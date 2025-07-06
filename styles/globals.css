@@ -1,10 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import './tag-theme.css';
+@import './light-theme.css';
 
 html,
 body {
+  height: 100%;
   scroll-behavior: smooth !important;
+  margin: 0;
+  font-family: "Roboto", "Open Sans", "Lato", sans-serif;
+  overflow-x: hidden;
 }
 
 /* It makes the HTML progress bar filling smooth when value change. */
@@ -14,9 +20,169 @@ progress::-webkit-progress-value {
 
 @layer base {
   .btn-gradient {
-    @apply !bg-gradient !bg-[length:300%_300%] hover:saturate-[1.2] shadow duration-100 !border-0 !border-transparent !bg-transparent animate-shimmer disabled:!bg-none disabled:!bg-gray-500/30  !text-white;
+    @apply !bg-gradient !bg-[length:300%_300%] hover:saturate-[1.2] shadow duration-100 !border-0 !border-transparent !bg-transparent animate-shimmer disabled:!bg-none disabled:!bg-gray-500/30 !text-white;
   }
+  
   .btn {
     @apply !capitalize;
   }
 }
+
+/* Animation for gradient buttons */
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Lato", sans-serif;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.center {
+  margin: auto;
+  text-align: center;
+}
+
+/* Generic link styling that respects the active theme */
+a {
+  color: var(--p);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: var(--s);
+}
+
+/* Table styling that respects the active theme */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--b3);
+}
+
+th {
+  background-color: var(--b3);
+  color: var(--bc);
+}
+
+/* Global scrollbar styling that matches the active theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--s);
+  border-radius: 8px;
+  transition: 0.3s ease-in-out;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--a, var(--p));
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--b2);
+  border-radius: 8px;
+}
+
+/* Adding the outline text class directly in globals.css - useful for all themes */
+.outline-text {
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+                -1px -1px 0 rgba(0, 0, 0, 0.7), 1px -1px 0 rgba(0, 0, 0, 0.7),
+                -1px 1px 0 rgba(0, 0, 0, 0.7), 1px 1px 0 rgba(0, 0, 0, 0.7);
+}
+
+/* Enhanced text visibility for headings across all themes */
+.enhanced-text-visibility {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.2);
+}
+
+[data-theme="dark"] .enhanced-text-visibility,
+[data-theme="black"] .enhanced-text-visibility,
+[data-theme="luxury"] .enhanced-text-visibility,
+[data-theme="dracula"] .enhanced-text-visibility,
+[data-theme="synthwave"] .enhanced-text-visibility {
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+  filter: brightness(1.4) saturate(1.2);
+}
+
+/* Enhanced site title with gradient effect that works across all themes */
+.site-title {
+  background-image: linear-gradient(to right, hsl(var(--p)), hsl(var(--s)));
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-weight: 800;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)) brightness(1.2);
+}
+
+[data-theme="tag-theme"] .site-title {
+  background-image: linear-gradient(to right, var(--tag-primary), var(--tag-secondary));
+  filter: drop-shadow(0 0 5px rgba(57, 255, 20, 0.8)) brightness(1.2);
+}
+
+/* Theme dropdown styling to ensure visibility across all themes */
+.theme-dropdown-container {
+  background-color: hsl(var(--b1)) !important;
+  color: hsl(var(--bc)) !important;
+  border: 2px solid hsl(var(--p));
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.theme-name {
+  color: hsl(var(--bc));
+  font-weight: 500;
+}
+
+[data-theme="dark"] .theme-dropdown-container,
+[data-theme="black"] .theme-dropdown-container,
+[data-theme="dracula"] .theme-dropdown-container,
+[data-theme="luxury"] .theme-dropdown-container,
+[data-theme="synthwave"] .theme-dropdown-container {
+  border: 2px solid hsl(var(--s));
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.theme-color-preview {
+  border: 1px solid hsl(var(--bc) / 0.3);
+}
+
+/* Fix for theme dropdown readability - ensures proper contrast */
+[data-theme] .theme-dropdown-menu {
+  /* Use theme-specific variables for proper contrast */
+  background-color: var(--b2);
+  color: var(--bc);
+  border: 1px solid var(--b3);
+}
+
+/* Add dropdown menu readability enhancement */
+[data-theme="tag-theme"] .absolute.right-0.mt-2.w-56 {
+  background-color: var(--tag-base-200);
+  color: var(--tag-base-content);
+  border: 2px solid var(--tag-accent);
+}
+
+
+

@@ -1,3 +1,4 @@
+/*
 import connectMongo from "@/libs/mongoose";
 import Lead from "@/models/Lead";
 
@@ -36,3 +37,4 @@ export default async function handler(req, res) {
       res.status(404).json({ error: "Unknow request type" });
   }
 }
+*/

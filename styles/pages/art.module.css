@@ -1,0 +1,28 @@
+.container {
+	width: 100%;
+	padding: 16px;
+	text-align: center;
+}
+
+.listingsGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+	gap: 16px;
+	margin-top: 20px;
+}
+
+.loadMoreButton {
+	display: block;
+	margin: 16px auto;
+	padding: 10px 20px;
+	font-size: 16px;
+	background-color: #0070f3;
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+}
+
+.loadMoreButton:hover {
+	background-color: #005bb5;
+}
