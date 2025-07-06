@@ -4,6 +4,7 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./styles/globals.css",
+    "./styles/tag-theme.css",
   ],
   theme: {
     extend: {
@@ -55,14 +56,58 @@ module.exports = {
           "100%": { backgroundPosition: "0% 50%" },
         },
       },
+      fontFamily: {
+        sans: [
+          "Inter",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica Neue",
+          "Arial",
+          "sans-serif",
+        ],
+        serif: [
+          "Merriweather",
+          "Georgia",
+          "Cambria",
+          "Times New Roman",
+          "Times",
+          "serif",
+        ],
+        mono: [
+          "Fira Code",
+          "Menlo",
+          "Monaco",
+          "Consolas",
+          "Courier New",
+          "monospace",
+        ],
+      },
     },
   },
   plugins: [require("daisyui")],
   daisyui: {
-    // Light & dark themes are added by default (it switches automatically based on OS settings)
-    // You can add another theme among the list of 30+
-    // Add "data-theme='theme_name" to any HTML tag to enable the 'theme_name' theme.
-    // https://daisyui.com/
-    themes: ["light", "dark"],
+    themes: [
+      "tag-theme", // Our custom theme added first (default)
+      "light",
+      "dark",
+      "cupcake",
+      "bumblebee",
+      "emerald",
+      "corporate",
+      "synthwave",
+      "retro",
+      "valentine",
+      "halloween",
+      "garden",
+      "aqua",
+      "pastel",
+      "fantasy",
+      "black",
+      "luxury",
+      "dracula",
+    ],
   },
 };
