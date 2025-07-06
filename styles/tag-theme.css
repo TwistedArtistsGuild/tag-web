@@ -1,0 +1,328 @@
+/* TAG Unofficial Theme for DaisyUI 
+ * This theme leverages vibrant neon colors for a bold and energetic design system
+ */
+
+:root {
+  /* TAG brand colors - neon color scheme */
+  --tag-primary: #39FF14;      /* Neon green */
+  --tag-secondary: #FF10F0;    /* Neon pink */
+  --tag-accent: #BB86FC;       /* Neon purple */
+  --tag-neutral: #121212;      /* Dark background */
+  --tag-base-100: #18181B;     /* Slightly lighter than pure black for surfaces */
+  --tag-base-200: #27272A;     /* Dark gray for cards/containers */
+  --tag-base-300: #3F3F46;     /* Medium gray for hover states */
+  --tag-base-content: #ECEDEE; /* Light text for readability */
+  --tag-info: #3abff8;         /* Info blue */
+  --tag-success: #36d399;      /* Success green */
+  --tag-warning: #fbbd23;      /* Warning yellow */
+  --tag-error: #f87272;        /* Error red */
+}
+
+/* DaisyUI theme configuration 
+ * For more info: https://daisyui.com/docs/themes/
+ */
+[data-theme="tag-theme"] {
+  /* Base colors */
+  --p: var(--tag-primary);
+  --pc: #000000;               /* Black text on neon green for contrast */
+  --s: var(--tag-secondary);
+  --sc: #000000;               /* Black text on neon pink for contrast */
+  --a: var(--tag-accent);
+  --ac: #000000;               /* Black text on neon purple for contrast */
+  --n: var(--tag-neutral);
+  --nc: #ECEDEE;               /* Light text on dark background */
+  --b1: var(--tag-base-100);
+  --b2: var(--tag-base-200);
+  --b3: var(--tag-base-300);
+  --bc: var(--tag-base-content);
+  
+  /* State colors */
+  --in: var(--tag-info);
+  --inc: #000000;
+  --su: var(--tag-success);
+  --suc: #000000;
+  --wa: var(--tag-warning);
+  --wac: #000000;
+  --er: var(--tag-error);
+  --erc: #000000;
+  
+  /* Typography settings */
+  font-family: 'Roboto', 'Open Sans', 'Lato', sans-serif;
+  font-size: 1rem;
+  
+  /* Rounded corners */
+  --rounded-box: 0.5rem;
+  --rounded-btn: 0.25rem;
+  --rounded-badge: 0.125rem;
+  
+  /* Animation settings */
+  --animation-btn: 0.2s;
+  --animation-input: 0.2s;
+  
+  /* Border widths */
+  --border-btn: 2px;
+  --tab-border: 2px;
+  --tab-radius: 0.5rem;
+  
+  /* Sizing & Spacing */
+  --padding-card: 0.5rem;
+  --btn-text-case: capitalize;
+  --navbar-padding: 0.5rem;
+  --focus-ring: 2px;
+  --focus-ring-offset: 2px;
+}
+
+/* Paint dripping header effect */
+.header-paint-drip {
+  position: relative;
+  background: linear-gradient(90deg, var(--tag-primary), var(--tag-secondary), var(--tag-accent));
+  overflow: visible;
+  padding-bottom: 3rem;
+}
+
+.header-paint-drip::after {
+  content: "";
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background-image: 
+    radial-gradient(circle at 10% 0, transparent 0, transparent 30%, var(--tag-primary) 30%, var(--tag-primary) 50%, transparent 50%),
+    radial-gradient(circle at 30% 0, transparent 0, transparent 30%, var(--tag-secondary) 30%, var(--tag-secondary) 55%, transparent 55%),
+    radial-gradient(circle at 50% 0, transparent 0, transparent 30%, var(--tag-accent) 30%, var(--tag-accent) 60%, transparent 60%),
+    radial-gradient(circle at 70% 0, transparent 0, transparent 30%, var(--tag-secondary) 30%, var(--tag-secondary) 55%, transparent 55%),
+    radial-gradient(circle at 90% 0, transparent 0, transparent 30%, var(--tag-primary) 30%, var(--tag-primary) 50%, transparent 50%);
+  background-size: 20% 100%;
+  background-repeat: repeat-x;
+}
+
+/* Neon glow effects for elements */
+.neon-glow-green {
+  text-shadow: 0 0 5px var(--tag-primary), 0 0 10px var(--tag-primary), 0 0 15px var(--tag-primary);
+  box-shadow: 0 0 5px var(--tag-primary), 0 0 10px var(--tag-primary);
+}
+
+.neon-glow-pink {
+  text-shadow: 0 0 5px var(--tag-secondary), 0 0 10px var(--tag-secondary), 0 0 15px var(--tag-secondary);
+  box-shadow: 0 0 5px var(--tag-secondary), 0 0 10px var(--tag-secondary);
+}
+
+.neon-glow-purple {
+  text-shadow: 0 0 5px var(--tag-accent), 0 0 10px var(--tag-accent), 0 0 15px var(--tag-accent);
+  box-shadow: 0 0 5px var(--tag-accent), 0 0 10px var(--tag-accent);
+}
+
+/* Custom button styles with neon effect */
+.btn-tag-neon {
+  background: var(--tag-neutral);
+  color: var(--tag-primary);
+  border: 2px solid var(--tag-primary);
+  transition: all 0.3s ease;
+  box-shadow: 0 0 5px var(--tag-primary), 0 0 10px var(--tag-primary);
+  text-shadow: 0 0 5px var(--tag-primary);
+}
+
+.btn-tag-neon:hover {
+  background: var(--tag-primary);
+  color: var(--tag-neutral);
+  box-shadow: 0 0 10px var(--tag-primary), 0 0 20px var(--tag-primary), 0 0 30px var(--tag-primary);
+  transform: translateY(-2px);
+}
+
+/* Gradient button with new colors */
+.btn-tag-gradient {
+  background-image: linear-gradient(to right, var(--tag-primary), var(--tag-secondary), var(--tag-accent));
+  background-size: 300% 300%;
+  color: black;
+  font-weight: bold;
+  border: none;
+  transition: all 0.3s ease;
+  animation: shimmer 2s ease-in-out infinite;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-tag-gradient:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-tag-gradient:disabled {
+  background: rgba(80, 80, 80, 0.3);
+  background-image: none;
+  color: rgba(212, 212, 212, 0.5);
+  box-shadow: none;
+  transform: none;
+}
+
+/* Input and form elements styling with neon accents */
+.input-tag {
+  background-color: var(--tag-base-200);
+  border: 2px solid var(--tag-secondary);
+  border-radius: 4px;
+  color: var(--tag-base-content);
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.input-tag:focus {
+  border-color: var(--tag-secondary);
+  box-shadow: 0 0 5px var(--tag-secondary), 0 0 10px var(--tag-secondary);
+  outline: none;
+}
+
+.select-tag {
+  height: 2rem;
+  background-color: var(--tag-base-200);
+  border: 2px solid var(--tag-accent);
+  border-radius: 4px;
+  color: var(--tag-base-content);
+  padding: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.select-tag:focus {
+  border-color: var(--tag-accent);
+  box-shadow: 0 0 5px var(--tag-accent), 0 0 10px var(--tag-accent);
+  outline: none;
+}
+
+/* Keyframe animation for gradient shimmer effect */
+@keyframes shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Custom scrollbar styles with neon accents */
+.tag-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tag-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--tag-secondary);
+  border-radius: 8px;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.tag-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--tag-accent);
+  box-shadow: 0 0 5px var(--tag-accent), 0 0 10px var(--tag-accent);
+}
+
+.tag-scrollbar::-webkit-scrollbar-track {
+  background-color: var(--tag-base-200);
+  border-radius: 8px;
+}
+
+/* Custom card styles with TAG branding */
+.card-tag {
+  background-color: var(--tag-base-200);
+  border: 2px solid var(--tag-accent);
+  border-radius: 8px;
+  box-shadow: 0 0 5px var(--tag-accent);
+  transition: all 0.3s ease;
+  padding: 0.5rem;
+}
+
+.card-tag:hover {
+  border-color: var(--tag-secondary);
+  box-shadow: 0 0 10px var(--tag-accent), 0 0 15px var(--tag-accent);
+  transform: translateY(-2px);
+}
+
+/* Add smooth hover effects to links with neon glow */
+.link-tag {
+  color: var(--tag-primary);
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.link-tag:hover {
+  color: var(--tag-secondary);
+  text-shadow: 0 0 5px var(--tag-secondary), 0 0 10px var(--tag-secondary);
+}
+
+/* Table styles with neon accents */
+.table-tag {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--tag-base-100);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.table-tag th {
+  background-color: var(--tag-base-300);
+  color: var(--tag-primary);
+  padding: 0.5rem;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid var(--tag-primary);
+  text-shadow: 0 0 5px var(--tag-primary);
+}
+
+.table-tag td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--tag-base-300);
+  color: var(--tag-base-content);
+}
+
+.table-tag tr:hover {
+  background-color: rgba(57, 255, 20, 0.1);
+}
+
+/* Effect depth for interactive elements */
+.btn, .card, .input, select, textarea {
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn:hover, .card:hover, .input:focus, select:focus, textarea:focus {
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Site-wide styling overrides for the tag theme */
+.tag-body {
+  font-family: 'Roboto', 'Open Sans', 'Lato', sans-serif;
+  background-color: var(--tag-neutral);
+  color: var(--tag-base-content);
+  background-image: radial-gradient(circle at 50% 50%, rgba(187, 134, 252, 0.1) 0%, transparent 50%);
+}
+
+/* Outline text class for better readability on any background */
+.outline-text {
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+                -1px -1px 0 rgba(0, 0, 0, 0.7), 1px -1px 0 rgba(0, 0, 0, 0.7),
+                -1px 1px 0 rgba(0, 0, 0, 0.7), 1px 1px 0 rgba(0, 0, 0, 0.7);
+}
+
+/* Paint splatter accents */
+.paint-splatter {
+  position: relative;
+}
+
+.paint-splatter::before {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23FF10F0' d='M65.7,10.8c3.5-0.9,7.5-1.7,10.8,0.1c3.9,2.2,5,7.2,5.3,11.7c0.4,5.4-0.2,10.9-0.9,16.2 c-0.3,2.3-0.6,4.8,0.3,7c2.1,5.1,9.3,6.3,11.5,11.4c2.5,5.9-2.7,12.5-8.9,14.5s-13.1,0.7-19.7,0.7c-5.5,0-11.1,0.4-16.2,2.3 c-5.5,2.1-10,6.3-15.8,7.7c-7.8,1.8-15.7-2.9-19.6-10s-4.4-15.5-3.5-23.6c0.5-4.7,1.4-9.4,3.8-13.3c2.2-3.6,5.6-6.3,8.7-9.2 C28.5,20.6,34.5,15,41.6,12c3.5-1.5,7.5-2.2,11-0.7C58,13.8,60,16.9,65.7,10.8z'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.8;
+  z-index: -1;
+  transform: rotate(45deg);
+}
+
+/* Neon divider */
+.neon-divider {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--tag-primary), var(--tag-secondary), var(--tag-accent), transparent);
+  border: none;
+  border-radius: 3px;
+  margin: 1.5rem 0;
+  box-shadow: 0 0 10px var(--tag-secondary), 0 0 20px var(--tag-accent);
+}

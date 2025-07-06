@@ -1,0 +1,56 @@
+.card {
+	display: flex;
+	align-items: center;
+	background-color: #fff;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	margin: 16px;
+	padding: 16px;
+	width: 100%;
+	max-width: 600px;
+	transition: transform 0.2s;
+	gap: 16px; /* Space between image and text */
+}
+
+.card:hover {
+	transform: scale(1.05);
+}
+
+.imageContainer {
+	flex-shrink: 0;
+}
+
+.profilePic, .listingPic {
+	border-radius: 50%;
+	object-fit: cover;
+	margin-right: 16px;
+    border-radius: 8px;
+}
+
+.details {
+	flex: 1;
+}
+
+.link {
+	font-size: 1.2em;
+	font-weight: bold;
+	color: #333;
+	text-decoration: none;
+	margin-bottom: 8px;
+}
+
+.link:hover {
+	color: #0070f3;
+}
+
+.byline, .description {
+	font-size: 1em;
+	color: #666;
+	margin-bottom: 8px;
+}
+
+.time, .artistfk, .listingtypefk, .cost, .units {
+	font-size: 0.9em;
+	color: #999;
+}
