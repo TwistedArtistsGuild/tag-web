@@ -1,12 +1,36 @@
 {
-  "extends": ["next/core-web-vitals", "eslint:recommended"],
+  "extends": ["next/core-web-vitals", "eslint:recommended", "plugin:import/errors", "plugin:import/warnings"],
   "env": {
     "browser": true,
     "node": true,
     "es6": true
   },
   "rules": {
-    // Your specific rules.
-    "no-unused-vars": "warn"
+    "no-unused-vars": "warn",
+    "header/header": [
+      2,
+      "block",
+      [
+        " Copyright (C) Twisted Artists Guild - All Rights Reserved",
+        " Unauthorized copying of this file, via any medium is strictly prohibited",
+        " Proprietary and confidential",
+        " ",
+        " Use https://dev.azure.com/bobbshields/tag-web-dev for dev team communcation tools"
+      ]
+    ],
+    //"import/no-unresolved": "error",
+    "import/no-relative-parent-imports": "error" // Added rule to catch relative paths
+  },
+  "plugins": [
+    "header",
+    "import"
+  ],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "paths": ["src"],
+        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+      }
+    }
   }
 }
