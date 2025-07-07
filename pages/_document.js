@@ -1,14 +1,19 @@
+/* This file is part of the Twisted Artists Guild project.
+
+ Copyright (C) 2025 Twisted Artists Guild
+
+ Licensed under the GNU General Public License v3.0
+ (https://www.gnu.org/licenses/gpl-3.0.en.html).
+
+ This software comes with NO WARRANTY; see the license for details.
+
+ Open source · low-profit · human-first*/
 import { Html, Head, Main, NextScript } from "next/document";
-import config from "@/config";
 
 export default function Document() {
   return (
-    <Html lang="en" data-theme={config.colors.theme}>
+    <Html lang="en" className="font-sans">
       <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content={config.colors.main} />
-        <meta name="msapplication-TileColor" content={config.colors.main} />
-
         <link
           rel="apple-touch-icon"
           sizes="180x180"
@@ -27,12 +32,6 @@ export default function Document() {
           href="/favicon-16x16.png"
         />
         <link rel="icon" href="/favicon.ico" />
-
-        <script
-          defer
-          data-domain={config.domainName}
-          src="https://plausible.io/js/script.js"
-        ></script>
       </Head>
       <body>
         <Main />
