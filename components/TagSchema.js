@@ -1,5 +1,16 @@
-import Head from "next/head";
-import config from "@/config";
+/* This file is part of the Twisted Artists Guild project.
+
+ Copyright (C) 2025 Twisted Artists Guild
+
+ Licensed under the GNU General Public License v3.0
+ (https://www.gnu.org/licenses/gpl-3.0.en.html).
+
+ This software comes with NO WARRANTY; see the license for details.
+
+ Open source · low-profit · human-first*/
+
+import Head from "next/head"
+import config from "@/config"
 
 // Strctured Data for Rich Results on Google. Learn more: https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data
 // Find your type here (SoftwareApp, Book...): https://developers.google.com/search/docs/appearance/structured-data/search-gallery
@@ -8,41 +19,41 @@ import config from "@/config";
 // I recommend the default one below for software apps: It tells Google your AppName is a Software, and it has a rating of 4.8/5 from 12 reviews
 // Fill the fields with your own data
 const TagSchema = () => {
-  return (
-    <Head>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "http://schema.org",
-            "@type": "SoftwareApplication",
-            name: config.appName,
-            description: "60 to 180 characters",
-            image: `https://${config.domainName}/logo.png`,
-            url: `https://${config.domainName}/`,
-            author: {
-              "@type": "Person",
-              name: "Marc Lou",
-            },
-            datePublished: "2023-08-01",
-            applicationCategory: "EducationalApplication",
-            aggregateRating: {
-              "@type": "AggregateRating",
-              ratingValue: "4.8",
-              ratingCount: "12",
-            },
-            offers: [
-              {
-                "@type": "Offer",
-                price: "9.00",
-                priceCurrency: "USD",
-              },
-            ],
-          }),
-        }}
-      ></script>
-    </Head>
-  );
-};
+	return (
+		<Head>
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{
+					__html: JSON.stringify({
+						"@context": "http://schema.org",
+						"@type": "SoftwareApplication",
+						name: config.appName,
+						description: "60 to 180 characters",
+						image: `https://${config.domainName}/logo.png`,
+						url: `https://${config.domainName}/`,
+						author: {
+							"@type": "Person",
+							name: "Marc Lou",
+						},
+						datePublished: "2023-08-01",
+						applicationCategory: "EducationalApplication",
+						aggregateRating: {
+							"@type": "AggregateRating",
+							ratingValue: "4.8",
+							ratingCount: "12",
+						},
+						offers: [
+							{
+								"@type": "Offer",
+								price: "9.00",
+								priceCurrency: "USD",
+							},
+						],
+					}),
+				}}
+			></script>
+		</Head>
+	)
+}
 
-export default TagSchema;
+export default TagSchema
