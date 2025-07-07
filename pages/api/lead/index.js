@@ -1,40 +1,10 @@
-/*
-import connectMongo from "@/libs/mongoose";
-import Lead from "@/models/Lead";
+/* This file is part of the Twisted Artists Guild project.
 
-// This route is used to store the leads that are generated from the landing page.
-// The API call is initiated by <ButtonLead /> component
-// Duplicate emails just return 200 OK
-export default async function handler(req, res) {
-  await connectMongo();
+ Copyright (C) 2025 Twisted Artists Guild
 
-  const { method, body } = req;
+ Licensed under the GNU General Public License v3.0
+ (https://www.gnu.org/licenses/gpl-3.0.en.html).
 
-  switch (method) {
-    case "POST": {
-      if (!body.email) {
-        return res.status(404).send({ error: "Need an email" });
-      }
+ This software comes with NO WARRANTY; see the license for details.
 
-      try {
-        const lead = await Lead.findOne({ email: body.email });
-
-        if (!lead) {
-          await Lead.create({ email: body.email });
-
-          // Here you can add your own logic
-          // For instance, sending a welcome email (use the the sendEmail helper function from /libs/mailgun)
-        }
-
-        return res.status(200).json({});
-      } catch (e) {
-        console.error(e);
-        return res.status(500).json({ error: e?.message });
-      }
-    }
-
-    default:
-      res.status(404).json({ error: "Unknow request type" });
-  }
-}
-*/
+ Open source · low-profit · human-first*/
