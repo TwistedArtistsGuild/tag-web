@@ -18,13 +18,11 @@ import meganProfile	from "./megan";
 const profiles = [
 	bobbProfile,
 	satyaProfile,
-	//vickiProfile,
 	turleProfile,
 	baileyProfile,
-	aprilProfile,
 	jasonProfile,
 	meganProfile,
-	//echoProfile,
+
 ];
 
 export default profiles;
