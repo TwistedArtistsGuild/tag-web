@@ -63,17 +63,7 @@ jobs:
           name: nextjs-build
           path: .next
 
-      - name: Deploy to Azure Static Web Apps
-        if: github.event.inputs.environment == 'prod' || github.ref == 'refs/heads/deploy' || github.ref == 'refs/heads/main'
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: 'upload'
-          app_location: "/"
-          output_location: ".next"
-          skip_app_build: true
-          production_branch: main
-
+# Removed deploy step. This workflow now only runs CI checks (install, audit, lint, build, export, artifact upload).
+# Azure App Service will handle deployment and startup using its own configuration.
 # To enable auto-deployments, add a trigger on push or PR and remove the manual-only logic above.
 # For approval workflows, use environments with required reviewers in your repo settings.
