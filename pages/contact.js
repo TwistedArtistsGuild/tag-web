@@ -9,14 +9,14 @@ export default function Contact() {
   const pageMetaData = {
     title: "Connect with TAG - Twisted Artists Guild",
     description:
-      "Join our vibrant community of twisted artists. Connect, collaborate, and create with fellow artists worldwide.",
+      "Creativity thrives in collaboration — and Twisted Artists Guild is where artists, thinkers, and dreamers unite. Whether you’re an illustrator, performer, crafter, or curator, you belong here.",
     keywords: "art community, twisted artists, creative collaboration, art networking, contact",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
       title: "Connect with TAG - Twisted Artists Guild",
-      description: "Join our vibrant community of twisted artists. Connect, collaborate, and create!",
+      description: "Creativity thrives in collaboration — and Twisted Artists Guild is where artists, thinkers, and dreamers unite.",
     },
   }
 
@@ -63,44 +63,25 @@ export default function Contact() {
       <TagSEO metadataProp={pageMetaData} canonicalSlug="contact" />
 
       {/* Hero Section */}
-      <div className="pt-32 pb-16 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="font-poiret text-7xl md:text-8xl text-primary shadow-text mb-6 animate-pulse">
-            Let's Connect
+      <div className="pt-32 pb-10 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="font-poiret text-6xl md:text-7xl text-primary shadow-text mb-6 animate-pulse">
+            🧵 Let’s Connect
           </h1>
-          <p className="text-xl md:text-2xl text-base-content/80 max-w-3xl mx-auto leading-relaxed mb-8">
-            Ready to join a community where creativity knows no bounds? The Twisted Artists Guild is your gateway to
-            artistic collaboration, inspiration, and endless possibilities.
+          <p className="text-xl md:text-2xl text-base-content/80 max-w-2xl mx-auto leading-relaxed mb-8">
+            Creativity thrives in collaboration — and Twisted Artists Guild is where artists, thinkers, and dreamers unite. Whether you’re an illustrator, performer, crafter, or curator, you belong here.
           </p>
-
-          {/* Call to Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <a
-              href="https://www.facebook.com/groups/twistedartists/"
-              className="bg-primary hover:bg-primary-focus text-primary-content px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            >
-              🎨 Join Our Facebook Community
-            </a>
-            <div className="text-base-content/60">or</div>
-            <button
-              onClick={() => document.getElementById("contact-form").scrollIntoView({ behavior: "smooth" })}
-              className="bg-secondary hover:bg-secondary-focus text-secondary-content px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            >
-              📝 Send Us a Message
-            </button>
-          </div>
         </div>
       </div>
 
       {/* Social Media Section */}
-      <div className="py-16 bg-base-200/50">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-primary mb-4">Follow Our Journey</h2>
+      <div className="py-10 bg-base-200/50">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-primary mb-4">✨ Stay In Touch</h2>
           <p className="text-lg text-base-content/70 mb-8">
-            Stay connected across all platforms and never miss our latest creations
+            Follow our journey across the platforms where art comes alive:
           </p>
-
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-wrap justify-center gap-6 mb-8">
             {socialLinks.map((social, index) => (
               <a
                 key={social.name}
@@ -124,7 +105,6 @@ export default function Contact() {
                     {social.name}
                   </p>
                 </div>
-
                 {/* Tooltip */}
                 {hoveredSocial === index && (
                   <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-lg text-sm whitespace-nowrap z-10">
@@ -135,26 +115,41 @@ export default function Contact() {
               </a>
             ))}
           </div>
+          <p className="text-base-content/70 text-md">
+            We share updates, featured artists, live events, competition highlights, and behind-the-scenes magic.
+          </p>
         </div>
       </div>
 
-      {/* Contact Form Section */}
-      <div id="contact-form" className="py-16">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-primary mb-4">Get In Touch</h2>
-          <p className="text-lg text-base-content/70 mb-8">
-            Have a question, collaboration idea, or just want to say hello? We'd love to hear from you!
+      {/* Contact Section */}
+      <div className="py-10">
+        <div className="max-w-3xl mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold text-primary mb-4">📨 Get in Touch</h2>
+          <p className="text-lg text-base-content/70 mb-6">
+            Let us know you're interested and we'll put you on the onboarding list!
           </p>
-
-          <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-4xl mx-auto">
-            <iframe
-              width="100%"
-              height="600"
-              src="https://forms.office.com/Pages/ResponsePage.aspx?id=CXCjcr9p3k-mFkuxZV9NHPDbHBXdbw9MqFWEzrNZGvtURVE4WVZSUDcwR00xSjdYMEIwRlZJV1YzOC4u&embed=true"
-              className="border-none rounded-2xl"
-              allowFullScreen
-              title="Contact Form"
-            />
+          <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl mx-auto mb-4" style={{ minHeight: 700 }}>
+            <div className="w-full" style={{ minHeight: 600 }}>
+              <iframe
+                src="https://api.leadconnectorhq.com/widget/form/jqVGvHmn4pv8gb67G3zU"
+                style={{ width: '100%', height: '700px', border: 'none', borderRadius: '3px' }}
+                id="inline-jqVGvHmn4pv8gb67G3zU"
+                data-layout="{'id':'INLINE'}"
+                data-trigger-type="alwaysShow"
+                data-trigger-value=""
+                data-activation-type="alwaysActivated"
+                data-activation-value=""
+                data-deactivation-type="neverDeactivate"
+                data-deactivation-value=""
+                data-form-name="Form 0"
+                data-height="1201"
+                data-layout-iframe-id="inline-jqVGvHmn4pv8gb67G3zU"
+                data-form-id="jqVGvHmn4pv8gb67G3zU"
+                title="Form 0"
+                allowFullScreen
+              />
+            </div>
+            <script src="https://link.msgsndr.com/js/form_embed.js"></script>
           </div>
         </div>
       </div>
@@ -162,16 +157,19 @@ export default function Contact() {
       {/* Footer CTA */}
       <div className="py-16 bg-primary text-primary-content text-center">
         <div className="max-w-3xl mx-auto px-4">
-          <h3 className="text-3xl font-bold mb-4">Ready to Twist Reality?</h3>
+          <h3 className="text-3xl font-bold mb-4">🎭 Ready to Twist Reality?</h3>
           <p className="text-xl mb-6 opacity-90">
-            Join thousands of artists who are already part of our twisted family
+            Let's build a community together:
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <span className="text-lg">🎭 Create</span>
+            <span className="text-lg">🧑‍🎨 Create</span>
             <span className="text-lg">🤝 Collaborate</span>
             <span className="text-lg">🚀 Inspire</span>
             <span className="text-lg">✨ Transform</span>
           </div>
+          <p className="mt-8 text-lg opacity-80">
+            The next evolution of art is cooperative — and it starts with you.
+          </p>
         </div>
       </div>
     </div>
