@@ -66,7 +66,7 @@ function LayoutContent(props) {
           {props.children}
         </main>
 
-        <Footer />
+        <Footer className={`${leftMargin} ${rightMargin}`} />
       </div>
 
       {isMounted && (

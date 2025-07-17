@@ -9,7 +9,6 @@
 
  Open source · low-profit · human-first*/
 
-
 import { useAppContext } from "/components/Context"
 import Link from "next/link"
 import MissionStatement from "/components/MissionStatement"
@@ -18,11 +17,14 @@ import MissionStatement from "/components/MissionStatement"
  * Footer component for website navigation and social media links
  * @returns {JSX.Element} Footer component
  */
-export default function Footer() {
+export default function Footer({ className }) {
+  // Accept className prop
   const { active, setActive } = useAppContext()
 
   return (
-    <footer className="bg-base-200 border-t border-base-content/10">
+    <footer className={`bg-base-200 border-t border-base-content/10 ${className}`}>
+      {" "}
+      {/* Apply className here */}
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-wrap lg:items-start">
           <div className="w-64 flex-shrink-0 text-left">
