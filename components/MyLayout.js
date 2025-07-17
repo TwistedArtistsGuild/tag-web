@@ -22,8 +22,8 @@ import ErrorBoundary from "./ErrorBoundary"
 import config from "@/config"
 import Header from "/components/Header/Header"
 import Footer from "/components/Footer"
-import LeftSidebar from "/components/LeftSidebar"
-import RightSidebar from "/components/RightSidebar"
+import LeftSidebar from "/components/Sidebar-left"
+import RightSidebar from "/components/Sidebar-right"
 import { LayoutProvider, useLayout } from "./LayoutProvider"
 
 const font = Inter({ subsets: ["latin"] })
