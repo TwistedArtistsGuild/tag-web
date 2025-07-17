@@ -12,7 +12,6 @@
 
 import Link from "next/link"
 import styles from "/styles/pages/listings.module.css"
-import Sidebar from "/components/Sidebar"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "/components/card_listing"
@@ -460,8 +459,6 @@ const Listings = (props) => {
                     ))}
                 </div>
             </div>
-            
-            <Sidebar open={open} setOpen={setOpen} listings={props.listings} />
         </div>
     )
 }
