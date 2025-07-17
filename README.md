@@ -1,58 +1,100 @@
-# tag-web
-The front end for the TwistedArtistsGuild.com web app. 
+# 🎨 tag-web
 
+[Wiki](https://github.com/TwistedArtistsGuild/tag-web/wiki) • [Project Board](https://github.com/users/TwistedArtistsGuild/projects/2)
 
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+The frontend for [TwistedArtistsGuild.com](https://twistedartistsguild.com) — a mission-driven platform empowering artists through accessible, ethical, and scalable tools. This Next.js application brings the guild’s user-facing experience to life, blending artistic freedom with cooperative infrastructure.
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+---
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+## 🔥 Introduction
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+Twisted Artists Guild is a digital cooperative for creators. The `tag-web` frontend is your portal to that world — enabling art discovery, event engagement, competition voting, and direct artist commerce. It’s fast, flexible, and built to reflect our human-first ethos.
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+---
 
+## 🚀 Getting Started
 
-# ShipFast — Javascript
+1. **Clone this repo**
+   ```bash
+   git clone https://github.com/twistedartistsguild/tag-web.git
+   cd tag-web
+   ```
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+3. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-Hey maker, it's Marc from [ShipFast](https://shipfa.st/docs) 👋
+### Dependencies
+- Next.js, React, Tailwind CSS, daisyUI
+- Azure SDKs: communication-email, identity, storage-blob
+- Stripe, Mailgun, Nodemailer, PostgreSQL
+- Rich text & gallery libraries: react-quill, react-slick, react-image-gallery
+- Content sanitization: sanitize-html, dompurify
 
-Let's get your startup off the ground, FAST ⚡️
+### API Reference
+- Backend: tag-web-api-dotnet
+- Env file: see /docs/env.md
 
-**🔔 Watch/Star the repo to be notified when updates are pushed**
+---
 
-## Get Started
+## 🧪 Build and Test
 
-1. Clone the repo and run your local server: [Get Started](https://shipfa.st/docs) in the documentation will guide you 🗺️
+To build for production:
+```bash
+npm run build
+```
+To lint and fix:
+```bash
+npm run lint
+```
+To run tests (WIP):
+```bash
+npm run test
+```
 
-2. Start building: Follow [this tutorial](https://shipfa.st/docs/tutorials/ship-in-5-minutes) to ship your first product in 5 minutes ⚡️
+**Testing includes:**
+- Jest + React Testing Library
+- Cypress setup in progress
+- Target 80%+ coverage across major components
 
-## Links
+---
 
-- [📚 Documentation](https://shipfa.st/docs)
-- [📣 Updates](https://shipfast.beehiiv.com/)
-- [🧑‍💻 Discord](https://shipfa.st/dashboard)
+## 🤝 Contributing
+We welcome contributions that align with TAG’s cooperative values.
 
-## Support
+- Fork the repo
+- Create your feature branch: `git checkout -b feat/my-feature-name`
+- Commit using Conventional Commits
+- Open a Pull Request with linked issue and description
 
-Reach out to me on [Twitter](https://twitter.com/marc_louvion) or marc@shipfa.st
+Before submitting, be sure to check:
+- ESLint header block
+- Accessibility markers (WCAG compliance)
+- Usage of absolute imports (`@/components/...`)
+- Commit message structure
 
-\_
+Contributor guides can be found in `/CONTRIBUTING.md` and `/docs/styleguide.md`
 
-Let's ship it, FAST ⚡️
+---
 
-P.S. Want to showcase your startups? Get your [Indie Page](https://indiepa.ge?ref=shipfast_readme) and share your entrepreneurial journey. Join 2,732 founders ⭐️
+## 🧭 Philosophy & License
+This platform is built for artists, not algorithms. We use GPL v3.0 to protect creators and encourage ethical transparency.
+
+Open source • Low-profit • Human-first
+
+---
+
+## 📣 Related Projects
+- tag-web-api-dotnet — backend API & governance engine
+- tag-web/wiki — architecture & feature planning
+
+---
+
+Let me know if you want badges, links to your project board, or contributor info added!
 
 
 
