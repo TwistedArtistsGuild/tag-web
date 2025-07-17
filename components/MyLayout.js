@@ -9,6 +9,7 @@
 
  Open source · low-profit · human-first*/
 "use client"
+"use client"
 
 import "react-tooltip/dist/react-tooltip.css"
 import { useEffect, useState } from "react"
@@ -38,7 +39,23 @@ function LayoutContent(props) {
   const router = useRouter()
   const { data } = useSession()
   const [isMounted, setIsMounted] = useState(false)
+ * Layout Content Component - The actual layout implementation
+ */
+function LayoutContent(props) {
+  const { isHeaderVisible, isLeftSidebarVisible, isRightSidebarVisible, isMobile } = useLayout()
+  const { sidebarProps = {} } = props
+  const { pageSections = [] } = sidebarProps || {}
+  const router = useRouter()
+  const { data } = useSession()
+  const [isMounted, setIsMounted] = useState(false)
 
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  const topMargin = isHeaderVisible ? "mt-20" : "mt-0"
+  const leftMargin = !isMobile && isLeftSidebarVisible ? "lg:ml-80" : ""
+  const rightMargin = !isMobile && isRightSidebarVisible ? "lg:mr-80" : ""
   useEffect(() => {
     setIsMounted(true)
   }, [])
