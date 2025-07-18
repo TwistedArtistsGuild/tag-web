@@ -8,6 +8,9 @@ import React from "react"
  (https://www.gnu.org/licenses/gpl-3.0.en.html).
  This software comes with NO WARRANTY; see the license for details.
  Open source · low-profit · human-first*/
+"use client"
+
+import React from "react"
 
 import styles from "/styles/pages/index.module.css"
 import TagSEO from "@/components/TagSEO"

@@ -7,7 +7,8 @@
     "build": "next build",
     "postbuild": "next-sitemap",
     "start": "next start",
-    "lint": "next lint --fix"
+    "lint": "next lint --fix",
+    "startAzure": "node_modules/next/dist/bin/next start -p $PORT"
   },
   "dependencies": {
     "@auth/pg-adapter": "^1.10.0",
@@ -51,7 +52,7 @@
   "devDependencies": {
     "autoprefixer": "^10.4.15",
     "daisyui": "^3.6.1",
-    "eslint": "^8.47.0",
+    "eslint": "^8.57.0",
     "eslint-config-next": "^15.3.5",
     "eslint-plugin-header": "^3.1.1",
     "eslint-plugin-import": "^2.32.0",

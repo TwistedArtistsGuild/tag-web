@@ -6,6 +6,7 @@
  (https://www.gnu.org/licenses/gpl-3.0.en.html).
  This software comes with NO WARRANTY; see the license for details.
  Open source · low-profit · human-first*/
+"use client"
 
 import "react-tooltip/dist/react-tooltip.css"
 import { useEffect, useState } from "react"
@@ -19,8 +20,8 @@ import ErrorBoundary from "./ErrorBoundary"
 import config from "@/config"
 import Header from "/components/Header/Header"
 import Footer from "/components/Footer"
-import LeftSidebar from "/components/LeftSidebar"
-import RightSidebar from "/components/RightSidebar"
+import LeftSidebar from "/components/Sidebar-left"
+import RightSidebar from "/components/Sidebar-right"
 import { LayoutProvider, useLayout } from "./LayoutProvider"
 
 const font = Inter({ subsets: ["latin"] })
@@ -63,7 +64,7 @@ function LayoutContent(props) {
           {props.children}
         </main>
 
-        <Footer />
+        <Footer className={`${leftMargin} ${rightMargin}`} />
       </div>
 
       {isMounted && (
