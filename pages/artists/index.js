@@ -12,7 +12,6 @@
 
 import Link from "next/link"
 import styles from "/styles/pages/artists.module.css"
-import Sidebar from "/components/Sidebar"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import ArtistCard from "/components/card_artist"
@@ -61,7 +60,6 @@ const Artists = (props) => {
 						)}
 					</div>
 				</div>
-				<Sidebar open={open} setOpen={setOpen} artists={props.artists} />
 			</div>
 		</main>
 	)

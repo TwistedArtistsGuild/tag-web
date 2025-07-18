@@ -1,5 +1,3 @@
-"use client"
-
 /* This file is part of the Twisted Artists Guild project.
 
  Copyright (C) 2025 Twisted Artists Guild
@@ -10,6 +8,7 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
+"use client"
 
 import { SessionProvider } from "next-auth/react"
 import "@/styles/globals.css"

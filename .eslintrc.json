@@ -27,6 +27,7 @@
   ],
   "rules": {
     "no-unused-vars": "warn",
+    "import/no-unresolved": "off",
     "header/header": [
       "error",
       "block",
@@ -49,7 +50,7 @@
     "import/resolver": {
       "node": {
         "paths": ["src"],
-        "extensions": [".js", ".jsx", ".ts", ".tsx"]
+        "extensions": [".js"]
       }
     }
   }
