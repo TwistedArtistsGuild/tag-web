@@ -9,9 +9,6 @@
 
  Open source · low-profit · human-first*/
 
-
-
-import styles from "/styles/pages/listings.module.css"
 import ListingCard from "/components/card_listing"
 //Imports
 import {useRouter} from "next/router"

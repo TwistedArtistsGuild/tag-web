@@ -8,28 +8,28 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import React, { useState } from 'react';
-import Link from 'next/link';
 
-const VoteIndex = () => {
-  const [isPanelMinimized, setIsPanelMinimized] = useState(false);
+ "use client"
+
+import Link from "next/link"
+import { useState } from "react"
+
+function VoteIndex() {
+  const [isPanelMinimized, setIsPanelMinimized] = useState(false)
 
   const togglePanel = () => {
-    setIsPanelMinimized(!isPanelMinimized);
-  };
+    setIsPanelMinimized(!isPanelMinimized)
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300 py-8 px-4">
+      <div className="container mx-auto">
         {/* Minimizeable Panel */}
-        <div className="mb-6 border rounded-lg shadow bg-base-100 p-4">
+        <div className="mb-6 card bg-base-100 shadow-lg rounded-box p-4">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-primary">Quick Links</h2>
-            <button
-              className="btn btn-sm btn-secondary"
-              onClick={togglePanel}
-            >
-              {isPanelMinimized ? 'Expand' : 'Minimize'}
+            <button className="btn btn-sm btn-secondary" onClick={togglePanel}>
+              {isPanelMinimized ? "Expand" : "Minimize"}
             </button>
           </div>
           {!isPanelMinimized && (
@@ -41,56 +41,98 @@ const VoteIndex = () => {
           )}
         </div>
 
-        {/* Main Content */}
-        <h1 className="text-4xl font-bold mb-4 text-primary">Art Competitions</h1>
-        <p className="text-lg mb-6 text-base-content">
-          Welcome to the Twisted Artists Guild voting page! Here, you can vote on your favorite art pieces and leave comments to support the artists. Your engagement helps shape the community and celebrate creativity.
-        </p>
-        <div>
-            <h3 className="text-lg font-bold">Active Prompts:</h3>
-            <ul className="list-disc pl-5">
-                <li>Weekly Contest: "Autumn Colors"</li>
-                <li>Monthly Contest: "Winter Wonderland"</li>
-                <li>Upcoming Quarterly Contest: "Valentine's Day Special"</li>
-            </ul>
-        </div>
-        <div className="">
-          <Link href="/vote/vote_halloween" className="btn btn-primary">
-            Vote on Halloween Contest
-          </Link>
-        </div>
-        <div className="mt-8">
-                    <h2 className="text-3xl font-bold">Previous Prompts and Winners</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="border rounded p-4 shadow">
-                            <h3 className="text-2xl font-semibold">Prompt: Hands of Love</h3>
-                            <ul className="list-disc pl-5">
-                                <li>Winner: Artist A - Category: Painting</li>
-                                <li>Winner: Artist B - Category: Sculpture</li>
-                                <li>Winner: Artist C - Category: Digital Art</li>
-                            </ul>
-                        </div>
-                        <div className="border rounded p-4 shadow">
-                            <h3 className="text-2xl font-semibold">Prompt: Winter Wonderland</h3>
-                            <ul className="list-disc pl-5">
-                                <li>Winner: Artist D - Category: Photography</li>
-                                <li>Winner: Artist E - Category: Painting</li>
-                                <li>Winner: Artist F - Category: Costume Design</li>
-                            </ul>
-                        </div>
-                        <div className="border rounded p-4 shadow">
-                            <h3 className="text-2xl font-semibold">Prompt: Nature's Fury</h3>
-                            <ul className="list-disc pl-5">
-                                <li>Winner: Artist G - Category: Digital Art</li>
-                                <li>Winner: Artist H - Category: Sculpture</li>
-                                <li>Winner: Artist I - Category: Painting</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+        {/* Main Content - Hero Section */}
+        <section className="text-center mb-12">
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+            🎨 TAG Contest Central
+          </h1>
+          <p className="text-xl md:text-2xl text-secondary mb-6">Vote. Celebrate. Shape the future of art.</p>
+          <p className="text-lg text-base-content max-w-3xl mx-auto">
+            Welcome to the Twisted Artists Guild Contest Hub—your gateway to artist showcases, themed challenges, and
+            member-driven voting. Whether you're an artist sharing your vision or a community member showing support,
+            this is where collaboration meets celebration.
+          </p>
+        </section>
+
+        {/* What You Can Do Here Section */}
+        <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
+          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">What You Can Do Here</h2>
+          <ul className="list-disc pl-5 text-lg text-base-content space-y-2">
+            <li>Browse and vote on current contest entries</li>
+            <li>Leave encouraging comments to uplift your fellow artists</li>
+            <li>Explore past prompts and winning pieces across every medium</li>
+            <li>Get inspired by the depth, diversity, and passion of our cooperative community</li>
+          </ul>
+        </section>
+
+        {/* Active Prompts Section */}
+        <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
+          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary flex items-center gap-2">
+            🗳️ Active Prompts
+          </h2>
+          <ul className="list-disc pl-5 text-lg text-base-content space-y-4">
+            <li>
+              <span className="font-semibold">Weekly Theme: "Autumn Colors"</span>
+              <p className="text-base text-gray-700 ml-4">
+                From crisp palettes to cozy moods—see how artists are interpreting fall’s textures and tones.
+              </p>
+            </li>
+            <li>
+              <span className="font-semibold">Monthly Challenge: "Winter Wonderland"</span>
+              <p className="text-base text-gray-700 ml-4">
+                A celebration of light, quiet, and mystery in winter scenes—from surreal snowscapes to whimsical icy
+                creations.
+              </p>
+            </li>
+            <li>
+              <span className="font-semibold">Upcoming Quarterly Contest: "Valentine’s Day Special"</span>
+              <p className="text-base text-gray-700 ml-4">
+                Love in all its forms—romantic, platonic, artistic, chaotic. Submissions open soon!
+              </p>
+            </li>
+          </ul>
+          <div className="mt-8 text-center">
+            <Link href="/vote/vote_halloween" className="btn btn-primary btn-lg">
+              Vote on Halloween Contest
+            </Link>
+          </div>
+        </section>
+
+        {/* Previous Prompts and Winners Section */}
+        <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
+          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary flex items-center gap-2">
+            🏆 Previous Prompts & Winners
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            <div className="card bg-base-200 shadow-md p-4 rounded-box">
+              <h3 className="text-xl font-semibold text-primary mb-2">Prompt: Hands of Love</h3>
+              <ul className="list-disc pl-5 text-base-content space-y-1">
+                <li>Winner: Artist A - Category: Painting</li>
+                <li>Winner: Artist B - Category: Sculpture</li>
+                <li>Winner: Artist C - Category: Digital Art</li>
+              </ul>
+            </div>
+            <div className="card bg-base-200 shadow-md p-4 rounded-box">
+              <h3 className="text-xl font-semibold text-primary mb-2">Prompt: Winter Wonderland</h3>
+              <ul className="list-disc pl-5 text-base-content space-y-1">
+                <li>Winner: Artist D - Category: Photography</li>
+                <li>Winner: Artist E - Category: Painting</li>
+                <li>Winner: Artist F - Category: Costume Design</li>
+              </ul>
+            </div>
+            <div className="card bg-base-200 shadow-md p-4 rounded-box">
+              <h3 className="text-xl font-semibold text-primary mb-2">Prompt: Nature’s Fury</h3>
+              <ul className="list-disc pl-5 text-base-content space-y-1">
+                <li>Winner: Artist G - Category: Digital Art</li>
+                <li>Winner: Artist H - Category: Sculpture</li>
+                <li>Winner: Artist I - Category: Painting</li>
+              </ul>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default VoteIndex;
+export default VoteIndex
