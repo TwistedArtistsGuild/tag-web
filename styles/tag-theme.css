@@ -1,53 +1,52 @@
 /* This file is part of the Twisted Artists Guild project.
 
- Copyright (C) 2025 Twisted Artists Guild
+Copyright (C) 2025 Twisted Artists Guild
 
- Licensed under the GNU General Public License v3.0
- (https://www.gnu.org/licenses/gpl-3.0.en.html).
+Licensed under the GNU General Public License v3.0
+(https://www.gnu.org/licenses/gpl-3.0.en.html).
 
- This software comes with NO WARRANTY; see the license for details.
+This software comes with NO WARRANTY; see the license for details.
 
- Open source · low-profit · human-first*/
- 
- 
- /* TAG Unofficial Theme for DaisyUI 
- * This theme leverages vibrant neon colors for a bold and energetic design system
- */
+Open source · low-profit · human-first*/
+
+/* TAG Unofficial Theme for DaisyUI 
+* This theme leverages vibrant neon colors for a bold and energetic design system
+*/
 
 :root {
-  /* TAG brand colors - neon color scheme */
-  --tag-primary: #39FF14;      /* Neon green */
-  --tag-secondary: #FF10F0;    /* Neon pink */
-  --tag-accent: #BB86FC;       /* Neon purple */
-  --tag-neutral: #121212;      /* Dark background */
-  --tag-base-100: #18181B;     /* Slightly lighter than pure black for surfaces */
-  --tag-base-200: #27272A;     /* Dark gray for cards/containers */
-  --tag-base-300: #3F3F46;     /* Medium gray for hover states */
-  --tag-base-content: #ECEDEE; /* Light text for readability */
-  --tag-info: #3abff8;         /* Info blue */
-  --tag-success: #36d399;      /* Success green */
-  --tag-warning: #fbbd23;      /* Warning yellow */
-  --tag-error: #f87272;        /* Error red */
+  /* TAG brand colors - circus neon scheme */
+  --tag-primary: #7cff00; /* Vibrant Green */
+  --tag-secondary: #ff00ff; /* Vibrant Magenta/Pink */
+  --tag-accent: #bb86fc; /* Vibrant Purple */
+  --tag-neutral: #121212; /* Dark background */
+  --tag-base-100: #18181b; /* Slightly lighter than pure black for surfaces */
+  --tag-base-200: #27272a; /* Dark gray for cards/containers */
+  --tag-base-300: #3f3f46; /* Medium gray for hover states */
+  --tag-base-content: #ecedee; /* Light text for readability */
+  --tag-info: #3abff8; /* Info blue */
+  --tag-success: #36d399; /* Success green */
+  --tag-warning: #fbbd23; /* Warning yellow */
+  --tag-error: #f87272; /* Error red */
 }
 
 /* DaisyUI theme configuration 
- * For more info: https://daisyui.com/docs/themes/
- */
+* For more info: https://daisyui.com/docs/themes/
+*/
 [data-theme="tag-theme"] {
   /* Base colors */
   --p: var(--tag-primary);
-  --pc: #000000;               /* Black text on neon green for contrast */
+  --pc: #000000; /* Black text on neon green for contrast */
   --s: var(--tag-secondary);
-  --sc: #000000;               /* Black text on neon pink for contrast */
+  --sc: #000000; /* Black text on neon pink for contrast */
   --a: var(--tag-accent);
-  --ac: #000000;               /* Black text on neon purple for contrast */
+  --ac: #000000; /* Black text on neon purple for contrast */
   --n: var(--tag-neutral);
-  --nc: #ECEDEE;               /* Light text on dark background */
+  --nc: var(--tag-base-content); /* Light text on dark background */
   --b1: var(--tag-base-100);
   --b2: var(--tag-base-200);
   --b3: var(--tag-base-300);
   --bc: var(--tag-base-content);
-  
+
   /* State colors */
   --in: var(--tag-info);
   --inc: #000000;
@@ -57,25 +56,25 @@
   --wac: #000000;
   --er: var(--tag-error);
   --erc: #000000;
-  
+
   /* Typography settings */
-  font-family: 'Roboto', 'Open Sans', 'Lato', sans-serif;
+  font-family: "Roboto", "Open Sans", "Lato", sans-serif;
   font-size: 1rem;
-  
+
   /* Rounded corners */
   --rounded-box: 0.5rem;
   --rounded-btn: 0.25rem;
   --rounded-badge: 0.125rem;
-  
+
   /* Animation settings */
   --animation-btn: 0.2s;
   --animation-input: 0.2s;
-  
+
   /* Border widths */
   --border-btn: 2px;
   --tab-border: 2px;
   --tab-radius: 0.5rem;
-  
+
   /* Sizing & Spacing */
   --padding-card: 0.5rem;
   --btn-text-case: capitalize;
@@ -84,29 +83,28 @@
   --focus-ring-offset: 2px;
 }
 
-/* Paint dripping header effect */
+/* Header base styling */
 .header-paint-drip {
   position: relative;
   background: linear-gradient(90deg, var(--tag-primary), var(--tag-secondary), var(--tag-accent));
-  overflow: visible;
-  padding-bottom: 3rem;
+  filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3)); /* Apply shadow to the whole header */
 }
 
-.header-paint-drip::after {
-  content: "";
+/* Inner div for the circus tent/drip effect */
+.header-drip-effect {
   position: absolute;
-  bottom: -30px;
+  bottom: 0;
   left: 0;
   width: 100%;
-  height: 40px;
-  background-image: 
-    radial-gradient(circle at 10% 0, transparent 0, transparent 30%, var(--tag-primary) 30%, var(--tag-primary) 50%, transparent 50%),
-    radial-gradient(circle at 30% 0, transparent 0, transparent 30%, var(--tag-secondary) 30%, var(--tag-secondary) 55%, transparent 55%),
-    radial-gradient(circle at 50% 0, transparent 0, transparent 30%, var(--tag-accent) 30%, var(--tag-accent) 60%, transparent 60%),
-    radial-gradient(circle at 70% 0, transparent 0, transparent 30%, var(--tag-secondary) 30%, var(--tag-secondary) 55%, transparent 55%),
-    radial-gradient(circle at 90% 0, transparent 0, transparent 30%, var(--tag-primary) 30%, var(--tag-primary) 50%, transparent 50%);
-  background-size: 20% 100%;
+  height: 40px; /* Height of the "drip" shapes */
+  background-image: radial-gradient(ellipse at center top, var(--tag-primary) 60%, transparent 60%),
+    radial-gradient(ellipse at center top, var(--tag-secondary) 60%, transparent 60%),
+    radial-gradient(ellipse at center top, var(--tag-accent) 60%, transparent 60%),
+    radial-gradient(ellipse at center top, var(--tag-secondary) 60%, transparent 60%); /* Repeating colors */
+  background-size: 25% 100%; /* Each segment takes 25% width */
   background-repeat: repeat-x;
+  background-position: 0% 0, 25% 0, 50% 0, 75% 0; /* Position each block */
+  transform: translateY(10px); /* Slight offset to make it appear to hang */
 }
 
 /* Neon glow effects for elements */
@@ -202,9 +200,15 @@
 
 /* Keyframe animation for gradient shimmer effect */
 @keyframes shimmer {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 
 /* Custom scrollbar styles with neon accents */
@@ -287,18 +291,26 @@
 }
 
 /* Effect depth for interactive elements */
-.btn, .card, .input, select, textarea {
+.btn,
+.card,
+.input,
+select,
+textarea {
   box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
 }
 
-.btn:hover, .card:hover, .input:focus, select:focus, textarea:focus {
+.btn:hover,
+.card:hover,
+.input:focus,
+select:focus,
+textarea:focus {
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
 }
 
 /* Site-wide styling overrides for the tag theme */
 .tag-body {
-  font-family: 'Roboto', 'Open Sans', 'Lato', sans-serif;
+  font-family: "Roboto", "Open Sans", "Lato", sans-serif;
   background-color: var(--tag-neutral);
   color: var(--tag-base-content);
   background-image: radial-gradient(circle at 50% 50%, rgba(187, 134, 252, 0.1) 0%, transparent 50%);
@@ -306,9 +318,10 @@
 
 /* Outline text class for better readability on any background */
 .outline-text {
-  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
-                -1px -1px 0 rgba(0, 0, 0, 0.7), 1px -1px 0 rgba(0, 0, 0, 0.7),
-                -1px 1px 0 rgba(0, 0, 0, 0.7), 1px 1px 0 rgba(0, 0, 0, 0.7);
+  text-shadow:
+    -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+    -1px -1px 0 rgba(0, 0, 0, 0.7), 1px -1px 0 rgba(0, 0, 0, 0.7),
+    -1px 1px 0 rgba(0, 0, 0, 0.7), 1px 1px 0 rgba(0, 0, 0, 0.7);
 }
 
 /* Paint splatter accents */
@@ -332,7 +345,14 @@
 /* Neon divider */
 .neon-divider {
   height: 3px;
-  background: linear-gradient(90deg, transparent, var(--tag-primary), var(--tag-secondary), var(--tag-accent), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--tag-primary),
+    var(--tag-secondary),
+    var(--tag-accent),
+    transparent
+  );
   border: none;
   border-radius: 3px;
   margin: 1.5rem 0;

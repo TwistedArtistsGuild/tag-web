@@ -16,25 +16,25 @@ import TagSEO from "@/components/TagSEO";
 import ListingCard from "/components/card_listing";
 
 /**
- * 
- * @param {*} props 
- * @returns 
+ *
+ * @param {*} props
+ * @returns
  */
 const Listings = (props) => {
-	const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false) // This state is not used in the current JSX, but kept for consistency
 
-	const pageMetaData = {
-		title: `TAG Art Listings - ${props.supercat || "Art"}`,
-		description: `Explore ${props.supercat || "art"} in various categories`,
-		keywords: `${props.supercat || "art"}, listing, sales, e-commerce`,
-		robots: "index, follow",
-		author: "Bobb Shields",
-		viewport: "width=device-width, initial-scale=1.0",
-		og: {
-			title: `TAG Art Listings - ${props.supercat || "Art"}`,
-			description: `Explore ${props.supercat || "art"} in various categories`,
-		},
-	};
+  const pageMetaData = {
+    title: `TAG Art Listings - ${props.supercat || "Art"}`,
+    description: `Explore ${props.supercat || "art"} in various categories`,
+    keywords: `${props.supercat || "art"}, listing, sales, e-commerce`,
+    robots: "index, follow",
+    author: "Bobb Shields",
+    viewport: "width=device-width, initial-scale=1.0",
+    og: {
+      title: `TAG Art Listings - ${props.supercat || "Art"}`,
+      description: `Explore ${props.supercat || "art"} in various categories`,
+    },
+  }
 
 	return (
 		<div className="container mx-auto p-4">
@@ -62,48 +62,49 @@ const Listings = (props) => {
 	);
 };
 
-Listings.getInitialProps = async function (context) {
-	const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
-	const { supercat = "", cat = "", medium = "", subcat = "" } = context.query;
+Listings.getInitialProps = async (context) => {
+  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+  const { supercat = "", cat = "", medium = "", subcat = "" } = context.query
+  let data = []
+  let status = 200
 
-	let data = [];
-	let status = 200;
+  if (process.env.DEBUG === "true") {
+    console.log(
+      `Listing data fetch starting for supercat: ${supercat}, cat: ${cat}, medium: ${medium}, subcat: ${subcat}`,
+    )
+  }
 
-	if (process.env.DEBUG === "true") {
-		console.log(`Listing data fetch starting for supercat: ${supercat}, cat: ${cat}, medium: ${medium}, subcat: ${subcat}`);
-	}
+  try {
+    const queryParams = new URLSearchParams({
+      supercat,
+      cat,
+      medium,
+      subcat,
+      keyword: `${supercat} ${cat} ${medium} ${subcat}`,
+    }).toString()
+    const res = await fetch(`${api_url}listing/?${queryParams}`)
+    status = res.status
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${status}`)
+    }
+    data = await res.json()
+  } catch (error) {
+    console.error("An error has occurred with your fetch request: ", error)
+  }
 
-	try {
-		const queryParams = new URLSearchParams({
-			supercat,
-			cat,
-			medium,
-			subcat,
-			keyword: `${supercat} ${cat} ${medium} ${subcat}`,
-		}).toString();
+  if (process.env.DEBUG === "true") {
+    console.log(`Listing data fetched. Count: ${data.length}`)
+  }
 
-		const res = await fetch(`${api_url}listing/?${queryParams}`);
-		status = res.status;
-		if (!res.ok) {
-			throw new Error(`HTTP error! status: ${status}`);
-		}
-		data = await res.json();
-	} catch (error) {
-		console.error("An error has occurred with your fetch request: ", error);
-	}
+  return {
+    listings: data,
+    status: status,
+    supercat,
+    cat,
+    medium,
+    subcat,
+  }
+}
 
-	if (process.env.DEBUG === "true") {
-		console.log(`Listing data fetched. Count: ${data.length}`);
-	}
+export default Listings
 
-	return {
-		listings: data,
-		status: status,
-		supercat,
-		cat,
-		medium,
-		subcat,
-	};
-};
-
-export default Listings;

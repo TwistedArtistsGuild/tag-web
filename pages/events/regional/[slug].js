@@ -11,7 +11,6 @@
 
 
 import Link from "next/link"
-import styles from "/styles/pages/artists.module.css"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import shortDateOptions from "/utils/shortdateoptions"
