@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import Image from "next/image"
@@ -56,6 +56,11 @@ export default function Header({ pageSections = [] }) {
   const [notificationCount, setNotificationCount] = useState(3) // Mock notification count
   const [unreadMessages, setUnreadMessages] = useState(2) // Mock unread messages
   const [scrolled, setScrolled] = useState(false)
+  const [isLoginOpen, setIsLoginOpen] = useState(false)
+  const [isThemeOpen, setIsThemeOpen] = useState(false)
+
+  const notificationsIconRef = useRef(null)
+  const messagesIconRef = useRef(null)
 
   function handleActive(link) {
     setActive(link)
@@ -67,28 +72,39 @@ export default function Header({ pageSections = [] }) {
     localStorage.setItem("theme", newTheme)
   }
 
+  function closeAllPopups() {
+    setIsNotificationsDropdownOpen(false)
+    setIsMessageAppletOpen(false)
+    setIsLoginOpen(false)
+    setIsThemeOpen(false)
+  }
+
   function toggleMessageApplet() {
-    setIsMessageAppletOpen(!isMessageAppletOpen)
-    // Close notifications dropdown if message applet is opened
-    if (!isMessageAppletOpen) {
-      setIsNotificationsDropdownOpen(false)
-    }
-    // Mark messages as read when applet is opened
+    if (!isMessageAppletOpen) closeAllPopups()
+    setIsMessageAppletOpen((open) => !open)
     if (!isMessageAppletOpen && unreadMessages > 0) {
       setUnreadMessages(0)
     }
   }
 
   function toggleNotificationsDropdown() {
-    setIsNotificationsDropdownOpen(!isNotificationsDropdownOpen)
-    // Close message applet if notifications dropdown is opened
-    if (!isNotificationsDropdownOpen) {
-      setIsMessageAppletOpen(false)
-    }
-    // Mark notifications as read when dropdown is opened
+    if (!isNotificationsDropdownOpen) closeAllPopups()
+    setIsNotificationsDropdownOpen((open) => !open)
     if (!isNotificationsDropdownOpen && notificationCount > 0) {
       setNotificationCount(0)
     }
+  }
+
+  function toggleLogin() {
+    setIsNotificationsDropdownOpen(false)
+    setIsMessageAppletOpen(false)
+    setIsLoginOpen((open) => !open)
+  }
+
+  function toggleTheme() {
+    setIsNotificationsDropdownOpen(false)
+    setIsMessageAppletOpen(false)
+    setIsThemeOpen((open) => !open)
   }
 
   function getHeaderClassName() {
@@ -129,6 +145,42 @@ export default function Header({ pageSections = [] }) {
   }, [])
 
   const headerClass = getHeaderClassName()
+
+  const stockPhotos = [
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1322183-artistpaintingmural2.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-carlo-junemann-156928830-12407580-merchandisehats.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-joshsorenson-995301-drummer.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-jovanvasiljevic-32146479-merchandisesweater.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-karolina-grabowska-4471894-blackguitar.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-marcela-alessandra-789314-1885213-pianist.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-markus-winkler-1430818-3812433-merchandiseclothingrack.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-nappy-936030-violin.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-pixabay-210922-guitarist.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-pixabay-262034-brushes.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-sebastian-ervi-866902-1763075-bandNcrowd.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg",
+  ];
+
+  // Height of the header for popup offset
+  const headerHeight = 88
+  const popupStyle = {
+    position: "fixed",
+    top: `${headerHeight}px`,
+    right: 0,
+    zIndex: 100,
+    width: "420px",
+    maxWidth: "100vw",
+    height: "calc(100vh - 88px)",
+    boxShadow: '0 0 0 4px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.18)',
+    borderLeft: "2px solid var(--fallback-b3, #d1d5db)",
+    background: "var(--fallback-b1, #fff)",
+    borderRadius: 0,
+    display: isNotificationsDropdownOpen || isMessageAppletOpen ? "block" : "none"
+  }
 
   return (
     <>
@@ -224,14 +276,15 @@ export default function Header({ pageSections = [] }) {
           {/* Right: User Controls */}
           <div className="flex items-center space-x-2">
             {/* Theme Switcher */}
-            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={handleThemeChange} />
+            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={handleThemeChange} onClick={toggleTheme} isOpen={isThemeOpen} />
 
             {/* Notifications & Messages - Only if user logged in */}
             {session?.user && ( // Use session.user for logged-in check
               <>
                 <button
+                  ref={messagesIconRef}
                   onClick={toggleMessageApplet}
-                  className="btn btn-ghost btn-sm btn-circle relative"
+                  className={`btn btn-ghost btn-sm btn-circle relative${isMessageAppletOpen ? " bg-primary text-primary-content ring-2 ring-primary/60" : ""}`}
                   aria-label="Messages"
                 >
                   <MessageSquare size={18} />
@@ -242,8 +295,9 @@ export default function Header({ pageSections = [] }) {
                   )}
                 </button>
                 <button
+                  ref={notificationsIconRef}
                   onClick={toggleNotificationsDropdown}
-                  className="btn btn-ghost btn-sm btn-circle relative"
+                  className={`btn btn-ghost btn-sm btn-circle relative${isNotificationsDropdownOpen ? " bg-primary text-primary-content ring-2 ring-primary/60" : ""}`}
                   aria-label="Notifications"
                 >
                   <Bell size={18} />
@@ -257,7 +311,7 @@ export default function Header({ pageSections = [] }) {
             )}
 
             {/* Login Profile */}
-            <LoginProfile className="btn btn-ghost btn-sm" />
+            <LoginProfile className="btn btn-ghost btn-sm" isOpen={isLoginOpen} onToggle={toggleLogin} onClick={toggleLogin} />
 
             {/* Mobile Right Sidebar Toggle Button */}
             {isMobile && (
@@ -284,137 +338,156 @@ export default function Header({ pageSections = [] }) {
       {/* Header Spacer - Adjusted to match new header height */}
       {isHeaderVisible && <div className="h-28 w-full" />} {/* Adjusted from h-22 to h-28 */}
       {/* Messages Applet (fixed panel) */}
-      <MessagesApplet
-        isOpen={isMessageAppletOpen}
-        onClose={toggleMessageApplet}
-        conversations={[
-          {
-            id: 1,
-            name: "Sarah Johnson",
-            avatar: "/placeholder.svg?height=40&width=40",
-            messages: [
-              { id: 1, sender: "Sarah Johnson", text: "Hey, how are you?", time: "10:00 AM" },
-              { id: 2, sender: "You", text: "I'm good, thanks! How about you?", time: "10:05 AM" },
-              { id: 3, sender: "Sarah Johnson", text: "Doing great! Just finished a new painting.", time: "10:10 AM" },
-            ],
-          },
-          {
-            id: 2,
-            name: "John Doe",
-            avatar: "/placeholder.svg?height=40&width=40",
-            messages: [
-              { id: 4, sender: "John Doe", text: "Meeting at 2 PM?", time: "Yesterday" },
-              { id: 5, sender: "You", text: "Yes, confirmed!", time: "Yesterday" },
-            ],
-          },
-          {
-            id: 3,
-            name: "Community Chat",
-            avatar: "/placeholder.svg?height=40&width=40",
-            messages: [
-              { id: 6, sender: "Admin", text: "Welcome to the community!", time: "2 days ago" },
-              { id: 7, sender: "User1", text: "Thanks!", time: "2 days ago" },
-            ],
-          },
-        ]}
-      />
+      {isMessageAppletOpen && !isNotificationsDropdownOpen && !isLoginOpen && !isThemeOpen && (
+        <div style={popupStyle}>
+          <MessagesApplet
+            isOpen={isMessageAppletOpen}
+            onClose={toggleMessageApplet}
+            conversations={[
+              {
+                id: 1,
+                name: "Sarah Johnson",
+                avatar: stockPhotos[0],
+                messages: [
+                  { id: 1, sender: "Sarah Johnson", text: "Hey, how are you?", time: "10:00 AM" },
+                  { id: 2, sender: "You", text: "I'm good, thanks! How about you?", time: "10:05 AM" },
+                  { id: 3, sender: "Sarah Johnson", text: "Doing great! Just finished a new painting.", time: "10:10 AM" },
+                ],
+              },
+              {
+                id: 2,
+                name: "John Doe",
+                avatar: stockPhotos[1],
+                messages: [
+                  { id: 4, sender: "John Doe", text: "Meeting at 2 PM?", time: "Yesterday" },
+                  { id: 5, sender: "You", text: "Yes, confirmed!", time: "Yesterday" },
+                ],
+              },
+              {
+                id: 3,
+                name: "Community Chat",
+                avatar: stockPhotos[2],
+                messages: [
+                  { id: 6, sender: "Admin", text: "Welcome to the community!", time: "2 days ago" },
+                  { id: 7, sender: "User1", text: "Thanks!", time: "2 days ago" },
+                ],
+              },
+            ]}
+          />
+        </div>
+      )}
       {/* Notifications Dropdown (simple dropdown) */}
-      {isNotificationsDropdownOpen && (
-        <NotificationsDropdown
-          notifications={[
-            {
-              title: "New Follower",
-              body: "Alex started following you.",
-              time: "Just now",
-              avatar: "/placeholder.svg?height=40&width=40&seed=alex",
-            },
-            {
-              title: "Comment",
-              body: "Sarah commented on your post.",
-              time: "5m ago",
-              avatar: "/placeholder.svg?height=40&width=40&seed=sarah",
-            },
-            {
-              title: "Sale",
-              body: "You sold 'Sunset Overdrive'!",
-              time: "1h ago",
-              avatar: "/placeholder.svg?height=40&width=40&seed=sale",
-            },
-            {
-              title: "Event Reminder",
-              body: "Art show starts in 1 hour.",
-              time: "Today",
-              avatar: "/placeholder.svg?height=40&width=40&seed=event",
-            },
-            {
-              title: "Blog Update",
-              body: "New blog post: 'The Art of Color'",
-              time: "Yesterday",
-              avatar: "/placeholder.svg?height=40&width=40&seed=blog",
-            },
-            {
-              title: "Mention",
-              body: "You were mentioned in a comment.",
-              time: "2h ago",
-              avatar: "/placeholder.svg?height=40&width=40&seed=mention",
-            },
-            {
-              title: "Collaboration Invite",
-              body: "John invited you to collaborate.",
-              time: "3h ago",
-              avatar: "/placeholder.svg?height=40&width=40&seed=john",
-            },
-            {
-              title: "New Message",
-              body: "You have a new message from Emily.",
-              time: "4h ago",
-              avatar: "/placeholder.svg?height=40&width=40&seed=emily",
-            },
-            {
-              title: "Profile View",
-              body: "Your profile was viewed 10 times today.",
-              time: "Today",
-              avatar: "/placeholder.svg?height=40&width=40&seed=profile",
-            },
-            {
-              title: "Art Liked",
-              body: "Your artwork 'Blue Dream' got 5 new likes.",
-              time: "Today",
-              avatar: "/placeholder.svg?height=40&width=40&seed=art",
-            },
-            {
-              title: "Payment Received",
-              body: "You received a payment for a commission.",
-              time: "Yesterday",
-              avatar: "/placeholder.svg?height=40&width=40&seed=payment",
-            },
-            {
-              title: "System Update",
-              body: "Platform maintenance scheduled for Sunday.",
-              time: "Yesterday",
-              avatar: "/placeholder.svg?height=40&width=40&seed=system",
-            },
-            {
-              title: "Contest Winner",
-              body: "Congrats! You won the monthly art contest.",
-              time: "2d ago",
-              avatar: "/placeholder.svg?height=40&width=40&seed=winner",
-            },
-            {
-              title: "New Resource",
-              body: "A new tutorial is available in Resources.",
-              time: "2d ago",
-              avatar: "/placeholder.svg?height=40&width=40&seed=resource",
-            },
-            {
-              title: "Feedback Request",
-              body: "Please provide feedback on your last sale.",
-              time: "3d ago",
-              avatar: "/placeholder.svg?height=40&width=40&seed=feedback",
-            },
-          ]}
-          onClose={() => setIsNotificationsDropdownOpen(false)}
-        />
+      {isNotificationsDropdownOpen && !isMessageAppletOpen && !isLoginOpen && !isThemeOpen && (
+        <div style={popupStyle}>
+          <NotificationsDropdown
+            notifications={[
+              {
+                title: "New Follower",
+                body: "Alex started following you.",
+                time: "Just now",
+                avatar: stockPhotos[3],
+              },
+              {
+                title: "Comment",
+                body: "Sarah commented on your post.",
+                time: "5m ago",
+                avatar: stockPhotos[4],
+              },
+              {
+                title: "Sale",
+                body: "You sold 'Sunset Overdrive'!",
+                time: "1h ago",
+                avatar: stockPhotos[5],
+              },
+              {
+                title: "Event Reminder",
+                body: "Art show starts in 1 hour.",
+                time: "Today",
+                avatar: stockPhotos[6],
+              },
+              {
+                title: "Blog Update",
+                body: "New blog post: 'The Art of Color'",
+                time: "Yesterday",
+                avatar: stockPhotos[7],
+              },
+              {
+                title: "Mention",
+                body: "You were mentioned in a comment.",
+                time: "2h ago",
+                avatar: stockPhotos[8],
+              },
+              {
+                title: "Collaboration Invite",
+                body: "John invited you to collaborate.",
+                time: "3h ago",
+                avatar: stockPhotos[9],
+              },
+              {
+                title: "New Message",
+                body: "You have a new message from Emily.",
+                time: "4h ago",
+                avatar: stockPhotos[10],
+              },
+              {
+                title: "Profile View",
+                body: "Your profile was viewed 10 times today.",
+                time: "Today",
+                avatar: stockPhotos[11],
+              },
+              {
+                title: "Art Liked",
+                body: "Your artwork 'Blue Dream' got 5 new likes.",
+                time: "Today",
+                avatar: stockPhotos[12],
+              },
+              {
+                title: "Payment Received",
+                body: "You received a payment for a commission.",
+                time: "Yesterday",
+                avatar: stockPhotos[13],
+              },
+              {
+                title: "System Update",
+                body: "Platform maintenance scheduled for Sunday.",
+                time: "Yesterday",
+                avatar: stockPhotos[14],
+              },
+              {
+                title: "Contest Winner",
+                body: "Congrats! You won the monthly art contest.",
+                time: "2d ago",
+                avatar: stockPhotos[15],
+              },
+              {
+                title: "New Resource",
+                body: "A new tutorial is available in Resources.",
+                time: "2d ago",
+                avatar: stockPhotos[0],
+              },
+              {
+                title: "Feedback Request",
+                body: "Please provide feedback on your last sale.",
+                time: "3d ago",
+                avatar: stockPhotos[1],
+              },
+            ]}
+            onClose={() => setIsNotificationsDropdownOpen(false)}
+            isOpen={true}
+          />
+        </div>
+      )}
+      {/* Login Popup */}
+      {isLoginOpen && !isThemeOpen && (
+        <div style={popupStyle}>
+          {/* Replace below with your actual login form or modal */}
+          <div className="flex flex-col items-center justify-center h-full p-8">
+            <h2 className="text-2xl font-bold mb-4">Sign In</h2>
+            {/* Example login form placeholder */}
+            <button className="btn btn-primary w-full" onClick={toggleLogin}>Sign in with Provider</button>
+            <button className="btn btn-ghost mt-4" onClick={toggleLogin}>Cancel</button>
+          </div>
+        </div>
       )}
     </>
   )
