@@ -20,49 +20,47 @@ import ArtistCardWithPic from "@/components/card_artist_wPic" // Import the new 
  * @returns {JSX.Element} - Artists page component
  */
 const Artists = (props) => {
-  const [open, setOpen] = useState(false) // `open` state is not used in the provided JSX, but kept for consistency
-  const pageMetaData = {
-    title: "TAG Artists Links",
-    description: "A list of our artist members",
-    keywords: "art, artist member, sales, portfolio",
-    robots: "index, follow",
-    author: "Bobb Shields",
-    viewport: "width=device-width, initial-scale=1.0",
-    og: {
-      title: "TAG Artists Links",
-      description: "A list of our artist members",
-    },
-  }
-  return (
-    <main className="flex flex-col min-h-screen bg-gray-100 py-8">
-      <div className="container mx-auto px-4">
-        <TagSEO metadataProp={pageMetaData} canonicalSlug="artists" />
-        <div className="flex-1 flex flex-col items-center w-full">
-          <Link
-            href="/portal/artist/create"
-            className="btn btn-primary mb-8 text-lg" // Simplified button classes
-          >
-            {"Create a new artist"}
-          </Link>
-          <div className="flex flex-col items-center w-full flex-grow gap-6">
-            {props.artists && props.artists.length > 0 ? (
-              props.artists.map((artist) =>
-                artist.images && artist.images.length > 0 ? (
-                  <ArtistCardWithPic key={artist.artistid} artist={artist} />
-                ) : (
-                  <ArtistCard key={artist.artistid} artist={artist} />
-                ),
-              )
-            ) : (
-              <div className="alert alert-info">
-                <span>No artists found. Be the first to create an artist profile!</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </main>
-  )
+	const [open, setOpen] = useState(false)
+
+	const pageMetaData = {
+		title: "TAG Artists Links",
+		description: "A list of our artist members",
+		keywords: "art, artist member, sales, portfolio",
+		robots: "index, follow",
+		author: "Bobb Shields",
+		viewport: "width=device-width, initial-scale=1.0",
+		og: {
+			title: "TAG Artists Links",
+			description: "A list of our artist members",
+		},
+	}
+
+	return (
+		<main className="flex flex-col min-h-screen">
+			<div className={styles.container}>
+				<TagSEO metadataProp={pageMetaData} canonicalSlug="artists" />
+
+				<div className="flex-1 flex flex-col items-center py-4 w-full">
+					<Link
+						href="/portal/artist/create"
+						className="btn btn-primary mb-4">
+						{"Create a new artist"}
+					</Link>
+					<div className="flex flex-col items-center w-full flex-grow">
+						{props.artists && props.artists.length > 0 ? (
+							props.artists.map((artist) => (
+								<ArtistCard key={artist.artistid} artist={artist} />
+							))
+						) : (
+							<div className="alert alert-info">
+								<span>No artists found. Be the first to create an artist profile!</span>
+							</div>
+						)}
+					</div>
+				</div>
+			</div>
+		</main>
+	)
 }
 
 Artists.getInitialProps = async () => {

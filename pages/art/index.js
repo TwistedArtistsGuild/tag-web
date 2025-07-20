@@ -9,7 +9,9 @@
 
  Open source · low-profit · human-first*/
 
-"use client"
+
+import Link from "next/link"
+import styles from "/styles/pages/listings.module.css"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "/components/card_listing"
@@ -485,51 +487,50 @@ const Listings = (props) => {
     },
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100 text-base-content py-8 px-4">
-      <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
-
-      {/* Dynamic listings section */}
-      <div className="my-16 container mx-auto">
-        <h3 className="text-3xl font-bold mb-6 text-primary">Random Art Selection</h3>
-        <p className="mb-10 text-lg text-gray-700">
-          Explore a curated selection of random art pieces to inspire your creativity.
-        </p>
-        <div className="grid grid-cols-1 gap-20 mb-24">
-          {props.listings.map((listing) => (
-            <div key={listing.listingid} className="flex justify-center">
-              <div className="w-full max-w-3xl">
-                <ListingCard listing={listing} />
-              </div>
+    return (
+        <div className={styles.listingContainer}>
+            <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
+            
+            {/* Dynamic listings section */}
+            <div className="my-16">
+                <h3 className="text-2xl font-bold mb-6">Random Art Selection</h3>
+                <p className="mb-10 text-lg">Explore a curated selection of random art pieces to inspire your creativity.</p>
+                <div className="grid grid-cols-1 gap-20 mb-24">
+                    {props.listings.map((listing) => (
+                        <div key={listing.listingid} className="flex justify-center">
+                            <div className="w-full max-w-3xl">
+                                <ListingCard listing={listing} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Fake listings section with more reasonable staggered spacing */}
-      <div className="mt-24 mb-20 container mx-auto">
-        <h3 className="text-3xl font-bold mb-8 text-center text-primary">Coming Soon: Bloomscrolling</h3>
-        <p className="mb-12 text-xl text-center max-w-4xl mx-auto text-gray-700">
-          Imagine endlessly viewing listings from our artistic community, with no advertisements!.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-16">
-          {props.fakeListings.map((listing, index) => (
-            <div
-              key={listing.listingid}
-              className={`flex justify-center ${
-                // Add staggered positioning with more reasonable spacing
-                index % 4 === 0 ? "mt-0" : index % 4 === 1 ? "mt-20" : index % 4 === 2 ? "mt-8" : "mt-28"
-              } transition-all duration-700`}
-            >
-              <div className="w-full max-w-2xl transform transition-transform duration-300 hover:scale-105 hover:z-10">
-                <ListingCard listing={listing} />
-              </div>
+            
+            {/* Fake listings section with more reasonable staggered spacing */}
+            <div className="mt-24 mb-20">
+                <h3 className="text-3xl font-bold mb-8 text-center">Coming Soon: Bloomscrolling</h3>
+                <p className="mb-12 text-xl text-center max-w-4xl mx-auto">Imagine endlessly vieweing listings from our artistic community, with no advertisements!.</p>
+                <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-16">
+                    {props.fakeListings.map((listing, index) => (
+                        <div 
+                            key={listing.listingid} 
+                            className={`flex justify-center ${
+                                // Add staggered positioning with more reasonable spacing
+                                index % 4 === 0 ? 'mt-0' : 
+                                index % 4 === 1 ? 'mt-20' : 
+                                index % 4 === 2 ? 'mt-8' : 
+                                'mt-28'
+                            } transition-all duration-700`}
+                        >
+                            <div className="w-full max-w-2xl transform transition-transform duration-300 hover:scale-105 hover:z-10">
+                                <ListingCard listing={listing} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
-          ))}
         </div>
-      </div>
-    </div>
-  )
+    )
 }
 
 Listings.getInitialProps = async (context) => {

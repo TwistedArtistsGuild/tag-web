@@ -8,7 +8,6 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-
 "use client"
 
 import React from "react"
