@@ -53,13 +53,13 @@ export default function LoginProfile({ className = "" }) {
             <span>{session.user?.name || "User"}</span>
           </li>
           <li>
-            <Link href="/profile" onClick={() => setIsOpen(false)}>
+            <Link href="/user/profile" onClick={() => setIsOpen(false)}>
               <User className="w-4 h-4" />
               Profile
             </Link>
           </li>
           <li>
-            <Link href="/settings" onClick={() => setIsOpen(false)}>
+            <Link href="/user/settings" onClick={() => setIsOpen(false)}>
               <Settings className="w-4 h-4" />
               Settings
             </Link>
