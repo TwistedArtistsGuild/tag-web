@@ -36,28 +36,51 @@ const Artists = (props) => {
 	}
 
 	return (
-		<main className="flex flex-col min-h-screen">
-			<div className="flex flex-col items-center justify-evenly min-h-screen w-full">
+		<main className="flex flex-col min-h-screen w-full bg-base-100">
+			<div className="w-full max-w-5xl mx-auto flex flex-col items-center px-4 py-8">
 				<TagSEO metadataProp={pageMetaData} canonicalSlug="artists" />
 
-				<div className="flex-1 flex flex-col items-center py-4 w-full">
-					<Link
-						href="/portal/artist/create"
-						className="btn btn-primary mb-4">
-						{"Create a new artist"}
-					</Link>
-					<div className="flex flex-col items-center w-full flex-grow">
-						{props.artists && props.artists.length > 0 ? (
-							props.artists.map((artist) => (
-								<ArtistCard key={artist.artistid} artist={artist} />
-							))
-						) : (
-							<div className="alert alert-info">
-								<span>No artists found. Be the first to create an artist profile!</span>
-							</div>
-						)}
-					</div>
-				</div>
+				{/* Introductory Section */}
+				<section className="w-full mb-8 bg-base-200 rounded-xl shadow p-6 text-center">
+					<h1 className="text-3xl md:text-4xl font-extrabold mb-2 font-josefin-sans">Artist Portfolios</h1>
+					<p className="text-lg md:text-xl text-base-content/90 mb-2">
+						Discover the creative energy of Twisted Artists Guild members. Each portfolio showcases the artist’s unique voice, featured works, and ways to connect or support them.
+					</p>
+					<ul className="list-disc list-inside text-base-content/80 text-left max-w-2xl mx-auto mb-2">
+						<li>Artist statement & philosophy</li>
+						<li>Carousel of featured works</li>
+						<li>Tags for genre, technique, or theme</li>
+						<li>Timeline of recent projects</li>
+						<li>Links to social, shops, or commissions</li>
+					</ul>
+					<p className="text-base-content/80">Explore by style, medium, or vibe.</p>
+				</section>
+
+				{/* Future: Filters/Featured/Sections */}
+				<section className="w-full mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+					{/* Placeholder for filters, featured artists, etc. */}
+					<div className="flex-1" />
+					<Link href="/portal/artist/create" className="btn btn-primary">Create a new artist</Link>
+				</section>
+
+				{/* Main Artist Card Grid */}
+				<section className="w-full flex-1 min-h-[400px] flex flex-col justify-stretch">
+					{props.artists && props.artists.length > 0 ? (
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 h-full">
+							{props.artists.map((artist) => (
+								<div key={artist.artistid} className="h-[75%] min-h-[300px] flex items-stretch">
+									<ArtistCard artist={artist} className="flex-1 h-full" />
+								</div>
+							))}
+						</div>
+					) : (
+						<div className="alert alert-info w-full flex justify-center">
+							<span>No artists found. Be the first to create an artist profile!</span>
+						</div>
+					)}
+				</section>
+
+				{/* Future: Additional content sections (interviews, timelines, etc.) */}
 			</div>
 		</main>
 	)
