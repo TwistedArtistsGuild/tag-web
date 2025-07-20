@@ -10,20 +10,18 @@
  Open source · low-profit · human-first*/
 "use client"
 
-"use client"
-
-import { useAppContext } from "/components/Context"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import Image from "next/image"
+import { useSession } from "next-auth/react" // Using useSession for authentication
 import LoginProfile from "/components/Header/LoginProfile"
 import ThemeSwitcher from "/components/Header/ThemeSwitcher"
-import logo from "@/public/logo.png"
-import config from "@/config"
 import DropdownMenu from "/components/Header/DropdownMenu"
 import { useLayout } from "/components/LayoutProvider"
-import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu, X } from "lucide-react"
+import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu } from "lucide-react"
+import NotificationsDropdown from "/components/Header/NotificationsDropdown" // Keep as dropdown for now
+import MessagesApplet from "/components/Header/MessagesApplet" // The new message applet
 
 // Available themes
 const themes = [
@@ -48,15 +46,15 @@ const themes = [
 ]
 
 export default function Header({ pageSections = [] }) {
-  const { active, setActive, user } = useAppContext()
-  const { isHeaderVisible, toggleHeader } = useLayout()
+  const { data: session } = useSession() // Use session for user data
+  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar } = useLayout()
   const router = useRouter()
-  const [isOpen, setIsOpen] = useState(false)
+  const [active, setActive] = useState("") // State for active navigation link
   const [theme, setTheme] = useState("tag-theme")
-  const [dmModalOpen, setDmModalOpen] = useState(false)
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(3)
-  const [unreadMessages, setUnreadMessages] = useState(2)
+  const [isNotificationsDropdownOpen, setIsNotificationsDropdownOpen] = useState(false)
+  const [isMessageAppletOpen, setIsMessageAppletOpen] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(3) // Mock notification count
+  const [unreadMessages, setUnreadMessages] = useState(2) // Mock unread messages
   const [scrolled, setScrolled] = useState(false)
 
   function handleActive(link) {
@@ -69,28 +67,32 @@ export default function Header({ pageSections = [] }) {
     localStorage.setItem("theme", newTheme)
   }
 
-  function toggleDmModal() {
-    setDmModalOpen(!dmModalOpen)
-    if (!dmModalOpen) {
-      setNotificationsOpen(false)
+  function toggleMessageApplet() {
+    setIsMessageAppletOpen(!isMessageAppletOpen)
+    // Close notifications dropdown if message applet is opened
+    if (!isMessageAppletOpen) {
+      setIsNotificationsDropdownOpen(false)
     }
-    if (!dmModalOpen && unreadMessages > 0) {
+    // Mark messages as read when applet is opened
+    if (!isMessageAppletOpen && unreadMessages > 0) {
       setUnreadMessages(0)
     }
   }
 
-  function toggleNotifications() {
-    setNotificationsOpen(!notificationsOpen)
-    if (!notificationsOpen) {
-      setDmModalOpen(false)
+  function toggleNotificationsDropdown() {
+    setIsNotificationsDropdownOpen(!isNotificationsDropdownOpen)
+    // Close message applet if notifications dropdown is opened
+    if (!isNotificationsDropdownOpen) {
+      setIsMessageAppletOpen(false)
     }
-    if (!notificationsOpen && notificationCount > 0) {
+    // Mark notifications as read when dropdown is opened
+    if (!isNotificationsDropdownOpen && notificationCount > 0) {
       setNotificationCount(0)
     }
   }
 
   function getHeaderClassName() {
-    const baseClasses = "flex justify-between items-center border-b border-base-300 w-full px-8 py-2 min-h-[88px]" // Adjusted py-3 to py-2, added min-h-[88px]
+    const baseClasses = "flex justify-between items-center border-b border-base-300 w-full px-8 py-2 min-h-[88px]"
     if (theme === "tag-theme") {
       return `${baseClasses} header-paint-drip`
     }
@@ -114,7 +116,8 @@ export default function Header({ pageSections = [] }) {
   }, [])
 
   useEffect(() => {
-    setIsOpen(false)
+    // Close mobile menu when route changes
+    // setIsOpen(false) // This state is no longer used for mobile menu
   }, [router.asPath])
 
   useEffect(() => {
@@ -148,6 +151,11 @@ export default function Header({ pageSections = [] }) {
         <div className={headerClass}>
           {/* Left: Logo and Brand */}
           <div className="flex items-center space-x-4">
+            {isMobile && (
+              <button className="btn btn-ghost btn-circle" onClick={toggleLeftSidebar} aria-label="Toggle left sidebar">
+                <Menu className="w-6 h-6" />
+              </button>
+            )}
             <Link href="/" className="flex items-center space-x-2" onClick={() => setActive("")}>
               <Image src="/tag_logo.png" alt="Home" height={40} width={80} />
               <span className="font-josefin-sans text-xl font-extrabold italic hidden sm:block">
@@ -161,7 +169,7 @@ export default function Header({ pageSections = [] }) {
             <Link
               href="/artists"
               className={`text-lg ${getTextColorClass(active === "artist")}`}
-              onClick={(e) => handleActive(e.target.name)}
+              onClick={() => handleActive("artist")}
               name="artist"
             >
               Artists
@@ -182,7 +190,7 @@ export default function Header({ pageSections = [] }) {
             <Link
               href="/events"
               className={`text-lg ${getTextColorClass(active === "events")}`}
-              onClick={(e) => handleActive(e.target.name)}
+              onClick={() => handleActive("events")}
               name="events"
             >
               Events
@@ -190,7 +198,7 @@ export default function Header({ pageSections = [] }) {
             <Link
               href="/blogs"
               className={`text-lg ${getTextColorClass(active === "blog")}`}
-              onClick={(e) => handleActive(e.target.name)}
+              onClick={() => handleActive("blog")}
               name="blog"
             >
               Blog
@@ -198,7 +206,7 @@ export default function Header({ pageSections = [] }) {
             <Link
               href="/news"
               className={`text-lg ${getTextColorClass(active === "news")}`}
-              onClick={(e) => handleActive(e.target.name)}
+              onClick={() => handleActive("news")}
               name="news"
             >
               News
@@ -206,7 +214,7 @@ export default function Header({ pageSections = [] }) {
             <Link
               href="/vote/"
               className={`text-lg ${getTextColorClass(active === "vote")}`}
-              onClick={(e) => handleActive(e.target.name)}
+              onClick={() => handleActive("vote")}
               name="vote"
             >
               Vote
@@ -219,10 +227,10 @@ export default function Header({ pageSections = [] }) {
             <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={handleThemeChange} />
 
             {/* Notifications & Messages - Only if user logged in */}
-            {user && (
+            {session?.user && ( // Use session.user for logged-in check
               <>
                 <button
-                  onClick={toggleDmModal}
+                  onClick={toggleMessageApplet}
                   className="btn btn-ghost btn-sm btn-circle relative"
                   aria-label="Messages"
                 >
@@ -234,7 +242,7 @@ export default function Header({ pageSections = [] }) {
                   )}
                 </button>
                 <button
-                  onClick={toggleNotifications}
+                  onClick={toggleNotificationsDropdown}
                   className="btn btn-ghost btn-sm btn-circle relative"
                   aria-label="Notifications"
                 >
@@ -251,10 +259,12 @@ export default function Header({ pageSections = [] }) {
             {/* Login Profile */}
             <LoginProfile className="btn btn-ghost btn-sm" />
 
-            {/* Mobile Menu Button */}
-            <button type="button" className="btn btn-ghost btn-sm lg:hidden" onClick={() => setIsOpen(true)}>
-              <Menu className="w-5 h-5" />
-            </button>
+            {/* Mobile Right Sidebar Toggle Button */}
+            {isMobile && (
+              <button type="button" className="btn btn-ghost btn-sm lg:hidden" onClick={toggleRightSidebar}>
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
           </div>
           {/* Inner div for the circus tent/drip effect */}
           {theme === "tag-theme" && <div className="header-drip-effect" />}
@@ -270,71 +280,142 @@ export default function Header({ pageSections = [] }) {
             <ChevronUp className="w-4 h-4" />
           </button>
         )}
-
-        {/* Mobile Menu */}
-        <div className={`relative z-50 ${isOpen ? "" : "hidden"}`}>
-          <div className="fixed inset-y-0 right-0 z-[100] w-full px-8 py-4 overflow-y-auto bg-base-200 sm:max-w-sm transform transition duration-300">
-            <div className="flex items-center justify-between mb-6">
-              <Link className="flex items-center gap-2" href="/">
-                <Image src={logo || "/placeholder.svg"} alt={`${config.appName} logo`} className="w-8" />
-                <span className="font-extrabold text-lg">{config.appName}</span>
-              </Link>
-              <button type="button" className="btn btn-ghost btn-sm" onClick={() => setIsOpen(false)}>
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <Link href="/artists" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
-                Artists
-              </Link>
-              <Link href="/art" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
-                Art
-              </Link>
-              <Link href="/events" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
-                Events
-              </Link>
-              <Link href="/blogs" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
-                Blog
-              </Link>
-              <Link href="/news" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
-                News
-              </Link>
-              <Link href="/vote" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
-                Vote
-              </Link>
-
-              {user && (
-                <div className="pt-4 border-t border-base-300">
-                  <button onClick={toggleDmModal} className="flex items-center gap-2 py-2 w-full">
-                    <MessageSquare size={16} />
-                    Messages{" "}
-                    {unreadMessages > 0 && <span className="badge badge-sm badge-error">{unreadMessages}</span>}
-                  </button>
-                  <button onClick={toggleNotifications} className="flex items-center gap-2 py-2 w-full">
-                    <Bell size={16} />
-                    Notifications{" "}
-                    {notificationCount > 0 && <span className="badge badge-sm badge-error">{notificationCount}</span>}
-                  </button>
-                </div>
-              )}
-
-              <div className="pt-4 border-t border-base-300">
-                {/* Theme switcher in mobile menu */}
-                <ThemeSwitcher
-                  themes={themes}
-                  currentTheme={theme}
-                  onThemeChange={handleThemeChange}
-                  className="w-full justify-start"
-                />
-                <LoginProfile />
-              </div>
-            </div>
-          </div>
-        </div>
       </header>
       {/* Header Spacer - Adjusted to match new header height */}
-      {isHeaderVisible && <div className="h-22" />} {/* Adjusted from h-16 to h-22 */}
+      {isHeaderVisible && <div className="h-28 w-full" />} {/* Adjusted from h-22 to h-28 */}
+      {/* Messages Applet (fixed panel) */}
+      <MessagesApplet
+        isOpen={isMessageAppletOpen}
+        onClose={toggleMessageApplet}
+        conversations={[
+          {
+            id: 1,
+            name: "Sarah Johnson",
+            avatar: "/placeholder.svg?height=40&width=40",
+            messages: [
+              { id: 1, sender: "Sarah Johnson", text: "Hey, how are you?", time: "10:00 AM" },
+              { id: 2, sender: "You", text: "I'm good, thanks! How about you?", time: "10:05 AM" },
+              { id: 3, sender: "Sarah Johnson", text: "Doing great! Just finished a new painting.", time: "10:10 AM" },
+            ],
+          },
+          {
+            id: 2,
+            name: "John Doe",
+            avatar: "/placeholder.svg?height=40&width=40",
+            messages: [
+              { id: 4, sender: "John Doe", text: "Meeting at 2 PM?", time: "Yesterday" },
+              { id: 5, sender: "You", text: "Yes, confirmed!", time: "Yesterday" },
+            ],
+          },
+          {
+            id: 3,
+            name: "Community Chat",
+            avatar: "/placeholder.svg?height=40&width=40",
+            messages: [
+              { id: 6, sender: "Admin", text: "Welcome to the community!", time: "2 days ago" },
+              { id: 7, sender: "User1", text: "Thanks!", time: "2 days ago" },
+            ],
+          },
+        ]}
+      />
+      {/* Notifications Dropdown (simple dropdown) */}
+      {isNotificationsDropdownOpen && (
+        <NotificationsDropdown
+          notifications={[
+            {
+              title: "New Follower",
+              body: "Alex started following you.",
+              time: "Just now",
+              avatar: "/placeholder.svg?height=40&width=40&seed=alex",
+            },
+            {
+              title: "Comment",
+              body: "Sarah commented on your post.",
+              time: "5m ago",
+              avatar: "/placeholder.svg?height=40&width=40&seed=sarah",
+            },
+            {
+              title: "Sale",
+              body: "You sold 'Sunset Overdrive'!",
+              time: "1h ago",
+              avatar: "/placeholder.svg?height=40&width=40&seed=sale",
+            },
+            {
+              title: "Event Reminder",
+              body: "Art show starts in 1 hour.",
+              time: "Today",
+              avatar: "/placeholder.svg?height=40&width=40&seed=event",
+            },
+            {
+              title: "Blog Update",
+              body: "New blog post: 'The Art of Color'",
+              time: "Yesterday",
+              avatar: "/placeholder.svg?height=40&width=40&seed=blog",
+            },
+            {
+              title: "Mention",
+              body: "You were mentioned in a comment.",
+              time: "2h ago",
+              avatar: "/placeholder.svg?height=40&width=40&seed=mention",
+            },
+            {
+              title: "Collaboration Invite",
+              body: "John invited you to collaborate.",
+              time: "3h ago",
+              avatar: "/placeholder.svg?height=40&width=40&seed=john",
+            },
+            {
+              title: "New Message",
+              body: "You have a new message from Emily.",
+              time: "4h ago",
+              avatar: "/placeholder.svg?height=40&width=40&seed=emily",
+            },
+            {
+              title: "Profile View",
+              body: "Your profile was viewed 10 times today.",
+              time: "Today",
+              avatar: "/placeholder.svg?height=40&width=40&seed=profile",
+            },
+            {
+              title: "Art Liked",
+              body: "Your artwork 'Blue Dream' got 5 new likes.",
+              time: "Today",
+              avatar: "/placeholder.svg?height=40&width=40&seed=art",
+            },
+            {
+              title: "Payment Received",
+              body: "You received a payment for a commission.",
+              time: "Yesterday",
+              avatar: "/placeholder.svg?height=40&width=40&seed=payment",
+            },
+            {
+              title: "System Update",
+              body: "Platform maintenance scheduled for Sunday.",
+              time: "Yesterday",
+              avatar: "/placeholder.svg?height=40&width=40&seed=system",
+            },
+            {
+              title: "Contest Winner",
+              body: "Congrats! You won the monthly art contest.",
+              time: "2d ago",
+              avatar: "/placeholder.svg?height=40&width=40&seed=winner",
+            },
+            {
+              title: "New Resource",
+              body: "A new tutorial is available in Resources.",
+              time: "2d ago",
+              avatar: "/placeholder.svg?height=40&width=40&seed=resource",
+            },
+            {
+              title: "Feedback Request",
+              body: "Please provide feedback on your last sale.",
+              time: "3d ago",
+              avatar: "/placeholder.svg?height=40&width=40&seed=feedback",
+            },
+          ]}
+          onClose={() => setIsNotificationsDropdownOpen(false)}
+        />
+      )}
     </>
   )
 }
