@@ -437,7 +437,7 @@ const SocialComments = ({
                             <div className="flex justify-between w-full">
                                 <p className="font-semibold">{comment.authorDisplayName || comment.author}</p>
                                 <time 
-                                    className="text-sm text-gray-500" 
+                                    className="text-sm text-base-content/60" 
                                     dateTime={comment.created}
                                 >
                                     {new Date(comment.created).toLocaleString()}

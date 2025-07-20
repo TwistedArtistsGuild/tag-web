@@ -38,8 +38,8 @@ export default function NotificationsDropdown({ notifications = [], isOpen, onCl
         maxWidth: "100vw",
         maxHeight: "calc(100vh - " + (rect.bottom + 8) + "px)",
         boxShadow: '0 0 0 4px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.18)',
-        borderLeft: "2px solid var(--fallback-b3, #d1d5db)",
-        background: "var(--fallback-b1, #fff)",
+        borderLeft: "2px solid var(--fallback-b3, #d1d5db)", // fallback for DaisyUI theme
+        background: "var(--fallback-b1, #fff)", // fallback for DaisyUI theme
         borderRadius: 0,
         display: isOpen ? "block" : "none"
       })

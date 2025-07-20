@@ -107,7 +107,7 @@ const DateInput = (props) => {
       />
       {/* For debugging - can be removed in production */}
       {process.env.NODE_ENV === 'development' && props.value && (
-        <div className="text-xs text-gray-500 mt-1">
+        <div className="text-xs text-base-content/60 mt-1">
           Stored value: {props.value}
         </div>
       )}

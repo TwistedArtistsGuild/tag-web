@@ -11,7 +11,7 @@
 
 
 const StockProgramBanner = () => (
-  <div className="bg-warning text-warning-content px-4 py-3 text-center font-semibold shadow-md mb-6 rounded">
+  <div className="bg-warning text-warning-content px-4 py-3 text-center font-semibold shadow-md mb-6 rounded-box">
     ⚠️ The TAG stock program is a conceptual draft and will be subject to full legal review before activation. This page describes the intended structure for legal counsel and member feedback.
   </div>
 );

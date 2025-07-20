@@ -132,14 +132,14 @@ export default function MessagesApplet({ isOpen, onClose, anchorEl }) {
       id: 6,
       participant: {
         name: "Patricia Patron",
-        avatar: "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg",
+        avatar: "https://tagstatic.blob.core.windows.net/pexels/pexels-patricia-1234567-patron.jpg",
       },
       messages: [
-        { id: 40, sender: "Patricia Patron", body: "Your art at the gallery was amazing!", time: "5h ago", avatar: "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg" },
+        { id: 40, sender: "Patricia Patron", body: "Your art at the gallery was amazing!", time: "5h ago", avatar: "https://tagstatic.blob.core.windows.net/pexels/pexels-patricia-1234567-patron.jpg" },
         { id: 41, sender: "You", body: "Thank you so much, Patricia!", time: "4h 59m ago", avatar: "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1322183-artistpaintingmural2.jpg" },
-        { id: 42, sender: "Patricia Patron", body: "Will you be showing again soon?", time: "4h 58m ago", avatar: "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg" },
+        { id: 42, sender: "Patricia Patron", body: "Will you be showing again soon?", time: "4h 58m ago", avatar: "https://tagstatic.blob.core.windows.net/pexels/pexels-patricia-1234567-patron.jpg" },
         { id: 43, sender: "You", body: "Yes, next month!", time: "4h 57m ago", avatar: "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1322183-artistpaintingmural2.jpg" },
-        { id: 44, sender: "Patricia Patron", body: "I'll be there!", time: "4h 56m ago", avatar: "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg" },
+        { id: 44, sender: "Patricia Patron", body: "I'll be there!", time: "4h 56m ago", avatar: "https://tagstatic.blob.core.windows.net/pexels/pexels-patricia-1234567-patron.jpg" },
       ],
     },
   ])
@@ -195,8 +195,8 @@ export default function MessagesApplet({ isOpen, onClose, anchorEl }) {
         maxWidth: "100vw",
         maxHeight: "calc(100vh - " + (rect.bottom + 8) + "px)",
         boxShadow: '0 0 0 4px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.18)',
-        borderLeft: "2px solid var(--fallback-b3, #d1d5db)",
-        background: "var(--fallback-b1, #fff)",
+        borderLeft: "2px solid var(--fallback-b3, #d1d5db)", // fallback for DaisyUI theme
+        background: "var(--fallback-b1, #fff)", // fallback for DaisyUI theme
         borderRadius: 0,
         display: isOpen ? "block" : "none"
       })

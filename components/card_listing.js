@@ -46,7 +46,7 @@ const ListingCard = ({ listing }) => {
   }
 
   return (
-    <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full">
+    <div className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full rounded-box">
       <figure className="relative h-48 w-full overflow-hidden">
         {" "}
         {/* Reduced height to h-48 */}
@@ -67,13 +67,17 @@ const ListingCard = ({ listing }) => {
         >
           {listing?.title || "Untitled"}
         </Link>
-        <p className="text-lg text-gray-700 line-clamp-3">{listing?.description || "No description available"}</p>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-lg text-neutral-content line-clamp-3">
+          {listing?.description || "No description available"}
+        </p>
+        <p className="text-sm text-neutral-content mt-2">
           Listing created:{" "}
           {listing?.created ? new Date(listing.created).toLocaleDateString("en-US") : "No date available"}
         </p>
-        <p className="text-sm text-gray-500">Artist: {listing?.artist?.title || "No artist found"}</p>
-        <p className="text-sm text-gray-500">Category: {listing?.artCategory?.category || "No category found"}</p>
+        <p className="text-sm text-neutral-content">Artist: {listing?.artist?.title || "No artist found"}</p>
+        <p className="text-sm text-neutral-content">
+          Category: {listing?.artCategory?.category || "No category found"}
+        </p>
 
         {/* Social icons with numbers */}
         <div className="flex items-center gap-4 mt-4 pt-4 border-t border-base-200">
