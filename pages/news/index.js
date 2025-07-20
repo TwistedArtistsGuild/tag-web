@@ -50,34 +50,40 @@ export default function News() {
       </div>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Our Purpose Section */}
+        {/* News Service Section */}
         <section className="py-12 bg-base-100 rounded-box shadow-lg px-6 mb-12">
-          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary text-center flex items-center justify-center gap-2">
-            <SparklesIcon className="w-8 h-8 text-yellow-400" /> Our Purpose
+          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary text-center">
+            🎙️ Twisted Artists Guild News Service
           </h2>
-          <p className="text-lg md:text-xl text-gray-700 mb-6">
-            The TAG News Service is a storytelling initiative powered by our marketing department, designed to spotlight
-            the lives, ideas, and creative journeys of our cooperative’s members. Through rich interviews, cultural
-            coverage, and market research, we document what it means to be a working artist today—with integrity,
-            curiosity, and a community-first lens.
+          <p className="text-xl text-center mb-12 text-secondary">
+            Amplifying artist voices. Exploring the pulse of creativity.
           </p>
-          <p className="text-lg md:text-xl text-gray-700 mt-4">
-            Our journalist team works at the intersection of marketing and editorial, blending narrative storytelling
-            with cooperative insight. They conduct interviews from scripted research prompts, capture close-up
-            conversations with artists, and produce engaging social content that benefits visibility and discovery.
-          </p>
-          <p className="text-lg md:text-xl text-gray-700 mt-4">
-            While rooted in marketing, this branch of TAG follows ethical journalistic standards. In addition to
-            research-driven interviews, our writers pursue broader art coverage—from gallery openings and emerging
-            trends to artist-led movements—always centered on the voices of creators.
-          </p>
-        </section>
 
-        {/* Featured Articles Section */}
-        <section className="py-12 bg-base-100 rounded-box shadow-lg px-6 mb-12">
-          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary text-center flex items-center justify-center gap-2">
-            <BookOpenIcon className="w-8 h-8 text-blue-400" /> Featured Articles
-          </h2>
+          <div className="max-w-4xl mx-auto text-center mb-12">
+            <p className="text-lg text-gray-700 mb-6">
+              The TAG News Service is a storytelling initiative powered by our marketing department, designed to
+              spotlight the lives, ideas, and creative journeys of our cooperative’s members. Through rich interviews,
+              cultural coverage, and market research, we document what it means to be a working artist today—with
+              integrity, curiosity, and a community-first lens.
+            </p>
+            <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2 text-primary">
+              ✨ Our Purpose
+            </h3>
+            <p className="text-lg text-gray-700">
+              Our journalist team works at the intersection of marketing and editorial, blending narrative storytelling
+              with cooperative insight. They conduct interviews from scripted research prompts, capture close-up
+              conversations with artists, and produce engaging social content that benefits visibility and discovery.
+            </p>
+            <p className="text-lg text-gray-700 mt-4">
+              While rooted in marketing, this branch of TAG follows ethical journalistic standards. In addition to
+              research-driven interviews, our writers pursue broader art coverage—from gallery openings and emerging
+              trends to artist-led movements—always centered on the voices of creators.
+            </p>
+          </div>
+
+          <h3 className="text-xl font-bold mb-8 text-center flex items-center justify-center gap-2 text-primary">
+            📚 Featured Articles
+          </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Article Card 1: Amina Rodriguez - Multidisciplinary Storyteller */}
             <div className="card bg-base-200 shadow-xl overflow-hidden">
@@ -86,7 +92,7 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg"
                   alt="Artist painting on a canvas"
                   fill
-                  style={{ objectFit: "cover" }}
+                  objectFit="cover"
                 />
               </figure>
               <div className="card-body p-6">
@@ -111,7 +117,7 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg"
                   alt="Artist's paint palette with brushes"
                   fill
-                  style={{ objectFit: "cover" }}
+                  objectFit="cover"
                 />
               </figure>
               <div className="card-body p-6">
@@ -136,7 +142,7 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg"
                   alt="Artist painting a large mural"
                   fill
-                  style={{ objectFit: "cover" }}
+                  objectFit="cover"
                 />
               </figure>
               <div className="card-body p-6">
@@ -161,7 +167,7 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg"
                   alt="Artist working on a large mural in a studio"
                   fill
-                  style={{ objectFit: "cover" }}
+                  objectFit="cover"
                 />
               </figure>
               <div className="card-body p-6">
