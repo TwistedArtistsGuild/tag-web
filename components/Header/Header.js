@@ -10,22 +10,25 @@
  Open source · low-profit · human-first*/
 "use client"
 
+"use client"
+
 import { useAppContext } from "/components/Context"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import Image from "next/image"
 import LoginProfile from "/components/Header/LoginProfile"
+import ThemeSwitcher from "/components/Header/ThemeSwitcher"
 import logo from "@/public/logo.png"
 import config from "@/config"
 import DropdownMenu from "/components/Header/DropdownMenu"
 import { useLayout } from "/components/LayoutProvider"
-import { FiBell, FiMessageSquare, FiChevronUp, FiChevronDown } from "react-icons/fi"
+import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu, X } from "lucide-react"
 
 // Available themes
 const themes = [
   "tag-theme",
-  "light", 
+  "light",
   "dark",
   "cupcake",
   "bumblebee",
@@ -87,7 +90,7 @@ export default function Header({ pageSections = [] }) {
   }
 
   function getHeaderClassName() {
-    const baseClasses = "flex justify-between items-center border-b border-base-300 w-full px-8 py-4"
+    const baseClasses = "flex justify-between items-center border-b border-base-300 w-full px-8 py-2 min-h-[88px]" // Adjusted py-3 to py-2, added min-h-[88px]
     if (theme === "tag-theme") {
       return `${baseClasses} header-paint-drip`
     }
@@ -133,10 +136,9 @@ export default function Header({ pageSections = [] }) {
           className="fixed top-0 left-1/2 transform -translate-x-1/2 z-50 bg-primary text-primary-content px-4 py-2 rounded-b-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
           aria-label="Show header"
         >
-          <FiChevronDown className="w-4 h-4" />
+          <ChevronDown className="w-4 h-4" />
         </button>
       )}
-
       <header
         className={`w-full transition-all duration-300 ease-in-out ${
           isHeaderVisible ? "translate-y-0" : "-translate-y-full"
@@ -213,10 +215,8 @@ export default function Header({ pageSections = [] }) {
 
           {/* Right: User Controls */}
           <div className="flex items-center space-x-2">
-            {/* Search */}
-            <div className="hidden md:flex items-center">
-              <input type="text" placeholder="Search..." className="input input-bordered input-sm w-32 lg:w-48" />
-            </div>
+            {/* Theme Switcher */}
+            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={handleThemeChange} />
 
             {/* Notifications & Messages - Only if user logged in */}
             {user && (
@@ -226,7 +226,7 @@ export default function Header({ pageSections = [] }) {
                   className="btn btn-ghost btn-sm btn-circle relative"
                   aria-label="Messages"
                 >
-                  <FiMessageSquare size={18} />
+                  <MessageSquare size={18} />
                   {unreadMessages > 0 && (
                     <span className="absolute -top-1 -right-1 bg-error text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                       {unreadMessages}
@@ -238,7 +238,7 @@ export default function Header({ pageSections = [] }) {
                   className="btn btn-ghost btn-sm btn-circle relative"
                   aria-label="Notifications"
                 >
-                  <FiBell size={18} />
+                  <Bell size={18} />
                   {notificationCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-error text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                       {notificationCount}
@@ -248,25 +248,16 @@ export default function Header({ pageSections = [] }) {
               </>
             )}
 
-            {/* Login Profile with Theme Selector */}
-            <LoginProfile 
-              className="btn btn-ghost btn-sm" 
-              themes={themes}
-              currentTheme={theme}
-              onThemeChange={handleThemeChange}
-            />
+            {/* Login Profile */}
+            <LoginProfile className="btn btn-ghost btn-sm" />
 
             {/* Mobile Menu Button */}
-            <button 
-              type="button" 
-              className="btn btn-ghost btn-sm lg:hidden" 
-              onClick={() => setIsOpen(true)}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+            <button type="button" className="btn btn-ghost btn-sm lg:hidden" onClick={() => setIsOpen(true)}>
+              <Menu className="w-5 h-5" />
             </button>
           </div>
+          {/* Inner div for the circus tent/drip effect */}
+          {theme === "tag-theme" && <div className="header-drip-effect" />}
         </div>
 
         {/* Header Close Button - Bottom Center when open */}
@@ -276,7 +267,7 @@ export default function Header({ pageSections = [] }) {
             className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-base-200 text-base-content hover:bg-base-300 px-3 py-1 rounded-b-lg border border-base-300 shadow-md transition-all duration-300 hover:scale-105"
             aria-label="Hide header"
           >
-            <FiChevronUp className="w-4 h-4" />
+            <ChevronUp className="w-4 h-4" />
           </button>
         )}
 
@@ -289,43 +280,61 @@ export default function Header({ pageSections = [] }) {
                 <span className="font-extrabold text-lg">{config.appName}</span>
               </Link>
               <button type="button" className="btn btn-ghost btn-sm" onClick={() => setIsOpen(false)}>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="space-y-4">
-              <Link href="/artists" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>Artists</Link>
-              <Link href="/art" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>Art</Link>
-              <Link href="/events" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>Events</Link>
-              <Link href="/blogs" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>Blog</Link>
-              <Link href="/news" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>News</Link>
-              <Link href="/vote" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>Vote</Link>
-              
+              <Link href="/artists" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
+                Artists
+              </Link>
+              <Link href="/art" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
+                Art
+              </Link>
+              <Link href="/events" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
+                Events
+              </Link>
+              <Link href="/blogs" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
+                Blog
+              </Link>
+              <Link href="/news" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
+                News
+              </Link>
+              <Link href="/vote" className="block py-2 text-lg" onClick={() => setIsOpen(false)}>
+                Vote
+              </Link>
+
               {user && (
                 <div className="pt-4 border-t border-base-300">
                   <button onClick={toggleDmModal} className="flex items-center gap-2 py-2 w-full">
-                    <FiMessageSquare size={16} />
-                    Messages {unreadMessages > 0 && <span className="badge badge-sm badge-error">{unreadMessages}</span>}
+                    <MessageSquare size={16} />
+                    Messages{" "}
+                    {unreadMessages > 0 && <span className="badge badge-sm badge-error">{unreadMessages}</span>}
                   </button>
                   <button onClick={toggleNotifications} className="flex items-center gap-2 py-2 w-full">
-                    <FiBell size={16} />
-                    Notifications {notificationCount > 0 && <span className="badge badge-sm badge-error">{notificationCount}</span>}
+                    <Bell size={16} />
+                    Notifications{" "}
+                    {notificationCount > 0 && <span className="badge badge-sm badge-error">{notificationCount}</span>}
                   </button>
                 </div>
               )}
 
               <div className="pt-4 border-t border-base-300">
-                <LoginProfile themes={themes} currentTheme={theme} onThemeChange={handleThemeChange} />
+                {/* Theme switcher in mobile menu */}
+                <ThemeSwitcher
+                  themes={themes}
+                  currentTheme={theme}
+                  onThemeChange={handleThemeChange}
+                  className="w-full justify-start"
+                />
+                <LoginProfile />
               </div>
             </div>
           </div>
         </div>
       </header>
-
-      {/* Header Spacer - Much smaller now */}
-      {isHeaderVisible && <div className="h-20" />}
+      {/* Header Spacer - Adjusted to match new header height */}
+      {isHeaderVisible && <div className="h-22" />} {/* Adjusted from h-16 to h-22 */}
     </>
   )
 }

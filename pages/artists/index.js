@@ -8,13 +8,11 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-
-
 import Link from "next/link"
-import styles from "/styles/pages/artists.module.css"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
-import ArtistCard from "/components/card_artist"
+import ArtistCard from "@/components/card_artist"
+import ArtistCardWithPic from "@/components/card_artist_wPic" // Import the new component
 
 /**
  * Artists page component that displays list of artist members
@@ -65,40 +63,62 @@ const Artists = (props) => {
 	)
 }
 
-Artists.getInitialProps = async function () {
-	const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+Artists.getInitialProps = async () => {
+  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+  let data = []
+  let status = 200
 
-	let data = []
-	let status = 200
+  // Function to generate a random number for social counters
+  const getRandomCount = () => Math.floor(Math.random() * 1000) + 1 // Random number between 1 and 1000
 
-	// If we are running in debug mode, log the active API URL
-	if (process.env.DEBUG === "true") {
-		console.log("Artist data fetch starting via API: \n " + api_url + "artist/")
-	}
+  // Function to generate random placeholder images for slideshow
+  const getRandomImages = (count = 3) => {
+    const images = []
+    for (let i = 0; i < count; i++) {
+      images.push({
+        url: `/placeholder.svg?height=200&width=300&text=Art+${Math.floor(Math.random() * 100)}`,
+        alt: `Artist artwork ${i + 1}`,
+      })
+    }
+    return images
+  }
 
-	try {
-		// Fetch the artist data
-		const res = await fetch(api_url + "artist/")
-		status = res.status
-		if (!res.ok) {
-			throw new Error(`HTTP error! status: ${status}`)
-		}
-		data = await res.json()
-	} catch (error) {
-		console.error("An error has occurred with your artist fetch request: ", error)
-	}
+  // If we are running in debug mode, log the active API URL
+  if (process.env.DEBUG === "true") {
+    console.log("Artist data fetch starting via API: \n " + api_url + "artist/")
+  }
+  try {
+    // Fetch the artist data
+    const res = await fetch(api_url + "artist/")
+    status = res.status
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${status}`)
+    }
+    data = await res.json()
 
-	// If we are running in debug mode, log the artist data
-	if (process.env.DEBUG === "true") {
-		console.log(`Artist data fetched. Count: ${data.length}`)
-	}
-
-	// Return the artist data and status
-	return {
-		artists: data,
-		status: status,
-		sidebarProps: { card_listings: data }
-	}
+    // Add random social counters and images to each artist after fetching
+    data = data.map((artist, index) => ({
+      ...artist,
+      loves: getRandomCount(),
+      likes: getRandomCount(),
+      followers: getRandomCount(),
+      // Add images to some artists for demonstration
+      images: index % 2 === 0 ? getRandomImages(Math.floor(Math.random() * 3) + 2) : [], // 2-4 images for every other artist
+    }))
+  } catch (error) {
+    console.error("An error has occurred with your artist fetch request: ", error)
+  }
+  // If we are running in debug mode, log the artist data
+  if (process.env.DEBUG === "true") {
+    console.log(`Artist data fetched. Count: ${data.length}`)
+  }
+  // Return the artist data and status
+  return {
+    artists: data,
+    status: status,
+    sidebarProps: { card_listings: data },
+  }
 }
 
 export default Artists
+

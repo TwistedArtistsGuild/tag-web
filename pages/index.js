@@ -12,7 +12,6 @@
 
 import React from "react"
 
-
 import styles from "/styles/pages/index.module.css"
 import TagSEO from "@/components/TagSEO"
 import Hero from "@/components/Hero"

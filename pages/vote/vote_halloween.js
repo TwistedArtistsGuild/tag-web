@@ -8,108 +8,210 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import Head from 'next/head';
-import { useState } from 'react';
+ "use client"
 
-export default function Competitions() {
-    const [competitions, setCompetitions] = useState([
-        { id: 1, theme: 'Halloween', category: 'Video - Dance', likes: 120, comments: ['Amazing choreography!', 'So spooky and fun!'] },
-        { id: 2, theme: 'Halloween', category: 'Painting', likes: 85, comments: ['Beautiful colors!', 'This captures the Halloween spirit perfectly.'] },
-        { id: 3, theme: 'Halloween', category: 'Yard Art Sculpture', likes: 150, comments: ['Incredible detail!', 'This is the clear winner for me.'] },
-        { id: 4, theme: 'Halloween', category: 'Digital Art', likes: 60, comments: ['Very creative!', 'Love the concept.'] },
-        { id: 5, theme: 'Halloween', category: 'Costume Design', likes: 45, comments: ['Great craftsmanship!', 'This is so unique.'] },
-    ]);
+import Link from "next/link"
+import Image from "next/image"
+import { useState } from "react"
+import { ThumbsUpIcon, MessageSquareIcon } from "lucide-react" // Import icons for voting and comments
 
-    const [filter, setFilter] = useState({ category: 'All', theme: 'All' });
+function HalloweenContest() {
+  const stockPhotos = [
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-pixabay-262034-brushes.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-joshsorenson-995301-drummer.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-marcela-alessandra-789314-1885213-pianist.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg",
+    "https://tagstatic.blob.core.windows.net/pexels/pexels-markus-winkler-1430818-3812433-merchandiseclothingrack.jpg",
+  ]
 
-    const handleLike = (id) => {
-        setCompetitions(competitions.map(comp => comp.id === id ? { ...comp, likes: comp.likes + 1 } : comp));
-    };
+  const getRandomStockPhoto = () => {
+    const randomIndex = Math.floor(Math.random() * stockPhotos.length)
+    return stockPhotos[randomIndex]
+  }
 
-    const handleComment = (id, comment) => {
-        setCompetitions(competitions.map(comp => comp.id === id ? { ...comp, comments: [...comp.comments, comment] } : comp));
-    };
+  const [entries, setEntries] = useState([
+    {
+      id: 1,
+      title: "Spooky Haunted Mansion",
+      artist: "Ghostly Painter",
+      imageUrl: getRandomStockPhoto(),
+      description: "A chilling digital painting of a mansion where spirits linger.",
+      votes: 125,
+      comments: [
+        { id: 1, author: "ArtLover", text: "So atmospheric! Love the details." },
+        { id: 2, author: "SpookyFan", text: "Gave me chills, amazing work!" },
+      ],
+    },
+    {
+      id: 2,
+      title: "Pumpkin Patch Nightmare",
+      artist: "Carving King",
+      imageUrl: getRandomStockPhoto(),
+      description: "An intricate pumpkin carving that comes alive at night.",
+      votes: 98,
+      comments: [{ id: 3, author: "JackOLantern", text: "Best pumpkin I've ever seen!" }],
+    },
+    {
+      id: 3,
+      title: "Witch's Brew Cauldron",
+      artist: "Mystic Sculptor",
+      imageUrl: getRandomStockPhoto(),
+      description: "A bubbling cauldron sculpture, perfect for a witch's lair.",
+      votes: 150,
+      comments: [
+        { id: 4, author: "PotionMaster", text: "The details on the bubbles are fantastic!" },
+        { id: 5, author: "MagicUser", text: "I can almost smell the potion!" },
+      ],
+    },
+    {
+      id: 4,
+      title: "Zombie Apocalypse",
+      artist: "Undead Illustrator",
+      imageUrl: getRandomStockPhoto(),
+      description: "A gruesome comic-style illustration of the end of days.",
+      votes: 80,
+      comments: [{ id: 6, author: "HorrorFan", text: "Brutally good!" }],
+    },
+  ])
 
-    const filteredCompetitions = competitions.filter(comp => {
-        return (filter.category === 'All' || comp.category === filter.category) &&
-               (filter.theme === 'All' || comp.theme === filter.theme);
-    });
+  const [newCommentText, setNewCommentText] = useState("")
 
-    return (
-        <>
-            <Head>
-                <title>Competitions - Twisted Artists Guild</title>
-            </Head>
-            <main className="container mx-auto px-4 py-8">
-                <h1 className="text-4xl font-bold mb-4">Art Competitions</h1>
+  const handleVote = (id) => {
+    setEntries(entries.map((entry) => (entry.id === id ? { ...entry, votes: entry.votes + 1 } : entry)))
+  }
 
-                <div className="mb-4">
-                    <label htmlFor="categoryFilter" className="block text-lg font-medium">Filter by Category:</label>
-                    <select
-                        id="categoryFilter"
-                        className="border rounded px-2 py-1"
-                        value={filter.category}
-                        onChange={(e) => setFilter({ ...filter, category: e.target.value })}
-                    >
-                        <option value="All">All</option>
-                        <option value="Video - Dance">Video - Dance</option>
-                        <option value="Painting">Painting</option>
-                        <option value="Yard Art Sculpture">Yard Art Sculpture</option>
-                        <option value="Digital Art">Digital Art</option>
-                        <option value="Costume Design">Costume Design</option>
-                    </select>
+  const handleAddComment = (entryId) => {
+    if (newCommentText.trim() === "") return
+
+    setEntries(
+      entries.map((entry) =>
+        entry.id === entryId
+          ? {
+              ...entry,
+              comments: [
+                ...entry.comments,
+                { id: entry.comments.length + 1, author: "Anonymous", text: newCommentText.trim() },
+              ],
+            }
+          : entry,
+      ),
+    )
+    setNewCommentText("") // Clear the comment input after adding
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300 py-8 px-4">
+      <div className="container mx-auto">
+        {/* Hero Section for Halloween Contest */}
+        <section className="text-center mb-12">
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-purple-700">
+            🎃 Halloween Art Contest 👻
+          </h1>
+          <p className="text-xl md:text-2xl text-secondary mb-6">
+            Vote for your favorite spooky creations and help crown our Halloween champion!
+          </p>
+          <p className="text-lg text-base-content max-w-3xl mx-auto">
+            Welcome to the Twisted Artists Guild's annual Halloween Art Contest! Explore a gallery of eerie, enchanting,
+            and outright terrifying artworks submitted by our talented community. Cast your vote for the pieces that
+            send shivers down your spine or capture the true spirit of Halloween.
+          </p>
+        </section>
+
+        {/* Contest Rules/Guidelines Section */}
+        <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
+          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">Contest Guidelines</h2>
+          <ul className="list-disc pl-5 text-lg text-base-content space-y-2">
+            <li>Each user can vote once per artwork.</li>
+            <li>Voting closes on November 1st at 11:59 PM PST.</li>
+            <li>Winners will be announced on November 3rd on our main blog.</li>
+            <li>Be respectful in comments and support your fellow artists!</li>
+          </ul>
+        </section>
+
+        {/* Contest Entries Section */}
+        <section className="mb-12">
+          <h2 className="text-3xl font-bold mb-8 text-primary text-center">Contest Entries</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {entries.map((entry) => (
+              <div
+                key={entry.id}
+                className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out"
+              >
+                <figure className="relative h-60 w-full">
+                  <Image
+                    src={entry.imageUrl || "/placeholder.svg"}
+                    alt={entry.title}
+                    fill
+                    style={{ objectFit: "cover" }}
+                    className="rounded-t-box"
+                  />
+                </figure>
+                <div className="card-body p-6">
+                  <h3 className="card-title text-2xl text-primary">{entry.title}</h3>
+                  <p className="text-lg text-gray-700">By: {entry.artist}</p>
+                  <p className="text-sm text-base-content line-clamp-3">{entry.description}</p>
+                  <div className="card-actions justify-between items-center mt-4">
+                    <button onClick={() => handleVote(entry.id)} className="btn btn-primary btn-sm">
+                      <ThumbsUpIcon className="w-4 h-4 mr-1" />
+                      Vote ({entry.votes})
+                    </button>
+                    <div className="flex items-center text-gray-600">
+                      <MessageSquareIcon className="w-4 h-4 mr-1" />
+                      {entry.comments.length} Comments
+                    </div>
+                  </div>
+
+                  {/* Comments Section for each entry */}
+                  <div className="mt-6 pt-4 border-t border-base-200">
+                    <h4 className="text-lg font-semibold text-primary mb-3">Comments</h4>
+                    {entry.comments.length > 0 ? (
+                      <div className="space-y-3 max-h-32 overflow-y-auto pr-2">
+                        {entry.comments.map((comment) => (
+                          <div key={comment.id} className="text-sm bg-base-200 p-2 rounded-lg">
+                            <span className="font-medium text-secondary">{comment.author}:</span> {comment.text}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">No comments yet. Be the first to comment!</p>
+                    )}
+                    <div className="mt-4 flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Add a comment..."
+                        className="input input-bordered input-sm flex-grow"
+                        value={newCommentText}
+                        onChange={(e) => setNewCommentText(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleAddComment(entry.id)
+                          }
+                        }}
+                      />
+                      <button onClick={() => handleAddComment(entry.id)} className="btn btn-primary btn-sm">
+                        Post
+                      </button>
+                    </div>
+                  </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
-                <div className="mb-4">
-                    <label htmlFor="themeFilter" className="block text-lg font-medium">Filter by Theme:</label>
-                    <select
-                        id="themeFilter"
-                        className="border rounded px-2 py-1"
-                        value={filter.theme}
-                        onChange={(e) => setFilter({ ...filter, theme: e.target.value })}
-                    >
-                        <option value="All">All</option>
-                        <option value="Halloween">Halloween</option>
-                        {/* Add more themes here */}
-                    </select>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredCompetitions.map(comp => (
-                        <div key={comp.id} className="border rounded p-4 shadow">
-                            <h2 className="text-2xl font-semibold">{comp.theme}</h2>
-                            <p className="text-sm text-gray-600">Category: {comp.category}</p>
-                            <button
-                                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                onClick={() => handleLike(comp.id)}
-                            >
-                                Like ({comp.likes})
-                            </button>
-                            <div className="mt-4">
-                                <h3 className="text-lg font-medium">Comments:</h3>
-                                <ul className="list-disc pl-5">
-                                    {comp.comments.map((comment, index) => (
-                                        <li key={index} className="text-sm">{comment}</li>
-                                    ))}
-                                </ul>
-                                <input
-                                    type="text"
-                                    placeholder="Add a comment"
-                                    className="border rounded px-2 py-1 mt-2 w-full"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && e.target.value.trim()) {
-                                            handleComment(comp.id, e.target.value);
-                                            e.target.value = '';
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                
-            </main>
-        </>
-    );
+        {/* Back to Main Contest Page */}
+        <div className="mt-12 text-center">
+          <Link href="/vote" className="btn btn-secondary btn-lg">
+            Back to Contest Hub
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
 }
+
+export default HalloweenContest

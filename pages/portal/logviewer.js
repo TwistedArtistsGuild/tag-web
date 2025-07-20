@@ -13,7 +13,6 @@
 
 ///////////////// Imports
 import Link from "next/link"
-import styles from "/styles/components/dynamicRequest.module.css"
 import shortDateOptions from "/utils/shortdateoptions"
 import TagSEO from "@/components/TagSEO"
 
