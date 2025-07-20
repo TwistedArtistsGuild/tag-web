@@ -12,18 +12,18 @@ import React, { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 
-const SearchPage = ({ initialSearchTerm }) => {
+const SearchPage = ({ initialSearchTerm, results: initialResults = [], status }) => {
 	const [searchTerm, setSearchTerm] = useState(initialSearchTerm || "")
 	const [searchType, setSearchType] = useState("artist")
 	const [orderBy, setOrderBy] = useState("relevance")
-	const [results, setResults] = useState([])
+	const [results, setResults] = useState(initialResults)
 	const router = useRouter()
 
 	useEffect(() => {
 		if (initialSearchTerm) {
-			handleSearch()
+			setResults(initialResults)
 		}
-	}, [initialSearchTerm])
+	}, [initialSearchTerm, initialResults])
 
 	const handleSearch = async () => {
 		const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
