@@ -16,14 +16,24 @@ import { useState } from "react"
 
 function VoteIndex() {
   const [isPanelMinimized, setIsPanelMinimized] = useState(false)
-
   const togglePanel = () => {
     setIsPanelMinimized(!isPanelMinimized)
   }
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300 py-8 px-4">
-      <div className="container mx-auto">
+    <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+      {/* Hero Section */}
+      <section className="text-center py-12">
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
+          🎨 TAG Contest Central
+        </h1>
+        <p className="text-xl md:text-2xl text-secondary mb-6">Vote. Celebrate. Shape the future of art.</p>
+        <p className="text-lg text-base-content max-w-3xl mx-auto">
+          Welcome to the Twisted Artists Guild Contest Hub—your gateway to artist showcases, themed challenges, and
+          member-driven voting. Whether you're an artist sharing your vision or a community member showing support,
+          this is where collaboration meets celebration.
+        </p>
+      </section>
+      <main className="container mx-auto px-4 py-8 flex-1 w-full">
         {/* Minimizeable Panel */}
         <div className="mb-6 card bg-base-100 shadow-lg rounded-box p-4">
           <div className="flex justify-between items-center">
@@ -40,20 +50,6 @@ function VoteIndex() {
             </div>
           )}
         </div>
-
-        {/* Main Content - Hero Section */}
-        <section className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
-            🎨 TAG Contest Central
-          </h1>
-          <p className="text-xl md:text-2xl text-secondary mb-6">Vote. Celebrate. Shape the future of art.</p>
-          <p className="text-lg text-base-content max-w-3xl mx-auto">
-            Welcome to the Twisted Artists Guild Contest Hub—your gateway to artist showcases, themed challenges, and
-            member-driven voting. Whether you're an artist sharing your vision or a community member showing support,
-            this is where collaboration meets celebration.
-          </p>
-        </section>
-
         {/* What You Can Do Here Section */}
         <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
           <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">What You Can Do Here</h2>
@@ -64,7 +60,6 @@ function VoteIndex() {
             <li>Get inspired by the depth, diversity, and passion of our cooperative community</li>
           </ul>
         </section>
-
         {/* Active Prompts Section */}
         <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
           <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary flex items-center gap-2">
@@ -97,7 +92,6 @@ function VoteIndex() {
             </Link>
           </div>
         </section>
-
         {/* Previous Prompts and Winners Section */}
         <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
           <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary flex items-center gap-2">
@@ -130,7 +124,7 @@ function VoteIndex() {
             </div>
           </div>
         </section>
-      </div>
+      </main>
     </div>
   )
 }

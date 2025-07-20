@@ -21,7 +21,6 @@ import ArtistCardWithPic from "@/components/card_artist_wPic" // Import the new 
  */
 const Artists = (props) => {
 	const [open, setOpen] = useState(false)
-
 	const pageMetaData = {
 		title: "TAG Artists Links",
 		description: "A list of our artist members",
@@ -36,40 +35,34 @@ const Artists = (props) => {
 	}
 
 	return (
-		<main className="flex flex-col min-h-screen w-full bg-base-100">
-			<div className="w-full max-w-5xl mx-auto flex flex-col items-center px-4 py-8">
-				<TagSEO metadataProp={pageMetaData} canonicalSlug="artists" />
-
-				{/* Introductory Section */}
-				<section className="w-full mb-8 bg-base-200 rounded-xl shadow p-6 text-center">
-					<h1 className="text-3xl md:text-4xl font-extrabold mb-2 font-josefin-sans">Artist Portfolios</h1>
-					<p className="text-lg md:text-xl text-base-content/90 mb-2">
-						Discover the creative energy of Twisted Artists Guild members. Each portfolio showcases the artist’s unique voice, featured works, and ways to connect or support them.
-					</p>
-					<ul className="list-disc list-inside text-base-content/80 text-left max-w-2xl mx-auto mb-2">
-						<li>Artist statement & philosophy</li>
-						<li>Carousel of featured works</li>
-						<li>Tags for genre, technique, or theme</li>
-						<li>Timeline of recent projects</li>
-						<li>Links to social, shops, or commissions</li>
-					</ul>
-					<p className="text-base-content/80">Explore by style, medium, or vibe.</p>
-				</section>
-
-				{/* Future: Filters/Featured/Sections */}
-				<section className="w-full mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
-					{/* Placeholder for filters, featured artists, etc. */}
-					<div className="flex-1" />
+		<div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="artists" />
+			{/* Hero Section */}
+			<section className="text-center py-12">
+				<h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
+					Artist Portfolios
+				</h1>
+				<p className="text-xl md:text-2xl text-secondary mb-6">
+					Discover the creative energy of Twisted Artists Guild members. Each portfolio showcases the artist’s unique voice, featured works, and ways to connect or support them.
+				</p>
+				<p className="text-lg text-base-content max-w-3xl mx-auto mb-4">
+					Explore by style, medium, or vibe.
+				</p>
+			</section>
+			<main className="container mx-auto px-4 py-8 flex-1 w-full">
+				{/* Call to Action */}
+				<div className="flex justify-end mb-8">
 					<Link href="/portal/artist/create" className="btn btn-primary">Create a new artist</Link>
-				</section>
-
+				</div>
 				{/* Main Artist Card Grid */}
 				<section className="w-full flex-1 min-h-[400px] flex flex-col justify-stretch">
 					{props.artists && props.artists.length > 0 ? (
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 h-full">
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 							{props.artists.map((artist) => (
-								<div key={artist.artistid} className="h-[75%] min-h-[300px] flex items-stretch">
-									<ArtistCard artist={artist} className="flex-1 h-full" />
+								<div key={artist.artistid} className="flex items-stretch">
+									<div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full">
+										<ArtistCard artist={artist} className="flex-1 h-full" />
+									</div>
 								</div>
 							))}
 						</div>
@@ -79,10 +72,8 @@ const Artists = (props) => {
 						</div>
 					)}
 				</section>
-
-				{/* Future: Additional content sections (interviews, timelines, etc.) */}
-			</div>
-		</main>
+			</main>
+		</div>
 	)
 }
 

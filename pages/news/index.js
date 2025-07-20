@@ -16,20 +16,12 @@ import { SparklesIcon, BookOpenIcon } from "lucide-react" // Import Lucide icons
 
 export default function News() {
   return (
-    <div className="min-h-screen bg-gray-100 text-base-content">
-      <Head>
-        <title>News - Twisted Artists Guild</title>
-        <meta
-          name="description"
-          content="Welcome to the Twisted Artists Guild News Service, where we bring you the latest updates, artist interviews, and insights into the art world."
-        />
-      </Head>
-
-      {/* Hero Section for News */}
-      <div className="relative h-[50vh] flex items-center justify-center overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+      {/* Hero Section */}
+      <section className="text-center py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/50 z-10"></div>
-        <div className="relative z-20 text-center px-4 max-w-5xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+        <div className="relative z-20">
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-primary">
             Twisted Artists Guild News Service
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white">
@@ -47,9 +39,8 @@ export default function News() {
             unoptimized
           />
         </div>
-      </div>
-
-      <main className="container mx-auto px-4 py-8">
+      </section>
+      <main className="container mx-auto px-4 py-8 flex-1 w-full">
         {/* News Service Section */}
         <section className="py-12 bg-base-100 rounded-box shadow-lg px-6 mb-12">
           <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary text-center">
@@ -58,7 +49,6 @@ export default function News() {
           <p className="text-xl text-center mb-12 text-secondary">
             Amplifying artist voices. Exploring the pulse of creativity.
           </p>
-
           <div className="max-w-4xl mx-auto text-center mb-12">
             <p className="text-lg text-gray-700 mb-6">
               The TAG News Service is a storytelling initiative powered by our marketing department, designed to
@@ -80,11 +70,10 @@ export default function News() {
               trends to artist-led movements—always centered on the voices of creators.
             </p>
           </div>
-
           <h3 className="text-xl font-bold mb-8 text-center flex items-center justify-center gap-2 text-primary">
             📚 Featured Articles
           </h3>
-          <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Article Card 1: Amina Rodriguez - Multidisciplinary Storyteller */}
             <div className="card bg-base-200 shadow-xl overflow-hidden">
               <figure className="relative h-48 w-full">
@@ -187,7 +176,6 @@ export default function News() {
             </div>
           </div>
         </section>
-
         {/* Call to Action / Footer */}
         <section className="py-16 bg-gradient-to-r from-purple-800 to-pink-700 rounded-box shadow-lg px-6">
           <div className="container mx-auto px-4 text-center">
