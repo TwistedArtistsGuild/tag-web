@@ -97,7 +97,7 @@ const ArtistCardWithPic = ({ artist }) => {
                 </div>
               ))
             ) : (
-              <div className="relative w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
+              <div className="relative w-full h-full flex items-center justify-center bg-base-200 text-base-content/60">
                 <Image src="/blank_image.png" alt="No images available" layout="fill" objectFit="contain" />
               </div>
             )}
@@ -107,7 +107,7 @@ const ArtistCardWithPic = ({ artist }) => {
         {/* Artist Details Section */}
         <div className="card-body p-4 flex-grow justify-center">
           <h2 className="card-title text-lg font-semibold">{artist.title}</h2>
-          <p className="text-sm text-gray-500">{artist.byline}</p>
+          <p className="text-sm text-base-content/60">{artist.byline}</p>
         </div>
       </Link>
 

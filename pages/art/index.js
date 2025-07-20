@@ -471,12 +471,10 @@ const generateFakeListings = () => {
  * @returns
  */
 const Listings = (props) => {
-  const [open, setOpen] = useState(false)
-
   const pageMetaData = {
     title: "TAG Art Listings Main Page",
     description: "Explore art through Bloomscrolling",
-    keywords: "listing, art, sales, e-commerce",
+    keywords: "art, sculpture, painting, digital, gallery",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
@@ -485,51 +483,49 @@ const Listings = (props) => {
       description: "Explore art through Bloomscrolling",
     },
   }
-
-    return (
-        <div className={styles.listingContainer}>
-            <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
-            
-            {/* Dynamic listings section */}
-            <div className="my-16">
-                <h3 className="text-2xl font-bold mb-6">Random Art Selection</h3>
-                <p className="mb-10 text-lg">Explore a curated selection of random art pieces to inspire your creativity.</p>
-                <div className="grid grid-cols-1 gap-20 mb-24">
-                    {props.listings.map((listing) => (
-                        <div key={listing.listingid} className="flex justify-center">
-                            <div className="w-full max-w-3xl">
-                                <ListingCard listing={listing} />
-                            </div>
-                        </div>
-                    ))}
+  return (
+    <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
+      {/* Hero Section */}
+      <section className="text-center py-12">
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
+          Art Listings
+        </h1>
+        <p className="text-xl md:text-2xl text-secondary mb-6">
+          Explore a curated selection of art pieces to inspire your creativity.
+        </p>
+      </section>
+      <main className="container mx-auto px-4 py-8 flex-1 w-full">
+        {/* Dynamic listings section */}
+        <div className="mb-16">
+          <h3 className="text-2xl font-bold mb-6">Featured Art</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {props.listings.map((listing) => (
+              <div key={listing.listingid} className="flex justify-center">
+                <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-3xl">
+                  <ListingCard listing={listing} />
                 </div>
-            </div>
-            
-            {/* Fake listings section with more reasonable staggered spacing */}
-            <div className="mt-24 mb-20">
-                <h3 className="text-3xl font-bold mb-8 text-center">Coming Soon: Bloomscrolling</h3>
-                <p className="mb-12 text-xl text-center max-w-4xl mx-auto">Imagine endlessly vieweing listings from our artistic community, with no advertisements!.</p>
-                <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-16">
-                    {props.fakeListings.map((listing, index) => (
-                        <div 
-                            key={listing.listingid} 
-                            className={`flex justify-center ${
-                                // Add staggered positioning with more reasonable spacing
-                                index % 4 === 0 ? 'mt-0' : 
-                                index % 4 === 1 ? 'mt-20' : 
-                                index % 4 === 2 ? 'mt-8' : 
-                                'mt-28'
-                            } transition-all duration-700`}
-                        >
-                            <div className="w-full max-w-2xl transform transition-transform duration-300 hover:scale-105 hover:z-10">
-                                <ListingCard listing={listing} />
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+              </div>
+            ))}
+          </div>
         </div>
-    )
+        {/* Fake listings section */}
+        <div className="mt-24 mb-20">
+          <h3 className="text-3xl font-bold mb-8 text-center">Coming Soon: Bloomscrolling</h3>
+          <p className="mb-12 text-xl text-center max-w-4xl mx-auto">Imagine endlessly viewing listings from our artistic community, with no advertisements!.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {props.fakeListings.map((listing) => (
+              <div key={listing.listingid} className="flex justify-center">
+                <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl">
+                  <ListingCard listing={listing} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
+    </div>
+  )
 }
 
 Listings.getInitialProps = async (context) => {

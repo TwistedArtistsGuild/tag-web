@@ -60,11 +60,11 @@ const ArtistCard = ({ artist }) => {
   }
 
   return (
-    <div className="card lg:card-side bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl border border-base-300">
+    <div className="card lg:card-side bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl border border-base-300 rounded-box">
       {/* Wrap the main content (excluding social icons) with Link */}
       <Link href={`/artists/${artist.path}`} passHref className="flex flex-grow cursor-pointer">
         <figure className="p-4 flex-shrink-0">
-          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200">
+          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-base-300">
             <Image
               src={artist?.profilePic?.url || "/blank_image.png"}
               alt={artist?.profilePic?.alttext || `${artist?.title}'s profile picture`}
@@ -75,8 +75,8 @@ const ArtistCard = ({ artist }) => {
           </div>
         </figure>
         <div className="card-body p-4 flex-grow justify-center">
-          <h2 className="card-title text-lg font-semibold">{artist.title}</h2>
-          <p className="text-sm text-gray-500">{artist.byline}</p>
+          <h2 className="card-title text-lg font-semibold text-primary">{artist.title}</h2>
+          <p className="text-sm text-base-content/60">{artist.byline}</p>
         </div>
       </Link>
 
@@ -100,4 +100,3 @@ const ArtistCard = ({ artist }) => {
 }
 
 export default ArtistCard
-
