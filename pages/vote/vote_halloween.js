@@ -104,7 +104,7 @@ function HalloweenContest() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300 py-8 px-4" data-theme="halloween">
       <div className="container mx-auto">
         {/* Hero Section for Halloween Contest */}
         <section className="text-center mb-12">
