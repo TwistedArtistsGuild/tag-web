@@ -15,6 +15,27 @@ import Link from "next/link"
 import { useLayout } from "./LayoutProvider"
 import ArtistCard from "/components/card_artist"
 import ListingCard from "/components/card_listing"
+import Image from "next/image"
+import { useRouter } from "next/router"
+
+const stockPhotos = [
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1322183-artistpaintingmural2.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-carlo-junemann-156928830-12407580-merchandisehats.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-joshsorenson-995301-drummer.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-jovanvasiljevic-32146479-merchandisesweater.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-karolina-grabowska-4471894-blackguitar.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-marcela-alessandra-789314-1885213-pianist.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-markus-winkler-1430818-3812433-merchandiseclothingrack.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-nappy-936030-violin.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-pixabay-210922-guitarist.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-pixabay-262034-brushes.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-sebastian-ervi-866902-1763075-bandNcrowd.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg",
+  "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg",
+]
 
 export default function LeftSidebar(props) {
   const { leftSidebarData = {} } = props.sidebarProps || {};
@@ -22,7 +43,7 @@ export default function LeftSidebar(props) {
     {
       id: "default",
       name: "Default Artist (no data passed in)",
-      avatar: "/placeholder.svg?height=64&width=64",
+      avatar: stockPhotos[0],
       specialty: "Default Specialty",
       rating: 1,
       location: "Default Location"
@@ -32,7 +53,7 @@ export default function LeftSidebar(props) {
     {
       id: "default",
       name: "Default Listing (no data passed in)",
-      image: "/placeholder.svg?height=64&width=64",
+      image: stockPhotos[1],
       price: 0,
       artist: "Default Artist"
     }
@@ -50,6 +71,7 @@ export default function LeftSidebar(props) {
   const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
   const [searchTerm, setSearchTerm] = useState("")
   const [activeFilter, setActiveFilter] = useState("all")
+  const router = useRouter()
 
   const topOffset = isHeaderVisible ? "top-20" : "top-0"
 
@@ -97,57 +119,24 @@ export default function LeftSidebar(props) {
         </div>
 
         {/* Search Section */}
-        <div className="p-4 border-b border-base-content/10 bg-base-100">
-          <div className="space-y-3">
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text font-medium">Search</span>
-              </label>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search artists, art, events..."
-                className="input input-bordered input-sm w-full"
-              />
-            </div>
-            <button className="btn btn-primary btn-sm w-full">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="p-2 border-b border-base-content/10 bg-base-100">
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search..."
+              className="input input-bordered input-xs flex-1"
+              onKeyDown={e => { if (e.key === 'Enter') { router.push(`/search?term=${encodeURIComponent(searchTerm)}`) } }}
+            />
+            <button
+              className="btn btn-primary btn-xs"
+              onClick={() => router.push(`/search?term=${encodeURIComponent(searchTerm)}`)}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              Search
             </button>
-          </div>
-        </div>
-
-        {/* Navigation Links */}
-        <div className="p-4 border-b border-base-content/10">
-          <h3 className="font-medium text-base-content mb-3">Quick Navigation</h3>
-          <div className="space-y-2">
-            <Link href="/artists" className="btn btn-ghost btn-sm w-full justify-start">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Artists
-            </Link>
-            <Link href="/art" className="btn btn-ghost btn-sm w-full justify-start">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              Artwork
-            </Link>
-            <Link href="/events" className="btn btn-ghost btn-sm w-full justify-start">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Events
-            </Link>
-            <Link href="/blogs" className="btn btn-ghost btn-sm w-full justify-start">
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-              </svg>
-              Blog
-            </Link>
           </div>
         </div>
 
@@ -191,10 +180,10 @@ export default function LeftSidebar(props) {
             </>
           ) : (
             <div className="text-center py-8 text-base-content/60">
-              <svg className="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <p>No content available</p>
+              <div className="flex flex-col items-center justify-center">
+                <Image src={stockPhotos[2]} width={48} height={48} alt="No content" className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>No content available</p>
+              </div>
             </div>
           )}
         </div>
