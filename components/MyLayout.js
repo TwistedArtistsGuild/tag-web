@@ -46,7 +46,7 @@ function LayoutContent(props) {
   }, [])
 
   // Adjusted topMargin to match the new header height
-  const topMargin = isHeaderVisible ? "mt-16" : "mt-0" // Changed from mt-20 to mt-16
+  const topMargin = isHeaderVisible ? "mt-2" : "mt-0" // Changed from mt-20 to mt-16
   const leftMargin = !isMobile && isLeftSidebarVisible ? "lg:ml-80" : ""
   const rightMargin = !isMobile && isRightSidebarVisible ? "lg:mr-80" : ""
 
