@@ -37,7 +37,7 @@ const Artists = (props) => {
 
 	return (
 		<main className="flex flex-col min-h-screen">
-			<div className={styles.container}>
+			<div className="flex flex-col items-center justify-evenly min-h-screen w-full">
 				<TagSEO metadataProp={pageMetaData} canonicalSlug="artists" />
 
 				<div className="flex-1 flex flex-col items-center py-4 w-full">

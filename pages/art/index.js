@@ -487,7 +487,7 @@ const Listings = (props) => {
   }
 
     return (
-        <div className={styles.listingContainer}>
+        <div className="flex flex-col items-center justify-evenly min-h-screen w-full">
             <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
             
             {/* Dynamic listings section */}
