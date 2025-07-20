@@ -8,28 +8,29 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import ContactCard from "@/components/card_contact";
+import ContactCard from "@/components/card_contact"
 
 const ContactsPage = ({ links }) => {
-	return (
-		<div className="card shadow-lg p-4">
-			<ContactCard links={links} />
-		</div>
-	);
-};
+  return (
+    <div className="card shadow-lg p-4 bg-base-100 rounded-box">
+      <ContactCard links={links} />
+    </div>
+  )
+}
 
-ContactsPage.getInitialProps = async function (context) {
-	const { slug } = context.query;
-	const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+ContactsPage.getInitialProps = async (context) => {
+  const { slug } = context.query
+  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
 
-	try {
-		const response = await fetch(`${api_url}artists/${slug}/contacts`);
-		const data = await response.json();
-		return { links: data.links };
-	} catch (error) {
-		console.error("Error fetching contacts:", error);
-		return { links: [] };
-	}
-};
+  try {
+    const response = await fetch(`${api_url}artists/${slug}/contacts`)
+    const data = await response.json()
+    return { links: data.links }
+  } catch (error) {
+    console.error("Error fetching contacts:", error)
+    return { links: [] }
+  }
+}
 
-export default ContactsPage;
+export default ContactsPage
+

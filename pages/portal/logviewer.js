@@ -13,7 +13,6 @@
 
 ///////////////// Imports
 import Link from "next/link"
-import styles from "/styles/components/dynamicRequest.module.css"
 import shortDateOptions from "/utils/shortdateoptions"
 import TagSEO from "@/components/TagSEO"
 
@@ -34,10 +33,10 @@ const Log = props => {
 	}
 
 	return (
-		<div className={styles.container}>
+		<div className="flex flex-col items-center justify-evenly min-h-screen w-full">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/logviewer" />
-			<div className={styles.topDisplay}>
-				<h1 className={styles.title}>Log viewer</h1>
+			<div className="w-full max-w-4xl p-4">
+				<h1 className="text-4xl font-bold mb-8 text-primary">Log viewer</h1>
 
 				<div>
 					<div>
@@ -58,7 +57,8 @@ const Log = props => {
 											<Link
 												href="/portal/logviewer/[lognum]"
 												as={`/portal/logviewer/${log.lognum}`}
-												className={styles.link}>
+												className="link link-primary font-mono"
+											>
 												{log.lognum}
 											</Link>
 										</td>
@@ -66,9 +66,9 @@ const Log = props => {
 										<td>{log.shorttext}</td>
 										<td>{log.longtext}</td>
 										<td>{log.critical}</td>
-										<td> <div className={styles.time}>
-											{new Date(log.logtimestamp.toString()).toLocaleDateString("en-US", options)}
-										</div> </td>
+										<td> <div className="text-xs text-gray-500">
+	{log.logtimestamp ? new Date(log.logtimestamp.toString()).toLocaleDateString("en-US", options) : "-"}
+</div> </td>
 									</tr>
 								))}
 							</tbody>

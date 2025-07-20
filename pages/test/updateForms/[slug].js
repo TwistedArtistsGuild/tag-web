@@ -13,7 +13,6 @@
 import DynaFormDB from '/components/widgets/DynaFormDB';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import 'daisyui';
 
 /**
  * Page component for updating form metadata and fields.

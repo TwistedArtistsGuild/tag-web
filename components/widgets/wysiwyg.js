@@ -103,7 +103,7 @@ export default function Wysiwyg({ formattedData, onSubmit, onCancel, placeholder
 				<>
 					<div>
 						<div
-							className="p-4 bg-white rounded-lg"
+							className="p-4 bg-base-100 rounded-lg"
 							dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(quillContent) }}
 						/>
 					</div>

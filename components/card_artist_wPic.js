@@ -8,33 +8,31 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-"use client" // This component now uses client-side state
+"use client" // This component uses client-side state
 
 import Link from "next/link"
 import Image from "next/image"
 import { HeartIcon, ThumbsUpIcon, UsersIcon } from "lucide-react"
-import { useState } from "react" // Import useState
+import { useState } from "react"
 
 /**
- * Card component for displaying artist information in landscape orientation
+ * Card component for displaying artist information with a picture slideshow
  * @param {Object} props - Component properties
- * @param {Object} props.artist - Artist data object with profilePic object and social counters
- * @returns {JSX.Element} - Artist card component
+ * @param {Object} props.artist - Artist data object with profilePic, images array, and social counters
+ * @returns {JSX.Element} - Artist card component with slideshow
  */
-const ArtistCard = ({ artist }) => {
-  // Initialize state for each counter with values from props
+const ArtistCardWithPic = ({ artist }) => {
   const [loves, setLoves] = useState(artist.loves)
   const [likes, setLikes] = useState(artist.likes)
   const [followers, setFollowers] = useState(artist.followers)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  // Function to handle social icon clicks
+  // Function to handle social icon clicks (same as ArtistCard)
   const handleSocialClick = async (type) => {
-    // Optimistically update UI
     if (type === "loves") setLoves((prev) => prev + 1)
     if (type === "likes") setLikes((prev) => prev + 1)
     if (type === "followers") setFollowers((prev) => prev + 1)
 
-    // Send update to your API route
     try {
       const res = await fetch(`/api/artist/${artist.artistid}/${type}`, {
         method: "POST",
@@ -44,7 +42,6 @@ const ArtistCard = ({ artist }) => {
       })
 
       if (!res.ok) {
-        // If API call fails, revert the UI update (optional, but good practice)
         if (type === "loves") setLoves((prev) => prev - 1)
         if (type === "likes") setLikes((prev) => prev - 1)
         if (type === "followers") setFollowers((prev) => prev - 1)
@@ -52,30 +49,64 @@ const ArtistCard = ({ artist }) => {
       }
     } catch (error) {
       console.error("Error sending social update:", error)
-      // Revert UI update on network error
       if (type === "loves") setLoves((prev) => prev - 1)
       if (type === "likes") setLikes((prev) => prev - 1)
       if (type === "followers") setFollowers((prev) => prev - 1)
     }
   }
 
+  // Handle image navigation for slideshow
+  const goToNextImage = (e) => {
+    e.preventDefault() // Prevent link click
+    setCurrentImageIndex((prevIndex) => (prevIndex === artist.images.length - 1 ? 0 : prevIndex + 1))
+  }
+
+  const goToPrevImage = (e) => {
+    e.preventDefault() // Prevent link click
+    setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? artist.images.length - 1 : prevIndex - 1))
+  }
+
   return (
-    <div className="card lg:card-side bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl border border-base-300 rounded-box">
-      {/* Wrap the main content (excluding social icons) with Link */}
+    <div className="card lg:card-side bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl border border-base-300">
+      {/* Main content area, excluding social icons */}
       <Link href={`/artists/${artist.path}`} passHref className="flex flex-grow cursor-pointer">
-        <figure className="p-4 flex-shrink-0">
-          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-base-300">
-            <Image
-              src={artist?.profilePic?.url || "/blank_image.png"}
-              alt={artist?.profilePic?.alttext || `${artist?.title}'s profile picture`}
-              layout="fill"
-              style={{ objectFit: "cover" }}
-              className="rounded-full"
-            />
+        {/* Image Slideshow Section */}
+        <figure className="p-4 flex-shrink-0 w-48 h-48 relative">
+          <div className="carousel w-full h-full rounded-box overflow-hidden">
+            {artist.images && artist.images.length > 0 ? (
+              artist.images.map((image, index) => (
+                <div
+                  key={index}
+                  id={`slide${index}`}
+                  className={`carousel-item relative w-full h-full ${index === currentImageIndex ? "" : "hidden"}`}
+                >
+                  <Image
+                    src={image.url || "/placeholder.svg"}
+                    alt={image.alt || `Artist image ${index + 1}`}
+                    layout="fill"
+                    style={{ objectFit: "cover" }}
+                  />
+                  <div className="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
+                    <button onClick={goToPrevImage} className="btn btn-circle btn-sm">
+                      ❮
+                    </button>
+                    <button onClick={goToNextImage} className="btn btn-circle btn-sm">
+                      ❯
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="relative w-full h-full flex items-center justify-center bg-base-200 text-base-content/60">
+                <Image src="/blank_image.png" alt="No images available" layout="fill" objectFit="contain" />
+              </div>
+            )}
           </div>
         </figure>
+
+        {/* Artist Details Section */}
         <div className="card-body p-4 flex-grow justify-center">
-          <h2 className="card-title text-lg font-semibold text-primary">{artist.title}</h2>
+          <h2 className="card-title text-lg font-semibold">{artist.title}</h2>
           <p className="text-sm text-base-content/60">{artist.byline}</p>
         </div>
       </Link>
@@ -99,4 +130,5 @@ const ArtistCard = ({ artist }) => {
   )
 }
 
-export default ArtistCard
+export default ArtistCardWithPic
+

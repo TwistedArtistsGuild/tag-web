@@ -8,43 +8,41 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import { useState } from "react";
-import Link from "next/link";
+"use client"
 
-const DropdownMenu = ({ title, titleHref, options, active, onActivate, className }) => {
-	const [isOpen, setIsOpen] = useState(false);
+import { useState } from "react"
+import Link from "next/link"
+import { ChevronDown, ChevronUp } from "lucide-react" // Using Lucide React icons
 
-	const handleMouseEnter = () => setIsOpen(true);
-	const handleMouseLeave = () => setIsOpen(false);
+export default function DropdownMenu({ title, titleHref, options, active, onActivate, className = "" }) {
+  const [isOpen, setIsOpen] = useState(false)
 
-	return (
-		<div
-			className={`relative inline-block ${active ? "font-bold" : ""}`}
-			onMouseEnter={handleMouseEnter}
-			onMouseLeave={handleMouseLeave}
-		>
-			<Link
-				href={titleHref}
-				className={`cursor-pointer ${className}`}
-				onClick={onActivate}
-			>
-				{title}
-			</Link>
-			{isOpen && (
-				<div className="absolute bg-base-100 shadow-lg z-10 min-w-[10rem] mt-1 rounded-md">
-					{options.map((option, index) => (
-						<Link
-							key={index}
-							href={option.href}
-							className="block px-4 py-2 text-base-content hover:bg-base-200"
-						>
-							{option.label}
-						</Link>
-					))}
-				</div>
-			)}
-		</div>
-	);
-};
+  const handleToggle = () => {
+    setIsOpen(!isOpen)
+    if (!isOpen && onActivate) {
+      onActivate()
+    }
+  }
 
-export default DropdownMenu;
+  return (
+    <div className={`dropdown dropdown-hover ${className}`}>
+      <div tabIndex={0} role="button" className="flex items-center space-x-1" onClick={handleToggle}>
+        <Link href={titleHref} className={`${className} ${active ? "text-primary" : "text-base-content"}`}>
+          {title}
+        </Link>
+        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+      </div>
+      {isOpen && (
+        <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+          {options.map((option, index) => (
+            <li key={index}>
+              <Link href={option.href} onClick={() => setIsOpen(false)}>
+                {option.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}

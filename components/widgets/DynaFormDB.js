@@ -544,7 +544,7 @@ export default function DynaForm(props) {
         <div className="mt-4 border-t pt-4 text-xs text-gray-500">
           <details>
             <summary className="cursor-pointer">User Data Being Submitted</summary>
-            <pre className="mt-2 bg-gray-800 text-gray-200 p-2 rounded overflow-x-auto">
+            <pre className="mt-2 bg-base-300 text-base-content p-2 rounded overflow-x-auto">
               {JSON.stringify(session?.user || { anonymous: true, browser: browserInfo || "Loading browser info..." }, null, 2)}
             </pre>
           </details>

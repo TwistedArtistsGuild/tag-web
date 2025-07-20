@@ -5,6 +5,7 @@
  This software comes with NO WARRANTY; see the license for details.
  Open source · low-profit · human-first*/
 
+
 import { useAppContext } from "/components/Context"
 import Link from "next/link"
 import MissionStatement from "/components/MissionStatement"

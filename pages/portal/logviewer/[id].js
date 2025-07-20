@@ -11,20 +11,19 @@
 
 
 //change to displaying an individual log (from Blogs)
-import styles from "/styles/components/dynamicRequest.module.css"
 import shortDateOptions from "/utils/shortdateoptions"
 
 const Logviewer = props => {
 	const options = shortDateOptions
 
 	return (
-		<div className={styles.container}>
-			<div className={styles.topDisplay}>
-				<h1 className={styles.title}>Log viewer</h1>
+		<div className="flex flex-col items-center justify-evenly min-h-screen w-full">
+			<div className="w-full max-w-4xl p-4">
+				<h1 className="text-4xl font-bold mb-8 text-primary">Log viewer</h1>
         
 				<div>
 					<div>
-						<table>
+						<table className="table w-full">
 							<thead>
 								<tr>
 									<th>Tags</th>
@@ -45,7 +44,7 @@ const Logviewer = props => {
 									<td>{props.log.shorttext}</td>
 									<td>{props.log.longtext}</td>
 									<td>{props.log.critical.toString()}</td>
-									<td> <div className={styles.time}>
+									<td> <div className="text-xs text-gray-500">
 										{new Date(props.log.logtimestamp.toString()).toLocaleDateString("en-US", options)}
 									</div> </td>
 									<td>{props.log.userfk}</td>

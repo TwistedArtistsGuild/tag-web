@@ -19,6 +19,12 @@ const nextConfig = {
         hostname: "tagpictures.blob.core.windows.net",
         port: "",
         pathname: "**",
+      }, 
+      {
+        protocol: "https",
+        hostname: "tagstatic.blob.core.windows.net",
+        port: "",
+        pathname: "**",
       },
       {
         protocol: "https",
