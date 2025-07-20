@@ -13,7 +13,39 @@
 import { useState } from "react"
 import { useLayout } from "./LayoutProvider"
 
-export default function RightSidebar({ cartItems = [], stories = [], notifications = [] }) {
+export default function RightSidebar(props) {
+  const { rightSidebarData = {} } = props.sidebarProps || {};
+  const cartItems = rightSidebarData.cartItems || [
+    {
+      id: "default",
+      name: "Default Cart Item (no data passed in)",
+      price: 0,
+      quantity: 1,
+      image: "/placeholder.svg?height=48&width=48",
+      artist: "Default Artist"
+    }
+  ];
+  const stories = rightSidebarData.stories || [
+    {
+      id: "default",
+      author: "Default Author (no data passed in)",
+      avatar: "/placeholder.svg?height=32&width=32",
+      content: "This is a default story because no data was passed in.",
+      timestamp: "now"
+    }
+  ];
+  const notifications = rightSidebarData.notifications || [
+    {
+      id: "default",
+      message: "Default notification (no data passed in)",
+      type: "info"
+    }
+  ];
+  if (process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line no-console
+    console.log("[RightSidebar] props:", { cartItems, stories, notifications, rightSidebarData, sidebarProps: props.sidebarProps })
+  }
+
   const { isRightSidebarVisible, toggleRightSidebar, isMobile, isHeaderVisible } = useLayout()
   const [activeTab, setActiveTab] = useState("cart")
   const [newStory, setNewStory] = useState("")
@@ -40,9 +72,10 @@ export default function RightSidebar({ cartItems = [], stories = [], notificatio
       <aside
         className={`
           fixed ${topOffset} bottom-0 right-0 w-80 bg-base-200 border-l border-base-content/10 z-30
-          transition-transform duration-300 ease-in-out overflow-hidden
+          transition-transform duration-300 ease-in-out
           ${isRightSidebarVisible ? "translate-x-0" : "translate-x-full"}
           ${isMobile ? "w-full" : "w-80"}
+          h-screen overflow-y-auto
         `}
       >
         {/* Close Button - Left Edge Center of Sidebar when open */}

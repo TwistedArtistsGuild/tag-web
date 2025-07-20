@@ -16,7 +16,37 @@ import { useLayout } from "./LayoutProvider"
 import ArtistCard from "/components/card_artist"
 import ListingCard from "/components/card_listing"
 
-export default function LeftSidebar({ artists = [], listings = [], filters = [] }) {
+export default function LeftSidebar(props) {
+  const { leftSidebarData = {} } = props.sidebarProps || {};
+  const artists = leftSidebarData.artists || [
+    {
+      id: "default",
+      name: "Default Artist (no data passed in)",
+      avatar: "/placeholder.svg?height=64&width=64",
+      specialty: "Default Specialty",
+      rating: 1,
+      location: "Default Location"
+    }
+  ];
+  const listings = leftSidebarData.listings || [
+    {
+      id: "default",
+      name: "Default Listing (no data passed in)",
+      image: "/placeholder.svg?height=64&width=64",
+      price: 0,
+      artist: "Default Artist"
+    }
+  ];
+  const filters = leftSidebarData.filters || [
+    { label: "All Art", value: "all" },
+    { label: "Paintings", value: "paintings" },
+    { label: "Sculpture", value: "sculpture" },
+  ];
+  if (process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line no-console
+    console.log("[LeftSidebar] props:", { artists, listings, filters, leftSidebarData, sidebarProps: props.sidebarProps })
+  }
+
   const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
   const [searchTerm, setSearchTerm] = useState("")
   const [activeFilter, setActiveFilter] = useState("all")
@@ -42,9 +72,10 @@ export default function LeftSidebar({ artists = [], listings = [], filters = [] 
       <aside
         className={`
           fixed ${topOffset} bottom-0 left-0 w-80 bg-base-200 border-r border-base-content/10 z-30
-          transition-transform duration-300 ease-in-out overflow-hidden
+          transition-transform duration-300 ease-in-out
           ${isLeftSidebarVisible ? "translate-x-0" : "-translate-x-full"}
           ${isMobile ? "w-full" : "w-80"}
+          h-screen overflow-y-auto
         `}
       >
         {/* Close Button - Right Edge Center of Sidebar when open */}
@@ -134,6 +165,7 @@ export default function LeftSidebar({ artists = [], listings = [], filters = [] 
                     checked={activeFilter === filter.value}
                     onChange={() => setActiveFilter(filter.value)}
                   />
+                  
                   <span className="label-text ml-2">{filter.label}</span>
                 </label>
               ))}
@@ -142,7 +174,7 @@ export default function LeftSidebar({ artists = [], listings = [], filters = [] 
         )}
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
           {listings && listings.length > 0 ? (
             <>
               <h3 className="font-medium text-base-content mb-3">Featured Listings</h3>
