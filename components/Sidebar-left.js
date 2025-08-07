@@ -17,25 +17,7 @@ import ArtistCard from "/components/card_artist"
 import ListingCard from "/components/card_listing"
 import Image from "next/image"
 import { useRouter } from "next/router"
-
-const stockPhotos = [
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1322183-artistpaintingmural2.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-carlo-junemann-156928830-12407580-merchandisehats.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-joshsorenson-995301-drummer.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-jovanvasiljevic-32146479-merchandisesweater.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-karolina-grabowska-4471894-blackguitar.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-marcela-alessandra-789314-1885213-pianist.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-markus-winkler-1430818-3812433-merchandiseclothingrack.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-nappy-936030-violin.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-pixabay-210922-guitarist.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-pixabay-262034-brushes.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-sebastian-ervi-866902-1763075-bandNcrowd.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg",
-]
+import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 export default function LeftSidebar(props) {
   // Since MyLayout.js spreads the leftSidebarData, we access props directly
@@ -43,7 +25,7 @@ export default function LeftSidebar(props) {
     {
       id: "default",
       name: "Default Artist (no data passed in)",
-      avatar: stockPhotos[0],
+      avatar: getRandomStockPhotoByCategory('artist'),
       specialty: "Default Specialty",
       rating: 1,
       location: "Default Location"
@@ -53,7 +35,7 @@ export default function LeftSidebar(props) {
     {
       id: "default",
       name: "Default Listing (no data passed in)",
-      image: stockPhotos[1],
+      image: getRandomStockPhotoByCategory('painting'),
       price: 0,
       artist: "Default Artist"
     }
@@ -177,7 +159,7 @@ export default function LeftSidebar(props) {
           ) : (
             <div className="text-center py-8 text-base-content/60">
               <div className="flex flex-col items-center justify-center">
-                <Image src={stockPhotos[2]} width={48} height={48} alt="No content" className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <Image src={getRandomStockPhotoByCategory('general')} width={48} height={48} alt="No content" className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>No content available</p>
               </div>
             </div>

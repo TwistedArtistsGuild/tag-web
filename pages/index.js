@@ -18,6 +18,7 @@ import TagSEO from "@/components/TagSEO"
 import Hero from "@/components/Hero"
 import FAQ from "@/components/FAQ"
 import CTA from "@/components/CTA"
+import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 /**
  * Home/index page component
@@ -83,7 +84,7 @@ Home.getInitialProps = async () => {
       {
         id: 1,
         name: "Sarah Chen",
-        avatar: "/placeholder.svg?height=64&width=64",
+        avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Digital Art",
         rating: 4.9,
         location: "San Francisco, CA",
@@ -91,7 +92,7 @@ Home.getInitialProps = async () => {
       {
         id: 2,
         name: "Marcus Rodriguez",
-        avatar: "/placeholder.svg?height=64&width=64",
+        avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Sculpture",
         rating: 4.8,
         location: "Austin, TX",
@@ -99,7 +100,7 @@ Home.getInitialProps = async () => {
       {
         id: 3,
         name: "Elena Volkov",
-        avatar: "/placeholder.svg?height=64&width=64",
+        avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Photography",
         rating: 4.9,
         location: "New York, NY",
@@ -123,7 +124,7 @@ Home.getInitialProps = async () => {
         name: "Digital Portrait Commission",
         price: 150.0,
         quantity: 1,
-        image: "/placeholder.svg?height=48&width=48",
+        image: getRandomStockPhotoByCategory('painting'),
         artist: "Sarah Chen",
       },
       {
@@ -131,7 +132,7 @@ Home.getInitialProps = async () => {
         name: "Custom Sculpture",
         price: 450.0,
         quantity: 1,
-        image: "/placeholder.svg?height=48&width=48",
+        image: getRandomStockPhotoByCategory('painting'),
         artist: "Marcus Rodriguez",
       },
       {
@@ -139,7 +140,7 @@ Home.getInitialProps = async () => {
         name: "Photography Print Set",
         price: 75.0,
         quantity: 2,
-        image: "/placeholder.svg?height=48&width=48",
+        image: getRandomStockPhotoByCategory('general'),
         artist: "Elena Volkov",
       },
     ],
@@ -147,21 +148,21 @@ Home.getInitialProps = async () => {
       {
         id: 1,
         author: "You",
-        avatar: "/placeholder.svg?height=32&width=32",
+        avatar: getRandomStockPhotoByCategory('artist'),
         content: "Just finished my latest digital piece! Really excited about the color palette I chose.",
         timestamp: "2 hours ago",
       },
       {
         id: 2,
         author: "Sarah Chen",
-        avatar: "/placeholder.svg?height=32&width=32",
+        avatar: getRandomStockPhotoByCategory('artist'),
         content: "Working on a new commission today. The client wants something really unique!",
         timestamp: "4 hours ago",
       },
       {
         id: 3,
         author: "Marcus Rodriguez",
-        avatar: "/placeholder.svg?height=32&width=32",
+        avatar: getRandomStockPhotoByCategory('artist'),
         content: "Found some amazing clay at the local art supply store. Can't wait to start sculpting!",
         timestamp: "1 day ago",
       },
