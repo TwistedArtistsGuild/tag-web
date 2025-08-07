@@ -33,8 +33,8 @@ const stockPhotos = [
 ]
 
 export default function RightSidebar(props) {
-  const { rightSidebarData = {} } = props.sidebarProps || {};
-  const cartItems = rightSidebarData.cartItems || [
+  // Since MyLayout.js spreads the rightSidebarData, we access props directly
+  const cartItems = props.cartItems || [
     {
       id: "default",
       name: "Default Cart Item (no data passed in)",
@@ -44,7 +44,7 @@ export default function RightSidebar(props) {
       artist: "Default Artist"
     }
   ];
-  const stories = rightSidebarData.stories || [
+  const stories = props.stories || [
     {
       id: "default",
       author: "Default Author (no data passed in)",
@@ -53,18 +53,14 @@ export default function RightSidebar(props) {
       timestamp: "now"
     }
   ];
-  const notifications = rightSidebarData.notifications || [
+  const notifications = props.notifications || [
     {
       id: "default",
       message: "Default notification (no data passed in)",
       type: "info"
     }
   ];
-  if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
-    console.log("[RightSidebar] props:", { cartItems, stories, notifications, rightSidebarData, sidebarProps: props.sidebarProps })
-  }
-
+  
   const { isRightSidebarVisible, toggleRightSidebar, isMobile, isHeaderVisible } = useLayout()
   const [activeTab, setActiveTab] = useState("cart")
   const [newStory, setNewStory] = useState("")

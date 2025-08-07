@@ -38,8 +38,8 @@ const stockPhotos = [
 ]
 
 export default function LeftSidebar(props) {
-  const { leftSidebarData = {} } = props.sidebarProps || {};
-  const artists = leftSidebarData.artists || [
+  // Since MyLayout.js spreads the leftSidebarData, we access props directly
+  const artists = props.artists || [
     {
       id: "default",
       name: "Default Artist (no data passed in)",
@@ -49,7 +49,7 @@ export default function LeftSidebar(props) {
       location: "Default Location"
     }
   ];
-  const listings = leftSidebarData.listings || [
+  const listings = props.listings || [
     {
       id: "default",
       name: "Default Listing (no data passed in)",
@@ -58,16 +58,12 @@ export default function LeftSidebar(props) {
       artist: "Default Artist"
     }
   ];
-  const filters = leftSidebarData.filters || [
+  const filters = props.filters || [
     { label: "All Art", value: "all" },
     { label: "Paintings", value: "paintings" },
     { label: "Sculpture", value: "sculpture" },
   ];
-  if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
-    console.log("[LeftSidebar] props:", { artists, listings, filters, leftSidebarData, sidebarProps: props.sidebarProps })
-  }
-
+  
   const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
   const [searchTerm, setSearchTerm] = useState("")
   const [activeFilter, setActiveFilter] = useState("all")

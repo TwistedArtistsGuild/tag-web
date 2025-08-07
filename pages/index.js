@@ -75,8 +75,8 @@ export default function Home() {
   )
 }
 
-// Add getLayout function to pass sidebar data
-Home.getLayout = function getLayout(page) {
+// Use getInitialProps to pass sidebar data like other pages
+Home.getInitialProps = async () => {
   // Sample data for left sidebar (navigation/filtering)
   const leftSidebarData = {
     artists: [
@@ -168,15 +168,10 @@ Home.getLayout = function getLayout(page) {
     ],
   }
 
-  return (
-    <div>
-      {/* Pass data to layout via props */}
-      {React.cloneElement(page, {
-        sidebarProps: {
-          leftSidebarData,
-          rightSidebarData,
-        },
-      })}
-    </div>
-  )
+  return {
+    sidebarProps: {
+      leftSidebarData,
+      rightSidebarData,
+    },
+  }
 }
