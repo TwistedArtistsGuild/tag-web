@@ -110,9 +110,9 @@ export default function RightSidebar(props) {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 max-h-[calc(100vh-200px)]">
           {activeTab === "cart" && (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto max-h-full">
               {cartItems.length > 0 ? (
                 <>
                   {cartItems.map((item, index) => (
@@ -161,7 +161,7 @@ export default function RightSidebar(props) {
           )}
 
           {activeTab === "stories" && (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto max-h-full">
               {/* Add New Story */}
               <div className="card card-compact bg-base-100 shadow">
                 <div className="card-body">
