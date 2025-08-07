@@ -43,5 +43,5 @@ We support the latest major version of the codebase. Older versions may not rece
 
 ---
 
-For more information, see [docs/env.md](docs/env.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+For more information, see [env.md](env.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
