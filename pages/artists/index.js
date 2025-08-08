@@ -10,8 +10,8 @@
  Open source · low-profit · human-first*/
 import Link from "next/link"
 import TagSEO from "@/components/TagSEO"
-import ArtistCard from "@/components/card_artist"
-import ArtistCardWithPic from "@/components/card_artist_wPic" // Import the new component
+import ArtistCard from "@/components/cards/card_artist"
+import ArtistCardWithPic from "@/components/cards/card_artist_wPic" // Import the new component
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 /**

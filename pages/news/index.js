@@ -9,13 +9,35 @@
 
  Open source · low-profit · human-first*/
 
+
 import Head from "next/head"
 import Image from "next/image" // Import Image component
 import Link from "next/link" // Import Link component
-import { SparklesIcon, BookOpenIcon } from "lucide-react" // Import Lucide icons
+import { SparklesIcon, BookOpenIcon, HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon } from "lucide-react" // Import Lucide icons
+import { SocialRealtimeProvider } from "../../components/social/SocialRealtimeContext"
+import { useState } from "react"
 
 export default function News() {
+  // Social data state for articles
+  const [socialData, setSocialData] = useState({
+    "beyond-canvas": { views: 1234, loves: 89, comments: 23, shares: 45 },
+    "member-interviews": { views: 2156, loves: 167, comments: 42, shares: 78 },
+    "art-algorithms": { views: 1890, loves: 203, comments: 67, shares: 91 },
+    "studio-cooperative": { views: 1567, loves: 134, comments: 38, shares: 56 }
+  });
+
+  const handleSocialAction = (articleId, action) => {
+    setSocialData(prev => ({
+      ...prev,
+      [articleId]: {
+        ...prev[articleId],
+        [action]: prev[articleId][action] + 1
+      }
+    }));
+  };
+
   return (
+    <SocialRealtimeProvider>
     <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
       {/* Hero Section */}
       <section className="text-center py-12 relative overflow-hidden">
@@ -27,6 +49,11 @@ export default function News() {
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white">
             Amplifying artist voices. Exploring the pulse of creativity.
           </p>
+          {/* Social Features Badge */}
+          <div className="badge badge-primary badge-lg gap-2 mb-4">
+            <HeartIcon className="w-4 h-4" />
+            <span>Interactive Social Features Enabled</span>
+          </div>
         </div>
         <div className="absolute inset-0 -z-10">
           <Image
@@ -75,13 +102,14 @@ export default function News() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Article Card 1: Amina Rodriguez - Multidisciplinary Storyteller */}
-            <div className="card bg-base-200 shadow-xl overflow-hidden">
+            <div className="card bg-base-200 shadow-xl overflow-hidden group">
               <figure className="relative h-48 w-full">
                 <Image
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg"
                   alt="Artist painting on a canvas"
                   fill
                   objectFit="cover"
+                  className="group-hover:scale-105 transition-transform duration-300"
                 />
               </figure>
               <div className="card-body p-6">
@@ -92,6 +120,35 @@ export default function News() {
                   Amina blends textile, digital collage, and immersive installations to explore identity and memory. We
                   unpack her process, her cooperative mindset, and how shared authorship shapes her latest exhibition.
                 </p>
+                
+                {/* Enhanced Social Section */}
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 text-base-content/60">
+                      <EyeIcon className="w-4 h-4" />
+                      <span className="text-xs">{socialData["beyond-canvas"].views}</span>
+                    </div>
+                    <button 
+                      onClick={() => handleSocialAction("beyond-canvas", 'loves')}
+                      className="flex items-center gap-1 text-error hover:scale-105 transition-transform cursor-pointer"
+                    >
+                      <HeartIcon className="w-4 h-4" />
+                      <span className="text-xs">{socialData["beyond-canvas"].loves}</span>
+                    </button>
+                    <div className="flex items-center gap-1 text-base-content/60">
+                      <MessageCircleIcon className="w-4 h-4" />
+                      <span className="text-xs">{socialData["beyond-canvas"].comments}</span>
+                    </div>
+                    <button 
+                      onClick={() => handleSocialAction("beyond-canvas", 'shares')}
+                      className="flex items-center gap-1 text-info hover:scale-105 transition-transform cursor-pointer"
+                    >
+                      <ShareIcon className="w-4 h-4" />
+                      <span className="text-xs">{socialData["beyond-canvas"].shares}</span>
+                    </button>
+                  </div>
+                </div>
+                
                 <div className="card-actions justify-end mt-4">
                   <Link href="#" className="btn btn-sm btn-outline btn-primary">
                     Read More
@@ -192,5 +249,6 @@ export default function News() {
         </section>
       </main>
     </div>
+    </SocialRealtimeProvider>
   )
 }

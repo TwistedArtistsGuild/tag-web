@@ -8,7 +8,7 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import ContactCard from "@/components/card_contact"
+import ContactCard from "@/components/cards/card_contact"
 
 const ContactsPage = ({ links }) => {
   return (
