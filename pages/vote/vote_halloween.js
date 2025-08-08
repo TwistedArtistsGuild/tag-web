@@ -8,7 +8,7 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
- "use client"
+"use client"
 
 import Link from "next/link"
 import Image from "next/image"
@@ -16,6 +16,9 @@ import { useState } from "react"
 import { ThumbsUpIcon, MessageSquareIcon } from "lucide-react" // Import icons for voting and comments
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
+const getRandomStockPhoto = () => getRandomStockPhotoByCategory('general')
+
+export default function HalloweenContest() {
   const [entries, setEntries] = useState([
     {
       id: 1,
@@ -98,7 +101,7 @@ import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
             Vote for your favorite spooky creations and help crown our Halloween champion!
           </p>
           <p className="text-lg text-base-content max-w-3xl mx-auto">
-            Welcome to the Twisted Artists Guild's annual Halloween Art Contest! Explore a gallery of eerie, enchanting,
+            Welcome to the Twisted Artists Guild&apos;s annual Halloween Art Contest! Explore a gallery of eerie, enchanting,
             and outright terrifying artworks submitted by our talented community. Cast your vote for the pieces that
             send shivers down your spine or capture the true spirit of Halloween.
           </p>
@@ -196,5 +199,3 @@ import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
     </div>
   )
 }
-
-export default HalloweenContest
