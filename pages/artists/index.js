@@ -9,10 +9,10 @@
 
  Open source · low-profit · human-first*/
 import Link from "next/link"
-import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
-import ArtistCard from "@/components/card_artist"
-import ArtistCardWithPic from "@/components/card_artist_wPic" // Import the new component
+import ArtistCard from "@/components/cards/card_artist"
+import ArtistCardWithPic from "@/components/cards/card_artist_wPic" // Import the new component
+import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 /**
  * Artists page component that displays list of artist members
@@ -20,7 +20,6 @@ import ArtistCardWithPic from "@/components/card_artist_wPic" // Import the new 
  * @returns {JSX.Element} - Artists page component
  */
 const Artists = (props) => {
-	const [open, setOpen] = useState(false)
 	const pageMetaData = {
 		title: "TAG Artists Links",
 		description: "A list of our artist members",
@@ -126,11 +125,94 @@ Artists.getInitialProps = async () => {
   if (process.env.DEBUG === "true") {
     console.log(`Artist data fetched. Count: ${data.length}`)
   }
-  // Return the artist data and status
+  // Return the artist data and status with sidebar data
   return {
     artists: data,
     status: status,
-    sidebarProps: { card_listings: data },
+    sidebarProps: {
+      leftSidebarData: {
+        artists: data.slice(0, 5), // Show first 5 artists as featured in sidebar
+        contentType: "artists",
+        filters: [
+          { label: "All Artists", value: "all" },
+          { label: "Painters", value: "painter" },
+          { label: "Sculptors", value: "sculptor" },
+          { label: "Digital Artists", value: "digital" },
+          { label: "Mixed Media", value: "mixed" },
+          { label: "Photographers", value: "photographer" }
+        ]
+      },
+      rightSidebarData: {
+        cartItems: [
+          {
+            id: "artist-cart-1",
+            name: "Artist Portfolio Review",
+            price: 25.0,
+            quantity: 1,
+            image: getRandomStockPhotoByCategory('painting'),
+            artist: "TAG Services"
+          },
+          {
+            id: "artist-cart-2", 
+            name: "Featured Artist Spotlight",
+            price: 50.0,
+            quantity: 1,
+            image: getRandomStockPhotoByCategory('artist'),
+            artist: "TAG Promotion"
+          },
+          {
+            id: "artist-cart-3",
+            name: "Artist Mentorship Session",
+            price: 75.0,
+            quantity: 1,
+            image: getRandomStockPhotoByCategory('general'),
+            artist: "TAG Education"
+          }
+        ],
+        stories: [
+          {
+            id: "artist-story-1",
+            author: "TAG Community",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "Welcome to our artist community! Discover amazing talent and connect with creative minds.",
+            timestamp: "2 hours ago"
+          },
+          {
+            id: "artist-story-2", 
+            author: "Gallery Curator",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "Featured artist spotlight coming this week - stay tuned for exciting announcements!",
+            timestamp: "1 day ago"
+          },
+          {
+            id: "artist-story-3",
+            author: "Art Collector",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "Just discovered some incredible emerging talent through TAG. The quality and creativity is outstanding!",
+            timestamp: "2 days ago"
+          },
+          {
+            id: "artist-story-4",
+            author: "Artist Mentor",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "Loving the collaborative spirit in our community. So many artists helping each other grow!",
+            timestamp: "3 days ago"
+          }
+        ],
+        notifications: [
+          {
+            id: "artist-notif-1",
+            message: "New artist applications are now open!",
+            type: "info"
+          },
+          {
+            id: "artist-notif-2", 
+            message: "Portfolio review deadline: March 31st",
+            type: "warning"
+          }
+        ]
+      }
+    }
   }
 }
 

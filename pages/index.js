@@ -1,9 +1,14 @@
 /* This file is part of the Twisted Artists Guild project.
+
  Copyright (C) 2025 Twisted Artists Guild
+
  Licensed under the GNU General Public License v3.0
  (https://www.gnu.org/licenses/gpl-3.0.en.html).
+
  This software comes with NO WARRANTY; see the license for details.
+
  Open source · low-profit · human-first*/
+
 "use client"
 
 import React from "react"
@@ -13,6 +18,7 @@ import TagSEO from "@/components/TagSEO"
 import Hero from "@/components/Hero"
 import FAQ from "@/components/FAQ"
 import CTA from "@/components/CTA"
+import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 /**
  * Home/index page component
@@ -70,15 +76,15 @@ export default function Home() {
   )
 }
 
-// Add getLayout function to pass sidebar data
-Home.getLayout = function getLayout(page) {
+// Use getInitialProps to pass sidebar data like other pages
+Home.getInitialProps = async () => {
   // Sample data for left sidebar (navigation/filtering)
   const leftSidebarData = {
     artists: [
       {
         id: 1,
         name: "Sarah Chen",
-        avatar: "/placeholder.svg?height=64&width=64",
+        avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Digital Art",
         rating: 4.9,
         location: "San Francisco, CA",
@@ -86,7 +92,7 @@ Home.getLayout = function getLayout(page) {
       {
         id: 2,
         name: "Marcus Rodriguez",
-        avatar: "/placeholder.svg?height=64&width=64",
+        avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Sculpture",
         rating: 4.8,
         location: "Austin, TX",
@@ -94,7 +100,7 @@ Home.getLayout = function getLayout(page) {
       {
         id: 3,
         name: "Elena Volkov",
-        avatar: "/placeholder.svg?height=64&width=64",
+        avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Photography",
         rating: 4.9,
         location: "New York, NY",
@@ -118,7 +124,7 @@ Home.getLayout = function getLayout(page) {
         name: "Digital Portrait Commission",
         price: 150.0,
         quantity: 1,
-        image: "/placeholder.svg?height=48&width=48",
+        image: getRandomStockPhotoByCategory('painting'),
         artist: "Sarah Chen",
       },
       {
@@ -126,7 +132,7 @@ Home.getLayout = function getLayout(page) {
         name: "Custom Sculpture",
         price: 450.0,
         quantity: 1,
-        image: "/placeholder.svg?height=48&width=48",
+        image: getRandomStockPhotoByCategory('painting'),
         artist: "Marcus Rodriguez",
       },
       {
@@ -134,7 +140,7 @@ Home.getLayout = function getLayout(page) {
         name: "Photography Print Set",
         price: 75.0,
         quantity: 2,
-        image: "/placeholder.svg?height=48&width=48",
+        image: getRandomStockPhotoByCategory('general'),
         artist: "Elena Volkov",
       },
     ],
@@ -142,36 +148,31 @@ Home.getLayout = function getLayout(page) {
       {
         id: 1,
         author: "You",
-        avatar: "/placeholder.svg?height=32&width=32",
+        avatar: getRandomStockPhotoByCategory('artist'),
         content: "Just finished my latest digital piece! Really excited about the color palette I chose.",
         timestamp: "2 hours ago",
       },
       {
         id: 2,
         author: "Sarah Chen",
-        avatar: "/placeholder.svg?height=32&width=32",
+        avatar: getRandomStockPhotoByCategory('artist'),
         content: "Working on a new commission today. The client wants something really unique!",
         timestamp: "4 hours ago",
       },
       {
         id: 3,
         author: "Marcus Rodriguez",
-        avatar: "/placeholder.svg?height=32&width=32",
+        avatar: getRandomStockPhotoByCategory('artist'),
         content: "Found some amazing clay at the local art supply store. Can't wait to start sculpting!",
         timestamp: "1 day ago",
       },
     ],
   }
 
-  return (
-    <div>
-      {/* Pass data to layout via props */}
-      {React.cloneElement(page, {
-        sidebarProps: {
-          leftSidebarData,
-          rightSidebarData,
-        },
-      })}
-    </div>
-  )
+  return {
+    sidebarProps: {
+      leftSidebarData,
+      rightSidebarData,
+    },
+  }
 }

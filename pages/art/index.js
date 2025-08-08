@@ -10,10 +10,11 @@
  Open source · low-profit · human-first*/
 
 
-import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
-import ListingCard from "/components/card_listing"
+import ListingCard from "@/components/cards/card_listing"
+import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 
 /**
  * Function to generate a random number for social counters
@@ -484,17 +485,21 @@ const Listings = (props) => {
     },
   }
   return (
-    <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
-      <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
-      {/* Hero Section */}
-      <section className="text-center py-12">
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
-          Art Listings
-        </h1>
-        <p className="text-xl md:text-2xl text-secondary mb-6">
-          Explore a curated selection of art pieces to inspire your creativity.
-        </p>
-      </section>
+    <SocialRealtimeProvider>
+      <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+        <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
+        {/* Hero Section */}
+        <section className="text-center py-12">
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
+            Art Listings
+          </h1>
+          <p className="text-xl md:text-2xl text-secondary mb-6">
+            Explore a curated selection of art pieces to inspire your creativity.
+          </p>
+          <div className="badge badge-info badge-lg">
+            ✨ Enhanced with Social Features
+          </div>
+        </section>
       <main className="container mx-auto px-4 py-8 flex-1 w-full">
         {/* Dynamic listings section */}
         <div className="mb-16">
@@ -525,6 +530,7 @@ const Listings = (props) => {
         </div>
       </main>
     </div>
+    </SocialRealtimeProvider>
   )
 }
 
@@ -550,10 +556,140 @@ Listings.getInitialProps = async (context) => {
   // Generate fake listings for demonstration
   const fakeListings = generateFakeListings()
 
+  // Generate some fake artists for sidebar
+  const featuredArtists = [
+    {
+      id: "sidebar-artist-1",
+      name: "Elena Rodriguez",
+      avatar: "/placeholder.svg?height=48&width=48",
+      specialty: "Abstract Painting",
+      rating: 4.8,
+      location: "San Francisco, CA"
+    },
+    {
+      id: "sidebar-artist-2", 
+      name: "Marcus Chen",
+      avatar: "/placeholder.svg?height=48&width=48",
+      specialty: "Digital Sculpture",
+      rating: 4.9,
+      location: "Portland, OR"
+    },
+    {
+      id: "sidebar-artist-3",
+      name: "Sophia Williams",
+      avatar: "/placeholder.svg?height=48&width=48", 
+      specialty: "Mixed Media",
+      rating: 4.7,
+      location: "Austin, TX"
+    }
+  ]
+
   return {
     listings: data,
     fakeListings,
     status: status,
+    sidebarProps: {
+      leftSidebarData: {
+        artists: featuredArtists,
+        contentType: "artists",
+        filters: [
+          { label: "All Art", value: "all" },
+          { label: "Paintings", value: "paintings" },
+          { label: "Sculptures", value: "sculptures" },
+          { label: "Digital Art", value: "digital" },
+          { label: "Photography", value: "photography" },
+          { label: "Mixed Media", value: "mixed" },
+          { label: "Under $100", value: "budget" },
+          { label: "$100 - $500", value: "mid" },
+          { label: "Premium", value: "premium" }
+        ]
+      },
+      rightSidebarData: {
+        cartItems: [
+          {
+            id: "art-cart-1",
+            name: "Abstract Digital Print",
+            price: 85.0,
+            quantity: 1,
+            image: getRandomStockPhotoByCategory('painting'),
+            artist: "Elena Rodriguez"
+          },
+          {
+            id: "art-cart-2",
+            name: "Sculpture Commission",
+            price: 340.0,
+            quantity: 1,
+            image: getRandomStockPhotoByCategory('general'),
+            artist: "Marcus Chen"
+          },
+          {
+            id: "art-cart-3",
+            name: "Photography Bundle",
+            price: 120.0,
+            quantity: 2,
+            image: getRandomStockPhotoByCategory('general'),
+            artist: "Sophia Williams"
+          },
+          {
+            id: "art-cart-4",
+            name: "Mixed Media Piece",
+            price: 200.0,
+            quantity: 1,
+            image: getRandomStockPhotoByCategory('painting'),
+            artist: "Various Artists"
+          }
+        ],
+        stories: [
+          {
+            id: "art-story-1",
+            author: "Art Collector",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "Just discovered this amazing piece! The technique and composition are absolutely stunning.",
+            timestamp: "30 minutes ago"
+          },
+          {
+            id: "art-story-2",
+            author: "Gallery Director", 
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "New arrivals this week include some exceptional contemporary works. Don't miss out!",
+            timestamp: "3 hours ago"
+          },
+          {
+            id: "art-story-3",
+            author: "Art Critic",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "The emerging talent in our community continues to amaze me. Such innovative approaches to traditional mediums.",
+            timestamp: "6 hours ago"
+          },
+          {
+            id: "art-story-4",
+            author: "Student Artist",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "Learned so much from studying the pieces in this collection. Inspiration everywhere!",
+            timestamp: "1 day ago"
+          },
+          {
+            id: "art-story-5",
+            author: "Curator",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "Planning our next exhibition theme. The diversity of styles here is perfect for our spring show.",
+            timestamp: "2 days ago"
+          }
+        ],
+        notifications: [
+          {
+            id: "art-notif-1",
+            message: "Flash sale: 20% off all digital prints this weekend!",
+            type: "success"
+          },
+          {
+            id: "art-notif-2",
+            message: "New artwork uploaded by featured artists",
+            type: "info"
+          }
+        ]
+      }
+    }
   }
 }
 
