@@ -11,15 +11,37 @@
 import Head from "next/head"
 import Image from "next/image"
 import Link from "next/link"
-import { BuildingIcon, GraduationCapIcon, CheckIcon, FacebookIcon, InstagramIcon, TwitterIcon } from "lucide-react"
+import { BuildingIcon, GraduationCapIcon, CheckIcon, FacebookIcon, InstagramIcon, TwitterIcon, HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon, CalendarIcon } from "lucide-react"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import { SocialRealtimeProvider } from "/components/social/SocialRealtimeContext"
+import { useState } from "react"
 
 /**
  * Events landing page showcasing the vision for TAG events
  * Features both performance art events and academic support offerings
  */
 export default function EventsLanding() {
+  // Social data state for events
+  const [socialData, setSocialData] = useState({
+    "music-events": { views: 2145, loves: 234, comments: 87, shares: 156, attending: 89 },
+    "circus-acrobatics": { views: 1876, loves: 189, comments: 64, shares: 128, attending: 67 },
+    "dance-performance": { views: 2567, loves: 312, comments: 103, shares: 201, attending: 134 },
+    "sculpture-workshop": { views: 1234, loves: 145, comments: 56, shares: 89, attending: 78 },
+    "mixed-media": { views: 1654, loves: 198, comments: 72, shares: 134, attending: 92 }
+  });
+
+  const handleSocialAction = (eventId, action) => {
+    setSocialData(prev => ({
+      ...prev,
+      [eventId]: {
+        ...prev[eventId],
+        [action]: prev[eventId][action] + 1
+      }
+    }));
+  };
+
   return (
+    <SocialRealtimeProvider>
     <div className="min-h-screen bg-gray-100 text-base-content">
       <Head>
         <title>Twisted Artists Guild | Events</title>
@@ -38,6 +60,11 @@ export default function EventsLanding() {
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white">
             Where performance meets passion and education ignites creativity
           </p>
+          {/* Social Features Badge */}
+          <div className="badge badge-secondary badge-lg gap-2 mb-6">
+            <CalendarIcon className="w-4 h-4" />
+            <span>Event Social Features Enabled</span>
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/events/upcoming" className="btn btn-primary btn-lg">
               Upcoming Events
@@ -83,14 +110,14 @@ export default function EventsLanding() {
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
             {/* Performance Card 1: Music Events */}
-            <div className="card bg-base-200 shadow-xl image-full overflow-hidden">
+            <div className="card bg-base-200 shadow-xl image-full overflow-hidden group">
               <figure>
                 <Image
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-joshsorenson-995301-drummer.jpg"
                   alt="Drummer performing on stage"
                   width={600}
                   height={400}
-                  className="w-full"
+                  className="w-full group-hover:scale-105 transition-transform duration-300"
                   style={{ objectFit: "cover" }}
                 />
               </figure>
@@ -99,6 +126,35 @@ export default function EventsLanding() {
                 <p className="text-white">
                   Experience electrifying performances from bands and DJs that push the boundaries of sound.
                 </p>
+                
+                {/* Enhanced Social Section */}
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/20">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 text-white/80">
+                      <EyeIcon className="w-4 h-4" />
+                      <span className="text-xs">{socialData["music-events"].views}</span>
+                    </div>
+                    <button 
+                      onClick={() => handleSocialAction("music-events", 'loves')}
+                      className="flex items-center gap-1 text-red-400 hover:scale-105 transition-transform cursor-pointer"
+                    >
+                      <HeartIcon className="w-4 h-4" />
+                      <span className="text-xs">{socialData["music-events"].loves}</span>
+                    </button>
+                    <div className="flex items-center gap-1 text-white/80">
+                      <MessageCircleIcon className="w-4 h-4" />
+                      <span className="text-xs">{socialData["music-events"].comments}</span>
+                    </div>
+                    <button 
+                      onClick={() => handleSocialAction("music-events", 'attending')}
+                      className="flex items-center gap-1 text-green-400 hover:scale-105 transition-transform cursor-pointer"
+                    >
+                      <CalendarIcon className="w-4 h-4" />
+                      <span className="text-xs">{socialData["music-events"].attending}</span>
+                    </button>
+                  </div>
+                </div>
+                
                 <div className="card-actions justify-end">
                   <div className="badge badge-outline text-white border-white">Music</div>
                   <div className="badge badge-primary">Live</div>
@@ -336,6 +392,7 @@ export default function EventsLanding() {
         </section>
       </main>
     </div>
+    </SocialRealtimeProvider>
   )
 }
 

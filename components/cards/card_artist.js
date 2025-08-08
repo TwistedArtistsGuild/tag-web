@@ -12,8 +12,9 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { HeartIcon, ThumbsUpIcon, UsersIcon } from "lucide-react"
-import { useState } from "react" // Import useState
+import { HeartIcon, ThumbsUpIcon, UsersIcon, MessageCircleIcon, SmileIcon } from "lucide-react"
+import { useState } from "react"
+import SocialReactions from "@/components/social/Reactions"
 
 /**
  * Card component for displaying artist information in landscape orientation
@@ -26,6 +27,22 @@ const ArtistCard = ({ artist }) => {
   const [loves, setLoves] = useState(artist.loves)
   const [likes, setLikes] = useState(artist.likes)
   const [followers, setFollowers] = useState(artist.followers)
+  const [showQuickReactions, setShowQuickReactions] = useState(false)
+  const [reactionCounts, setReactionCounts] = useState({
+    '❤️': Math.floor(Math.random() * 50) + 1,
+    '👏': Math.floor(Math.random() * 30) + 1,
+    '🎨': Math.floor(Math.random() * 25) + 1,
+    '🔥': Math.floor(Math.random() * 20) + 1,
+  })
+
+  // Function to handle quick reactions
+  const handleQuickReaction = (emoji) => {
+    setReactionCounts(prev => ({
+      ...prev,
+      [emoji]: prev[emoji] + 1
+    }))
+    console.log(`Quick reaction ${emoji} added to artist ${artist.artistid}`)
+  }
 
   // Function to handle social icon clicks
   const handleSocialClick = async (type) => {
@@ -60,37 +77,72 @@ const ArtistCard = ({ artist }) => {
   }
 
   return (
-    <div className="card lg:card-side bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl border border-base-300 rounded-box">
+    <div 
+      className="card lg:card-side bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full max-w-2xl border border-base-300 rounded-box group"
+      onMouseEnter={() => setShowQuickReactions(true)}
+      onMouseLeave={() => setShowQuickReactions(false)}
+    >
       {/* Wrap the main content (excluding social icons) with Link */}
-      <Link href={`/artists/${artist.path}`} passHref className="flex flex-grow cursor-pointer">
-        <figure className="p-4 flex-shrink-0">
+      <Link href={`/artists/${artist.path}`} passHref className="flex flex-grow cursor-pointer relative">
+        <figure className="p-4 flex-shrink-0 relative">
           <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-base-300">
             <Image
               src={artist?.profilePic?.url || "/blank_image.png"}
               alt={artist?.profilePic?.alttext || `${artist?.title}'s profile picture`}
               layout="fill"
               style={{ objectFit: "cover" }}
-              className="rounded-full"
+              className="rounded-full group-hover:scale-105 transition-transform duration-300"
             />
           </div>
+          
+          {/* Quick Reactions Overlay */}
+          {showQuickReactions && (
+            <div className="absolute top-0 right-0 flex gap-1 bg-base-100/90 backdrop-blur-sm rounded-full p-1 shadow-lg">
+              {Object.entries(reactionCounts).map(([emoji, count]) => (
+                <button
+                  key={emoji}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handleQuickReaction(emoji)
+                  }}
+                  className="hover:scale-125 transition-transform duration-200 text-sm"
+                  title={`${count} reactions`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
         </figure>
         <div className="card-body p-4 flex-grow justify-center">
           <h2 className="card-title text-lg font-semibold text-primary">{artist.title}</h2>
           <p className="text-sm text-base-content/60">{artist.byline}</p>
+          
+          {/* Social Engagement Preview */}
+          <div className="flex items-center gap-2 mt-2">
+            <SmileIcon className="w-4 h-4 text-base-content/60" />
+            <span className="text-xs text-base-content/60">
+              {Object.values(reactionCounts).reduce((a, b) => a + b, 0)} reactions
+            </span>
+            <MessageCircleIcon className="w-4 h-4 text-base-content/60 ml-1" />
+            <span className="text-xs text-base-content/60">
+              {Math.floor(Math.random() * 25) + 5} comments
+            </span>
+          </div>
         </div>
       </Link>
 
-      {/* Social icons with numbers, vertically stacked on the right, matching image */}
+      {/* Enhanced Social Section */}
       <div className="flex flex-col items-center justify-center p-4 bg-base-200 rounded-r-box gap-2">
-        <div className="flex flex-col items-center cursor-pointer" onClick={() => handleSocialClick("loves")}>
+        <div className="flex flex-col items-center cursor-pointer hover:scale-105 transition-transform" onClick={() => handleSocialClick("loves")}>
           <HeartIcon className="w-6 h-6 text-error" />
           <span className="font-bold text-sm text-error">{loves}</span>
         </div>
-        <div className="flex flex-col items-center cursor-pointer" onClick={() => handleSocialClick("likes")}>
+        <div className="flex flex-col items-center cursor-pointer hover:scale-105 transition-transform" onClick={() => handleSocialClick("likes")}>
           <ThumbsUpIcon className="w-6 h-6 text-info" />
           <span className="font-bold text-sm text-info">{likes}</span>
         </div>
-        <div className="flex flex-col items-center cursor-pointer" onClick={() => handleSocialClick("followers")}>
+        <div className="flex flex-col items-center cursor-pointer hover:scale-105 transition-transform" onClick={() => handleSocialClick("followers")}>
           <UsersIcon className="w-6 h-6 text-success" />
           <span className="font-bold text-sm text-success">{followers}</span>
         </div>
