@@ -12,6 +12,7 @@ import Head from "next/head"
 import Image from "next/image"
 import Link from "next/link"
 import { BuildingIcon, GraduationCapIcon, CheckIcon, FacebookIcon, InstagramIcon, TwitterIcon } from "lucide-react"
+import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 /**
  * Events landing page showcasing the vision for TAG events
@@ -336,4 +337,161 @@ export default function EventsLanding() {
       </main>
     </div>
   )
+}
+
+EventsLanding.getInitialProps = async () => {
+  // Generate sample events for sidebar
+  const upcomingEvents = [
+    {
+      id: "event-1",
+      name: "Contemporary Art Exhibition", 
+      date: "March 15, 2025",
+      location: "TAG Gallery Downtown",
+      description: "Featuring emerging local artists"
+    },
+    {
+      id: "event-2",
+      name: "Performance Art Workshop",
+      date: "March 22, 2025", 
+      location: "Community Arts Center",
+      description: "Interactive workshop for all skill levels"
+    },
+    {
+      id: "event-3",
+      name: "Artist Talk & Networking",
+      date: "April 5, 2025",
+      location: "Virtual Event",
+      description: "Connect with fellow artists and creators"
+    }
+  ]
+
+  // Featured artists for events
+  const featuredArtists = [
+    {
+      id: "event-artist-1",
+      name: "Jordan Kim",
+      avatar: "/placeholder.svg?height=48&width=48",
+      specialty: "Performance Art",
+      rating: 4.9,
+      location: "Seattle, WA"
+    },
+    {
+      id: "event-artist-2",
+      name: "Alex Thompson", 
+      avatar: "/placeholder.svg?height=48&width=48",
+      specialty: "Installation Art",
+      rating: 4.8,
+      location: "Denver, CO"
+    }
+  ]
+
+  return {
+    sidebarProps: {
+      leftSidebarData: {
+        events: upcomingEvents,
+        artists: featuredArtists,
+        contentType: "events",
+        filters: [
+          { label: "All Events", value: "all" },
+          { label: "Exhibitions", value: "exhibitions" },
+          { label: "Workshops", value: "workshops" },
+          { label: "Performances", value: "performances" },
+          { label: "Virtual Events", value: "virtual" },
+          { label: "Free Events", value: "free" },
+          { label: "This Week", value: "week" },
+          { label: "This Month", value: "month" }
+        ]
+      },
+      rightSidebarData: {
+        cartItems: [
+          {
+            id: "event-cart-1",
+            name: "Workshop: Digital Art Basics",
+            price: 45.0,
+            quantity: 1,
+            image: getRandomStockPhotoByCategory('general'),
+            artist: "TAG Education"
+          },
+          {
+            id: "event-cart-2",
+            name: "Exhibition VIP Pass",
+            price: 25.0,
+            quantity: 2,
+            image: getRandomStockPhotoByCategory('painting'),
+            artist: "TAG Gallery"
+          },
+          {
+            id: "event-cart-3",
+            name: "Performance Art Ticket",
+            price: 30.0,
+            quantity: 1,
+            image: getRandomStockPhotoByCategory('artist'),
+            artist: "TAG Performances"
+          },
+          {
+            id: "event-cart-4",
+            name: "Artist Meet & Greet",
+            price: 15.0,
+            quantity: 1,
+            image: getRandomStockPhotoByCategory('general'),
+            artist: "TAG Events"
+          }
+        ],
+        stories: [
+          {
+            id: "event-story-1",
+            author: "Event Organizer",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "Exciting lineup for this month's events! Don't forget to register early for the workshop spots.",
+            timestamp: "1 hour ago"
+          },
+          {
+            id: "event-story-2",
+            author: "Artist Coordinator",
+            avatar: getRandomStockPhotoByCategory('artist'), 
+            content: "Last week's performance was absolutely incredible. The energy from the audience was amazing!",
+            timestamp: "2 days ago"
+          },
+          {
+            id: "event-story-3",
+            author: "Workshop Instructor",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "Seeing students discover their artistic voice never gets old. Next workshop starts Monday!",
+            timestamp: "3 days ago"
+          },
+          {
+            id: "event-story-4",
+            author: "Gallery Visitor",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "The current exhibition completely blew my mind. Such innovative approaches to traditional themes.",
+            timestamp: "4 days ago"
+          },
+          {
+            id: "event-story-5",
+            author: "Performance Artist",
+            avatar: getRandomStockPhotoByCategory('artist'),
+            content: "Thrilled to be part of next month's showcase. Can't wait to share my new piece with everyone!",
+            timestamp: "1 week ago"
+          }
+        ],
+        notifications: [
+          {
+            id: "event-notif-1",
+            message: "Workshop registration opens tomorrow at 9 AM",
+            type: "info"
+          },
+          {
+            id: "event-notif-2",
+            message: "Limited spots available for VIP exhibition preview",
+            type: "warning"
+          },
+          {
+            id: "event-notif-3",
+            message: "Early bird pricing ends this Friday!",
+            type: "success"
+          }
+        ]
+      }
+    }
+  }
 }
