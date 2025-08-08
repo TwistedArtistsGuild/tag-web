@@ -12,59 +12,37 @@
 
 import { useState } from "react"
 import { useLayout } from "./LayoutProvider"
-
-const stockPhotos = [
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1322183-artistpaintingmural2.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-carlo-junemann-156928830-12407580-merchandisehats.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-joshsorenson-995301-drummer.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-jovanvasiljevic-32146479-merchandisesweater.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-karolina-grabowska-4471894-blackguitar.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-marcela-alessandra-789314-1885213-pianist.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-markus-winkler-1430818-3812433-merchandiseclothingrack.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-nappy-936030-violin.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-pixabay-210922-guitarist.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-pixabay-262034-brushes.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-sebastian-ervi-866902-1763075-bandNcrowd.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg",
-  "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg",
-]
+import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 export default function RightSidebar(props) {
-  const { rightSidebarData = {} } = props.sidebarProps || {};
-  const cartItems = rightSidebarData.cartItems || [
+  // Since MyLayout.js spreads the rightSidebarData, we access props directly
+  const cartItems = props.cartItems || [
     {
       id: "default",
       name: "Default Cart Item (no data passed in)",
       price: 0,
       quantity: 1,
-      image: stockPhotos[2],
+      image: getRandomStockPhotoByCategory('merchandise'),
       artist: "Default Artist"
     }
   ];
-  const stories = rightSidebarData.stories || [
+  const stories = props.stories || [
     {
       id: "default",
       author: "Default Author (no data passed in)",
-      avatar: stockPhotos[3],
+      avatar: getRandomStockPhotoByCategory('artist'),
       content: "This is a default story because no data was passed in.",
       timestamp: "now"
     }
   ];
-  const notifications = rightSidebarData.notifications || [
+  const notifications = props.notifications || [
     {
       id: "default",
       message: "Default notification (no data passed in)",
       type: "info"
     }
   ];
-  if (process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
-    console.log("[RightSidebar] props:", { cartItems, stories, notifications, rightSidebarData, sidebarProps: props.sidebarProps })
-  }
-
+  
   const { isRightSidebarVisible, toggleRightSidebar, isMobile, isHeaderVisible } = useLayout()
   const [activeTab, setActiveTab] = useState("cart")
   const [newStory, setNewStory] = useState("")
@@ -101,8 +79,9 @@ export default function RightSidebar(props) {
         {isRightSidebarVisible && (
           <button
             onClick={toggleRightSidebar}
-            className="absolute top-1/2 -left-3 transform -translate-y-1/2 bg-base-200 text-base-content hover:bg-base-300 px-1 py-3 rounded-l-lg border border-base-content/10 shadow-md transition-all duration-300 hover:scale-105 z-10"
+            className="absolute top-1/2 -left-3 transform -translate-y-1/2 bg-base-200 text-base-content hover:bg-base-300 px-2 py-4 rounded-l-lg border border-base-content/10 shadow-md transition-all duration-300 hover:scale-105 z-40 touch-manipulation"
             aria-label="Hide right sidebar"
+            style={{ touchAction: 'manipulation' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -113,6 +92,19 @@ export default function RightSidebar(props) {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 border-b border-base-content/10 bg-base-300">
           <h2 className="font-semibold text-lg text-base-content">Personal Space</h2>
+          {/* Mobile close button in header */}
+          {isMobile && (
+            <button
+              onClick={toggleRightSidebar}
+              className="btn btn-sm btn-circle btn-ghost touch-manipulation"
+              aria-label="Close sidebar"
+              style={{ touchAction: 'manipulation' }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
 
         {/* Tab Navigation */}
@@ -132,9 +124,9 @@ export default function RightSidebar(props) {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 max-h-[calc(100vh-200px)]">
           {activeTab === "cart" && (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto max-h-full">
               {cartItems.length > 0 ? (
                 <>
                   {cartItems.map((item, index) => (
@@ -183,7 +175,7 @@ export default function RightSidebar(props) {
           )}
 
           {activeTab === "stories" && (
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-y-auto max-h-full">
               {/* Add New Story */}
               <div className="card card-compact bg-base-100 shadow">
                 <div className="card-body">
@@ -239,7 +231,12 @@ export default function RightSidebar(props) {
 
       {/* Mobile Overlay */}
       {isMobile && isRightSidebarVisible && (
-        <div className="fixed inset-0 bg-black/50 z-20" onClick={toggleRightSidebar} />
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 touch-manipulation" 
+          onClick={toggleRightSidebar}
+          onTouchEnd={toggleRightSidebar}
+          style={{ touchAction: 'manipulation' }}
+        />
       )}
     </>
   )
