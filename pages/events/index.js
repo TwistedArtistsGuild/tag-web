@@ -11,9 +11,9 @@
 import Head from "next/head"
 import Image from "next/image"
 import Link from "next/link"
-import { BuildingIcon, GraduationCapIcon, CheckIcon, FacebookIcon, InstagramIcon, TwitterIcon, HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon, CalendarIcon } from "lucide-react"
+import { BuildingIcon, GraduationCapIcon, CheckIcon, HeartIcon, MessageCircleIcon, EyeIcon, CalendarIcon } from "lucide-react"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
-import { SocialRealtimeProvider } from "/components/social/SocialRealtimeContext"
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { useState } from "react"
 
 /**

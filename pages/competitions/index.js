@@ -10,8 +10,8 @@
  Open source · low-profit · human-first*/
 import React, { useState } from 'react';
 import 'tailwindcss/tailwind.css';
-import { HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon, TrophyIcon, VoteIcon } from "lucide-react"
-import { SocialRealtimeProvider } from "/components/social/SocialRealtimeContext"
+import { HeartIcon, MessageCircleIcon, EyeIcon, TrophyIcon, VoteIcon } from "lucide-react"
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 
 const competitions = [
   {

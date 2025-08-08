@@ -14,7 +14,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { HeartIcon, ThumbsUpIcon, UsersIcon, MessageCircleIcon, SmileIcon } from "lucide-react" // Import Lucide icons
 import { useState } from "react" // Import useState
-import SocialReactions from "@/components/social/Reactions"
 
 const ListingCard = ({ listing }) => {
   // Initialize state for each counter with values from props

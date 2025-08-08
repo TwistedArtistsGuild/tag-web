@@ -14,7 +14,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { HeartIcon, ThumbsUpIcon, UsersIcon, MessageCircleIcon, SmileIcon } from "lucide-react"
 import { useState } from "react"
-import SocialReactions from "@/components/social/Reactions"
 
 /**
  * Card component for displaying artist information in landscape orientation

@@ -9,6 +9,7 @@
 
  Open source · low-profit · human-first*/
 
+
 import Head from "next/head"
 import Image from "next/image" // Import Image component
 import Link from "next/link" // Import Link component
