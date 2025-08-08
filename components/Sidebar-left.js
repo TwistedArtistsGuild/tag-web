@@ -21,30 +21,74 @@ import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 export default function LeftSidebar(props) {
   // Since MyLayout.js spreads the leftSidebarData, we access props directly
-  const artists = props.artists || [
-    {
-      id: "default",
-      name: "Default Artist (no data passed in)",
-      avatar: getRandomStockPhotoByCategory('artist'),
-      specialty: "Default Specialty",
-      rating: 1,
-      location: "Default Location"
-    }
-  ];
-  const listings = props.listings || [
-    {
-      id: "default",
-      name: "Default Listing (no data passed in)",
-      image: getRandomStockPhotoByCategory('painting'),
-      price: 0,
-      artist: "Default Artist"
-    }
-  ];
+  const artists = props.artists || [];
+  const listings = props.listings || [];
+  const events = props.events || [];
   const filters = props.filters || [
     { label: "All Art", value: "all" },
     { label: "Paintings", value: "paintings" },
     { label: "Sculpture", value: "sculpture" },
   ];
+  const contentType = props.contentType || "auto"; // "artists", "listings", "events", or "auto"
+  
+  // Auto-detect content type if not specified
+  const getContentToDisplay = () => {
+    if (contentType !== "auto") return contentType;
+    if (listings.length > 0) return "listings";
+    if (artists.length > 0) return "artists";
+    if (events.length > 0) return "events";
+    return "none";
+  };
+  
+  const displayType = getContentToDisplay();
+
+  // Render content based on type
+  const renderContent = () => {
+    switch (displayType) {
+      case "listings":
+        return (
+          <>
+            <h3 className="font-medium text-base-content mb-3">Featured Listings</h3>
+            {listings.map((listing, index) => (
+              <ListingCard key={listing.id || index} listing={listing} />
+            ))}
+          </>
+        );
+      case "artists":
+        return (
+          <>
+            <h3 className="font-medium text-base-content mb-3">Featured Artists</h3>
+            {artists.map((artist, index) => (
+              <ArtistCard key={artist.id || index} artist={artist} />
+            ))}
+          </>
+        );
+      case "events":
+        return (
+          <>
+            <h3 className="font-medium text-base-content mb-3">Upcoming Events</h3>
+            {events.map((event, index) => (
+              <div key={event.id || index} className="card card-compact bg-base-100 shadow">
+                <div className="card-body">
+                  <h4 className="font-medium text-sm">{event.name}</h4>
+                  <p className="text-xs text-base-content/60">{event.date}</p>
+                  <p className="text-xs">{event.location}</p>
+                </div>
+              </div>
+            ))}
+          </>
+        );
+      default:
+        return (
+          <div className="text-center py-8 text-base-content/60">
+            <div className="flex flex-col items-center justify-center">
+              <Image src={getRandomStockPhotoByCategory('general')} width={48} height={48} alt="No content" className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No content available</p>
+            </div>
+          </div>
+        );
+    }
+  };
   
   const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
   const [searchTerm, setSearchTerm] = useState("")
@@ -122,18 +166,18 @@ export default function LeftSidebar(props) {
         {filters.length > 0 && (
           <div className="p-4 border-b border-base-content/10">
             <h3 className="font-medium text-base-content mb-3">Filters</h3>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {filters.map((filter, index) => (
                 <label key={index} className="label cursor-pointer justify-start">
                   <input
                     type="radio"
                     name="filter"
-                    className="radio radio-primary radio-sm"
+                    className="radio radio-primary radio-xs"
                     checked={activeFilter === filter.value}
                     onChange={() => setActiveFilter(filter.value)}
                   />
                   
-                  <span className="label-text ml-2">{filter.label}</span>
+                  <span className="label-text text-xs ml-2">{filter.label}</span>
                 </label>
               ))}
             </div>
@@ -141,29 +185,8 @@ export default function LeftSidebar(props) {
         )}
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
-          {listings && listings.length > 0 ? (
-            <>
-              <h3 className="font-medium text-base-content mb-3">Featured Listings</h3>
-              {listings.map((listing, index) => (
-                <ListingCard key={index} listing={listing} />
-              ))}
-            </>
-          ) : artists && artists.length > 0 ? (
-            <>
-              <h3 className="font-medium text-base-content mb-3">Featured Artists</h3>
-              {artists.map((artist, index) => (
-                <ArtistCard key={index} artist={artist} />
-              ))}
-            </>
-          ) : (
-            <div className="text-center py-8 text-base-content/60">
-              <div className="flex flex-col items-center justify-center">
-                <Image src={getRandomStockPhotoByCategory('general')} width={48} height={48} alt="No content" className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No content available</p>
-              </div>
-            </div>
-          )}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 max-h-[calc(100vh-300px)]">
+          {renderContent()}
         </div>
       </aside>
 
