@@ -303,7 +303,7 @@ const Artist = (props) => {
         <Image
           src={props.coverPic?.url || "/blank_image.png"}
           alt={props.coverPic?.altText || "Cover Picture"}
-          layout="fill"
+          fill
           style={{ objectFit: "cover" }}
           priority
         />
@@ -323,7 +323,7 @@ const Artist = (props) => {
                 <Image
                   src={props.profilePic?.url || "/blank_image.png"}
                   alt={`Profile picture of ${props.artist.title}`}
-                  layout="fill"
+                  fill
                   style={{ objectFit: "cover" }}
                   className="rounded-xl"
                 />
@@ -509,8 +509,8 @@ const Artist = (props) => {
                         <Image
                           src={listing.profilePic?.url || "/blank_image.png"}
                           alt={listing.profilePic?.altText || "Listing Image"}
-                          layout="fill"
-                          objectFit="cover"
+                          fill
+                          style={{ objectFit: "cover" }}
                           className="rounded-lg"
                         />
                       </Link>
