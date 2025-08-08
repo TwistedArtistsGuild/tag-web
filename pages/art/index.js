@@ -10,11 +10,11 @@
  Open source · low-profit · human-first*/
 
 
-import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
-import ListingCard from "/components/card_listing"
+import ListingCard from "@/components/cards/card_listing"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 
 /**
  * Function to generate a random number for social counters
@@ -485,17 +485,21 @@ const Listings = (props) => {
     },
   }
   return (
-    <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
-      <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
-      {/* Hero Section */}
-      <section className="text-center py-12">
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
-          Art Listings
-        </h1>
-        <p className="text-xl md:text-2xl text-secondary mb-6">
-          Explore a curated selection of art pieces to inspire your creativity.
-        </p>
-      </section>
+    <SocialRealtimeProvider>
+      <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+        <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
+        {/* Hero Section */}
+        <section className="text-center py-12">
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
+            Art Listings
+          </h1>
+          <p className="text-xl md:text-2xl text-secondary mb-6">
+            Explore a curated selection of art pieces to inspire your creativity.
+          </p>
+          <div className="badge badge-info badge-lg">
+            ✨ Enhanced with Social Features
+          </div>
+        </section>
       <main className="container mx-auto px-4 py-8 flex-1 w-full">
         {/* Dynamic listings section */}
         <div className="mb-16">
@@ -526,6 +530,7 @@ const Listings = (props) => {
         </div>
       </main>
     </div>
+    </SocialRealtimeProvider>
   )
 }
 
