@@ -21,12 +21,18 @@ const ListingCard = ({ listing }) => {
   const [likes, setLikes] = useState(listing.likes || 0)
   const [followers, setFollowers] = useState(listing.followers || 0)
   const [showQuickReactions, setShowQuickReactions] = useState(false)
+  
+  // Static diverse numbers for demo data
+  const demoNumbers = [67, 34, 23, 89, 45, 156, 78, 234, 12, 567]
+  
   const [reactionCounts, setReactionCounts] = useState({
-    '❤️': Math.floor(Math.random() * 20) + 1,
-    '👏': Math.floor(Math.random() * 15) + 1,
-    '🔥': Math.floor(Math.random() * 10) + 1,
-    '😍': Math.floor(Math.random() * 8) + 1,
+    '❤️': demoNumbers[0], // 67
+    '👏': demoNumbers[1], // 34
+    '🔥': demoNumbers[2], // 23
+    '😍': demoNumbers[3], // 89
   })
+  
+  const commentsCount = demoNumbers[4] // 45
 
   // Function to handle quick reactions
   const handleQuickReaction = (emoji) => {
@@ -141,7 +147,7 @@ const ListingCard = ({ listing }) => {
             </span>
             <MessageCircleIcon className="w-4 h-4 text-base-content/60 ml-2" />
             <span className="text-sm text-base-content/60">
-              {Math.floor(Math.random() * 15) + 1} comments
+              {commentsCount} comments
             </span>
           </div>
         </div>

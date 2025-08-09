@@ -9,11 +9,22 @@
 
  Open source · low-profit · human-first*/
 
-import { useState, useEffect, useCallback, memo, useRef } from 'react';
-import { useRealtimeReactions, useSocialRealtime } from './SocialRealtimeContext';
+import { useState, useEffect, useCallback, memo, useRef, useContext, createContext, useMemo } from 'react';
+
+// Create a safe fallback context
+const SafeRealtimeContext = createContext(null);
+
+// Import context optionally - will use fallback if provider is not available
+let SocialRealtimeContext = SafeRealtimeContext;
+try {
+    const contextModule = require('./SocialRealtimeContext');
+    SocialRealtimeContext = contextModule.SocialRealtimeContext || SafeRealtimeContext;
+} catch {
+    // Context not available - component will work in standalone mode
+}
 
 /**
- * SocialReactions - Real-time reaction system for posts, comments, and messages
+ * SocialReactions - Modular reaction system that works with or without realtime context
  * 
  * @param {Object} props
  * @param {string} props.targetId - ID of the target content (post, comment, message)
@@ -43,8 +54,14 @@ const SocialReactions = ({
     const [isLoading, setIsLoading] = useState(false);
     const [showReactionPicker, setShowReactionPicker] = useState(false);
     const [animatingReactions, setAnimatingReactions] = useState(new Set());
-    const { emit, isConnected } = useSocialRealtime();
     const pickerRef = useRef(null);
+
+    // Always call useContext (required by React hooks rules)
+    const realtimeContext = useContext(SocialRealtimeContext);
+    
+    // Extract realtime functions with safe fallbacks (memoized to prevent re-renders)
+    const emit = useMemo(() => realtimeContext?.emit || (() => {}), [realtimeContext?.emit]);
+    const isConnected = realtimeContext?.isConnected || false;
 
     // Close picker when clicking outside
     useEffect(() => {
@@ -54,7 +71,7 @@ const SocialReactions = ({
             }
         };
 
-        if (showReactionPicker) {
+        if (showReactionPicker && typeof document !== 'undefined') {
             document.addEventListener('mousedown', handleClickOutside);
             return () => document.removeEventListener('mousedown', handleClickOutside);
         }
@@ -74,9 +91,8 @@ const SocialReactions = ({
         { emoji: '🙌', name: 'praise', label: 'Praise' }
     ];
 
-    // Quick reactions (first 4) and remaining reactions
+    // Quick reactions (first 4)
     const quickReactions = availableReactions.slice(0, 4);
-    const remainingReactions = availableReactions.slice(4);
 
     // Initialize reactions from props
     useEffect(() => {
@@ -173,11 +189,28 @@ const SocialReactions = ({
         });
     }, [targetId, targetType, currentUser]);
 
-    useRealtimeReactions(handleRealtimeUpdate);
+    // Subscribe to realtime updates if context is available
+    useEffect(() => {
+        if (!realtimeContext || !realtimeContext.subscribe) return;
+        
+        const unsubscribe = realtimeContext.subscribe('reactions', handleRealtimeUpdate);
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [realtimeContext, handleRealtimeUpdate]);
 
-    // Add reaction
+    // Add reaction with auth check
     const addReaction = useCallback(async (emoji) => {
-        if (!currentUser || readOnly || isLoading) return;
+        // TODO: Replace with actual session/auth logic
+        if (!currentUser) {
+            // Placeholder for future auth logic
+            console.log('User not authenticated - would redirect to login or show auth modal');
+            // For demo purposes, show an alert
+            alert('Please log in to react to this content');
+            return;
+        }
+        
+        if (readOnly || isLoading) return;
         
         setIsLoading(true);
         
@@ -423,8 +456,8 @@ const SocialReactions = ({
                 </button>
             ))}
 
-            {/* Quick Reactions (if enabled and user hasn't used them) */}
-            {showQuickReactions && !readOnly && currentUser && (
+            {/* Quick Reactions (always show if enabled) */}
+            {showQuickReactions && !readOnly && (
                 <>
                     {quickReactions.map((reactionOption) => {
                         const existing = reactions.get(reactionOption.emoji);
@@ -444,7 +477,7 @@ const SocialReactions = ({
                                     ${sizeClasses.quickReaction}
                                     ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
                                 `}
-                                title={`Add ${reactionOption.label} reaction`}
+                                title={`Add ${reactionOption.label} reaction${!currentUser ? ' (login required)' : ''}`}
                             >
                                 <span className="leading-none">
                                     {reactionOption.emoji}
@@ -455,8 +488,8 @@ const SocialReactions = ({
                 </>
             )}
 
-            {/* Add Reaction Button */}
-            {!readOnly && currentUser && (
+            {/* Add Reaction Button (always show unless read-only) */}
+            {!readOnly && (
                 <div className="relative" ref={pickerRef}>
                     <button
                         onClick={() => setShowReactionPicker(!showReactionPicker)}
@@ -468,7 +501,7 @@ const SocialReactions = ({
                             ${sizeClasses.addButton}
                             ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
                         `}
-                        title="More reactions"
+                        title={currentUser ? "More reactions" : "More reactions (login required)"}
                     >
                         <span className="text-lg leading-none">+</span>
                         {showDetails && <span className="text-sm leading-none">More</span>}
