@@ -50,6 +50,9 @@ export default function UpdateFormsForm1(props) {
     api_url +
     `${props.FormStructure_metadata.apiurLpostfix}/${props.FormStructure_metadata.name}`;
 
+  // Set the requestType to "add" for the create field form before rendering
+  props.FormStructure_metadata.requestType = "add";
+
   return (
     <div>
       <div>
@@ -106,7 +109,6 @@ export default function UpdateFormsForm1(props) {
       <ul>
         <div className="text-lg font-bold mt-6">Create a new form field:</div>
         {/* Set the requestType to "add" */}
-        {props.FormStructure_metadata.requestType = "add"}
         <DynaFormDB
           metadataProp={props.FormStructure_metadata}
           fieldsProp={props.FormStructure_metadata.forms_Fields}

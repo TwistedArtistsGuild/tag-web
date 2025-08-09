@@ -63,10 +63,10 @@ export function getRandomStockPhotos(count = 1) {
 export function getRandomStockPhotoByCategory(category = 'general') {
   const categoryMap = {
     artist: [0, 1, 12, 14], // Artist painting murals, artist painting
-    instrument: [4, 6, 9, 10, 15], // Drummer, guitar, violin, guitarist, sax
+    instrument: [4, 6, 9, 10], // Drummer, guitar, violin, guitarist
     merchandise: [2, 5, 8], // Hats, sweater, clothing rack
     painting: [1, 3, 11, 12, 14], // Artist painting, paint palette, brushes, artist painting mural, artist painting
-    performance: [4, 7, 9, 10, 13, 15], // Drummer, pianist, violin, guitarist, band & crowd, sax
+    performance: [4, 7, 9, 10, 13], // Drummer, pianist, violin, guitarist, band & crowd
     general: null // All photos
   }
   
