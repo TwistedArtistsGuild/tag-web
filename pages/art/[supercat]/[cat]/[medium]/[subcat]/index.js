@@ -10,9 +10,8 @@
  Open source · low-profit · human-first*/
 
 
-import { useState } from "react";
 import TagSEO from "@/components/TagSEO";
-import ListingCard from "@/components/cards/card_listing";
+import CardFactory from "@/components/cards/CardFactory";
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 
 /**
@@ -21,7 +20,6 @@ import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContex
  * @returns
  */
 const Listings = (props) => {
-  const [open, setOpen] = useState(false) // This state is not used in the current JSX, but kept for consistency
 
   const pageMetaData = {
     title: `TAG Art Listings - ${props.supercat || "Art"}`,
@@ -48,16 +46,34 @@ const Listings = (props) => {
 						<div className="badge badge-info">✨ Enhanced with Social Features</div>
 					</div>
 				</div>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{props.listings.map((listing) => {
+						// Create a listing object with proper fallbacks for images
+						const listingData = {
+							...listing,
+							// Ensure image URL with multiple fallback options
+							url: listing.profilePic?.url || listing.url || listing.imageUrl || listing.picture?.url || `https://picsum.photos/seed/art-${listing.listingid}/600/400`,
+							imageUrl: listing.profilePic?.url || listing.url || listing.imageUrl || listing.picture?.url || `https://picsum.photos/seed/art-${listing.listingid}/600/400`,
+							// Add proper title
+							title: listing.title || "Untitled Artwork",
+							// Add proper description  
+							description: listing.description || "Art piece description",
+							// Ensure artist data structure
+							artist: listing.artist || {
+								title: listing.artistName || "Unknown Artist",
+								path: listing.artistPath || listing.artistSlug || "#"
+							}
+						};
+
 						return (
-							<ListingCard
+							<CardFactory
 								key={listing.listingid}
-								listing={{
-									...listing,
-									artist: { path: listing.artist?.path },
-									path: listing.path,
-								}}
+								type="listing"
+								variant="medium"
+								data={listingData}
+								showInteractions={true}
+								orientation="vertical"
+								className="w-full"
 							/>
 						);
 					})}

@@ -11,10 +11,8 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { useLayout } from "./LayoutProvider"
-import ArtistCard from "@/components/cards/card_artist"
-import ListingCard from "@/components/cards/card_listing"
+import CardFactory from "@/components/cards/CardFactory"
 import Image from "next/image"
 import { useRouter } from "next/router"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
@@ -50,7 +48,13 @@ export default function LeftSidebar(props) {
           <>
             <h3 className="font-medium text-base-content mb-3">Featured Listings</h3>
             {listings.map((listing, index) => (
-              <ListingCard key={listing.id || index} listing={listing} />
+              <CardFactory 
+                key={listing.id || index} 
+                type="listing" 
+                variant="small"
+                data={listing} 
+                orientation="vertical"
+              />
             ))}
           </>
         );
@@ -59,7 +63,14 @@ export default function LeftSidebar(props) {
           <>
             <h3 className="font-medium text-base-content mb-3">Featured Artists</h3>
             {artists.map((artist, index) => (
-              <ArtistCard key={artist.id || index} artist={artist} />
+              <CardFactory 
+                key={artist.id || index} 
+                type="artist"
+                variant="small"
+                data={artist} 
+                orientation="vertical"
+                interactive={false}
+              />
             ))}
           </>
         );

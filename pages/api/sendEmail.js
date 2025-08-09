@@ -11,7 +11,6 @@
 
 
 import { EmailClient } from "@azure/communication-email"
-import config from "@/config"
 
 /**
  * Sends an email using the provided parameters.

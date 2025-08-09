@@ -11,7 +11,6 @@
 
 
 
-import { useAppContext } from "/components/Context"
 import Link from "next/link"
 import MissionStatement from "/components/MissionStatement"
 

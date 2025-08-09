@@ -10,9 +10,8 @@
  Open source · low-profit · human-first*/
 
 
-import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
-import ListingCard from "@/components/cards/card_listing"
+import CardFactory from "@/components/cards/CardFactory"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 
@@ -23,7 +22,7 @@ const getRandomCount = () => Math.floor(Math.random() * 1000) + 1 // Random numb
 
 /**
  * Generates fake listings to demonstrate various art categories
- * @returns {Array} Array of fake listing objects with proper structure for ListingCard component
+ * @returns {Array} Array of fake listing objects with proper structure for CardFactory listing cards
  */
 const generateFakeListings = () => {
   return [
@@ -508,7 +507,12 @@ const Listings = (props) => {
             {props.listings.map((listing) => (
               <div key={listing.listingid} className="flex justify-center">
                 <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-3xl">
-                  <ListingCard listing={listing} />
+                  <CardFactory 
+                    type="listing" 
+                    variant="medium" 
+                    data={listing} 
+                    showInteractions={true}
+                  />
                 </div>
               </div>
             ))}
@@ -522,7 +526,12 @@ const Listings = (props) => {
             {props.fakeListings.map((listing) => (
               <div key={listing.listingid} className="flex justify-center">
                 <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl">
-                  <ListingCard listing={listing} />
+                  <CardFactory 
+                    type="listing" 
+                    variant="small" 
+                    data={listing} 
+                    showInteractions={true}
+                  />
                 </div>
               </div>
             ))}

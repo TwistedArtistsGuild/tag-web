@@ -108,7 +108,7 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg"
                   alt="Artist painting on a canvas"
                   fill
-                  objectFit="cover"
+                  style={{ objectFit: "cover" }}
                   className="group-hover:scale-105 transition-transform duration-300"
                 />
               </figure>
@@ -163,7 +163,7 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg"
                   alt="Artist's paint palette with brushes"
                   fill
-                  objectFit="cover"
+                  style={{ objectFit: "cover" }}
                 />
               </figure>
               <div className="card-body p-6">
@@ -188,7 +188,7 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg"
                   alt="Artist painting a large mural"
                   fill
-                  objectFit="cover"
+                  style={{ objectFit: "cover" }}
                 />
               </figure>
               <div className="card-body p-6">
@@ -213,7 +213,7 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg"
                   alt="Artist working on a large mural in a studio"
                   fill
-                  objectFit="cover"
+                  style={{ objectFit: "cover" }}
                 />
               </figure>
               <div className="card-body p-6">

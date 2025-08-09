@@ -11,17 +11,10 @@
 
 
 import Link from "next/link"
-import dynamic from "next/dynamic"
 import "react-quill/dist/quill.snow.css"
 import longDateOptions from "/utils/longdateoptions"
 import TagSEO from "@/components/TagSEO"
-import { defaultFieldClass, defaultTextareaClass } from "/utils/formSettings"
-
-// Dynamically import Quill
-const QuillNoSSRWrapper = dynamic(() => import("react-quill"), {
-	ssr: false,
-	loading: () => <p>Loading ...</p>,
-})
+import { defaultFieldClass } from "/utils/formSettings"
 
 const BlogByslug = props => {
 	const options =  longDateOptions
@@ -33,7 +26,7 @@ const BlogByslug = props => {
 		robots: "index, follow",
 		author: props.blog.title,
 		viewport: "width=device-width, initial-scale=1.0",
-		 og: {
+		og: {
 			title: props.blog.title,
 			description: props.blog.byline,
 		},

@@ -12,6 +12,8 @@ import { useState, useEffect } from "react"
 import ImageGallery from "react-image-gallery"
 import "react-image-gallery/styles/css/image-gallery.css"
 import SocialComments from "@/components/social/Comments" // Import SocialComments component
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext" // Import SocialRealtimeProvider
+import CardSocial from "@/components/cards/shared/CardSocial" // Import CardSocial component
 import Image from "next/image"
 
 const ListingDetails = ({ listing }) => {
@@ -124,9 +126,6 @@ const ListingDetails = ({ listing }) => {
     },
   ]
 
-  const [likeCount, setLikeCount] = useState(24)
-  const [liked, setLiked] = useState(false)
-
   // Current user mock data for SocialComments component
   const currentUser = {
     id: "currentUser1",
@@ -134,16 +133,6 @@ const ListingDetails = ({ listing }) => {
     displayName: "Current User",
     avatarUrl: "https://i.pravatar.cc/100?img=7",
     isAdmin: false,
-  }
-
-  // Handle like button click
-  const handleLikeClick = () => {
-    if (liked) {
-      setLikeCount(likeCount - 1)
-    } else {
-      setLikeCount(likeCount + 1)
-    }
-    setLiked(!liked)
   }
 
   // Callback functions for SocialComments component
@@ -173,53 +162,21 @@ const ListingDetails = ({ listing }) => {
   }, [])
 
   return (
-    <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
-      <div className="mb-8">
-        <div className="card shadow-lg p-4 bg-base-100 rounded-box">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="md:w-1/2">
-              <h1 className="text-3xl font-bold mb-4 text-primary">{listing.title || "Untitled"}</h1>
+    <SocialRealtimeProvider>
+      <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
+        <div className="mb-8">
+          <div className="card shadow-lg p-4 bg-base-100 rounded-box">
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="md:w-1/2">
+                <h1 className="text-3xl font-bold mb-4 text-primary">{listing.title || "Untitled"}</h1>
 
-              {/* Action buttons */}
-              <div className="flex items-center gap-4 mb-6">
-                <button
-                  onClick={handleLikeClick}
-                  className={`btn btn-sm ${liked ? "btn-primary" : "btn-outline"}`}
-                  aria-label="Like this artwork"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill={liked ? "currentColor" : "none"}
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                    />
-                  </svg>
-                  <span className="ml-2">{likeCount} Likes</span>
-                </button>
-                <button className="btn btn-sm btn-outline">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                    />
-                  </svg>
-                  <span className="ml-2">Share</span>
-                </button>
+              {/* Social Interactions */}
+              <div className="mb-6">
+                <CardSocial 
+                  targetType="listing"
+                  targetId={listing.listingID?.toString()}
+                  className="flex justify-start"
+                />
               </div>
 
               <p className="text-lg mb-6">
@@ -353,6 +310,7 @@ const ListingDetails = ({ listing }) => {
         </div>
       </div>
     </div>
+    </SocialRealtimeProvider>
   )
 }
 

@@ -15,10 +15,9 @@
  * Static Page - Contact - Shows how to get in touch with the guild
  * @returns Next and React components
  */
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAppContext } from "/components/Context";
 import TagSEO from "@/components/TagSEO";
-import Header from "/components/Header/Header";
 
 export default function Careers() {
   const { setPageSections } = useAppContext();

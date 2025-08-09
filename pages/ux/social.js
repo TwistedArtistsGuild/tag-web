@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import SocialComponentsDemo from '@/components/social/SocialComponentsDemo';
+import SocialComponentsDemo from '@/pages/ux/SocialComponentsDemo';
 
 /**
  * Social Components Test Page

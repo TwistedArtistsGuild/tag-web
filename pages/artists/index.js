@@ -10,8 +10,7 @@
  Open source · low-profit · human-first*/
 import Link from "next/link"
 import TagSEO from "@/components/TagSEO"
-import ArtistCard from "@/components/cards/card_artist"
-import ArtistCardWithPic from "@/components/cards/card_artist_wPic" // Import the new component
+import CardFactory from "@/components/cards/CardFactory"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 /**
@@ -60,7 +59,12 @@ const Artists = (props) => {
 							{props.artists.map((artist) => (
 								<div key={artist.artistid} className="flex items-stretch">
 									<div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full">
-										<ArtistCard artist={artist} className="flex-1 h-full" />
+										<CardFactory 
+											type="artist" 
+											data={artist} 
+											size="medium" 
+											className="flex-1 h-full" 
+										/>
 									</div>
 								</div>
 							))}

@@ -11,10 +11,11 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { SocialRealtimeProvider } from './SocialRealtimeContext';
-import SocialComments from './Comments';
-import DirectMessages from './DirectMessages';
-import SocialReactions from './Reactions';
+import { SocialRealtimeProvider } from '@/components/social/SocialRealtimeContext';
+import SocialComments from '@/components/social/Comments';
+import DirectMessages from '@/components/social/DirectMessages';
+import SocialReactions from '@/components/social/Reactions';
+import Share from '@/components/social/Share';
 
 // Mock data for demo
 const MOCK_CURRENT_USER = {
@@ -122,6 +123,12 @@ const SocialComponentsDemo = () => {
                         onClick={() => setActiveTab('reactions')}
                     >
                         Reactions Only
+                    </button>
+                    <button 
+                        className={`tab ${activeTab === 'share' ? 'tab-active' : ''}`}
+                        onClick={() => setActiveTab('share')}
+                    >
+                        Share Components
                     </button>
                 </div>
 
@@ -288,6 +295,100 @@ const SocialComponentsDemo = () => {
                                                 size="md"
                                             />
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'share' && (
+                        <div className="space-y-6">
+                            <div className="card bg-base-100 shadow-xl">
+                                <div className="card-body">
+                                    <h2 className="card-title">Share Components</h2>
+                                    <p className="text-base-content/70 mb-6">
+                                        Multi-platform sharing functionality with support for Facebook, Instagram, TikTok, YouTube, and email.
+                                        Test the different size variants and sharing options!
+                                    </p>
+                                    
+                                    {/* Different Share Variants */}
+                                    <div className="space-y-8">
+                                        <div className="border border-base-300 rounded-lg p-6">
+                                            <h3 className="font-semibold mb-3">Large Share Component</h3>
+                                            <p className="text-sm text-base-content/70 mb-4">Full-featured share with all social platforms</p>
+                                            <div className="flex justify-center">
+                                                <Share 
+                                                    size="large" 
+                                                    url={typeof window !== 'undefined' ? `${window.location.origin}/test/social` : '/test/social'}
+                                                    title="Check out the TAG Social Components Demo"
+                                                    description="Real-time social features including comments, reactions, messages, and sharing functionality for the Twisted Artists Guild platform."
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="border border-base-300 rounded-lg p-6">
+                                            <h3 className="font-semibold mb-3">Medium Share Component</h3>
+                                            <p className="text-sm text-base-content/70 mb-4">Standard size for cards and posts</p>
+                                            <div className="flex justify-center">
+                                                <Share 
+                                                    size="medium" 
+                                                    url={typeof window !== 'undefined' ? `${window.location.origin}/test/social` : '/test/social'}
+                                                    title="TAG Social Demo"
+                                                    description="Real-time social features for artists and creators."
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="border border-base-300 rounded-lg p-6">
+                                            <h3 className="font-semibold mb-3">Small Share Component</h3>
+                                            <p className="text-sm text-base-content/70 mb-4">Compact version for sidebars and tight spaces</p>
+                                            <div className="flex justify-center">
+                                                <Share 
+                                                    size="small" 
+                                                    url={typeof window !== 'undefined' ? `${window.location.origin}/test/social` : '/test/social'}
+                                                    title="TAG Social"
+                                                    description="Social features demo"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="border border-base-300 rounded-lg p-6">
+                                            <h3 className="font-semibold mb-3">Minimal Share Component</h3>
+                                            <p className="text-sm text-base-content/70 mb-4">Minimal design for horizontal layouts</p>
+                                            <div className="flex justify-center">
+                                                <Share 
+                                                    size="medium" 
+                                                    minimal={true}
+                                                    url={typeof window !== 'undefined' ? `${window.location.origin}/test/social` : '/test/social'}
+                                                    title="TAG Social"
+                                                    description="Minimal share demo"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="border border-base-300 rounded-lg p-6">
+                                            <h3 className="font-semibold mb-3">Artist Profile Share</h3>
+                                            <p className="text-sm text-base-content/70 mb-4">Example of sharing an artist profile</p>
+                                            <div className="flex justify-center">
+                                                <Share 
+                                                    size="large" 
+                                                    url={typeof window !== 'undefined' ? `${window.location.origin}/artists/jane-artist` : '/artists/jane-artist'}
+                                                    title="Check out Jane Artist on TAG"
+                                                    description="Contemporary mixed media artist exploring themes of nature and technology. View her latest works and connect with her artistic journey."
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-8 p-4 bg-info/10 rounded-lg">
+                                        <h4 className="font-semibold text-info mb-2">How Sharing Works</h4>
+                                        <ul className="text-sm text-base-content/70 space-y-1">
+                                            <li>• <strong>Facebook & Twitter:</strong> Opens native sharing dialogs with URL and message</li>
+                                            <li>• <strong>Instagram & TikTok:</strong> Copies link to clipboard with platform-optimized message</li>
+                                            <li>• <strong>YouTube:</strong> Copies link for content creators to reference in videos</li>
+                                            <li>• <strong>Email:</strong> Opens default email client with pre-filled subject and body</li>
+                                            <li>• <strong>Copy Link:</strong> Copies clean URL to clipboard with success feedback</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>

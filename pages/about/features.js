@@ -131,8 +131,8 @@ const Features = () => {
                 <Image 
                   src={section.image} 
                   alt={section.title}
-                  layout="fill"
-                  objectFit="cover"
+                  fill
+                  style={{ objectFit: "cover" }}
                   className="hover:scale-105 transition-transform duration-500"
                 />
               </div>

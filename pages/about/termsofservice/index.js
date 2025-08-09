@@ -28,7 +28,7 @@ export default function CodeOfConduct({ content }) {
 			</Head>
 			<div className="prose lg:prose-xl mx-auto">
 				<h2 className="text-2xl font-bold text-center my-4">
-					Our website's terms of service
+					Our website&apos;s terms of service
 				</h2>
 				<div dangerouslySetInnerHTML={{ __html: content }} />
 			</div>

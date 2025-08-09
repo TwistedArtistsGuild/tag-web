@@ -9,17 +9,6 @@
 
  Open source · low-profit · human-first*/
 
-import Image from 'next/image';
-
-const Gallery = () => {
-  return (
-    <Image
-      src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3"
-      alt="Gallery Image"
-      fill
-      style={{ objectFit: 'cover' }}
-    />
-  );
-};
-
-export default Gallery;
+export { default as ArtistCardSmall } from './ArtistCardSmall';
+export { default as ArtistCardMedium } from './ArtistCardMedium';
+export { default as ArtistCardLarge } from './ArtistCardLarge';

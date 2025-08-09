@@ -14,6 +14,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
+import CardFactory from "@/components/cards/CardFactory"
 import longDateOptions from "/utils/longdateoptions"
 import { useAppContext } from "/components/Context"
 import ImageGallery from "react-image-gallery" // Keep this for the main gallery
@@ -303,7 +304,7 @@ const Artist = (props) => {
         <Image
           src={props.coverPic?.url || "/blank_image.png"}
           alt={props.coverPic?.altText || "Cover Picture"}
-          layout="fill"
+          fill
           style={{ objectFit: "cover" }}
           priority
         />
@@ -323,7 +324,7 @@ const Artist = (props) => {
                 <Image
                   src={props.profilePic?.url || "/blank_image.png"}
                   alt={`Profile picture of ${props.artist.title}`}
-                  layout="fill"
+                  fill
                   style={{ objectFit: "cover" }}
                   className="rounded-xl"
                 />
@@ -454,7 +455,7 @@ const Artist = (props) => {
                 </div>
               )}
               <div className="mt-4 flex justify-between items-center">
-                <p className="text-lg font-medium">Browse the artist's featured collection</p>
+                <p className="text-lg font-medium">Browse the artist&apos;s featured collection</p>
                 <button className="btn btn-primary btn-sm">View All Works</button>
               </div>
             </div>
@@ -496,56 +497,36 @@ const Artist = (props) => {
 
           {/* Listings Section */}
           <div id="listings" className="mt-12">
-            <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">Top Listings</h2>
+            <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">Art Listings</h2>
             {listings.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {listings.map((listing) => (
-                  <div key={listing.listingID} className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
-                    <figure className="p-4">
-                      <Link
-                        href={`/artists/${props.slug}/listings/${listing.path || listing.listingID}`}
-                        className="block relative w-full h-40 rounded-lg overflow-hidden"
-                      >
-                        <Image
-                          src={listing.profilePic?.url || "/blank_image.png"}
-                          alt={listing.profilePic?.altText || "Listing Image"}
-                          layout="fill"
-                          objectFit="cover"
-                          className="rounded-lg"
-                        />
-                      </Link>
-                    </figure>
-                    <div className="card-body p-4">
-                      <Link href={`/artists/${props.slug}/listings/${listing.path || listing.listingID}`}>
-                        <h3 className="card-title text-lg hover:text-primary transition-colors">
-                          {listing.title || "Untitled"}
-                        </h3>
-                      </Link>
-                      <p className="text-sm line-clamp-2 text-gray-700">
-                        {listing.description || "No description available."}
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="font-medium text-lg">
-                          {listing.price ? `$${listing.price}` : "Price on request"}
-                        </span>
-                        <span className="badge badge-outline badge-primary">
-                          {listing.artCategory?.category || "Uncategorized"}
-                        </span>
-                      </div>
-                      <div className="card-actions justify-end mt-3">
-                        <Link
-                          href={`/artists/${props.slug}/listings/${listing.path || listing.listingID}`}
-                          className="btn btn-sm btn-primary"
-                        >
-                          View Details
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
+                  <CardFactory 
+                    key={listing.listingID || listing.PictureID}
+                    type="listing" 
+                    variant="medium" 
+                    data={{
+                      ...listing,
+                      // Ensure we have artist data for the embedded artist card
+                      artist: listing.artist || {
+                        ArtistID: props.artist?.artistid,
+                        Title: props.artist?.title,
+                        Path: props.slug,
+                        ProfilePicID: props.profilePic?.picturenum,
+                        Byline: props.artist?.byline
+                      }
+                    }}
+                    showInteractions={true}
+                    orientation="vertical"
+                    className="w-full"
+                  />
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No listings available for this artist.</p>
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg mb-4">No listings available for this artist yet.</p>
+                <p className="text-sm text-gray-400">Check back soon for new artwork!</p>
+              </div>
             )}
           </div>
 

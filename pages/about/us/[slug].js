@@ -32,7 +32,7 @@ export default function ProfilePage() {
 				<strong>Art Forms:</strong> {profile.artForms.join(", ")}{" "}
 				<span className="text-primary">
 					<Link href={profile.linkToArtistPage} className="link link-primary">
-						(View {profile.name.split(" ")[0]}'s Artist Page)
+						(View {profile.name.split(" ")[0]}&apos;s Artist Page)
 					</Link>
 				</span>
 			</h3>

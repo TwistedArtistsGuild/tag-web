@@ -50,6 +50,9 @@ export default function UpdateFormsForm1(props) {
     api_url +
     `${props.FormStructure_metadata.apiurLpostfix}/${props.FormStructure_metadata.name}`;
 
+  // Set the requestType to "add" for the create field form before rendering
+  props.FormStructure_metadata.requestType = "add";
+
   return (
     <div>
       <div>
@@ -81,8 +84,8 @@ export default function UpdateFormsForm1(props) {
         fieldsProp={props.metadataProp.forms_Fields}
       />
 
-	  <h2 className="text-lg font-bold mt-6">Here you may edit the metadata of the above form:</h2>
-	  <DynaFormDB
+      <h2 className="text-lg font-bold mt-6">Here you may edit the metadata of the above form:</h2>
+      <DynaFormDB
               metadataProp={props.FormStructure_metadata}
               fieldsProp={props.FormStructure_metadata.forms_Fields}
               formData={props.metadataProp}
@@ -90,7 +93,7 @@ export default function UpdateFormsForm1(props) {
             />
 
       <h2 className="text-lg font-bold mt-6">Here are the fields to be edited.</h2>
-	  <ul>
+      <ul>
         {/* Render each form field separately using the form structure */}
         {props.metadataProp.forms_Fields.map((field, index) => (
           <li key={index} className="mb-4">
@@ -103,10 +106,9 @@ export default function UpdateFormsForm1(props) {
           </li>
         ))}
       </ul>
-	  <ul>
+      <ul>
         <div className="text-lg font-bold mt-6">Create a new form field:</div>
         {/* Set the requestType to "add" */}
-        {props.FormStructure_metadata.requestType = "add"}
         <DynaFormDB
           metadataProp={props.FormStructure_metadata}
           fieldsProp={props.FormStructure_metadata.forms_Fields}
@@ -160,7 +162,7 @@ UpdateFormsForm1.getInitialProps = async function (context) {
     return {
       metadataProp: metadata,
       FormStructure_metadata: FormStructure_metadata,
-	  FormStructure_field: FormStructure_field,
+      FormStructure_field: FormStructure_field,
       formNames: formNames,
       slug: slug,
     };
@@ -169,7 +171,7 @@ UpdateFormsForm1.getInitialProps = async function (context) {
     return {
       metadataProp: {},
       FormStructure_metadata: {},
-	  FormStructure_field: {},
+      FormStructure_field: {},
       formNames: [],
       slug: slug,
     };
