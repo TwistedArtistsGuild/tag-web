@@ -48,7 +48,7 @@ UpdateBlogForm1.getInitialProps = async function (context) {
     let data = {};
     let metadata = {};
     try {
-        const res1 = await fetch(api_url + `blog/${slug}`);
+        const res1 = await fetch(api_url + `blog/path/${slug}`);
         data = await res1.json();
         const res2 = await fetch(api_url + `forms_metadata/BlogForm1`);
         metadata = await res2.json();
