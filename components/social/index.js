@@ -14,7 +14,7 @@ export { default as Comments } from './Comments';
 export { default as DirectMessages } from './DirectMessages';
 export { default as Reactions } from './Reactions';
 export { default as Share } from './Share';
-export { default as SocialComponentsDemo } from './SocialComponentsDemo';
+export { default as SocialComponentsDemo } from '@/pages/ux/SocialComponentsDemo';
 export { SocialRealtimeProvider } from './SocialRealtimeContext';
 export { default as WysiwygSingleLine } from './WysiwygSingleLine';
 export { default as WysiwygTextArea } from './WysiwygTextArea';

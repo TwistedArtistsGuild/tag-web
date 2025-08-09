@@ -11,11 +11,11 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { SocialRealtimeProvider } from './SocialRealtimeContext';
-import SocialComments from './Comments';
-import DirectMessages from './DirectMessages';
-import SocialReactions from './Reactions';
-import Share from './Share';
+import { SocialRealtimeProvider } from '@/components/social/SocialRealtimeContext';
+import SocialComments from '@/components/social/Comments';
+import DirectMessages from '@/components/social/DirectMessages';
+import SocialReactions from '@/components/social/Reactions';
+import Share from '@/components/social/Share';
 
 // Mock data for demo
 const MOCK_CURRENT_USER = {
