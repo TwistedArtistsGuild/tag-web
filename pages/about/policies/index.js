@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 
-import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import Link from "next/link"
 

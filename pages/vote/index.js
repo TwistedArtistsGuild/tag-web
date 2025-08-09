@@ -9,6 +9,8 @@
 
  Open source · low-profit · human-first*/
 
+
+
  "use client"
 
 import Link from "next/link"
@@ -29,7 +31,7 @@ function VoteIndex() {
         <p className="text-xl md:text-2xl text-secondary mb-6">Vote. Celebrate. Shape the future of art.</p>
         <p className="text-lg text-base-content max-w-3xl mx-auto">
           Welcome to the Twisted Artists Guild Contest Hub—your gateway to artist showcases, themed challenges, and
-          member-driven voting. Whether you're an artist sharing your vision or a community member showing support,
+          member-driven voting. Whether you&apos;re an artist sharing your vision or a community member showing support,
           this is where collaboration meets celebration.
         </p>
       </section>
@@ -67,13 +69,13 @@ function VoteIndex() {
           </h2>
           <ul className="list-disc pl-5 text-lg text-base-content space-y-4">
             <li>
-              <span className="font-semibold">Weekly Theme: "Autumn Colors"</span>
+              <span className="font-semibold">Weekly Theme: &quot;Autumn Colors&quot;</span>
               <p className="text-base text-gray-700 ml-4">
                 From crisp palettes to cozy moods—see how artists are interpreting fall’s textures and tones.
               </p>
             </li>
             <li>
-              <span className="font-semibold">Monthly Challenge: "Winter Wonderland"</span>
+              <span className="font-semibold">Monthly Challenge: &quot;Winter Wonderland&quot;</span>
               <p className="text-base text-gray-700 ml-4">
                 A celebration of light, quiet, and mystery in winter scenes—from surreal snowscapes to whimsical icy
                 creations.

@@ -10,10 +10,8 @@
  Open source · low-profit · human-first*/
 
 
-import { useState } from "react";
 import TagSEO from "/components/TagSEO";
 import Link from "next/link";
-import ImageGallery from "react-image-gallery";
 import "react-image-gallery/styles/css/image-gallery.css";
 import profiles from "/content/us/profiles";
 

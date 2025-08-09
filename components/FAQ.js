@@ -9,6 +9,8 @@
 
  Open source · low-profit · human-first*/
 
+
+
 import { useRef, useState } from "react"
 
 // <FAQ> component is a lsit of <Item> component
@@ -139,3 +141,4 @@ const FAQ = () => {
 }
 
 export default FAQ
+

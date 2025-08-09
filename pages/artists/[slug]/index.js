@@ -454,7 +454,7 @@ const Artist = (props) => {
                 </div>
               )}
               <div className="mt-4 flex justify-between items-center">
-                <p className="text-lg font-medium">Browse the artist's featured collection</p>
+                <p className="text-lg font-medium">Browse the artist&apos;s featured collection</p>
                 <button className="btn btn-primary btn-sm">View All Works</button>
               </div>
             </div>

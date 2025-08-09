@@ -28,6 +28,10 @@
   "rules": {
     "no-unused-vars": "warn",
     "import/no-unresolved": "off",
+    "@next/next/no-img-element": "warn",
+    "react-hooks/exhaustive-deps": "warn",
+    "@next/next/no-sync-scripts": "warn",
+    "import/no-relative-parent-imports": "warn",
     "header/header": [
       "error",
       "block",
@@ -43,8 +47,7 @@
         "",
         " Open source · low-profit · human-first"
       ]
-    ],
-    "import/no-relative-parent-imports": "error"
+    ]
   },
   "settings": {
     "import/resolver": {

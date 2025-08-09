@@ -136,7 +136,7 @@ const NeonTestimonial = ({ testimonial }) => {
           
           <div className="relative">
             <p className={`text-sm ${!isExpanded ? 'line-clamp-3' : ''}`}>
-              "{testimonial.content}"
+              &quot;{testimonial.content}&quot;
             </p>
             
             {testimonial.content.length > 180 && (
@@ -807,18 +807,18 @@ export default function NeonTest() {
             
             <p className="mb-4">
               The 1960s saw a renaissance in neon art, with pioneering artists like Dan Flavin and Bruce Nauman incorporating 
-              light elements into sculptural works. The medium's association with urban landscapes, advertising, and nightlife 
+              light elements into sculptural works. The medium&apos;s association with urban landscapes, advertising, and nightlife 
               made it a powerful tool for commentary on modern life and consumerism.
             </p>
             
             <p className="mb-4">
-              Today's neon artists blend traditional glass-bending techniques with modern LED technology and digital controls, 
+              Today&apos;s neon artists blend traditional glass-bending techniques with modern LED technology and digital controls, 
               creating works that can shift in color and intensity, respond to viewers, or sync with music and environmental factors.
             </p>
             
             <p>
               The resurgence of interest in neon aesthetics within contemporary art reflects both nostalgia for 20th century 
-              urban landscapes and a forward-looking embrace of technology's role in artistic expression.
+              urban landscapes and a forward-looking embrace of technology&apos;s role in artistic expression.
             </p>
           </div>
           
