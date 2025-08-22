@@ -29,15 +29,23 @@ export default function UpdateArtistForm1(props) {
 	// Show error message if there was an error loading data
 	if (props.error) {
 		return (
-			<div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-				<h2 className="text-xl font-bold text-red-700">Oops!</h2>
-				<p className="text-red-600">{props.error.message}</p>
-				<button 
-					className="mt-4 btn btn-primary"
-					onClick={() => router.back()}
-				>
-					Go Back
-				</button>
+			<div className="card bg-base-100 shadow-lg max-w-4xl mx-auto">
+				<div className="card-body">
+					<div className="alert alert-error">
+						<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+						</svg>
+						<span>{props.error.message}</span>
+					</div>
+					<div className="card-actions justify-end">
+						<button 
+							className="btn btn-primary"
+							onClick={() => router.back()}
+						>
+							Go Back
+						</button>
+					</div>
+				</div>
 			</div>
 		);
 	}
@@ -45,7 +53,7 @@ export default function UpdateArtistForm1(props) {
 	// Make sure metadata and artist data are properly loaded before rendering the form
 	if (!props.metadataProp || !props.artistdata) {
 		return (
-			<div className="flex justify-center items-center min-h-[200px]">
+			<div className="flex justify-center items-center min-h-[400px]">
 				<div className="loading loading-spinner loading-lg"></div>
 			</div>
 		);
@@ -60,8 +68,11 @@ export default function UpdateArtistForm1(props) {
 	};
 
 	return (
-		<div className="p-4">
-			<h1 className="text-2xl font-bold mb-4">Update Artist</h1>
+		<div className="container mx-auto px-4 py-8">
+			<div className="mb-6">
+				<h1 className="text-3xl font-bold text-base-content">Update Artist</h1>
+				<p className="text-base-content/70 mt-2">Modify artist information and settings</p>
+			</div>
 			<DynaFormDB 
 				request="update" 
 				metadataProp={metadataWithUrls} 

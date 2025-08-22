@@ -13,12 +13,6 @@
 
 import DynaFormDB from "/components/widgets/DynaFormDB"
 
-// Set the active API URL defaulting to prod
-var activeAPI_URL = process.env.NEXT_PUBLIC_TAG_API_URL
-
-const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
-const formName = "BlogForm1";
-
 /**
  * Component for updating user details.
  * @param {Object} props
@@ -27,10 +21,51 @@ const formName = "BlogForm1";
  * @returns {JSX.Element}
  */
 export default function UpdateBlogForm1(props) {
+    // Error handling
+    if (props.error) {
+        return (
+            <div className="card bg-base-100 shadow-lg max-w-4xl mx-auto">
+                <div className="card-body">
+                    <div className="alert alert-error">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>{props.error.message}</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Loading state
+    if (!props.metadataProp || !props.blogdata) {
+        return (
+            <div className="flex justify-center items-center min-h-[400px]">
+                <div className="loading loading-spinner loading-lg"></div>
+            </div>
+        );
+    }
+
+    // Set up the metadata properties  
     props.metadataProp.FromURL = "/blogs/" + props.slug + "/update.js";
     props.metadataProp.redirectURL = "/blogs/" + props.slug;
-    props.metadataProp.APIURL = process.env.NEXT_PUBLIC_TAG_API_URL + `${props.metadataProp.apiurlpostfix}/${props.slug}`;
-    return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.blogdata} /></div>;
+    
+    // Debug: Log the form data and metadata
+    if (process.env.NODE_ENV === 'development') {
+        console.log("🔧 UpdateBlogForm1 - blogID:", props.blogdata.blogID);
+        console.log("🔧 UpdateBlogForm1 - Full metadata:", props.metadataProp);
+    }
+    
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <DynaFormDB 
+                key={`blog-update-${props.blogdata.blogID}`}
+                request="update" 
+                metadataProp={props.metadataProp} 
+                formData={props.blogdata} 
+            />
+        </div>
+    );
 }
 
 /**
