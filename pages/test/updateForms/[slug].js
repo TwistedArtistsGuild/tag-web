@@ -147,13 +147,21 @@ UpdateFormsForm1.getInitialProps = async function (context) {
 
     // Fetch the metadata that defines the form structure.
     const formStructureRes = await fetch(`${api_url}forms_metadata/UpdateFormsMeta`);
-    const FormStructure_metadata = await formStructureRes.json();
-    console.log('FormStructure_Metadata from API:', FormStructure_metadata);
+    const FormStructure_metadataArray = await formStructureRes.json();
+    // API returns arrays for filtered queries; normalize to a single object
+    const FormStructure_metadata = Array.isArray(FormStructure_metadataArray)
+      ? FormStructure_metadataArray[0]
+      : FormStructure_metadataArray;
+    // Ensure forms_Fields exists (handle PascalCase vs camelCase from serializer)
+    FormStructure_metadata.forms_Fields = FormStructure_metadata.forms_Fields || FormStructure_metadata.Forms_Fields || [];
+    console.log('FormStructure_Metadata from API (normalized):', FormStructure_metadata);
 
-	// Fetch the metadata that defines the form structure.
+	// Fetch the field-structure metadata (fields editor definition)
 	const FormStructure_fieldRes = await fetch(`${api_url}forms_metadata/UpdateFormsFields`);
-	const FormStructure_field = await FormStructure_fieldRes.json();
-	console.log('FormStructure_field from API:', FormStructure_field);
+	const FormStructure_fieldArray = await FormStructure_fieldRes.json();
+	const FormStructure_field = Array.isArray(FormStructure_fieldArray) ? FormStructure_fieldArray[0] : FormStructure_fieldArray;
+	FormStructure_field.forms_Fields = FormStructure_field.forms_Fields || FormStructure_field.Forms_Fields || [];
+	console.log('FormStructure_field from API (normalized):', FormStructure_field);
 
     // Fetch list of available form names.
     const formNamesRes = await fetch(`${api_url}forms_metadata/listOfForms`);

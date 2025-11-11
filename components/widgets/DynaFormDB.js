@@ -500,6 +500,24 @@ export default function DynaForm(props) {
     // Check for direct APIURL first (this should be the primary method)
     if (metadata.APIURL) {
       newEndpoint = metadata.APIURL;
+
+      // If this is an UPDATE request, ensure the endpoint includes the resource id.
+      // Some metadata rows provide a collection URL (e.g. /api/blog) but the PUT
+      // endpoint requires /api/blog/{id}. Append the id if present and not already
+      // included in the URL.
+      if (props.request === REQUEST_TYPES.UPDATE && props.formData) {
+        const idField = props.formData.blogID || props.formData.id || props.formData.ID;
+        if (idField) {
+          const endsWithId = /\/\d+$/.test(newEndpoint);
+          if (!endsWithId) {
+            newEndpoint = `${newEndpoint.replace(/\/$/, '')}/${idField}`;
+            if (process.env.NODE_ENV === 'development') {
+              console.log("✅ UPDATE request detected, appending ID to APIURL:", newEndpoint);
+            }
+          }
+        }
+      }
+
       if (process.env.NODE_ENV === 'development') {
         console.log("✅ Using direct APIURL:", newEndpoint);
       }
@@ -644,10 +662,43 @@ export default function DynaForm(props) {
       }
     };
     
+    // For UPDATE requests, ensure we have the id in the payload (BlogID) and in the URL
+    // Try a few common places where the id may live (props.formData, formState.values)
+    let submitEndpoint = endpoint;
+    if (props.request === REQUEST_TYPES.UPDATE) {
+      const idCandidate =
+        props.formData?.BlogID ??
+        props.formData?.blogID ??
+        props.formData?.id ??
+        props.formData?.ID ??
+        formState.values?.BlogID ??
+        formState.values?.blogID ??
+        formState.values?.id ??
+        formState.values?.ID;
+
+      if (idCandidate !== undefined && idCandidate !== null) {
+        const numeric = Number(idCandidate);
+        const finalId = Number.isNaN(numeric) ? idCandidate : numeric;
+        submissionData.BlogID = finalId;
+
+        // Append id to endpoint if missing
+        if (submitEndpoint && !/\/\d+$/.test(submitEndpoint)) {
+          submitEndpoint = `${submitEndpoint.replace(/\/$/, '')}/${finalId}`;
+          if (process.env.NODE_ENV === 'development') {
+            console.log('✅ Appended id to submitEndpoint for UPDATE:', submitEndpoint);
+          }
+        }
+      } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('DynaFormDB: UPDATE requested but no id found in formData or form values');
+        }
+      }
+    }
+
     // Debug info in console at submission time
     if (process.env.NODE_ENV === 'development') {
       console.group("🚀 DynaFormDB Submission");
-      console.log("API URL:", endpoint);
+      console.log("API URL:", submitEndpoint);
       console.log("Method:", requestMethod);
       console.log("Form Data:", submissionData);
       console.groupEnd();
@@ -658,7 +709,7 @@ export default function DynaForm(props) {
     
     try {
       // Security best practices: server-side validation, CSRF protection, input sanitization
-      const response = await fetch(endpoint, {
+      const response = await fetch(submitEndpoint, {
         method: requestMethod,
         headers: {
           "Content-Type": "application/json",
@@ -669,9 +720,35 @@ export default function DynaForm(props) {
         body: JSON.stringify(submissionData),
       });
       
+      const contentType = response.headers.get('content-type') || '';
+      const isProblemJson = contentType.includes('application/problem+json');
       const responseData = await response.json().catch(() => ({}));
-      
+
+      // If API returned Problem Details (validation errors), map them to the UI
       if (!response.ok) {
+        if (isProblemJson && responseData && responseData.errors) {
+          // Map server validation errors into fieldErrors for the form
+          const serverFieldErrors = {};
+          Object.keys(responseData.errors).forEach(serverKey => {
+            // Server keys may be nested like 'User.UserSettings' or 'Body'
+            // Map nested keys to the last path segment (e.g., 'User.UserSettings' -> 'UserSettings')
+            const localKey = serverKey.includes('.') ? serverKey.split('.').pop() : serverKey;
+            // Join multiple messages into one string
+            serverFieldErrors[localKey] = Array.isArray(responseData.errors[serverKey])
+              ? responseData.errors[serverKey].join('\n')
+              : String(responseData.errors[serverKey]);
+          });
+
+          dispatch({ type: 'SET_FIELD_ERRORS', errors: serverFieldErrors });
+
+          // Use the Problem Details title or a default as a global message
+          const globalMsg = responseData.title || 'One or more validation errors occurred.';
+          dispatch({ type: 'SET_ERROR', error: globalMsg });
+
+          // Stop processing here (we surfaced validation messages)
+          return;
+        }
+
         throw new Error(responseData?.message || responseData?.error || `Server responded with ${response.status}`);
       }
       
@@ -683,15 +760,48 @@ export default function DynaForm(props) {
         console.groupEnd();
       }
       
-      // Successful submission - redirect or show success
+      // Successful submission - redirect or refresh the form values
       if (metadata.redirectURL) {
         router.push(metadata.redirectURL);
       } else {
-        // Reset form and show success message
-        dispatch({ type: 'RESET_FORM' });
-        // In a real app, you might want to show a toast or modal instead of alert
-        alert("Form submitted successfully!");
+        // For update requests, re-fetch the saved resource to refresh the form
+        if (props.request === REQUEST_TYPES.UPDATE) {
+          try {
+            const refreshRes = await fetch(submitEndpoint, {
+              method: HTTP_METHODS.GET,
+              headers: {
+                "Accept": "application/json",
+                ...(session?.accessToken && { "Authorization": `Bearer ${session.accessToken}` })
+              },
+              credentials: "include"
+            });
+
+            if (refreshRes.ok) {
+              const fresh = await refreshRes.json().catch(() => ({}));
+              // Replace form values with the fresh server state
+              dispatch({ type: 'SET_INITIAL_VALUES', values: fresh });
+              dispatch({ type: 'CLEAR_ERRORS' });
+            } else {
+              // Fallback: keep submitted values (without metadata) to avoid blanking
+              const fallback = { ...submissionData };
+              delete fallback._submissionMetadata;
+              dispatch({ type: 'SET_INITIAL_VALUES', values: fallback });
+            }
+          } catch (e) {
+            // If refresh fails, keep submitted values so the form is not blank
+            const fallback = { ...submissionData };
+            delete fallback._submissionMetadata;
+            dispatch({ type: 'SET_INITIAL_VALUES', values: fallback });
+            if (process.env.NODE_ENV === 'development') console.warn('Failed to refresh resource after update', e);
+          }
+        } else {
+          // For add requests, reset the form
+          dispatch({ type: 'RESET_FORM' });
+        }
       }
+
+      // Ensure submitting flag is cleared after success
+      dispatch({ type: 'SET_SUBMITTING', isSubmitting: false });
     } catch (error) {
       console.error("Error during form submission:", error);
       dispatch({ type: 'SET_ERROR', error: `Submission failed: ${error.message}` });

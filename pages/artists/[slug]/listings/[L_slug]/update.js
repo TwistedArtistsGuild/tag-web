@@ -57,10 +57,11 @@ export default function UpdateListingForm1(props) {
     }
 
     // Setup the correct API URL for byID endpoint and proper redirect URL
+    const base = api_url?.endsWith('/') ? api_url : `${api_url}/`;
     const metadataWithUrls = {
         ...props.metadata,
         // Use the byID route as specified in ListingController.cs
-        APIURL: `${api_url}listing/byID/${props.id}`,
+        APIURL: `${base}listing/byID/${props.id}`,  //APIURL: process.env.NEXT_PUBLIC_TAG_API_URL + "artist/" + props.slug
         redirectURL: `/artists/${slug}/listings/${L_slug}`
     };
 
@@ -126,9 +127,9 @@ UpdateListingForm1.getInitialProps = async function (context) {
             metadata = metadata[0];
         }
         
-        // First get the listing's ID using the slug
-        console.log(`Fetching listing by slug: ${L_slug}...`);
-        const slugRes = await fetch(`${api_url}listing/${L_slug}`);
+    // First get the listing's ID using the slug and the artist slug via the API route
+    console.log(`Fetching listing by artist/path: ${slug} / ${L_slug}...`);
+    const slugRes = await fetch(`${api_url}listing/artist/${encodeURIComponent(slug)}/listing/${encodeURIComponent(L_slug)}`);
         
         if (!slugRes.ok) {
             throw new Error(`Failed to find listing with slug: ${L_slug}`);
@@ -136,37 +137,14 @@ UpdateListingForm1.getInitialProps = async function (context) {
         
         const slugData = await slugRes.json();
         
-        // Extract listing ID - this is used to call the byID endpoint
+        // The artist/listing endpoint returns the full listing object already.
         listingId = slugData.listingID;
-        
         if (!listingId) {
             throw new Error(`Could not determine listing ID from slug data: ${JSON.stringify(slugData)}`);
         }
-        
-        // Now use the byID endpoint to get full listing data - which may include more detailed fields
-        console.log(`Found listingID: ${listingId}, fetching complete data...`);
-        const listingRes = await fetch(`${api_url}listing/byID/${listingId}`);
-        
-        if (!listingRes.ok) {
-            throw new Error(`Failed to fetch listing details: ${listingRes.status} ${listingRes.statusText}`);
-        }
-        
-        // Get the response as text first to inspect it
-        const listingText = await listingRes.text();
-        console.log(`Received listing data (${listingText.length} bytes): ${listingText.substring(0, 100)}...`);
-        
-        // Handle empty responses gracefully
-        if (!listingText || listingText.trim() === '') {
-            throw new Error(`No listing data returned for ID: ${listingId}`);
-        }
-        
-        try {
-            listingData = JSON.parse(listingText);
-        } catch (parseError) {
-            console.error("JSON parse error:", parseError);
-            console.error("Problematic JSON:", listingText);
-            throw new Error(`Failed to parse listing data: ${parseError.message}`);
-        }
+
+        // Use the returned slugData as the full listing data
+        listingData = slugData;
     } catch (err) {
         console.error("Error fetching data:", err);
         error = { message: err.message || "Failed to load necessary data" };
