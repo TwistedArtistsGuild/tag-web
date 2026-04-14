@@ -77,7 +77,7 @@ BlogByslug.getInitialProps = async function (context) {
 	} 
   
 
-	const res = await fetch (api_url + `blog/${slug}`)
+	const res = await fetch (api_url + `blog/path/${slug}`)
 	const data = await res.json ()
 
 	// If we are running in debug mode, log the artist data
