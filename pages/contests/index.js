@@ -13,7 +13,7 @@
 
 import Link from "next/link"
 
-function VoteIndex() {
+function ContestsIndex() {
   return (
     <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
       {/* Hero Section */}
@@ -88,4 +88,4 @@ function VoteIndex() {
   )
 }
 
-export default VoteIndex
+export default ContestsIndex
