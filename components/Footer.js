@@ -1,9 +1,14 @@
 /* This file is part of the Twisted Artists Guild project.
+
  Copyright (C) 2025 Twisted Artists Guild
+
  Licensed under the GNU General Public License v3.0
  (https://www.gnu.org/licenses/gpl-3.0.en.html).
+
  This software comes with NO WARRANTY; see the license for details.
+
  Open source · low-profit · human-first*/
+
 
 
 import { useAppContext } from "/components/Context"
@@ -71,7 +76,7 @@ export default function Footer({ className }) {
                 <Link href="/about/pricing" className="link link-hover">Pricing</Link>
                 <Link href="/about/vendor" className="link link-hover">Vendor</Link>
                 <Link href="/about/development" className="link link-hover">Development</Link>
-                <Link href="/about/investing" className="link link-hover">Investing</Link>
+                {/* <Link href="/about/investing" className="link link-hover">Investing</Link> */}
               </div>
             </div>
             <div className="lg:w-1/3 md:w-1/2 w-full px-2">
