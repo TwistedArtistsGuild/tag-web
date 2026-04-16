@@ -12,118 +12,77 @@
  "use client"
 
 import Link from "next/link"
-import { useState } from "react"
 
 function VoteIndex() {
-  const [isPanelMinimized, setIsPanelMinimized] = useState(false)
-  const togglePanel = () => {
-    setIsPanelMinimized(!isPanelMinimized)
-  }
   return (
     <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
       {/* Hero Section */}
       <section className="text-center py-12">
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
-          🎨 TAG Contest Central
-        </h1>
-        <p className="text-xl md:text-2xl text-secondary mb-6">Vote. Celebrate. Shape the future of art.</p>
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">Art Contests</h1>
+        <p className="text-xl md:text-2xl text-secondary mb-6">Highlight artist work. Grow engagement. Build visibility.</p>
         <p className="text-lg text-base-content max-w-3xl mx-auto">
-          Welcome to the Twisted Artists Guild Contest Hub—your gateway to artist showcases, themed challenges, and
-          member-driven voting. Whether you're an artist sharing your vision or a community member showing support,
-          this is where collaboration meets celebration.
+          Twisted Artists Guild runs ongoing art contests designed to spotlight artist work, encourage community
+          participation, and create durable visibility for members over time.
         </p>
       </section>
       <main className="container mx-auto px-4 py-8 flex-1 w-full">
-        {/* Minimizeable Panel */}
-        <div className="mb-6 card bg-base-100 shadow-lg rounded-box p-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-primary">Quick Links</h2>
-            <button className="btn btn-sm btn-secondary" onClick={togglePanel}>
-              {isPanelMinimized ? "Expand" : "Minimize"}
-            </button>
-          </div>
-          {!isPanelMinimized && (
-            <div className="mt-4">
-              <Link href="/shareholders" className="btn btn-primary">
-                Shareholder Voting
-              </Link>
-            </div>
-          )}
-        </div>
-        {/* What You Can Do Here Section */}
+        {/* Contest Framework */}
         <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
-          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">What You Can Do Here</h2>
+          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">How Contests Work</h2>
+          <p className="text-lg text-base-content mb-4">
+            Contests run on a monthly, quarterly, and annual cadence. Submissions are showcased publicly, and winners
+            are determined by community reactions rather than gatekeeping panels.
+          </p>
           <ul className="list-disc pl-5 text-lg text-base-content space-y-2">
-            <li>Browse and vote on current contest entries</li>
-            <li>Leave encouraging comments to uplift your fellow artists</li>
-            <li>Explore past prompts and winning pieces across every medium</li>
-            <li>Get inspired by the depth, diversity, and passion of our cooperative community</li>
+            <li>Artists submit work to open contest windows.</li>
+            <li>Public users can apply multiple reactions to support work they connect with.</li>
+            <li>Grassroots enthusiasm drives visibility and outcomes.</li>
+            <li>Results remain visible for transparency and long-term recognition.</li>
           </ul>
         </section>
-        {/* Active Prompts Section */}
+
+        {/* Community Reaction Model */}
         <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
           <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary flex items-center gap-2">
-            🗳️ Active Prompts
+            🗳️ Community-Led Outcomes
           </h2>
-          <ul className="list-disc pl-5 text-lg text-base-content space-y-4">
-            <li>
-              <span className="font-semibold">Weekly Theme: "Autumn Colors"</span>
-              <p className="text-base text-gray-700 ml-4">
-                From crisp palettes to cozy moods—see how artists are interpreting fall’s textures and tones.
-              </p>
-            </li>
-            <li>
-              <span className="font-semibold">Monthly Challenge: "Winter Wonderland"</span>
-              <p className="text-base text-gray-700 ml-4">
-                A celebration of light, quiet, and mystery in winter scenes—from surreal snowscapes to whimsical icy
-                creations.
-              </p>
-            </li>
-            <li>
-              <span className="font-semibold">Upcoming Quarterly Contest: "Valentine’s Day Special"</span>
-              <p className="text-base text-gray-700 ml-4">
-                Love in all its forms—romantic, platonic, artistic, chaotic. Submissions open soon!
-              </p>
-            </li>
-          </ul>
+          <p className="text-lg text-base-content mb-4">
+            Each public user may apply multiple reactions. This helps authentic enthusiasm and broad community support
+            shape rankings, instead of relying on a single up-vote dynamic.
+          </p>
+          <p className="text-lg text-base-content">
+            The model is intentionally lightweight and transparent: artists submit, the public reacts, and outcomes
+            stay visible.
+          </p>
           <div className="mt-8 text-center">
             <Link href="/vote/vote_halloween" className="btn btn-primary btn-lg">
-              Vote on Halloween Contest
+              View Active Contest
             </Link>
           </div>
         </section>
-        {/* Previous Prompts and Winners Section */}
+
+        {/* Contest Archive */}
         <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
           <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary flex items-center gap-2">
-            🏆 Previous Prompts & Winners
+            🏆 Durable Visibility Through Archives
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-            <div className="card bg-base-200 shadow-md p-4 rounded-box">
-              <h3 className="text-xl font-semibold text-primary mb-2">Prompt: Hands of Love</h3>
-              <ul className="list-disc pl-5 text-base-content space-y-1">
-                <li>Winner: Artist A - Category: Painting</li>
-                <li>Winner: Artist B - Category: Sculpture</li>
-                <li>Winner: Artist C - Category: Digital Art</li>
-              </ul>
-            </div>
-            <div className="card bg-base-200 shadow-md p-4 rounded-box">
-              <h3 className="text-xl font-semibold text-primary mb-2">Prompt: Winter Wonderland</h3>
-              <ul className="list-disc pl-5 text-base-content space-y-1">
-                <li>Winner: Artist D - Category: Photography</li>
-                <li>Winner: Artist E - Category: Painting</li>
-                <li>Winner: Artist F - Category: Costume Design</li>
-              </ul>
-            </div>
-            <div className="card bg-base-200 shadow-md p-4 rounded-box">
-              <h3 className="text-xl font-semibold text-primary mb-2">Prompt: Nature’s Fury</h3>
-              <ul className="list-disc pl-5 text-base-content space-y-1">
-                <li>Winner: Artist G - Category: Digital Art</li>
-                <li>Winner: Artist H - Category: Sculpture</li>
-                <li>Winner: Artist I - Category: Painting</li>
-              </ul>
-            </div>
+          <p className="text-lg text-base-content mb-4">
+            Every contest is archived with public-facing, indexable links to participating artist profiles and
+            listings. Archives remain accessible long-term to keep work discoverable after the contest window closes.
+          </p>
+          <p className="text-lg text-base-content mb-4">
+            This creates ongoing exposure, backlinking value, and SEO benefits for artists and for the Guild.
+          </p>
+          <p className="text-lg text-base-content font-semibold mb-8">
+            Over time, contests become a growing, searchable history of artist success within the cooperative.
+          </p>
+          <div className="text-center">
+            <Link href="/vote/archive" className="btn btn-primary btn-lg">
+              Explore Contest Archive
+            </Link>
           </div>
         </section>
+
       </main>
     </div>
   )
