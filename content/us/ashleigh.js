@@ -8,16 +8,16 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
- const ashleyProfile = {
-	name: "ashley ",
-	slug: "ashley",
+ const ashleighProfile = {
+	name: "ashleigh ",
+	slug: "ashleigh",
 	artForms: ["TBD"],
-	linkToArtistPage: "/artists/ashleyTBD",
+	linkToArtistPage: "/artists/ashleighTBD",
 	title: "Treasurer of the Board, Chief Accounting Officer",
 	roleSummary: "Manages finances, forecasting, investments, and artist compensation flows.",
-	bio: `ashley TBD.`,
+	bio: `ashleigh TBD.`,
 	images: [],
 };
 
-export default ashleyProfile;
+export default ashleighProfile;
  

@@ -8,7 +8,7 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import ashleyProfile from "./ashley";
+import ashleighProfile from "./ashleigh";
 import bobbProfile from "./bobb";
 import satyaProfile from "./satya";
 import turtleProfile from "./turtle";
@@ -20,10 +20,8 @@ import mattProfile	from "./matt";
 const profiles = [
 	satyaProfile,
 	bobbProfile,
-	ashleyProfile,
+	ashleighProfile,
 	mattProfile,
-	
-	
 	turtleProfile,
 	//baileyProfile,
 	jasonProfile,
