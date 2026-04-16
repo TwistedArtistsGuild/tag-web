@@ -8,15 +8,16 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
- const jasonProfile = {
-	name: "Jason Allen, Esq.",
-	slug: "jason",
-	artForms: ["Sewing", "Nerding"],
-	linkToArtistPage: "/artists/tbd",
-	title: "Advisor to the Board",
-	roleSummary: "Advises the board.",
-	bio: `An old high school buddy that remembers business law concepts from college.`,
+ const mattProfile = {
+	name: "matt ",
+	slug: "matt",
+	artForms: ["TBD"],
+	linkToArtistPage: "/artists/mattTBD",
+	title: "Secretary of the Board, Chief Accounting Officer",
+	roleSummary: "Runs vendors, contracts, logistics, and daily operations.",
+	bio: `matt TBD.`,
 	images: [],
 };
 
-export default jasonProfile;
+export default mattProfile;
+ 
