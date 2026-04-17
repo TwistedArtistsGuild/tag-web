@@ -9,7 +9,7 @@
 
  Open source · low-profit · human-first*/
 
-import ListingCard from "/components/card_listing"
+import ListingCard from "@/components/cards/card_listing"
 //Imports
 import {useRouter} from "next/router"
 //import Picture from '../../components/picture/[context]/[slug].js' 

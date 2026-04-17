@@ -25,3 +25,23 @@ As the project matures, we plan to:
 
 For now: please be kind, be constructive, and help us build this the right way.
 
+## Reporting a Vulnerability
+
+If you discover a security vulnerability, please report it privately by emailing a project maintainer or opening a security advisory on GitHub. Do **not** disclose security issues publicly until they have been reviewed and patched.
+
+## Security Best Practices
+
+- Never commit secrets, passwords, or API keys to the repository
+- Use environment variables for all sensitive configuration
+- Validate all user input and sanitize outputs
+- Follow the [OWASP Top 10](https://owasp.org/www-project-top-ten/) for web security
+- Keep dependencies up to date and run `npm audit` regularly
+
+## Supported Versions
+
+We support the latest major version of the codebase. Older versions may not receive security updates.
+
+---
+
+For more information, see [env.md](env.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+

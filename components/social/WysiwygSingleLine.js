@@ -70,7 +70,7 @@ const WysiwygSingleLine = ({
         // Prevent Enter key from creating new lines
         enter: {
           key: 13,
-          handler: (range, context) => {
+          handler: () => {
             // You could trigger a form submission here
             return false;
           }
@@ -79,7 +79,7 @@ const WysiwygSingleLine = ({
         'shift+enter': {
           key: 13,
           shiftKey: true,
-          handler: function(range, context) {
+          handler: function() {
             return true;
           }
         },

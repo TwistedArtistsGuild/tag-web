@@ -18,6 +18,8 @@ import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5
 
 // Import components
 import Image from "next/image";
+import { useRealtimeComments, useSocialRealtime } from './SocialRealtimeContext';
+import SocialReactions from './Reactions';
 
 // Dynamically import Quill to avoid SSR issues
 const QuillEditor = dynamic(() => import("react-quill"), {
@@ -83,6 +85,31 @@ const SocialComments = ({
             setIsLoading(false);
         }
     }, [initialComments, contextId]);
+    
+    // Real-time functionality
+    const { emit, isConnected } = useSocialRealtime();
+    
+    // Handle real-time comment updates
+    const handleRealtimeUpdate = useCallback((update) => {
+        if (update.type === 'comment_added') {
+            setComments(prevComments => {
+                // Check if comment already exists to avoid duplicates
+                const exists = prevComments.some(comment => comment.id === update.data.id);
+                if (!exists) {
+                    return [...prevComments, { ...update.data, isEditing: false, replies: [] }];
+                }
+                return prevComments;
+            });
+        } else if (update.type === 'comment_updated') {
+            setComments(prevComments => prevComments.map(comment => 
+                comment.id === update.data.id ? { ...comment, ...update.data, isEditing: false } : comment
+            ));
+        } else if (update.type === 'comment_deleted') {
+            setComments(prevComments => prevComments.filter(comment => comment.id !== update.data.id));
+        }
+    }, []);
+
+    useRealtimeComments(contextId, handleRealtimeUpdate);
     
     // Check if the current user can edit a specific comment
     const canEditComment = useCallback((comment) => {
@@ -192,9 +219,35 @@ const SocialComments = ({
                 
                 // If it's a new comment (has temp- prefix)
                 if (commentId.toString().startsWith('temp-')) {
+                    // Generate a real ID for the comment
+                    const newId = `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                    updatedComment.id = newId;
+                    
+                    // Emit real-time update for new comment
+                    if (isConnected) {
+                        emit('comments', {
+                            type: 'comment_added',
+                            data: {
+                                ...updatedComment,
+                                contextId
+                            }
+                        });
+                    }
+                    
                     // Call the onAddComment callback
                     onAddComment(updatedComment);
                 } else {
+                    // Emit real-time update for updated comment
+                    if (isConnected) {
+                        emit('comments', {
+                            type: 'comment_updated',
+                            data: {
+                                ...updatedComment,
+                                contextId
+                            }
+                        });
+                    }
+                    
                     // Call the onUpdateComment callback
                     onUpdateComment(updatedComment);
                 }
@@ -214,9 +267,37 @@ const SocialComments = ({
                         
                         // If it's a new reply (has temp- prefix)
                         if (commentId.toString().startsWith('temp-')) {
+                            // Generate a real ID for the reply
+                            const newId = `reply-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                            updatedReply.id = newId;
+                            
+                            // Emit real-time update for new reply
+                            if (isConnected) {
+                                emit('comments', {
+                                    type: 'reply_added',
+                                    data: {
+                                        ...updatedReply,
+                                        parentId: comment.id,
+                                        contextId
+                                    }
+                                });
+                            }
+                            
                             // Call the onAddComment callback with parent info
                             onAddComment(updatedReply, comment.id);
                         } else {
+                            // Emit real-time update for updated reply
+                            if (isConnected) {
+                                emit('comments', {
+                                    type: 'reply_updated',
+                                    data: {
+                                        ...updatedReply,
+                                        parentId: comment.id,
+                                        contextId
+                                    }
+                                });
+                            }
+                            
                             // Call the onUpdateComment callback
                             onUpdateComment(updatedReply, comment.id);
                         }
@@ -231,7 +312,7 @@ const SocialComments = ({
             
             return comment;
         }));
-    }, [onAddComment, onUpdateComment]);
+    }, [onAddComment, onUpdateComment, emit, isConnected, contextId]);
 
     /**
      * Increments like count for a comment or reply
@@ -306,21 +387,42 @@ const SocialComments = ({
 
     // Memoize editor content change handler for better performance
     const handleEditorChange = useCallback((commentId, content, isReply = false, parentId = null) => {
-        setComments(prevComments => prevComments.map(c => {
-            if (!isReply && c.id === commentId) {
-                return { ...c, body: content };
+        setComments(prevComments => {
+            // Find the specific comment to update without re-creating the entire array
+            const commentIndex = prevComments.findIndex(c => 
+                !isReply ? c.id === commentId : c.id === parentId
+            );
+            
+            if (commentIndex === -1) return prevComments;
+            
+            const newComments = [...prevComments];
+            
+            if (!isReply) {
+                // Update main comment
+                if (newComments[commentIndex].body !== content) {
+                    newComments[commentIndex] = { 
+                        ...newComments[commentIndex], 
+                        body: content 
+                    };
+                }
+            } else {
+                // Update reply
+                const replyIndex = newComments[commentIndex].replies.findIndex(r => r.id === commentId);
+                if (replyIndex !== -1 && newComments[commentIndex].replies[replyIndex].body !== content) {
+                    const newReplies = [...newComments[commentIndex].replies];
+                    newReplies[replyIndex] = { 
+                        ...newReplies[replyIndex], 
+                        body: content 
+                    };
+                    newComments[commentIndex] = {
+                        ...newComments[commentIndex],
+                        replies: newReplies
+                    };
+                }
             }
-            if (isReply && parentId === c.id) {
-                const updatedReplies = c.replies.map(reply => {
-                    if (reply.id === commentId) {
-                        return { ...reply, body: content };
-                    }
-                    return reply;
-                });
-                return { ...c, replies: updatedReplies };
-            }
-            return c;
-        }));
+            
+            return newComments;
+        });
     }, []);
 
     // Quill editor configuration
@@ -451,39 +553,63 @@ const SocialComments = ({
                             className="py-2 prose max-w-none prose-img:rounded-lg prose-video:rounded-lg"
                         />
                         
-                        {/* Action buttons */}
-                        <div className="flex flex-wrap gap-3 mt-3">
-                            <button 
-                                className="btn btn-sm btn-ghost gap-1"
-                                onClick={() => handleLike(comment.id, isReply, parentId)}
-                                disabled={readOnly || !currentUser}
-                                aria-label={`Like this ${isReply ? 'reply' : 'comment'}. Currently has ${comment.likes} likes.`}
-                            >
-                                <IoThumbsUp className="h-4 w-4" />
-                                <span className="badge badge-sm">{comment.likes || 0}</span>
-                            </button>
-                            
-                            {!isReply && !readOnly && currentUser && (
+                        {/* Reactions and Action buttons in one line */}
+                        <div className="flex items-center justify-between flex-wrap gap-3 mt-3">
+                            {/* Left side: Reactions */}
+                            <div className="flex items-center gap-2">
+                                <SocialReactions
+                                    targetId={comment.id}
+                                    targetType="comment"
+                                    initialReactions={comment.reactions || []}
+                                    currentUser={currentUser}
+                                    readOnly={readOnly}
+                                    size="sm"
+                                    showQuickReactions={true}
+                                    onReactionAdd={(reactionData) => {
+                                        // Handle reaction add if needed
+                                        console.log('Reaction added:', reactionData);
+                                    }}
+                                    onReactionRemove={(reactionData) => {
+                                        // Handle reaction remove if needed
+                                        console.log('Reaction removed:', reactionData);
+                                    }}
+                                />
+                            </div>
+
+                            {/* Right side: Action buttons */}
+                            <div className="flex items-center gap-2">
                                 <button 
-                                    className="btn btn-sm btn-ghost gap-1"
-                                    onClick={() => addNewReply(comment.id)}
-                                    aria-label={`Reply to comment by ${comment.authorDisplayName || comment.author}`}
+                                    className="btn btn-xs btn-ghost gap-1 text-base-content/70 hover:text-base-content"
+                                    onClick={() => handleLike(comment.id, isReply, parentId)}
+                                    disabled={readOnly || !currentUser}
+                                    aria-label={`Like this ${isReply ? 'reply' : 'comment'}. Currently has ${comment.likes} likes.`}
                                 >
-                                    <IoArrowUndo className="h-4 w-4" />
-                                    Reply
+                                    <IoThumbsUp className="h-3 w-3" />
+                                    <span className="text-xs">{comment.likes || 0}</span>
                                 </button>
-                            )}
-                            
-                            {canEditComment(comment) && (
-                                <button 
-                                    className="btn btn-sm btn-ghost gap-1"
-                                    onClick={() => toggleEditMode(comment.id, isReply, parentId)}
-                                    aria-label={`Edit this ${isReply ? 'reply' : 'comment'}`}
-                                >
-                                    <IoCreateOutline className="h-4 w-4" />
-                                    Edit
-                                </button>
-                            )}
+                                
+                                {!isReply && !readOnly && currentUser && (
+                                    <button 
+                                        className="btn btn-xs btn-ghost gap-1 text-base-content/70 hover:text-base-content"
+                                        onClick={() => addNewReply(comment.id)}
+                                        aria-label={`Reply to comment by ${comment.authorDisplayName || comment.author}`}
+                                    >
+                                        <IoArrowUndo className="h-3 w-3" />
+                                        <span className="text-xs">Reply</span>
+                                    </button>
+                                )}
+                                
+                                {canEditComment(comment) && (
+                                    <button 
+                                        className="btn btn-xs btn-ghost gap-1 text-base-content/70 hover:text-base-content"
+                                        onClick={() => toggleEditMode(comment.id, isReply, parentId)}
+                                        aria-label={`Edit this ${isReply ? 'reply' : 'comment'}`}
+                                    >
+                                        <IoCreateOutline className="h-3 w-3" />
+                                        <span className="text-xs">Edit</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </>
                 )}

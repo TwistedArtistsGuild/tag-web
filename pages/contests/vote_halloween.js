@@ -8,31 +8,17 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
- "use client"
+"use client"
 
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { ThumbsUpIcon, MessageSquareIcon } from "lucide-react" // Import icons for voting and comments
+import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
-function HalloweenContest() {
-  const stockPhotos = [
-    "https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg",
-    "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg",
-    "https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg",
-    "https://tagstatic.blob.core.windows.net/pexels/pexels-pixabay-262034-brushes.jpg",
-    "https://tagstatic.blob.core.windows.net/pexels/pexels-joshsorenson-995301-drummer.jpg",
-    "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg",
-    "https://tagstatic.blob.core.windows.net/pexels/pexels-marcela-alessandra-789314-1885213-pianist.jpg",
-    "https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg",
-    "https://tagstatic.blob.core.windows.net/pexels/pexels-markus-winkler-1430818-3812433-merchandiseclothingrack.jpg",
-  ]
+const getRandomStockPhoto = () => getRandomStockPhotoByCategory('general')
 
-  const getRandomStockPhoto = () => {
-    const randomIndex = Math.floor(Math.random() * stockPhotos.length)
-    return stockPhotos[randomIndex]
-  }
-
+export default function HalloweenContest() {
   const [entries, setEntries] = useState([
     {
       id: 1,
@@ -115,7 +101,7 @@ function HalloweenContest() {
             Vote for your favorite spooky creations and help crown our Halloween champion!
           </p>
           <p className="text-lg text-base-content max-w-3xl mx-auto">
-            Welcome to the Twisted Artists Guild's annual Halloween Art Contest! Explore a gallery of eerie, enchanting,
+            Welcome to the Twisted Artists Guild&apos;s annual Halloween Art Contest! Explore a gallery of eerie, enchanting,
             and outright terrifying artworks submitted by our talented community. Cast your vote for the pieces that
             send shivers down your spine or capture the true spirit of Halloween.
           </p>
@@ -213,5 +199,3 @@ function HalloweenContest() {
     </div>
   )
 }
-
-export default HalloweenContest

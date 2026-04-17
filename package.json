@@ -17,7 +17,7 @@
     "@azure/storage-blob": "^12.27.0",
     "@headlessui/react": "^1.7.17",
     "@microsoft/applicationinsights-web": "^3.3.9",
-    "axios": "^1.4.0",
+    "axios": "^1.11.0",
     "crisp-sdk-web": "^1.0.21",
     "dompurify": "^3.2.6",
     "form-data": "^4.0.0",

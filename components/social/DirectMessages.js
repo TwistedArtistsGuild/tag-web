@@ -18,6 +18,7 @@ import { IoSend, IoTimeOutline, IoCheckmarkSharp, IoCheckmarkDoneSharp } from "r
 
 // Import components
 import Image from "next/image";
+import { useRealtimeMessages, useTypingIndicator, useUserPresence, useSocialRealtime } from './SocialRealtimeContext';
 
 // Dynamically import Quill to avoid SSR issues
 const QuillEditor = dynamic(() => import("react-quill"), {
@@ -335,6 +336,71 @@ const DirectMessages = ({
     
     // Ref for auto-scrolling to latest messages
     const messagesEndRef = useRef(null);
+    
+    // Real-time functionality
+    const { emit, isConnected } = useSocialRealtime();
+    const [typingUsers, setTypingUsers] = useState([]);
+    const [onlineUsers, setOnlineUsers] = useState(new Set());
+    
+    // Handle real-time message updates
+    const handleRealtimeMessage = (update) => {
+        if (update.type === 'message_received') {
+            const newMessage = update.data;
+            
+            // Only add if not from current user (to avoid duplicates from optimistic updates)
+            if (newMessage.senderId !== currentUser?.id) {
+                if (demoMode) {
+                    setDemoMessages(prev => ({
+                        ...prev,
+                        [newMessage.conversationId]: [
+                            ...(prev[newMessage.conversationId] || []),
+                            {
+                                id: newMessage.id,
+                                content: newMessage.content,
+                                senderId: newMessage.senderId,
+                                senderName: newMessage.senderDisplayName,
+                                senderAvatar: newMessage.avatarUrl,
+                                timestamp: newMessage.timestamp,
+                                status: 'delivered'
+                            }
+                        ]
+                    }));
+                } else {
+                    setMessageList(prev => [...prev, newMessage]);
+                }
+                scrollToBottom();
+            }
+        }
+    };
+    
+    // Handle typing indicators
+    const handleTypingUpdate = (typingData) => {
+        setTypingUsers(prev => {
+            if (typingData.isTyping) {
+                return [...prev.filter(user => user.userId !== typingData.userId), typingData];
+            } else {
+                return prev.filter(user => user.userId !== typingData.userId);
+            }
+        });
+    };
+    
+    // Handle user presence updates
+    const handlePresenceUpdate = (presenceData) => {
+        setOnlineUsers(prev => {
+            const newSet = new Set(prev);
+            if (presenceData.data.isOnline) {
+                newSet.add(presenceData.data.userId);
+            } else {
+                newSet.delete(presenceData.data.userId);
+            }
+            return newSet;
+        });
+    };
+    
+    // Subscribe to real-time updates
+    useRealtimeMessages(activeConversation?.id || conversation?.id, handleRealtimeMessage);
+    useTypingIndicator(activeConversation?.id || conversation?.id, handleTypingUpdate);
+    useUserPresence(handlePresenceUpdate);
 
     // Get theme from localStorage on client-side only
     useEffect(() => {
@@ -408,11 +474,15 @@ const DirectMessages = ({
         // User to use for the message
         const userToUse = demoMode ? demoUser : currentUser;
         if (!userToUse) return;
+
+        // Clear the editor first to prevent state conflicts
+        const messageContentToSend = sanitizedContent;
+        setNewMessageContent("");
         
         // Create new message object
         const newMessage = {
-            id: `temp-${Date.now()}`, // Temporary ID, will be replaced by server
-            content: sanitizedContent,
+            id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique temporary ID
+            content: messageContentToSend,
             senderId: userToUse.id,
             senderName: userToUse.displayName || userToUse.username,
             senderAvatar: userToUse.avatarUrl || "/images/default-avatar.png",
@@ -421,72 +491,87 @@ const DirectMessages = ({
         };
         
         if (demoMode && activeConversation) {
-            // Add message to the demo conversation
-            const updatedMessages = [...demoMessages[activeConversation.id], newMessage];
-            setDemoMessages({
-                ...demoMessages,
-                [activeConversation.id]: updatedMessages
+            // Add message to the demo conversation using functional update
+            setDemoMessages(prevMessages => {
+                const currentMessages = prevMessages[activeConversation.id] || [];
+                return {
+                    ...prevMessages,
+                    [activeConversation.id]: [...currentMessages, newMessage]
+                };
             });
             
             // Update last message in conversation list
-            const updatedConversations = demoConversations.map(conv => {
-                if (conv.id === activeConversation.id) {
-                    return {
-                        ...conv,
-                        lastMessage: newMessageContent.replace(/<[^>]*>/g, '').trim().substring(0, 50) + (newMessageContent.length > 50 ? '...' : ''),
-                        lastMessageTime: 'Just now',
-                        unreadCount: 0
-                    };
-                }
-                return conv;
-            });
-            setDemoConversations(updatedConversations);
+            setDemoConversations(prevConversations => 
+                prevConversations.map(conv => {
+                    if (conv.id === activeConversation.id) {
+                        return {
+                            ...conv,
+                            lastMessage: messageContentToSend.replace(/<[^>]*>/g, '').trim().substring(0, 50) + (messageContentToSend.length > 50 ? '...' : ''),
+                            lastMessageTime: 'Just now',
+                            unreadCount: 0
+                        };
+                    }
+                    return conv;
+                })
+            );
             
-            // Simulate status changes
+            // Simulate status changes with functional updates to prevent conflicts
             setTimeout(() => {
-                const sentMessages = demoMessages[activeConversation.id].map(msg => 
-                    msg.id === newMessage.id ? {...msg, status: "sent"} : msg
-                );
-                setDemoMessages({
-                    ...demoMessages,
-                    [activeConversation.id]: sentMessages
-                });
+                setDemoMessages(prevMessages => ({
+                    ...prevMessages,
+                    [activeConversation.id]: prevMessages[activeConversation.id].map(msg => 
+                        msg.id === newMessage.id ? {...msg, status: "sent"} : msg
+                    )
+                }));
                 
                 // Simulate delivered after another delay
                 setTimeout(() => {
-                    const deliveredMessages = sentMessages.map(msg => 
-                        msg.id === newMessage.id ? {...msg, status: "delivered"} : msg
-                    );
-                    setDemoMessages({
-                        ...demoMessages,
-                        [activeConversation.id]: deliveredMessages
-                    });
+                    setDemoMessages(prevMessages => ({
+                        ...prevMessages,
+                        [activeConversation.id]: prevMessages[activeConversation.id].map(msg => 
+                            msg.id === newMessage.id ? {...msg, status: "delivered"} : msg
+                        )
+                    }));
                     
                     // Simulate read after another delay
                     setTimeout(() => {
-                        const readMessages = deliveredMessages.map(msg => 
-                            msg.id === newMessage.id ? {...msg, status: "read"} : msg
-                        );
-                        setDemoMessages({
-                            ...demoMessages,
-                            [activeConversation.id]: readMessages
-                        });
+                        setDemoMessages(prevMessages => ({
+                            ...prevMessages,
+                            [activeConversation.id]: prevMessages[activeConversation.id].map(msg => 
+                                msg.id === newMessage.id ? {...msg, status: "read"} : msg
+                            )
+                        }));
                     }, 2000);
                 }, 1000);
             }, 500);
         } else {
+            // Generate a real ID for the message
+            const realMessageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            newMessage.id = realMessageId;
+            newMessage.status = "sent";
+            
             // Update local state optimistically for real mode
-            setMessageList([...messageList, newMessage]);
+            setMessageList(prevMessages => [...prevMessages, newMessage]);
+            
+            // Emit real-time update
+            if (isConnected) {
+                emit('messages', {
+                    type: 'message_received',
+                    data: {
+                        ...newMessage,
+                        conversationId: conversation?.id,
+                        senderDisplayName: newMessage.senderName,
+                        avatarUrl: newMessage.senderAvatar
+                    }
+                });
+            }
             
             // Send to parent component/API
             onSendMessage(newMessage, conversation?.id);
         }
         
-        // Clear the editor
-        setNewMessageContent("");
-        
-        // Scroll to bottom
-        scrollToBottom();
+        // Scroll to bottom after a short delay to ensure DOM updates
+        setTimeout(() => scrollToBottom(), 100);
     };
     
     // Select a conversation in demo mode
@@ -505,6 +590,25 @@ const DirectMessages = ({
     const handleBackToList = () => {
         setActiveConversation(null);
         setShowConversationList(true);
+    };
+    
+    // Handle typing indicators
+    const handleTyping = (content) => {
+        setNewMessageContent(content);
+        
+        // Emit typing indicator
+        if (isConnected && (currentUser || demoUser)) {
+            const user = demoMode ? demoUser : currentUser;
+            emit('typing', {
+                type: 'user_typing',
+                data: {
+                    userId: user.id,
+                    username: user.username || user.displayName,
+                    conversationId: activeConversation?.id || conversation?.id,
+                    isTyping: content.trim().length > 0
+                }
+            });
+        }
     };
     
     // Group messages by sender for nicer UI
@@ -902,6 +1006,25 @@ const DirectMessages = ({
                         );
                     })}
                     
+                    {/* Typing Indicators */}
+                    {typingUsers.length > 0 && (
+                        <div className="typing-indicator p-3 text-sm text-base-content/70">
+                            <div className="flex items-center gap-2">
+                                <div className="flex gap-1">
+                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                </div>
+                                <span>
+                                    {typingUsers.length === 1 
+                                        ? `${typingUsers[0].username} is typing...`
+                                        : `${typingUsers.length} people are typing...`
+                                    }
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                    
                     {/* Scroll anchor */}
                     <div ref={messagesEndRef} />
                 </div>
@@ -912,7 +1035,7 @@ const DirectMessages = ({
                         <QuillEditor
                             modules={quillModules}
                             value={newMessageContent}
-                            onChange={setNewMessageContent}
+                            onChange={handleTyping}
                             placeholder="Write your message..."
                             className="bg-base-100 rounded min-h-[60px] max-h-[150px] overflow-y-auto"
                             onKeyDown={handleKeyDown}
@@ -1146,7 +1269,7 @@ const DirectMessages = ({
                         <QuillEditor
                             modules={quillModules}
                             value={newMessageContent}
-                            onChange={setNewMessageContent}
+                            onChange={handleTyping}
                             placeholder="Write your message..."
                             className="bg-base-100 rounded min-h-[60px] max-h-[150px] overflow-y-auto"
                             onKeyDown={handleKeyDown}

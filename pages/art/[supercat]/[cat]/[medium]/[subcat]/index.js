@@ -10,10 +10,10 @@
  Open source · low-profit · human-first*/
 
 
-import Link from "next/link";
 import { useState } from "react";
 import TagSEO from "@/components/TagSEO";
-import ListingCard from "/components/card_listing";
+import ListingCard from "@/components/cards/card_listing";
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 
 /**
  *
@@ -37,28 +37,33 @@ const Listings = (props) => {
   }
 
 	return (
-		<div className="container mx-auto p-4">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
+		<SocialRealtimeProvider>
+			<div className="container mx-auto p-4">
+				<TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
 
-			<div className="mb-6">
-				<h2 className="text-2xl font-bold text-center">{`Explore ${props.supercat || "Art"}`}</h2>
-				<p className="text-center text-gray-600">{`Discover ${props.supercat || "art"} in the category of ${props.cat || "all categories"}.`}</p>
+				<div className="mb-6">
+					<h2 className="text-2xl font-bold text-center">{`Explore ${props.supercat || "Art"}`}</h2>
+					<p className="text-center text-gray-600">{`Discover ${props.supercat || "art"} in the category of ${props.cat || "all categories"}.`}</p>
+					<div className="text-center mt-2">
+						<div className="badge badge-info">✨ Enhanced with Social Features</div>
+					</div>
+				</div>
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+					{props.listings.map((listing) => {
+						return (
+							<ListingCard
+								key={listing.listingid}
+								listing={{
+									...listing,
+									artist: { path: listing.artist?.path },
+									path: listing.path,
+								}}
+							/>
+						);
+					})}
+				</div>
 			</div>
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-				{props.listings.map((listing) => {
-					return (
-						<ListingCard
-							key={listing.listingid}
-							listing={{
-								...listing,
-								artist: { path: listing.artist?.path },
-								path: listing.path,
-							}}
-						/>
-					);
-				})}
-			</div>
-		</div>
+		</SocialRealtimeProvider>
 	);
 };
 
