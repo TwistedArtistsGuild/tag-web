@@ -12,8 +12,8 @@
 
 import { SessionProvider } from "next-auth/react"
 import "@/styles/globals.css"
-import EnhancedLayout from "/components/MyLayout"
-import { AppWrapper } from "/components/Context"
+import EnhancedLayout from "@/components/MyLayout"
+import { AppWrapper } from "@/components/Context"
 import { useEffect, useState } from "react"
 import { ApplicationInsights } from "@microsoft/applicationinsights-web"
 
@@ -99,3 +99,4 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
     </SessionProvider>
   )
 }
+

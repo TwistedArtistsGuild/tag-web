@@ -16,13 +16,13 @@ import { useRouter } from "next/router"
 import Link from "next/link"
 import Image from "next/image"
 import { useSession } from "next-auth/react" // Using useSession for authentication
-import LoginProfile from "/components/Header/LoginProfile"
-import ThemeSwitcher from "/components/Header/ThemeSwitcher"
-import DropdownMenu from "/components/Header/DropdownMenu"
-import { useLayout } from "/components/LayoutProvider"
+import LoginProfile from "@/components/Header/LoginProfile"
+import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
+import DropdownMenu from "@/components/Header/DropdownMenu"
+import { useLayout } from "@/components/LayoutProvider"
 import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu } from "lucide-react"
-import NotificationsDropdown from "/components/Header/NotificationsDropdown" // Keep as dropdown for now
-import MessagesApplet from "/components/Header/MessagesApplet" // The new message applet
+import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
+import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 // Available themes
@@ -475,3 +475,4 @@ export default function Header({ pageSections = [] }) {
     </>
   )
 }
+

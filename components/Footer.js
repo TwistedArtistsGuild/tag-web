@@ -11,9 +11,9 @@
 
 
 
-import { useAppContext } from "/components/Context"
+import { useAppContext } from "@/components/Context"
 import Link from "next/link"
-import MissionStatement from "/components/MissionStatement"
+import MissionStatement from "@/components/MissionStatement"
 
 /**
  * Footer component for website navigation and social media links
@@ -106,3 +106,4 @@ export default function Footer({ className }) {
     </footer>
   )
 }
+

@@ -13,8 +13,8 @@
 import { useEffect } from "react"
 import Head from "next/head"
 import Link from "next/link"
-import { useAppContext } from "/components/Context" // Import context to update header sections
-import StockProgramBanner from "/components/StockProgramBanner"
+import { useAppContext } from "@/components/Context" // Import context to update header sections
+import StockProgramBanner from "@/components/StockProgramBanner"
 
 const sections = [
   { id: "overview", label: "TAG Stock Plan Overview" },
@@ -216,3 +216,4 @@ const Investing = () => {
 }
 
 export default Investing
+

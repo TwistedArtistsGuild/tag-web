@@ -12,8 +12,8 @@
 
 
 import { useState } from "react"
-import UploadPictureForm1 from "/components/widgets/uploadPic"
-import { defaultFieldClass } from "/utils/formSettings";
+import UploadPictureForm1 from "@/components/widgets/uploadPic"
+import { defaultFieldClass } from "@/utils/formSettings";
 
 export default function UploadPicPage(props) {
 	const [context, setContext] = useState("twistedpassions")

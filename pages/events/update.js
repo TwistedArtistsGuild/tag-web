@@ -11,7 +11,7 @@
 
 
 
-import DynaFormDB from "/components/widgets/DynaFormDB"
+import DynaFormDB from "@/components/widgets/DynaFormDB"
 
 //broken but don't care!!!!
 

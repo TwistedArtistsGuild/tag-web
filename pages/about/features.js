@@ -11,7 +11,7 @@
 import React from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-import FAQ from '/components/homepage/FAQ';
+import FAQ from '@/components/homepage/FAQ';
 
 // Features Page - Showcasing platform's core functionalities
 const Features = () => {

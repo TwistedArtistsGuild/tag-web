@@ -13,9 +13,9 @@
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import "react-quill/dist/quill.snow.css"
-import longDateOptions from "/utils/longdateoptions"
+import longDateOptions from "@/utils/longdateoptions"
 import TagSEO from "@/components/TagSEO"
-import { defaultFieldClass, defaultTextareaClass } from "/utils/formSettings"
+import { defaultFieldClass, defaultTextareaClass } from "@/utils/formSettings"
 
 // Dynamically import Quill
 const QuillNoSSRWrapper = dynamic(() => import("react-quill"), {

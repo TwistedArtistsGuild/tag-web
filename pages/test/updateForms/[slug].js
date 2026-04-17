@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 
 
-import DynaFormDB from '/components/widgets/DynaFormDB';
+import DynaFormDB from '@/components/widgets/DynaFormDB';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
