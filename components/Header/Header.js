@@ -247,12 +247,12 @@ export default function Header({ pageSections = [] }) {
               News
             </Link>
             <Link
-              href="/vote/"
-              className={`text-lg ${getTextColorClass(active === "vote")}`}
-              onClick={() => handleActive("vote")}
-              name="vote"
+              href="/contests/"
+              className={`text-lg ${getTextColorClass(active === "contests")}`}
+              onClick={() => handleActive("contests")}
+              name="contests"
             >
-              Vote
+              Contests
             </Link>
           </nav>
 

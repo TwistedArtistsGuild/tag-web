@@ -12,8 +12,10 @@
 
 const StockProgramBanner = () => (
   <div className="bg-warning text-warning-content px-4 py-3 text-center font-semibold shadow-md mb-6 rounded-box">
-    ⚠️ The TAG stock program is a conceptual draft and will be subject to full legal review before activation. This page describes the intended structure for legal counsel and member feedback.
+    ⚠️ We are reviewing different private placement structures with legal counsel and are also considering potential
+    crowdsourcing pathways that may eventually allow us to advertise stock offerings. At this time, however, we are
+    restricted from advertising stock. ⚠️
   </div>
-);
+)
 
-export default StockProgramBanner;
+export default StockProgramBanner
