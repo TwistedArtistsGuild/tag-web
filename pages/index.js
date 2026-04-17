@@ -12,13 +12,17 @@
 "use client"
 
 import React from "react"
-import Link from "next/link"
 
 import styles from "/styles/pages/index.module.css"
 import TagSEO from "@/components/TagSEO"
-import Hero from "@/components/Hero"
-import FAQ from "@/components/FAQ"
-import CTA from "@/components/CTA"
+import Hero from "@/components/homepage/Hero"
+import CardTools from "@/components/homepage/Card_Tools"
+import CardBloomscroll from "@/components/homepage/Card_Blookscroll"
+import CardMembershipBenefits from "@/components/homepage/Card_membership_benefits"
+import CardContests from "@/components/homepage/Card_Contests"
+import CardPricing from "@/components/homepage/Card_Pricing"
+import FAQ from "@/components/homepage/FAQ"
+import CTA from "@/components/homepage/CTA"
 
 /**
  * Home/index page component
@@ -68,6 +72,15 @@ export default function Home() {
 
           {/* Main Content Sections */}
           <Hero />
+          <section className="bg-base-200">
+            <div className="max-w-7xl mx-auto px-8 py-20 space-y-8">
+              <CardTools />
+              <CardBloomscroll />
+              <CardMembershipBenefits />
+              <CardContests />
+              <CardPricing />
+            </div>
+          </section>
           <FAQ />
           <CTA />
         </div>
