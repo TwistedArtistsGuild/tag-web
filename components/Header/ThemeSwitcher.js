@@ -11,7 +11,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown, Palette } from "lucide-react" // Using Lucide React icons
+import { Check, ChevronDown, Palette } from "lucide-react" // Using Lucide React icons
 
 export default function ThemeSwitcher({ themes, currentTheme, onThemeChange }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -58,7 +58,7 @@ export default function ThemeSwitcher({ themes, currentTheme, onThemeChange }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-56 bg-base-100 border border-base-300 rounded-md shadow-xl z-[100] animate-opacity overflow-auto max-h-96 theme-dropdown-container">
+        <div className="absolute right-0 mt-2 w-72 bg-base-100 border border-base-300 rounded-md shadow-xl z-[100] animate-opacity overflow-auto max-h-96 theme-dropdown-container">
           <div className="p-2">
             <div className="text-sm font-semibold mb-2 px-2 text-primary">Select Theme</div>
             {themes.map((theme) => (
@@ -68,26 +68,32 @@ export default function ThemeSwitcher({ themes, currentTheme, onThemeChange }) {
                   onThemeChange(theme)
                   handleToggle()
                 }}
-                className={`w-full text-left px-4 py-2 hover:bg-base-300 rounded-md transition-colors ${
-                  currentTheme === theme ? "bg-primary/20 font-semibold" : ""
+                className={`w-full text-left px-3 py-2 rounded-md transition-colors theme-option-row ${
+                  currentTheme === theme ? "theme-option-row-current" : ""
                 }`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 justify-between">
                   {/* Theme color preview dot - uses data-theme to actually show the theme's color */}
                   <div
                     data-theme={theme}
-                    className="w-4 h-4 rounded-full border border-base-content/20 flex items-center justify-center theme-color-preview"
+                    className="theme-color-preview"
                   >
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{
-                        backgroundColor: "hsl(var(--p))",
-                        boxShadow: theme === "tag-theme" ? "0 0 5px hsl(var(--p)), 0 0 10px hsl(var(--p))" : "none",
-                      }}
-                    ></div>
+                    <span
+                      className="theme-swatch-primary"
+                      style={{ backgroundColor: "var(--color-primary, var(--p))" }}
+                    ></span>
+                    <span
+                      className="theme-swatch-secondary"
+                      style={{ backgroundColor: "var(--color-secondary, var(--s))" }}
+                    ></span>
                   </div>
 
-                  <span className="theme-name">{formatThemeName(theme)}</span>
+                  <div className="flex items-center justify-between flex-1 min-w-0">
+                    <span className="theme-name truncate">{formatThemeName(theme)}</span>
+                    <span className="theme-key">{theme}</span>
+                  </div>
+
+                  {currentTheme === theme ? <Check size={14} className="text-primary shrink-0" /> : null}
                 </div>
               </button>
             ))}
