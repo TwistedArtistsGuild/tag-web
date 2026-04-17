@@ -1,17 +1,14 @@
 /* This file is part of the Twisted Artists Guild project.
 
-
  Copyright (C) 2025 Twisted Artists Guild
-
 
  Licensed under the GNU General Public License v3.0
  (https://www.gnu.org/licenses/gpl-3.0.en.html).
 
-
  This software comes with NO WARRANTY; see the license for details.
 
-
  Open source · low-profit · human-first*/
+
 
 
 "use client"
@@ -98,6 +95,7 @@ export default function Home() {
 Home.getInitialProps = async () => {
   // Sample data for left sidebar (navigation/filtering)
   const leftSidebarData = {
+    /*
     artists: [
       {
         id: 1,
@@ -131,13 +129,15 @@ Home.getInitialProps = async () => {
       { label: "Photography", value: "photography" },
       { label: "Sculpture", value: "sculpture" },
       { label: "Performance", value: "performance" },
-    ],
+    ],*/
   }
 
   // Sample data for right sidebar (cart/stories)
   const rightSidebarData = {
     cartItems: [
+     /* 
       {
+        
         id: 1,
         name: "Digital Portrait Commission",
         price: 150.0,
@@ -161,8 +161,10 @@ Home.getInitialProps = async () => {
         image: getRandomStockPhotoByCategory('general'),
         artist: "Elena Volkov",
       },
+      */
     ],
     stories: [
+      /*
       {
         id: 1,
         author: "You",
@@ -184,6 +186,7 @@ Home.getInitialProps = async () => {
         content: "Found some amazing clay at the local art supply store. Can't wait to start sculpting!",
         timestamp: "1 day ago",
       },
+          */
     ],
   }
 
