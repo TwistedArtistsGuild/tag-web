@@ -1,12 +1,18 @@
 /* This file is part of the Twisted Artists Guild project.
+
  Copyright (C) 2025 Twisted Artists Guild
+
  Licensed under the GNU General Public License v3.0
  (https://www.gnu.org/licenses/gpl-3.0.en.html).
+
  This software comes with NO WARRANTY; see the license for details.
+
  Open source · low-profit · human-first*/
+
 "use client"
 
 import React from "react"
+import Link from "next/link"
 
 import styles from "/styles/pages/index.module.css"
 import TagSEO from "@/components/TagSEO"
@@ -45,17 +51,17 @@ export default function Home() {
           <section className={`${styles.parallax} flex flex-col`} aria-label="Featured Messages">
             <div className={`${styles.bgColor} bg-primary`}>
               <div className={`${styles.gradient} p-10`}>
-                <span className={`${styles.leftTextContent} text-2xl font-bold`}>A platform made for artists.</span>
+                <span className={`${styles.leftTextContent} text-2xl font-bold`}>A platform made for artists, by artists.</span>
               </div>
             </div>
             <div className={`${styles.bgColor} bg-secondary`}>
               <div className={`${styles.gradient} p-10`}>
-                <span className={`${styles.centerTextContent} text-2xl font-bold`}>A digital revolution.</span>
+                <span className={`${styles.centerTextContent} text-2xl font-bold`}>Building business tools is our art.</span>
               </div>
             </div>
             <div className={`${styles.bgColor} bg-accent`}>
               <div className={`${styles.gradient} p-10`}>
-                <span className={`${styles.rightTextContent} text-2xl font-bold`}>Tools at your fingertips.</span>
+                <span className={`${styles.rightTextContent} text-2xl font-bold`}>Join us, create more.</span>
               </div>
             </div>
           </section>

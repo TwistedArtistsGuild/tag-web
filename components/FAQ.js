@@ -35,7 +35,7 @@ const faqList = [
 		question: "How do I register as an Artist Member and what benefits do I receive?",
 		answer: (
 			<div className="space-y-2 leading-relaxed">
-				Becoming a TAG Artist Member is both free and empowering. Sign up at /artists/register/ to create your artist profile, where you can highlight your portfolio, link to your listings and events, and even showcase a timeline of your creative journey. Our platform is designed to be a business manager in your corner—providing you with tools such as a sales dashboard, CRM capabilities, event ticketing support, and even automated workflow forms to help streamline your day-to-day operations. Our goal is to reduce administrative burdens so you can focus on what you do best: creating art.
+				Becoming a TAG Artist Member is both free and empowering. Sign up at /artists/register/ to create your artist profile, where you can highlight your portfolio, link to your listings and events, and even showcase a timeline of your creative journey. Our platform is designed to be a business manager in your corner—providing you with tools such as a sales dashboard, CRM capabilities, event ticketing support, and even automated workflow forms to help streamline your day-to-day operations. Our goal is to reduce administrative burdens so you can focus on what you do best: creating art.
 			</div>
 		),
 	},
@@ -124,7 +124,11 @@ const FAQ = () => {
 				<div className="flex flex-col text-left basis-1/2">
 					<p className="inline-block font-semibold text-primary mb-4">FAQ</p>
 					<p className="sm:text-4xl text-3xl font-extrabold text-base-content">
-            Frequently Asked Questions
+						Got questions? We&apos;ve got answers.
+					</p>
+					<p className="mt-4 text-lg text-base-content/80 leading-relaxed">
+						From buying art to joining as an artist, pricing, support, and platform details, here&apos;s how the Guild
+						works.
 					</p>
 				</div>
 
