@@ -8,9 +8,17 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-<Image
-  src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3"
-  alt="Gallery Image"
-  fill
-  style={{ objectFit: 'cover' }}
-/>
+import Image from "next/image";
+
+export default function Gallery() {
+  return (
+    <div className="relative h-64 w-full overflow-hidden rounded-xl">
+      <Image
+        src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3"
+        alt="Gallery Image"
+        fill
+        style={{ objectFit: "cover" }}
+      />
+    </div>
+  );
+}
