@@ -54,9 +54,9 @@ const External = () => {
             <Link href="/about/development" className="text-base-content hover:text-primary">
               Development
             </Link>
-            <Link href="/about/investing" className="text-base-content hover:text-primary">
+            {/*<Link href="/about/investing" className="text-base-content hover:text-primary">
               Investing
-            </Link>
+            </Link>*/}
           </div>
         </div>
       </nav>
@@ -83,9 +83,9 @@ const External = () => {
           </p>
           <p className="text-lg text-primary font-bold mt-4">{"investors@twistedartistsguild.com"}</p>
           <div className="mt-8">
-            <Link href="/about/investing" className="btn btn-primary">
+           {/* <Link href="/about/investing" className="btn btn-primary">
               {"Back to Stock Plan Overview"}
-            </Link>
+            </Link>*/}
           </div>
         </div>
       </section>

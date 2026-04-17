@@ -231,9 +231,9 @@ const Pricing = () => {
             <Link href="/about/development" className="text-base-content hover:text-primary">
               Development
             </Link>
-            <Link href="/about/investing" className="text-base-content hover:text-primary">
+           {/*<Link href="/about/investing" className="text-base-content hover:text-primary">
               Investing
-            </Link>
+            </Link>*/}
           </div>
         </div>
       </nav>
