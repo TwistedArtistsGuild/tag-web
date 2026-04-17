@@ -11,11 +11,11 @@
 
 
 import { useState } from "react";
-import TagSEO from "/components/TagSEO";
+import TagSEO from "@/components/TagSEO";
 import Link from "next/link";
 import ImageGallery from "react-image-gallery";
-import "react-image-gallery/styles/css/image-gallery.css";
-import profiles from "/content/us/profiles";
+import "react-image-gallery/styles/image-gallery.css";
+import profiles from "@/content/us/profiles";
 
 export default function AboutUs() {
 	const pageMetaData = {
@@ -101,3 +101,4 @@ export default function AboutUs() {
 		</div>
 	);
 }
+
