@@ -9,12 +9,12 @@
 
  Open source · low-profit · human-first*/
 
-
-import React, { useEffect, useRef, useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import TiptapEditor from "@/components/social/tiptap-editor";
 
 /**
+ * @deprecated Use TiptapEditor directly with singleLine={true} and preset="minimal".
+ * This wrapper will be removed in a future release.
+ *
  * WysiwygSingleLine - A single line rich text editor component
  * Perfect for short rich text inputs like titles, comments, etc.
  * 
@@ -37,144 +37,24 @@ const WysiwygSingleLine = ({
   readOnly = false,
   toolbar = null,
   theme = "light",
+  preset,
 }) => {
-  const quillRef = useRef(null);
-  const [editorValue, setEditorValue] = useState(value);
-  
-  // Default toolbar options for single line editor - limited functionality
-  const defaultToolbar = [
-    ['bold', 'italic', 'underline', 'link'],
-    ['clean'] // remove formatting
-  ];
-  
-  // Use custom toolbar if provided, otherwise use default
-  const toolbarOptions = toolbar || defaultToolbar;
-  
-  // Apply dark theme if specified
-  useEffect(() => {
-    const editor = document.querySelector('.wysiwyg-single-line');
-    if (editor) {
-      if (theme === 'dark') {
-        editor.classList.add('quill-dark');
-      } else {
-        editor.classList.remove('quill-dark');
-      }
-    }
-  }, [theme]);
-  
-  // Configure Quill modules
-  const modules = {
-    toolbar: toolbarOptions,
-    keyboard: {
-      bindings: {
-        // Prevent Enter key from creating new lines
-        enter: {
-          key: 13,
-          handler: () => {
-            // You could trigger a form submission here
-            return false;
-          }
-        },
-        // Allow shift+enter to create a newline if absolutely necessary
-        'shift+enter': {
-          key: 13,
-          shiftKey: true,
-          handler: function() {
-            return true;
-          }
-        },
-      }
-    }
-  };
-  
-  // Handle editor content changes
-  const handleChange = (content) => {
-    setEditorValue(content);
-    onChange(content);
-  };
-  
-  // Apply additional styling for single line behavior
-  const editorStyle = {
-    maxHeight: '42px',
-    overflowY: 'hidden',
-    ...style
-  };
-  
-  // Force Quill to be a single line by removing line breaks
-  useEffect(() => {
-    if (quillRef.current) {
-      const quill = quillRef.current.getEditor();
-      
-      // This event listener will remove any line break automatically
-      quill.on('text-change', function(delta, oldDelta, source) {
-        if (source === 'user') {
-          const text = quill.getText();
-          if (text.includes('\n')) {
-            const cleanText = text.replace(/\n/g, ' ');
-            quill.setText(cleanText);
-            
-            // Move cursor to end - important for UX
-            quill.setSelection(cleanText.length, 0);
-          }
-        }
-      });
-    }
-  }, [quillRef]);
-  
+  const resolvedPreset = preset || (toolbar ? "medium" : "minimal");
+  const themeClass = theme === "dark" ? "is-dark" : "is-light";
+
   return (
-    <div className={`wysiwyg-single-line ${className} ${theme === 'dark' ? 'quill-dark' : ''}`}>
-      <style jsx global>{`
-        .wysiwyg-single-line .ql-container {
-          border-bottom-left-radius: 0.5rem;
-          border-bottom-right-radius: 0.5rem;
-        }
-        
-        .wysiwyg-single-line .ql-toolbar {
-          border-top-left-radius: 0.5rem;
-          border-top-right-radius: 0.5rem;
-          background: ${theme === 'dark' ? '#2a303c' : '#f8f8f8'};
-        }
-        
-        .wysiwyg-single-line.quill-dark .ql-toolbar {
-          border-color: #4b5563;
-        }
-        
-        .wysiwyg-single-line.quill-dark .ql-container {
-          border-color: #4b5563;
-        }
-        
-        .wysiwyg-single-line.quill-dark .ql-editor {
-          color: #e5e7eb;
-          background: #1f2937;
-        }
-        
-        .wysiwyg-single-line .ql-editor {
-          padding: 8px 12px;
-          max-height: 42px;
-          min-height: 42px;
-          overflow-y: hidden;
-        }
-        
-        /* Hide scrollbar but allow scrolling if needed */
-        .wysiwyg-single-line .ql-editor::-webkit-scrollbar {
-          display: none;
-        }
-        
-        .wysiwyg-single-line .ql-editor {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-      `}</style>
-      
-      <ReactQuill
-        ref={quillRef}
-        theme="snow"
-        value={editorValue}
-        onChange={handleChange}
-        modules={modules}
+    <div
+      className={`wysiwyg-single-line ${themeClass} ${className}`}
+      style={style}
+    >
+      <TiptapEditor
+        value={value}
+        onChange={onChange}
         placeholder={placeholder}
         readOnly={readOnly}
-        style={editorStyle}
+        preset={resolvedPreset}
+        singleLine
+        minHeight={42}
       />
     </div>
   );

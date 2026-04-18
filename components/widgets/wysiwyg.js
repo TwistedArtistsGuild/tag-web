@@ -11,55 +11,35 @@
 
 
 
-import { useState, useEffect, useRef } from "react"
-import dynamic from "next/dynamic"
+import { useState, useEffect } from "react"
 import DOMPurify from "dompurify"
-import "react-quill/dist/quill.snow.css"
+import TiptapEditor from "@/components/social/tiptap-editor"
 
-// Dynamically import Quill
-const QuillNoSSRWrapper = dynamic(() => import("react-quill"), {
-	ssr: false,
-	loading: () => <p>Loading ...</p>,
-})
-
+/**
+ * @deprecated Use TiptapEditor directly with actionPreset="submit-cancel".
+ * This wrapper will be removed in a future release.
+ */
 export default function Wysiwyg({ formattedData, onSubmit, onCancel, placeholder = "Enter your comment..." }) {
 	const [value, setValue] = useState("")
-	const [quillContent, setQuillContent] = useState("")
+	const [editorContent, setEditorContent] = useState("")
 	const [isEditing, setIsEditing] = useState(true)
-	const quillRef = useRef()
-
-	// Define toolbar options - simpler for comment systems
-	const modules = {
-		toolbar: [
-			["bold", "italic", "underline"],
-			[{ list: "ordered" }, { list: "bullet" }],
-			["link"],
-			["clean"] // Removes formatting
-		],
-	}
 
 	useEffect(() => {
 		if (formattedData) {
 			setValue(formattedData)
-			setQuillContent(formattedData)
+			setEditorContent(formattedData)
 		}
 	}, [formattedData])
 
 	const onChangeHandler = (content) => {
 		setValue(content)
-		setQuillContent(content)
+		setEditorContent(content)
 	}
 
-	const handleSubmit = () => {
-		// Don't submit empty comments (just HTML tags with no content)
-		const textOnly = quillContent.replace(/<[^>]*>/g, '').trim()
-		if (!textOnly) {
-			// You could add an error message here
-			return
-		}
-		
+	const handleSubmit = (html) => {
+		setEditorContent(html)
 		if (onSubmit) {
-			onSubmit(quillContent)
+			onSubmit(html)
 		}
 		setIsEditing(false)
 	}
@@ -67,44 +47,35 @@ export default function Wysiwyg({ formattedData, onSubmit, onCancel, placeholder
 	const handleCancel = () => {
 		if (onCancel) {
 			onCancel()
-		} else {
-			setIsEditing(false)
 		}
+		setIsEditing(false)
 	}
 
 	return (
 		<div className="bg-base-100 rounded-lg">
 			{isEditing ? (
 				<>
-					<QuillNoSSRWrapper
-						modules={modules}
+					<TiptapEditor
 						value={value}
 						onChange={onChangeHandler}
 						placeholder={placeholder}
-						ref={quillRef}
-						className="bg-base-100 rounded min-h-[100px]"
+						className="bg-base-100"
+						preset="minimal"
+						minHeight={100}
+						actionPreset="submit-cancel"
+						submitLabel={formattedData ? "Update" : "Post Comment"}
+						cancelLabel="Cancel"
+						emptySubmitMessage="Write something before posting."
+						onSubmit={handleSubmit}
+						onCancel={handleCancel}
 					/>
-					<div className="flex gap-2 mt-2 justify-end">
-						<button 
-							className="btn btn-sm btn-outline" 
-							onClick={handleCancel}
-						>
-							Cancel
-						</button>
-						<button 
-							className="btn btn-sm btn-primary" 
-							onClick={handleSubmit}
-						>
-							{formattedData ? "Update" : "Post Comment"}
-						</button>
-					</div>
 				</>
 			) : (
 				<>
 					<div>
 						<div
 							className="p-4 bg-base-100 rounded-lg"
-							dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(quillContent) }}
+							dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(editorContent) }}
 						/>
 					</div>
 					<button className="btn btn-sm btn-secondary mt-2" onClick={() => setIsEditing(true)}>Edit</button>

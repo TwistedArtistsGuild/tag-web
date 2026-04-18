@@ -9,12 +9,12 @@
 
  Open source · low-profit · human-first*/
 
-
-import React, { useEffect, useRef, useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import TiptapEditor from "@/components/social/tiptap-editor";
 
 /**
+ * @deprecated Use TiptapEditor directly with preset="full" (or "medium").
+ * This wrapper will be removed in a future release.
+ *
  * WysiwygTextArea - A multi-line rich text editor component
  * Perfect for longer content like descriptions, blog posts, etc.
  * 
@@ -40,157 +40,35 @@ const WysiwygTextArea = ({
   toolbar = null,
   theme = "light",
   minHeight = 150,
-  maxHeight = 400
+  maxHeight = 400,
+  preset = "full",
 }) => {
-  const quillRef = useRef(null);
-  const [editorValue, setEditorValue] = useState(value);
-  
-  // Default toolbar options for text area editor - full functionality
-  const defaultToolbar = [
-    [{ 'header': [1, 2, 3, false] }],
-    ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-    [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-    ['link', 'image'],
-    ['clean'] // remove formatting
-  ];
-  
-  // Use custom toolbar if provided, otherwise use default
-  const toolbarOptions = toolbar || defaultToolbar;
-  
-  // Apply dark theme if specified
-  useEffect(() => {
-    const editor = document.querySelector('.wysiwyg-text-area');
-    if (editor) {
-      if (theme === 'dark') {
-        editor.classList.add('quill-dark');
-      } else {
-        editor.classList.remove('quill-dark');
-      }
-    }
-  }, [theme]);
-  
-  // Configure Quill modules
-  const modules = {
-    toolbar: toolbarOptions,
-    clipboard: {
-      // Allow pasted content to maintain formatting
-      matchVisual: false
-    }
-  };
-  
-  // Handle editor content changes
-  const handleChange = (content) => {
-    setEditorValue(content);
-    onChange(content);
-  };
-  
-  // Calculate editor style with min/max height constraints
+  const resolvedPreset = preset || (toolbar ? "full" : "full");
+  const themeClass = theme === "dark" ? "is-dark" : "is-light";
+
   const editorStyle = {
     minHeight: `${minHeight}px`,
-    maxHeight: maxHeight > 0 ? `${maxHeight}px` : 'none',
-    ...style
+    maxHeight: maxHeight > 0 ? `${maxHeight}px` : "none",
+    ...style,
   };
-  
-  // Focus behavior - add a method to focus the editor
-  const focus = () => {
-    if (quillRef.current) {
-      const quill = quillRef.current.getEditor();
-      quill.focus();
-    }
-  };
-  
+
   return (
-    <div className={`wysiwyg-text-area ${className} ${theme === 'dark' ? 'quill-dark' : ''}`}>
-      <style jsx global>{`
-        .wysiwyg-text-area .ql-container {
-          border-bottom-left-radius: 0.5rem;
-          border-bottom-right-radius: 0.5rem;
-        }
-        
-        .wysiwyg-text-area .ql-toolbar {
-          border-top-left-radius: 0.5rem;
-          border-top-right-radius: 0.5rem;
-          background: ${theme === 'dark' ? '#2a303c' : '#f8f8f8'};
-        }
-        
-        .wysiwyg-text-area.quill-dark .ql-toolbar {
-          border-color: #4b5563;
-        }
-        
-        .wysiwyg-text-area.quill-dark .ql-container {
-          border-color: #4b5563;
-        }
-        
-        .wysiwyg-text-area.quill-dark .ql-editor {
-          color: #e5e7eb;
-          background: #1f2937;
-        }
-        
-        .wysiwyg-text-area.quill-dark .ql-snow .ql-stroke {
-          stroke: #e5e7eb;
-        }
-        
-        .wysiwyg-text-area.quill-dark .ql-snow .ql-fill {
-          fill: #e5e7eb;
-        }
-        
-        .wysiwyg-text-area.quill-dark .ql-picker {
-          color: #e5e7eb;
-        }
-        
-        .wysiwyg-text-area .ql-editor {
-          padding: 12px 15px;
-          min-height: ${minHeight - 42}px; /* Account for toolbar height */
-          ${maxHeight > 0 ? `max-height: ${maxHeight - 42}px;` : ''}
-          overflow-y: auto;
-        }
-        
-        /* Custom scrollbar styling */
-        .wysiwyg-text-area .ql-editor::-webkit-scrollbar {
-          width: 8px;
-        }
-        
-        .wysiwyg-text-area .ql-editor::-webkit-scrollbar-track {
-          background: ${theme === 'dark' ? '#374151' : '#f1f1f1'};
-          border-radius: 10px;
-        }
-        
-        .wysiwyg-text-area .ql-editor::-webkit-scrollbar-thumb {
-          background: ${theme === 'dark' ? '#6B7280' : '#c1c1c1'};
-          border-radius: 10px;
-        }
-        
-        .wysiwyg-text-area .ql-editor::-webkit-scrollbar-thumb:hover {
-          background: ${theme === 'dark' ? '#9CA3AF' : '#a8a8a8'};
-        }
-        
-        /* Additional styling for image handling */
-        .wysiwyg-text-area .ql-editor img {
-          max-width: 100%;
-          height: auto;
-        }
-      `}</style>
-      
-      <ReactQuill
-        ref={quillRef}
-        theme="snow"
-        value={editorValue}
-        onChange={handleChange}
-        modules={modules}
+    <div
+      className={`wysiwyg-text-area ${themeClass} ${className}`}
+      style={editorStyle}
+    >
+      <TiptapEditor
+        value={value}
+        onChange={onChange}
         placeholder={placeholder}
         readOnly={readOnly}
-        style={editorStyle}
+        preset={resolvedPreset}
+        minHeight={minHeight}
       />
     </div>
   );
 };
 
-// Add a static method to expose the focus function
-WysiwygTextArea.focus = (ref) => {
-  if (ref && ref.current) {
-    const editor = ref.current.getEditor();
-    editor.focus();
-  }
-};
+WysiwygTextArea.focus = () => {};
 
 export default WysiwygTextArea;
