@@ -8,6 +8,6 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import Listings from "/pages/art/[supercat]/[cat]/[medium]/[subcat]";
+import Listings from "@/pages/art/[supercat]/[cat]/[medium]/[subcat]";
 
 export default Listings;

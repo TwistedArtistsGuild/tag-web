@@ -9,11 +9,14 @@
 
  Open source · low-profit · human-first*/
  
- @tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 @import './tag-theme.css';
 @import './light-theme.css';
+
+/* Tailwind v4: DaisyUI must be registered in CSS (tailwind.config.js plugin list is not sufficient). */
+@plugin "daisyui" {
+  themes: light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, valentine, halloween, garden, aqua, pastel, fantasy, black, luxury, dracula;
+}
 
 html,
 body {
@@ -24,19 +27,90 @@ body {
   overflow-x: hidden;
 }
 
+html {
+  /* each theme sets --color-base-100 (DaisyUI v5) or --b1 (v3) on [data-theme] */
+  background-color: var(--color-base-100, var(--b1, #ffffff));
+  background-attachment: fixed;
+}
+
+body.site-body {
+  min-height: 100%;
+  color: var(--color-base-content, var(--bc));
+  background: transparent; /* let html canvas color show through */
+}
+
+.site-shell {
+  position: relative;
+}
+
+/* neon gradient for tag-theme — class toggled by JS in MyLayout.js */
+.site-shell.theme-tag {
+  background:
+    radial-gradient(circle at top left,  color-mix(in oklab, var(--tag-secondary) 20%, transparent) 0, transparent 35%),
+    radial-gradient(circle at top right, color-mix(in oklab, var(--tag-primary)   20%, transparent) 0, transparent 30%),
+    radial-gradient(circle at 20% 70%,   color-mix(in oklab, var(--tag-primary)   10%, transparent) 0, transparent 32%),
+    radial-gradient(circle at 80% 40%,   color-mix(in oklab, var(--tag-secondary) 10%, transparent) 0, transparent 28%),
+    linear-gradient(180deg, var(--tag-base-200) 0%, var(--tag-base-100) 60%, var(--tag-base-200) 100%);
+  background-attachment: fixed;
+}
+
+/* grid texture — only visible for tag-theme */
+.site-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-base-content, var(--bc)) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-base-content, var(--bc)) 4%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 78%);
+  opacity: 0;
+  z-index: 0;
+  transition: opacity 0.4s ease;
+}
+
+.site-shell.theme-tag::before {
+  opacity: 0.4;
+}
+
+.site-main {
+  position: relative;
+  z-index: 1;
+}
+
+.site-main-inner {
+  width: min(100%, 1280px);
+  margin: 0 auto;
+}
+
 /* It makes the HTML progress bar filling smooth when value change. */
 progress::-webkit-progress-value {
   transition: 0.6s width ease-out;
 }
 
-@layer base {
-  .btn-gradient {
-    @apply !bg-gradient !bg-[length:300%_300%] hover:saturate-[1.2] shadow duration-100 !border-0 !border-transparent !bg-transparent animate-shimmer disabled:!bg-none disabled:!bg-gray-500/30 !text-white;
-  }
-  
-  .btn {
-    @apply !capitalize;
-  }
+.btn-gradient {
+  background-image: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
+  background-size: 300% 300%;
+  border: 0;
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: var(--tw-shadow, 0 1px 2px 0 rgb(0 0 0 / 0.05));
+  transition-duration: 100ms;
+  animation: shimmer 3s ease-out infinite alternate;
+}
+
+.btn-gradient:hover {
+  filter: saturate(1.2);
+}
+
+.btn-gradient:disabled {
+  background-image: none;
+  background-color: rgb(107 114 128 / 0.3);
+}
+
+.btn {
+  text-transform: capitalize;
 }
 
 /* Animation for gradient buttons */
@@ -69,13 +143,13 @@ ul {
 
 /* Generic link styling that respects the active theme */
 a {
-  color: var(--p);
+  color: var(--color-primary, var(--p));
   text-decoration: none;
   transition: all 0.3s ease;
 }
 
 a:hover {
-  color: var(--s);
+  color: var(--color-secondary, var(--s));
 }
 
 /* Table styling that respects the active theme */
@@ -87,12 +161,12 @@ table {
 th, td {
   padding: 8px;
   text-align: left;
-  border-bottom: 1px solid var(--b3);
+  border-bottom: 1px solid var(--color-base-300, var(--b3));
 }
 
 th {
-  background-color: var(--b3);
-  color: var(--bc);
+  background-color: var(--color-base-300, var(--b3));
+  color: var(--color-base-content, var(--bc));
 }
 
 /* Global scrollbar styling that matches the active theme */
@@ -101,17 +175,17 @@ th {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--s);
+  background-color: var(--color-secondary, var(--s));
   border-radius: 8px;
   transition: 0.3s ease-in-out;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--a, var(--p));
+  background-color: var(--color-accent, var(--a, var(--p)));
 }
 
 ::-webkit-scrollbar-track {
-  background-color: var(--b2);
+  background-color: var(--color-base-200, var(--b2));
   border-radius: 8px;
 }
 
@@ -139,7 +213,11 @@ th {
 
 /* Enhanced site title with gradient effect that works across all themes */
 .site-title {
-  background-image: linear-gradient(to right, hsl(var(--p)), hsl(var(--s)));
+  background-image: linear-gradient(
+    to right,
+    var(--color-primary, var(--p)),
+    var(--color-secondary, var(--s))
+  );
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
@@ -155,16 +233,38 @@ th {
 
 /* Theme dropdown styling to ensure visibility across all themes */
 .theme-dropdown-container {
-  background-color: hsl(var(--b1)) !important;
-  color: hsl(var(--bc)) !important;
-  border: 2px solid hsl(var(--p));
+  background-color: var(--color-base-100, var(--b1)) !important;
+  color: var(--color-base-content, var(--bc)) !important;
+  border: 2px solid var(--color-primary, var(--p));
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   border-radius: 8px;
 }
 
 .theme-name {
-  color: hsl(var(--bc));
+  color: var(--color-base-content, var(--bc));
   font-weight: 500;
+}
+
+.theme-key {
+  color: color-mix(in oklab, var(--color-base-content, var(--bc)) 65%, transparent);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  margin-left: 0.5rem;
+  white-space: nowrap;
+}
+
+.theme-option-row {
+  border: 1px solid transparent;
+}
+
+.theme-option-row:hover {
+  background-color: color-mix(in oklab, var(--color-primary, var(--p)) 12%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary, var(--p)) 40%, transparent);
+}
+
+.theme-option-row-current {
+  background-color: color-mix(in oklab, var(--color-primary, var(--p)) 18%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-primary, var(--p)) 55%, transparent);
 }
 
 [data-theme="dark"] .theme-dropdown-container,
@@ -172,20 +272,80 @@ th {
 [data-theme="dracula"] .theme-dropdown-container,
 [data-theme="luxury"] .theme-dropdown-container,
 [data-theme="synthwave"] .theme-dropdown-container {
-  border: 2px solid hsl(var(--s));
+  border: 2px solid var(--color-secondary, var(--s));
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 10px rgba(255, 255, 255, 0.1);
 }
 
 .theme-color-preview {
-  border: 1px solid hsl(var(--bc) / 0.3);
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 0.3rem;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid color-mix(in oklab, var(--color-base-content, var(--bc)) 35%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, black 20%, transparent);
+  flex-shrink: 0;
+}
+
+.theme-swatch-primary,
+.theme-swatch-secondary {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Theme-reactive shell chrome ─────────────────────────────────────── */
+
+/* Sidebar + footer accent strip */
+.sidebar-accent,
+.footer-brand-bar {
+  height: 3px;
+  width: 100%;
+  flex-shrink: 0;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary, var(--p)),
+    var(--color-secondary, var(--s))
+  );
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+[data-theme="tag-theme"] .sidebar-accent,
+[data-theme="tag-theme"] .footer-brand-bar {
+  background: linear-gradient(
+    90deg,
+    var(--tag-primary),
+    var(--tag-secondary),
+    var(--tag-accent),
+    var(--tag-secondary)
+  );
+  box-shadow:
+    0 0 6px color-mix(in oklab, var(--tag-secondary) 70%, transparent),
+    0 0 14px color-mix(in oklab, var(--tag-primary) 40%, transparent);
+}
+
+/* Sidebar section header */
+.sidebar-inner-header {
+  border-bottom: 1px solid color-mix(in oklab, var(--color-primary, var(--p)) 35%, transparent);
+}
+
+[data-theme="tag-theme"] .sidebar-inner-header {
+  border-bottom: 1px solid color-mix(in oklab, var(--tag-accent) 55%, transparent);
+  box-shadow: 0 1px 6px color-mix(in oklab, var(--tag-accent) 20%, transparent);
+}
+
+/* Footer top accent — overrides the default muted border */
+footer.themed-footer {
+  border-top: none;
 }
 
 /* Fix for theme dropdown readability - ensures proper contrast */
 [data-theme] .theme-dropdown-menu {
   /* Use theme-specific variables for proper contrast */
-  background-color: var(--b2);
-  color: var(--bc);
-  border: 1px solid var(--b3);
+  background-color: var(--color-base-200, var(--b2));
+  color: var(--color-base-content, var(--bc));
+  border: 1px solid var(--color-base-300, var(--b3));
 }
 
 /* Add dropdown menu readability enhancement */

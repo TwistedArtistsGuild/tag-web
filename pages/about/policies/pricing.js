@@ -11,7 +11,7 @@
 
 
 import Head from "next/head"
-import { getMarkdownContent } from "/components/widgets/markdown"
+import { getMarkdownContent } from "@/components/widgets/markdown"
 
 export default function CodeOfConduct({ content }) {
 	return (
@@ -46,4 +46,5 @@ export async function getStaticProps() {
 		},
 	}
 }
+
 

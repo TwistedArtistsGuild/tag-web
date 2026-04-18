@@ -227,11 +227,10 @@ class MockRealtimeService {
 export const SocialRealtimeProvider = ({ children }) => {
     const [realtimeService] = useState(() => new MockRealtimeService());
     const [isConnected, setIsConnected] = useState(false);
-    const [connectionStatus, setConnectionStatus] = useState('disconnected');
+    const [connectionStatus, setConnectionStatus] = useState('connecting');
 
     useEffect(() => {
         // Connect to realtime service
-        setConnectionStatus('connecting');
         realtimeService.connect();
         
         // Simulate connection status updates

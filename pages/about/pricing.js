@@ -13,8 +13,8 @@
 import { useEffect } from "react"
 import Head from "next/head"
 import Link from "next/link"
-import { useAppContext } from "/components/Context" // Import context to update header sections
-import CTA from "/components/homepage/CTA"
+import { useAppContext } from "@/components/Context" // Import context to update header sections
+import CTA from "@/components/homepage/CTA"
 
 const Pricing = () => {
   const { setPageSections } = useAppContext() // Get access to context to set sections
@@ -284,3 +284,4 @@ const Pricing = () => {
 }
 
 export default Pricing
+

@@ -12,8 +12,8 @@
 
 import { SessionProvider } from "next-auth/react"
 import "@/styles/globals.css"
-import EnhancedLayout from "/components/MyLayout"
-import { AppWrapper } from "/components/Context"
+import EnhancedLayout from "@/components/MyLayout"
+import { AppWrapper } from "@/components/Context"
 import { useEffect, useState } from "react"
 import { ApplicationInsights } from "@microsoft/applicationinsights-web"
 
@@ -73,7 +73,7 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
       {/* Your original development banner */}
       {showDevBanner && (
         <div className="bg-warning text-warning-content text-center py-1 text-xs font-bold sticky top-0 z-50 flex justify-center items-center">
-          <div className="flex-grow">
+          <div className="grow">
             ⚠️ WEBSITE PROTOTYPE - PROOF OF CONCEPT - NOT FOR PRODUCTION USE - DATA IS LIKELY FAKED AND/OR MAY BE RESET
             WITHOUT NOTICE ⚠️
           </div>
@@ -99,3 +99,4 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
     </SessionProvider>
   )
 }
+

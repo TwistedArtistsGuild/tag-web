@@ -13,7 +13,7 @@
 import { useEffect } from "react"
 import Head from "next/head"
 import Link from "next/link"
-import { useAppContext } from "/components/Context" // Import context to update header sections
+import { useAppContext } from "@/components/Context" // Import context to update header sections
 
 const Vendor = () => {
   const { setPageSections } = useAppContext() // Get access to context to set sections
@@ -222,3 +222,4 @@ const Vendor = () => {
 }
 
 export default Vendor
+

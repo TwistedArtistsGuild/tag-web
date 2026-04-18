@@ -9,7 +9,7 @@
 
  Open source · low-profit · human-first*/
 import ImageGallery from "react-image-gallery";
-import 'react-image-gallery/styles/css/image-gallery.css';
+import 'react-image-gallery/styles/image-gallery.css';
 
 /**
  * @desc A reusable photo gallery component styled with daisyUI and Tailwind CSS.
@@ -50,3 +50,4 @@ const PhotoGallery = ({ images }) => {
 };
 
 export default PhotoGallery;
+

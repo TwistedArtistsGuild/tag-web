@@ -12,7 +12,7 @@
 "use client"
  
 import { useRouter } from "next/navigation"
-import { defaultButtonClass } from "/utils/formSettings"
+import { defaultButtonClass } from "@/utils/formSettings"
  
 export default function Page() {
 	const router = useRouter()
@@ -23,6 +23,7 @@ export default function Page() {
 		</button>
 	)
 }
+
 
 
 

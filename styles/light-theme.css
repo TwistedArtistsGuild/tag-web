@@ -25,15 +25,15 @@
   --color-secondary-content: white; /* Light text on secondary */
 
   /* Custom styling for the header */
-  --header-bg-gradient: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--s)) 100%);
+  --header-bg-gradient: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
   --header-clip-path: polygon(0 0, 100% 0, 100% 85%, 95% 100%, 0 100%);
   --header-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Special styling for the light theme header */
 [data-theme="light"] .header-custom {
-  background: linear-gradient(135deg, hsl(var(--p)) 0%, hsl(var(--pf)) 100%);
-  color: hsl(var(--pc));
+  background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in oklab, var(--color-primary) 82%, black) 100%);
+  color: var(--color-primary-content);
   clip-path: polygon(0 0, 100% 0, 100% 85%, 95% 100%, 0 100%);
   position: relative;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -59,7 +59,7 @@
   bottom: 0;
   width: 6%;
   height: 30px;
-  background: hsl(var(--pf));
+  background: color-mix(in oklab, var(--color-primary) 82%, black);
   transform: skewY(-25deg);
   transform-origin: top right;
   z-index: -1;
@@ -71,9 +71,9 @@
   min-width: 16rem !important; 
   max-width: 24rem !important;
   white-space: normal !important;
-  background-color: hsl(var(--b2));
-  color: hsl(var(--bc));
-  border: 2px solid hsl(var(--p));
+  background-color: var(--color-base-200);
+  color: var(--color-base-content);
+  border: 2px solid var(--color-primary);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   border-radius: var(--rounded-box, 0.5rem);
   overflow-y: auto;
@@ -100,5 +100,5 @@
 }
 
 [data-theme="light"] .dropdown .dropdown-content .dropdown-item:hover {
-  background-color: hsl(var(--p) / 0.1);
+  background-color: color-mix(in oklab, var(--color-primary) 10%, transparent);
 }

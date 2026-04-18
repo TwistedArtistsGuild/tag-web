@@ -10,22 +10,26 @@
  Open source · low-profit · human-first*/
 
 
-import { useState, useEffect, useCallback, memo } from "react";
-import dynamic from "next/dynamic";
+import { useState, useCallback, memo } from "react";
 import DOMPurify from "dompurify";
-import "react-quill/dist/quill.snow.css";
 import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5";
 
 // Import components
 import Image from "next/image";
 import { useRealtimeComments, useSocialRealtime } from './SocialRealtimeContext';
 import SocialReactions from './Reactions';
+import TiptapEditor from "@/components/widgets/tiptap-editor";
 
-// Dynamically import Quill to avoid SSR issues
-const QuillEditor = dynamic(() => import("react-quill"), {
-    ssr: false,
-    loading: () => <div className="h-32 bg-base-200 animate-pulse rounded-lg"></div>,
-});
+function buildCommentsState(initialComments = []) {
+    return initialComments.map(comment => ({
+        ...comment,
+        isEditing: false,
+        replies: comment.replies?.map(reply => ({
+            ...reply,
+            isEditing: false
+        })) || []
+    }));
+}
 
 /**
  * SocialComments - A feature-rich comment system with inline editing, replies, likes, and media embedding
@@ -49,42 +53,18 @@ const SocialComments = ({
     contextId = "",
     currentUser = null,
     allowMedia = true,
-    readOnly = false,
-    theme = "light"
+    readOnly = false
 }) => {
     // State management for comments
-    const [comments, setComments] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [currentTheme, setCurrentTheme] = useState('tag-theme');
-
-    // Use useEffect to safely access localStorage on client-side only
-    useEffect(() => {
-        setCurrentTheme(localStorage.getItem("theme") || "tag-theme");
-    }, []);
-    
-    // Initialize with provided comments or fetch if needed
-    useEffect(() => {
-        if (initialComments && initialComments.length > 0) {
-            setComments(initialComments.map(comment => ({
-                ...comment,
-                isEditing: false, // Add editing state to each comment
-                replies: comment.replies?.map(reply => ({
-                    ...reply,
-                    isEditing: false // Add editing state to each reply
-                })) || []
-            })));
-            setIsLoading(false);
-        } else if (contextId) {
-            // If we have a contextId but no initial comments, we would normally fetch them
-            // For now, just set empty state
-            setComments([]);
-            setIsLoading(false);
-        } else {
-            // No context or initial comments
-            setIsLoading(false);
+    const [comments, setComments] = useState(() => buildCommentsState(initialComments));
+    const [isLoading] = useState(false);
+    const [currentTheme] = useState(() => {
+        if (typeof window === "undefined") {
+            return "tag-theme";
         }
-    }, [initialComments, contextId]);
+
+        return localStorage.getItem("theme") || "tag-theme";
+    });
     
     // Real-time functionality
     const { emit, isConnected } = useSocialRealtime();
@@ -425,21 +405,6 @@ const SocialComments = ({
         });
     }, []);
 
-    // Quill editor configuration
-    const quillModules = {
-        toolbar: allowMedia ? [
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            ['link', 'image', 'video'],
-            ['clean']
-        ] : [
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            ['link'],
-            ['clean']
-        ]
-    };
-
     /**
      * Comment component - renders a single comment or reply
      */
@@ -490,13 +455,13 @@ const SocialComments = ({
                             </div>
                         </div>
                         
-                        {/* Quill editor for content */}
-                        <QuillEditor
-                            modules={quillModules}
+                        {/* Rich text editor for content */}
+                        <TiptapEditor
                             value={comment.body}
                             onChange={(content) => handleEditorChange(comment.id, content, isReply, parentId)}
                             placeholder={isReply ? "Write your reply..." : "What's on your mind?"}
-                            className="bg-base-100 rounded min-h-[100px]"
+                            className="bg-base-100"
+                            preset={allowMedia ? "medium" : "minimal"}
                         />
                         
                         {/* Action buttons */}
@@ -625,18 +590,6 @@ const SocialComments = ({
         return <div className="p-4 animate-pulse">Loading comments...</div>;
     }
 
-    // Show error state
-    if (error) {
-        return (
-            <div className="alert alert-error">
-                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Error loading comments: {error}</span>
-            </div>
-        );
-    }
-
     return (
         <div className="comments-container" data-theme={currentTheme}>
             {/* Add comment button - only shown if logged in and not read-only */}
@@ -703,5 +656,31 @@ const SocialComments = ({
         </div>
     );
 };
+
+export function TTCommentsEditorCard({ value, onChange, onSubmit, onCancel }) {
+    return (
+        <div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
+            <h2 className="text-lg font-semibold">Comment</h2>
+            <p className="text-sm text-base-content/70">
+                Minimal preset with Cancel / Post Comment actions.
+            </p>
+            <TiptapEditor
+                value={value}
+                onChange={onChange}
+                placeholder="Write a comment..."
+                preset="minimal"
+                fontScope="comment"
+                minHeight={100}
+                actionPreset="submit-cancel"
+                submitLabel="Post Comment"
+                cancelLabel="Cancel"
+                emptySubmitMessage="Write something before posting."
+                clearOnSubmit
+                onSubmit={onSubmit}
+                onCancel={onCancel}
+            />
+        </div>
+    );
+}
 
 export default SocialComments;

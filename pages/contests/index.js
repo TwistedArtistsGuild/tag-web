@@ -55,7 +55,7 @@ function ContestsIndex() {
             stay visible.
           </p>
           <div className="mt-8 text-center">
-            <Link href="/vote/vote_halloween" className="btn btn-primary btn-lg">
+            <Link href="/contests/vote_halloween" className="btn btn-primary btn-lg">
               View Active Contest
             </Link>
           </div>
