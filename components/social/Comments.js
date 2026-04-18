@@ -91,6 +91,31 @@ const SocialComments = ({
 
     useRealtimeComments(contextId, handleRealtimeUpdate);
     
+    // Real-time functionality
+    const { emit, isConnected } = useSocialRealtime();
+    
+    // Handle real-time comment updates
+    const handleRealtimeUpdate = useCallback((update) => {
+        if (update.type === 'comment_added') {
+            setComments(prevComments => {
+                // Check if comment already exists to avoid duplicates
+                const exists = prevComments.some(comment => comment.id === update.data.id);
+                if (!exists) {
+                    return [...prevComments, { ...update.data, isEditing: false, replies: [] }];
+                }
+                return prevComments;
+            });
+        } else if (update.type === 'comment_updated') {
+            setComments(prevComments => prevComments.map(comment => 
+                comment.id === update.data.id ? { ...comment, ...update.data, isEditing: false } : comment
+            ));
+        } else if (update.type === 'comment_deleted') {
+            setComments(prevComments => prevComments.filter(comment => comment.id !== update.data.id));
+        }
+    }, []);
+
+    useRealtimeComments(contextId, handleRealtimeUpdate);
+    
     // Check if the current user can edit a specific comment
     const canEditComment = useCallback((comment) => {
         if (readOnly) return false;
