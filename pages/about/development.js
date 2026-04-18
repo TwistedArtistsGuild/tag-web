@@ -13,7 +13,7 @@
 import { useEffect } from "react"
 import Head from "next/head"
 import Link from "next/link"
-import { useAppContext } from "/components/Context" // Import context to update header sections
+import { useAppContext } from "@/components/Context" // Import context to update header sections
 
 const Development = () => {
   const { setPageSections } = useAppContext() // Get access to context to set sections
@@ -250,9 +250,9 @@ const Development = () => {
             <Link href="/about/development" className="text-base-content hover:text-primary">
               Development
             </Link>
-            <Link href="/about/investing" className="text-base-content hover:text-primary">
+            {/*<Link href="/about/investing" className="text-base-content hover:text-primary">
               Investing
-            </Link>
+            </Link>*/}
           </div>
         </div>
       </nav>
@@ -269,3 +269,4 @@ const Development = () => {
 }
 
 export default Development
+

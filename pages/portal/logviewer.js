@@ -13,7 +13,7 @@
 
 ///////////////// Imports
 import Link from "next/link"
-import shortDateOptions from "/utils/shortdateoptions"
+import shortDateOptions from "@/utils/shortdateoptions"
 import TagSEO from "@/components/TagSEO"
 
 const Log = props => {
@@ -95,3 +95,4 @@ Log.getInitialProps = async function () {
 }
 
 export default Log
+

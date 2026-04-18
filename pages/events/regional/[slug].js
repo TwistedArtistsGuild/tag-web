@@ -13,7 +13,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
-import shortDateOptions from "/utils/shortdateoptions"
+import shortDateOptions from "@/utils/shortdateoptions"
 
 /**
  * 

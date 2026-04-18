@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 "use client"
 
-import ThemeSwitcher from "/components/Header/ThemeSwitcher"
+import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
 import { useState } from "react"
 
 const ThemeSampler = () => {
@@ -285,3 +285,4 @@ const ThemeSampler = () => {
 }
 
 export default ThemeSampler
+

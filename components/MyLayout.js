@@ -13,37 +13,31 @@
  "use client"
 
 import "react-tooltip/dist/react-tooltip.css"
-import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { Inter } from "next/font/google"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/router"
 import NextNProgress from "nextjs-progressbar"
-import { Toaster } from "react-hot-toast"
 import { Tooltip } from "react-tooltip"
 import ErrorBoundary from "./ErrorBoundary"
 import config from "@/config"
-import Header from "/components/Header/Header"
-import Footer from "/components/Footer"
-import LeftSidebar from "/components/Sidebar-left"
-import RightSidebar from "/components/Sidebar-right"
+import Header from "@/components/Header/Header"
+import Footer from "@/components/Footer"
+import LeftSidebar from "@/components/Sidebar-left"
+import RightSidebar from "@/components/Sidebar-right"
 import { LayoutProvider, useLayout } from "./LayoutProvider"
 
 const font = Inter({ subsets: ["latin"] })
+const ClientToaster = dynamic(
+  () => import("react-hot-toast").then((module) => module.Toaster),
+  { ssr: false }
+)
 
 /**
  * Layout Content Component - The actual layout implementation
  */
 function LayoutContent(props) {
-  const { isHeaderVisible, isLeftSidebarVisible, isRightSidebarVisible, isMobile } = useLayout()
+  const { isHeaderVisible, isLeftSidebarVisible, isRightSidebarVisible, isMobile, theme } = useLayout()
   const { sidebarProps = {} } = props
   const { pageSections = [] } = sidebarProps || {}
-  const router = useRouter()
-  const { data } = useSession()
-  const [isMounted, setIsMounted] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
 
   // Adjusted topMargin to match the new header height
   const topMargin = isHeaderVisible ? "mt-2" : "mt-0" // Changed from mt-20 to mt-16
@@ -60,27 +54,25 @@ function LayoutContent(props) {
 
       <NextNProgress color={config.colors.main} options={{ showSpinner: false }} />
 
-      <div className="flex flex-col min-h-screen">
+      <div className={`site-shell${theme === "tag-theme" ? " theme-tag" : ""} flex min-h-screen flex-col`}>
         <Header pageSections={pageSections} />
         <LeftSidebar {...(sidebarProps?.leftSidebarData || {})} />
         <RightSidebar {...(sidebarProps?.rightSidebarData || {})} />
 
-        <main className={`flex-1 p-4 transition-all duration-300 ${topMargin} ${leftMargin} ${rightMargin}`}>
-          {props.children}
+        <main className={`site-main flex-1 p-4 transition-all duration-300 ${topMargin} ${leftMargin} ${rightMargin}`}>
+          <div className="site-main-inner">{props.children}</div>
         </main>
 
         <Footer className={`${leftMargin} ${rightMargin}`} />
       </div>
 
-      {isMounted && (
-        <Toaster
-          toastOptions={{
-            duration: 3000,
-          }}
-        />
-      )}
+      <ClientToaster
+        toastOptions={{
+          duration: 3000,
+        }}
+      />
 
-      <Tooltip id="tooltip" className="z-[60] !opacity-100 max-w-sm shadow-lg" />
+      <Tooltip id="tooltip" className="z-60 opacity-100! max-w-sm shadow-lg" />
     </ErrorBoundary>
   )
 }

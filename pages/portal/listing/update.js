@@ -8,7 +8,7 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import DynaFormDB from "/components/widgets/DynaFormDB";
+import DynaFormDB from "@/components/widgets/DynaFormDB";
 
 const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
 const formName = "ListingForm1";

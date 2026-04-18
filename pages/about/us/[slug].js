@@ -9,9 +9,9 @@
 
  Open source · low-profit · human-first*/
 import { useRouter } from "next/router";
-import profiles from "/content/us/profiles";
+import profiles from "@/content/us/profiles";
 import ImageGallery from "react-image-gallery";
-import "react-image-gallery/styles/css/image-gallery.css";
+import "react-image-gallery/styles/image-gallery.css";
 import Link from "next/link";
 
 export default function ProfilePage() {

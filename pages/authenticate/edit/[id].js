@@ -18,7 +18,7 @@
  * Use https://dev.azure.com/bobbshields/tag-web-dev for dev team communcation tools
  */
 
-import DynaFormDB from "/components/widgets/DynaFormDB";
+import DynaFormDB from "@/components/widgets/DynaFormDB";
 
 const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
 const formName = "UserForm1";

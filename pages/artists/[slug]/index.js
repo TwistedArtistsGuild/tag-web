@@ -14,10 +14,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
-import longDateOptions from "/utils/longdateoptions"
-import { useAppContext } from "/components/Context"
+import longDateOptions from "@/utils/longdateoptions"
+import { useAppContext } from "@/components/Context"
 import ImageGallery from "react-image-gallery" // Keep this for the main gallery
-import "react-image-gallery/styles/css/image-gallery.css" // Import gallery styles
+import "react-image-gallery/styles/image-gallery.css" // Import gallery styles
 import {
   HeartIcon,
   ThumbsUpIcon,
@@ -27,11 +27,13 @@ import {
   MapPinIcon,
   SearchIcon,
   ReplyIcon,
-  FacebookIcon,
-  InstagramIcon,
-  TwitterIcon,
-  PinIcon as PinterestIcon,
 } from "lucide-react" // Import Lucide icons
+import {
+  FaFacebook as FacebookIcon,
+  FaInstagram as InstagramIcon,
+  FaXTwitter as TwitterIcon,
+  FaPinterest as PinterestIcon,
+} from "react-icons/fa6"
 
 /**
  * @desc Displays an individual artist's details by the shortname, passed by POST
