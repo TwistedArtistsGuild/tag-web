@@ -12,6 +12,7 @@ import { useState, useEffect } from "react"
 import ImageGallery from "react-image-gallery"
 import "react-image-gallery/styles/css/image-gallery.css"
 import SocialComments from "@/components/social/Comments" // Import SocialComments component
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import Image from "next/image"
 
 const ListingDetails = ({ listing }) => {
@@ -29,7 +30,7 @@ const ListingDetails = ({ listing }) => {
     },
     {
       original: "https://picsum.photos/id/1018/1000/600",
-      thumbnail: "https://picsum.photos/id/1018/250/150",
+      thumbnail: "https://picsum.photos/id/1018/250/150", 
       description: "Detail view",
     },
     {
@@ -335,21 +336,23 @@ const ListingDetails = ({ listing }) => {
           </div>
 
           {/* Comments Section - REPLACED WITH SocialComments COMPONENT */}
-          <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Comments & Feedback</h2>
-            <SocialComments
-              initialComments={sampleComments}
-              onAddComment={handleAddComment}
-              onUpdateComment={handleUpdateComment}
-              onLikeComment={handleLikeComment}
-              contextId={`listing-${listing.listingID}`}
-              currentUser={currentUser}
-              allowMedia={true}
-              readOnly={false}
-              theme={theme}
-              className="bg-base-100 text-base-content"
-            />
-          </div>
+          <SocialRealtimeProvider>
+              <div className="mt-8">
+                <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Comments & Feedback</h2>
+                <SocialComments
+                  initialComments={sampleComments}
+                  onAddComment={handleAddComment}
+                  onUpdateComment={handleUpdateComment}
+                  onLikeComment={handleLikeComment}
+                  contextId={`listing-${listing.listingID}`}
+                  currentUser={currentUser}
+                  allowMedia={true}
+                  readOnly={false}
+                  theme={theme}
+                  className="bg-base-100 text-base-content"
+                />
+               </div>
+           </SocialRealtimeProvider>
         </div>
       </div>
     </div>

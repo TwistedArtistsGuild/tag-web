@@ -7,50 +7,82 @@
 
  This software comes with NO WARRANTY; see the license for details.
 
- Open source · low-profit · human-first*/
+ Open source · low-profit · human-first*/ 
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
+import { useState, useEffect } from "react"
 import { useLayout } from "./LayoutProvider"
-import ArtistCard from "@/components/cards/card_artist"
-import ListingCard from "@/components/cards/card_listing"
-import Image from "next/image"
+import ArtistCardSmall from "@/components/cards/card_artist_small"
+import ListingCardSmall from "@/components/cards/card_listing_small"
 import { useRouter } from "next/router"
-import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 export default function LeftSidebar(props) {
   // Since MyLayout.js spreads the leftSidebarData, we access props directly
   const artists = props.artists || [];
-  const listings = props.listings || [];
+  const [listings, setDisplayListings] = useState(props.listings || []);
+  const [displayType, setDisplayType] = useState("auto");
   const events = props.events || [];
   const filters = props.filters || [
-    { label: "All Art", value: "all" },
-    { label: "Paintings", value: "paintings" },
-    { label: "Sculpture", value: "sculpture" },
+    { label: "All Art", value: "-1" },
+    { label: "Paintings", value: "3" },
+    { label: "Sculpture", value: "30" },
   ];
-  const contentType = props.contentType || "auto"; // "artists", "listings", "events", or "auto"
-  
+  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+
+ useEffect(() => {
   // Auto-detect content type if not specified
-  const getContentToDisplay = () => {
-    if (contentType !== "auto") return contentType;
-    if (listings.length > 0) return "listings";
-    if (artists.length > 0) return "artists";
-    if (events.length > 0) return "events";
-    return "none";
-  };
-  
-  const displayType = getContentToDisplay();
+     const resolveContent = async () => {
+    // 2. Logic: If we already have data from props, use it.
+    if (props.contentType && props.contentType !== "auto") {
+        setDisplayType(props.contentType);
+        return;
+    }
+      if (artists.length > 0) {
+          setDisplayType("artists");
+      } else if (events.length > 0) {
+          setDisplayType("events");
+      } else if (props.listings && props.listings.length > 0) {
+          setDisplayType("listings");
+      } else {
+          try {
+              // Fetch the listings data
+              let status = 200
+              const res = await fetch(`${api_url}listing/`);
+              //TODO: Change to add new API in backend to fetch top n listings instead of fetching all
+              //listings and filter top 5 to show
+              status = res.status
+              if (!res.ok) {
+                  throw new Error(`HTTP error! status: ${status}`)
+              }
+              const data = await res.json();
+              setDisplayListings(data);
+              setDisplayType("listings");
+          } catch (error) {
+              console.error('Error in getInitialProps:', error);
+              setDisplayType("none");
+          }
+      }
+     }
+     resolveContent();
+ }, [props.listings, props.artists, props.events]); // Re-run if props change
 
   // Render content based on type
   const renderContent = () => {
+    // 1. Create a helper function to filter based on the active state
+    const filterItem = (item) => {
+        if (activeFilter === "-1" || activeFilter === -1) return true;
+       
+        const itemType = item.artCategoryID;
+
+        return String(itemType) === String(activeFilter);
+    }; 
     switch (displayType) {
       case "listings":
         return (
           <>
             <h3 className="font-medium text-base-content mb-3">Featured Listings</h3>
-            {listings.map((listing, index) => (
-              <ListingCard key={listing.id || index} listing={listing} />
+            {listings.filter(filterItem).map((listing, index) => (
+              <ListingCardSmall key={listing.id || index} listing={listing} />
             ))}
           </>
         );
@@ -59,7 +91,7 @@ export default function LeftSidebar(props) {
           <>
             <h3 className="font-medium text-base-content mb-3">Featured Artists</h3>
             {artists.map((artist, index) => (
-              <ArtistCard key={artist.id || index} artist={artist} />
+              <ArtistCardSmall key={artist.id || index} artist={artist} />
             ))}
           </>
         );
@@ -79,20 +111,20 @@ export default function LeftSidebar(props) {
           </>
         );
       default:
-        return (
-          <div className="text-center py-8 text-base-content/60">
-            <div className="flex flex-col items-center justify-center">
-              <Image src={getRandomStockPhotoByCategory('general')} width={48} height={48} alt="No content" className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No content available</p>
-            </div>
-          </div>
+        return (          
+            <>
+                <h3 className="font-medium text-base-content mb-3">Featured Listings</h3>
+                {listings.filter(filterItem).map((listing, index) => (
+                    <ListingCardSmall key={listing.id || index} listing={listing} />
+                ))}
+            </>
         );
     }
   };
   
   const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
   const [searchTerm, setSearchTerm] = useState("")
-  const [activeFilter, setActiveFilter] = useState("all")
+  const [activeFilter, setActiveFilter] = useState("-1")
   const router = useRouter()
 
   const topOffset = isHeaderVisible ? "top-20" : "top-0"
