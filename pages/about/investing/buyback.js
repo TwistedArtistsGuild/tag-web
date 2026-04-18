@@ -13,8 +13,8 @@
 import { useEffect } from "react"
 import Head from "next/head"
 import Link from "next/link"
-import { useAppContext } from "/components/Context" // Import context to update header sections
-import StockProgramBanner from "/components/StockProgramBanner"
+import { useAppContext } from "@/components/Context" // Import context to update header sections
+import StockProgramBanner from "@/components/StockProgramBanner"
 
 const Buyback = () => {
   const { setPageSections } = useAppContext()
@@ -289,3 +289,4 @@ const Buyback = () => {
 }
 
 export default Buyback
+

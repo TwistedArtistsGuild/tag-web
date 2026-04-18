@@ -15,7 +15,7 @@ import { signOut } from "next-auth/react"
 import apiClient from "@/libs/api"
 import { usePrivate } from "@/hooks/usePrivate"
 import TagSEO from "@/components/TagSEO"
-import UploadPictureForm1 from "/components/widgets/uploadPic"
+import UploadPictureForm1 from "@/components/widgets/uploadPic"
 
 export default function Dashboard() {
 	// Custom hook to make private pages easier to deal with (see /hooks folder)

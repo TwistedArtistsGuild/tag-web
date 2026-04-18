@@ -19,6 +19,7 @@ export function LayoutProvider({ children }) {
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(true)
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
+  const [theme, setTheme] = useState("tag-theme")
 
   useEffect(() => {
     const checkMobile = () => {
@@ -34,6 +35,21 @@ export function LayoutProvider({ children }) {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
+  // Restore saved theme on mount (client-only)
+  useEffect(() => {
+    const saved = localStorage.getItem("theme") || "tag-theme"
+    if (saved !== "tag-theme") {
+      setTheme(saved)
+    }
+    document.documentElement.setAttribute("data-theme", saved)
+  }, [])
+
+  function updateTheme(newTheme) {
+    setTheme(newTheme)
+    document.documentElement.setAttribute("data-theme", newTheme)
+    localStorage.setItem("theme", newTheme)
+  }
+
   const value = {
     isHeaderVisible,
     setIsHeaderVisible,
@@ -42,6 +58,8 @@ export function LayoutProvider({ children }) {
     isRightSidebarVisible,
     setIsRightSidebarVisible,
     isMobile,
+    theme,
+    updateTheme,
     toggleHeader: () => setIsHeaderVisible((prev) => !prev),
     toggleLeftSidebar: () => setIsLeftSidebarVisible((prev) => !prev),
     toggleRightSidebar: () => setIsRightSidebarVisible((prev) => !prev),

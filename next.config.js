@@ -70,11 +70,6 @@ const nextConfig = {
     // https://andrewlock.net/how-to-set-the-hosting-environment-in-asp-net-core/
     LOCALOVERRIDE: "true", // Typically false for prod
   },
-  eslint: {
-    // **Warning**: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
 };
 
 module.exports = nextConfig;

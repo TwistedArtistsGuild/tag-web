@@ -16,9 +16,9 @@
  * @returns Next and React components
  */
 import { useState, useEffect } from "react";
-import { useAppContext } from "/components/Context";
+import { useAppContext } from "@/components/Context";
 import TagSEO from "@/components/TagSEO";
-import Header from "/components/Header/Header";
+import Header from "@/components/Header/Header";
 
 export default function Careers() {
   const { setPageSections } = useAppContext();
@@ -171,3 +171,4 @@ export default function Careers() {
     </div>
   );
 }
+

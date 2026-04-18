@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 
 import { useState } from "react"
-import { defaultButtonClass } from "/utils/formSettings";
+import { defaultButtonClass } from "@/utils/formSettings";
 
 export default function TestMail() {
 	const [status, setStatus] = useState("")
