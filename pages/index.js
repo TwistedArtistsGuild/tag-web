@@ -1,15 +1,11 @@
 /* This file is part of the Twisted Artists Guild project.
 
-
  Copyright (C) 2025 Twisted Artists Guild
-
 
  Licensed under the GNU General Public License v3.0
  (https://www.gnu.org/licenses/gpl-3.0.en.html).
 
-
  This software comes with NO WARRANTY; see the license for details.
-
 
  Open source · low-profit · human-first*/
 
@@ -105,7 +101,6 @@ Home.getInitialProps = async () => {
         id: 1,
         name: "Sarah Chen",
         avatar: getRandomStockPhotoByCategory('artist'),
-        avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Digital Art",
         rating: 4.9,
         location: "San Francisco, CA",
@@ -114,7 +109,6 @@ Home.getInitialProps = async () => {
         id: 2,
         name: "Marcus Rodriguez",
         avatar: getRandomStockPhotoByCategory('artist'),
-        avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Sculpture",
         rating: 4.8,
         location: "Austin, TX",
@@ -122,7 +116,6 @@ Home.getInitialProps = async () => {
       {
         id: 3,
         name: "Elena Volkov",
-        avatar: getRandomStockPhotoByCategory('artist'),
         avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Photography",
         rating: 4.9,
@@ -150,7 +143,6 @@ Home.getInitialProps = async () => {
         price: 150.0,
         quantity: 1,
         image: getRandomStockPhotoByCategory('painting'),
-        image: getRandomStockPhotoByCategory('painting'),
         artist: "Sarah Chen",
       },
       {
@@ -159,7 +151,6 @@ Home.getInitialProps = async () => {
         price: 450.0,
         quantity: 1,
         image: getRandomStockPhotoByCategory('painting'),
-        image: getRandomStockPhotoByCategory('painting'),
         artist: "Marcus Rodriguez",
       },
       {
@@ -167,7 +158,6 @@ Home.getInitialProps = async () => {
         name: "Photography Print Set",
         price: 75.0,
         quantity: 2,
-        image: getRandomStockPhotoByCategory('general'),
         image: getRandomStockPhotoByCategory('general'),
         artist: "Elena Volkov",
       },
@@ -179,7 +169,6 @@ Home.getInitialProps = async () => {
         id: 1,
         author: "You",
         avatar: getRandomStockPhotoByCategory('artist'),
-        avatar: getRandomStockPhotoByCategory('artist'),
         content: "Just finished my latest digital piece! Really excited about the color palette I chose.",
         timestamp: "2 hours ago",
       },
@@ -187,14 +176,12 @@ Home.getInitialProps = async () => {
         id: 2,
         author: "Sarah Chen",
         avatar: getRandomStockPhotoByCategory('artist'),
-        avatar: getRandomStockPhotoByCategory('artist'),
         content: "Working on a new commission today. The client wants something really unique!",
         timestamp: "4 hours ago",
       },
       {
         id: 3,
         author: "Marcus Rodriguez",
-        avatar: getRandomStockPhotoByCategory('artist'),
         avatar: getRandomStockPhotoByCategory('artist'),
         content: "Found some amazing clay at the local art supply store. Can't wait to start sculpting!",
         timestamp: "1 day ago",
