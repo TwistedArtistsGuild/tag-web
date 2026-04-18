@@ -16,18 +16,8 @@ import { IoSend, IoTimeOutline, IoCheckmarkSharp, IoCheckmarkDoneSharp } from "r
 
 // Import components
 import Image from "next/image";
-<<<<<<<< HEAD:components/social/TT_DirectMessages.js
 import { useRealtimeMessages, useTypingIndicator, useSocialRealtime } from './SocialRealtimeContext';
 import TiptapEditor from "@/components/widgets/tiptap-editor";
-========
-import { useRealtimeMessages, useTypingIndicator, useUserPresence, useSocialRealtime } from './SocialRealtimeContext';
-
-// Dynamically import Quill to avoid SSR issues
-const QuillEditor = dynamic(() => import("react-quill"), {
-    ssr: false,
-    loading: () => <div className="h-20 bg-base-200 animate-pulse rounded-lg"></div>,
-});
->>>>>>>> origin/deploy:components/social/DirectMessages.js
 
 // Mock demo data for conversations
 const MOCK_CONVERSATIONS = [
@@ -343,82 +333,6 @@ const DirectMessages = ({
     
     // Ref for auto-scrolling to latest messages
     const messagesEndRef = useRef(null);
-<<<<<<<< HEAD:components/social/TT_DirectMessages.js
-========
-    
-    // Real-time functionality
-    const { emit, isConnected } = useSocialRealtime();
-    const [typingUsers, setTypingUsers] = useState([]);
-    const [onlineUsers, setOnlineUsers] = useState(new Set());
-    
-    // Handle real-time message updates
-    const handleRealtimeMessage = (update) => {
-        if (update.type === 'message_received') {
-            const newMessage = update.data;
-            
-            // Only add if not from current user (to avoid duplicates from optimistic updates)
-            if (newMessage.senderId !== currentUser?.id) {
-                if (demoMode) {
-                    setDemoMessages(prev => ({
-                        ...prev,
-                        [newMessage.conversationId]: [
-                            ...(prev[newMessage.conversationId] || []),
-                            {
-                                id: newMessage.id,
-                                content: newMessage.content,
-                                senderId: newMessage.senderId,
-                                senderName: newMessage.senderDisplayName,
-                                senderAvatar: newMessage.avatarUrl,
-                                timestamp: newMessage.timestamp,
-                                status: 'delivered'
-                            }
-                        ]
-                    }));
-                } else {
-                    setMessageList(prev => [...prev, newMessage]);
-                }
-                scrollToBottom();
-            }
-        }
-    };
-    
-    // Handle typing indicators
-    const handleTypingUpdate = (typingData) => {
-        setTypingUsers(prev => {
-            if (typingData.isTyping) {
-                return [...prev.filter(user => user.userId !== typingData.userId), typingData];
-            } else {
-                return prev.filter(user => user.userId !== typingData.userId);
-            }
-        });
-    };
-    
-    // Handle user presence updates
-    const handlePresenceUpdate = (presenceData) => {
-        setOnlineUsers(prev => {
-            const newSet = new Set(prev);
-            if (presenceData.data.isOnline) {
-                newSet.add(presenceData.data.userId);
-            } else {
-                newSet.delete(presenceData.data.userId);
-            }
-            return newSet;
-        });
-    };
-    
-    // Subscribe to real-time updates
-    useRealtimeMessages(activeConversation?.id || conversation?.id, handleRealtimeMessage);
-    useTypingIndicator(activeConversation?.id || conversation?.id, handleTypingUpdate);
-    useUserPresence(handlePresenceUpdate);
-
-    // Get theme from localStorage on client-side only
-    useEffect(() => {
-        const storedTheme = typeof window !== 'undefined' ? localStorage.getItem("theme") : null;
-        if (storedTheme) {
-            setClientTheme(storedTheme);
-        }
-    }, []);
->>>>>>>> origin/deploy:components/social/DirectMessages.js
     
     // Real-time functionality
     const { emit, isConnected } = useSocialRealtime();

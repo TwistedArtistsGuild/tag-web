@@ -18,10 +18,7 @@ import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5
 import Image from "next/image";
 import { useRealtimeComments, useSocialRealtime } from './SocialRealtimeContext';
 import SocialReactions from './Reactions';
-<<<<<<<< HEAD:components/social/TT_Comments.js
 import TiptapEditor from "@/components/widgets/tiptap-editor";
-========
->>>>>>>> origin/deploy:components/social/Comments.js
 
 function buildCommentsState(initialComments = []) {
     return initialComments.map(comment => ({
@@ -68,31 +65,6 @@ const SocialComments = ({
 
         return localStorage.getItem("theme") || "tag-theme";
     });
-    
-    // Real-time functionality
-    const { emit, isConnected } = useSocialRealtime();
-    
-    // Handle real-time comment updates
-    const handleRealtimeUpdate = useCallback((update) => {
-        if (update.type === 'comment_added') {
-            setComments(prevComments => {
-                // Check if comment already exists to avoid duplicates
-                const exists = prevComments.some(comment => comment.id === update.data.id);
-                if (!exists) {
-                    return [...prevComments, { ...update.data, isEditing: false, replies: [] }];
-                }
-                return prevComments;
-            });
-        } else if (update.type === 'comment_updated') {
-            setComments(prevComments => prevComments.map(comment => 
-                comment.id === update.data.id ? { ...comment, ...update.data, isEditing: false } : comment
-            ));
-        } else if (update.type === 'comment_deleted') {
-            setComments(prevComments => prevComments.filter(comment => comment.id !== update.data.id));
-        }
-    }, []);
-
-    useRealtimeComments(contextId, handleRealtimeUpdate);
     
     // Real-time functionality
     const { emit, isConnected } = useSocialRealtime();

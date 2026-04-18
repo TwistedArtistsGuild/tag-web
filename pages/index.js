@@ -97,8 +97,6 @@ export default function Home() {
 
 // Use getInitialProps to pass sidebar data like other pages
 Home.getInitialProps = async () => {
-// Use getInitialProps to pass sidebar data like other pages
-Home.getInitialProps = async () => {
   // Sample data for left sidebar (navigation/filtering)
   const leftSidebarData = {
     /*
@@ -205,12 +203,6 @@ Home.getInitialProps = async () => {
     ],
   }
 
-  return {
-    sidebarProps: {
-      leftSidebarData,
-      rightSidebarData,
-    },
-  }
   return {
     sidebarProps: {
       leftSidebarData,

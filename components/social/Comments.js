@@ -18,10 +18,7 @@ import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5
 import Image from "next/image";
 import { useRealtimeComments, useSocialRealtime } from './SocialRealtimeContext';
 import SocialReactions from './Reactions';
-<<<<<<<< HEAD:components/social/TT_Comments.js
 import TiptapEditor from "@/components/widgets/tiptap-editor";
-========
->>>>>>>> origin/deploy:components/social/Comments.js
 
 function buildCommentsState(initialComments = []) {
     return initialComments.map(comment => ({
