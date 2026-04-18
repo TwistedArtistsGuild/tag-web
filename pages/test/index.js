@@ -34,8 +34,13 @@ export default function TestIndex() {
 				</Link>
 			</div>
 			<div className="mt-2">
-				<Link href="/test/testquill" className="link link-primary">
-          /test/testquill
+				<Link href="/test/social" className="link link-primary">
+				  /test/social
+				</Link>
+			</div>
+			<div className="mt-2">
+				<Link href="/test/testtiptap" className="link link-primary">
+				  /test/tiptap
 				</Link>
 			</div>
 		</div>

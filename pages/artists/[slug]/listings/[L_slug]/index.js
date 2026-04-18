@@ -11,7 +11,7 @@
 import { useState, useEffect } from "react"
 import ImageGallery from "react-image-gallery"
 import "react-image-gallery/styles/image-gallery.css"
-import SocialComments from "@/components/social/Comments" // Import SocialComments component
+import SocialComments from "@/components/social/TT_Comments" // Import SocialComments component
 import Image from "next/image"
 
 const ListingDetails = ({ listing }) => {

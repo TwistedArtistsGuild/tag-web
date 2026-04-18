@@ -11,20 +11,13 @@
 
 
 import { useState, useEffect, useRef } from "react";
-import dynamic from "next/dynamic";
 import DOMPurify from "dompurify";
-import "react-quill/dist/quill.snow.css";
 import { IoSend, IoTimeOutline, IoCheckmarkSharp, IoCheckmarkDoneSharp } from "react-icons/io5";
 
 // Import components
 import Image from "next/image";
 import { useRealtimeMessages, useTypingIndicator, useUserPresence, useSocialRealtime } from './SocialRealtimeContext';
-
-// Dynamically import Quill to avoid SSR issues
-const QuillEditor = dynamic(() => import("react-quill"), {
-    ssr: false,
-    loading: () => <div className="h-20 bg-base-200 animate-pulse rounded-lg"></div>,
-});
+import TiptapEditor from "@/components/widgets/tiptap-editor";
 
 // Mock demo data for conversations
 const MOCK_CONVERSATIONS = [
@@ -633,19 +626,6 @@ const DirectMessages = ({
         return grouped;
     };
     
-    // Configuration for Quill editor
-    const quillModules = {
-        toolbar: allowMedia ? [
-            ['bold', 'italic', 'underline'],
-            ['link', 'image'],
-            ['clean']
-        ] : [
-            ['bold', 'italic', 'underline'],
-            ['link'],
-            ['clean']
-        ]
-    };
-    
     // Handle keyboard shortcuts
     const handleKeyDown = (e) => {
         // Send message on Shift+Enter
@@ -1032,12 +1012,13 @@ const DirectMessages = ({
                 {/* Message composer */}
                 <div className="message-composer bg-base-200 p-3 border-t border-base-300">
                     <div className="flex flex-col">
-                        <QuillEditor
-                            modules={quillModules}
+                        <TiptapEditor
                             value={newMessageContent}
                             onChange={handleTyping}
                             placeholder="Write your message..."
-                            className="bg-base-100 rounded min-h-[60px] max-h-[150px] overflow-y-auto"
+                            className="bg-base-100"
+                            minHeight={80}
+                            preset={allowMedia ? "medium" : "minimal"}
                             onKeyDown={handleKeyDown}
                         />
                         <div className="flex justify-between items-center mt-2">
@@ -1266,12 +1247,13 @@ const DirectMessages = ({
             {!readOnly && (currentUser || demoMode) && (
                 <div className="message-composer bg-base-200 p-3 border-t border-base-300">
                     <div className="flex flex-col">
-                        <QuillEditor
-                            modules={quillModules}
+                        <TiptapEditor
                             value={newMessageContent}
                             onChange={handleTyping}
                             placeholder="Write your message..."
-                            className="bg-base-100 rounded min-h-[60px] max-h-[150px] overflow-y-auto"
+                            className="bg-base-100"
+                            minHeight={80}
+                            preset={allowMedia ? "medium" : "minimal"}
                             onKeyDown={handleKeyDown}
                         />
                         <div className="flex justify-between items-center mt-2">

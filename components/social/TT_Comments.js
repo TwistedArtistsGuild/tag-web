@@ -11,21 +11,14 @@
 
 
 import { useState, useEffect, useCallback, memo } from "react";
-import dynamic from "next/dynamic";
 import DOMPurify from "dompurify";
-import "react-quill/dist/quill.snow.css";
 import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5";
 
 // Import components
 import Image from "next/image";
 import { useRealtimeComments, useSocialRealtime } from './SocialRealtimeContext';
 import SocialReactions from './Reactions';
-
-// Dynamically import Quill to avoid SSR issues
-const QuillEditor = dynamic(() => import("react-quill"), {
-    ssr: false,
-    loading: () => <div className="h-32 bg-base-200 animate-pulse rounded-lg"></div>,
-});
+import TiptapEditor from "@/components/widgets/tiptap-editor";
 
 /**
  * SocialComments - A feature-rich comment system with inline editing, replies, likes, and media embedding
@@ -425,21 +418,6 @@ const SocialComments = ({
         });
     }, []);
 
-    // Quill editor configuration
-    const quillModules = {
-        toolbar: allowMedia ? [
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            ['link', 'image', 'video'],
-            ['clean']
-        ] : [
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            ['link'],
-            ['clean']
-        ]
-    };
-
     /**
      * Comment component - renders a single comment or reply
      */
@@ -490,13 +468,13 @@ const SocialComments = ({
                             </div>
                         </div>
                         
-                        {/* Quill editor for content */}
-                        <QuillEditor
-                            modules={quillModules}
+                        {/* Rich text editor for content */}
+                        <TiptapEditor
                             value={comment.body}
                             onChange={(content) => handleEditorChange(comment.id, content, isReply, parentId)}
                             placeholder={isReply ? "Write your reply..." : "What's on your mind?"}
-                            className="bg-base-100 rounded min-h-[100px]"
+                            className="bg-base-100"
+                            preset={allowMedia ? "medium" : "minimal"}
                         />
                         
                         {/* Action buttons */}
@@ -703,5 +681,31 @@ const SocialComments = ({
         </div>
     );
 };
+
+export function TTCommentsEditorCard({ value, onChange, onSubmit, onCancel }) {
+    return (
+        <div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
+            <h2 className="text-lg font-semibold">Comment</h2>
+            <p className="text-sm text-base-content/70">
+                Minimal preset with Cancel / Post Comment actions.
+            </p>
+            <TiptapEditor
+                value={value}
+                onChange={onChange}
+                placeholder="Write a comment..."
+                preset="minimal"
+                fontScope="comment"
+                minHeight={100}
+                actionPreset="submit-cancel"
+                submitLabel="Post Comment"
+                cancelLabel="Cancel"
+                emptySubmitMessage="Write something before posting."
+                clearOnSubmit
+                onSubmit={onSubmit}
+                onCancel={onCancel}
+            />
+        </div>
+    );
+}
 
 export default SocialComments;
