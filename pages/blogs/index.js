@@ -12,7 +12,7 @@
 import Link from "next/link"
 import Image from "next/image" // Import Image component
 import TagSEO from "@/components/TagSEO"
-import longDateOptions from "/utils/longdateoptions"
+import longDateOptions from "@/utils/longdateoptions"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { MessageCircleIcon, HeartIcon, ShareIcon } from "lucide-react"
 import { useState } from "react"

@@ -11,7 +11,7 @@
 
 
 //change to displaying an individual log (from Blogs)
-import shortDateOptions from "/utils/shortdateoptions"
+import shortDateOptions from "@/utils/shortdateoptions"
 
 const Logviewer = props => {
 	const options = shortDateOptions

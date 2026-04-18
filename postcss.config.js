@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 module.exports = {
   plugins: {
-    tailwindcss: {},
+    "@tailwindcss/postcss": {},
     autoprefixer: {},
   },
 }

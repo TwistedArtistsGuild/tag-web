@@ -12,8 +12,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { SocialRealtimeProvider } from './SocialRealtimeContext';
-import SocialComments from './Comments';
-import DirectMessages from './DirectMessages';
+import SocialComments from './TT_Comments';
+import DirectMessages from './TT_DirectMessages';
 import SocialReactions from './Reactions';
 
 // Mock data for demo

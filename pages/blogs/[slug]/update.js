@@ -11,7 +11,7 @@
 
 
 
-import DynaFormDB from "/components/widgets/DynaFormDB"
+import DynaFormDB from "@/components/widgets/DynaFormDB"
 
 // Set the active API URL defaulting to prod
 var activeAPI_URL = process.env.NEXT_PUBLIC_TAG_API_URL

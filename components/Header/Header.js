@@ -11,18 +11,18 @@
 
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import Image from "next/image"
 import { useSession } from "next-auth/react" // Using useSession for authentication
-import LoginProfile from "/components/Header/LoginProfile"
-import ThemeSwitcher from "/components/Header/ThemeSwitcher"
-import DropdownMenu from "/components/Header/DropdownMenu"
-import { useLayout } from "/components/LayoutProvider"
+import LoginProfile from "@/components/Header/LoginProfile"
+import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
+import DropdownMenu from "@/components/Header/DropdownMenu"
+import { useLayout } from "@/components/LayoutProvider"
 import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu } from "lucide-react"
-import NotificationsDropdown from "/components/Header/NotificationsDropdown" // Keep as dropdown for now
-import MessagesApplet from "/components/Header/MessagesApplet" // The new message applet
+import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
+import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 // Available themes
@@ -47,12 +47,11 @@ const themes = [
   "dracula",
 ]
 
-export default function Header({ pageSections = [] }) {
+export default function Header() {
   const { data: session } = useSession() // Use session for user data
-  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar } = useLayout()
+  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar, theme, updateTheme } = useLayout()
   const router = useRouter()
   const [active, setActive] = useState("") // State for active navigation link
-  const [theme, setTheme] = useState("tag-theme")
   const [isNotificationsDropdownOpen, setIsNotificationsDropdownOpen] = useState(false)
   const [isMessageAppletOpen, setIsMessageAppletOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(3) // Mock notification count
@@ -66,12 +65,6 @@ export default function Header({ pageSections = [] }) {
 
   function handleActive(link) {
     setActive(link)
-  }
-
-  function handleThemeChange(newTheme) {
-    setTheme(newTheme)
-    document.documentElement.setAttribute("data-theme", newTheme)
-    localStorage.setItem("theme", newTheme)
   }
 
   function closeAllPopups() {
@@ -124,14 +117,6 @@ export default function Header({ pageSections = [] }) {
     }
     return `${baseTextClass} text-base-content enhanced-text-visibility`
   }
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem("theme") || "tag-theme"
-      setTheme(savedTheme)
-      document.documentElement.setAttribute("data-theme", savedTheme)
-    }
-  }, [])
 
   useEffect(() => {
     // Close mobile menu when route changes
@@ -247,19 +232,19 @@ export default function Header({ pageSections = [] }) {
               News
             </Link>
             <Link
-              href="/vote/"
-              className={`text-lg ${getTextColorClass(active === "vote")}`}
-              onClick={() => handleActive("vote")}
-              name="vote"
+              href="/contests/"
+              className={`text-lg ${getTextColorClass(active === "contests")}`}
+              onClick={() => handleActive("contests")}
+              name="contests"
             >
-              Vote
+              Contests
             </Link>
           </nav>
 
           {/* Right: User Controls */}
           <div className="flex items-center space-x-2">
             {/* Theme Switcher */}
-            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={handleThemeChange} onClick={toggleTheme} isOpen={isThemeOpen} />
+            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={updateTheme} onClick={toggleTheme} isOpen={isThemeOpen} />
 
             {/* Notifications & Messages - Only if user logged in */}
             {session?.user && ( // Use session.user for logged-in check
@@ -475,3 +460,4 @@ export default function Header({ pageSections = [] }) {
     </>
   )
 }
+

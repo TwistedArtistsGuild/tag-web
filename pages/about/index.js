@@ -13,9 +13,9 @@
 import TagSEO from "@/components/TagSEO";
 import Link from "next/link";
 import { FaUsers, FaImages, FaHandshake, FaFileContract, FaClipboardList, FaProjectDiagram } from 'react-icons/fa';
-import MissionStatement from "/components/MissionStatement";
+import MissionStatement from "@/components/MissionStatement";
 import { useEffect } from "react";
-import { useAppContext } from "/components/Context";
+import { useAppContext } from "@/components/Context";
 
 export default function About() {
 	const { setPageSections } = useAppContext();
@@ -188,3 +188,4 @@ export default function About() {
 		</div>
 	);
 }
+

@@ -8,7 +8,7 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import DynaFormDB from "/components/widgets/DynaFormDB";
+import DynaFormDB from "@/components/widgets/DynaFormDB";
 
 const formName = "EventForm1";
 //broken but don't care!!!!

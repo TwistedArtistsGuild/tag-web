@@ -8,20 +8,24 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
- import bobbProfile from "./bobb";
+import ashleighProfile from "./ashleigh";
+import bobbProfile from "./bobb";
 import satyaProfile from "./satya";
-import turleProfile from "./turle";
-import baileyProfile from "./bailey";
+import turtleProfile from "./turtle";
+//import baileyProfile from "./bailey";
 import jasonProfile from "./jason";
-import meganProfile	from "./megan";
+//import meganProfile	from "./megan";
+import mattProfile	from "./matt";
 
 const profiles = [
-	bobbProfile,
 	satyaProfile,
-	turleProfile,
-	baileyProfile,
+	bobbProfile,
+	ashleighProfile,
+	mattProfile,
+	turtleProfile,
+	//baileyProfile,
 	jasonProfile,
-	meganProfile,
+	//meganProfile,
 
 ];
 

@@ -10,6 +10,7 @@
  Open source · low-profit · human-first*/
 
 import Image from "next/image"
+import Link from "next/link"
 
 const CTA = () => {
 	return (
@@ -24,16 +25,23 @@ const CTA = () => {
 			<div className="relative hero-content text-center text-neutral-content p-8">
 				<div className="flex flex-col items-center max-w-xl p-8 md:p-0">
 					<h2 className="font-bold text-3xl md:text-5xl tracking-tight mb-8 md:mb-12">
-            Join as a user today!  
+						Please join us!
 					</h2>
 					<p className="text-lg opacity-80 mb-12 md:mb-16">
-					Start your Bloomscrolling by endlessly scrolling through the latest art and news from your favorite artists.
-					Register as an artist and post your creations.  
+						Discover art, follow creators, and support the work you love, or become an artist member to share your own work with the world.
 					</p>
-					<p>We earn our transaction fee after helping you sell your art through our systems. We aim to compete in price while 
-						providing unmatched functionality, built by and for artists. </p>
-
-
+					<p className="text-base md:text-lg opacity-90 mb-10">
+						Twisted Artists Guild is built by artists for artists, with tools designed to help creativity turn into
+						sustainability.
+					</p>
+					<div className="flex flex-col sm:flex-row gap-3">
+						<Link href="https://marketing.twistedartistsguild.com/membership-drive" className="btn btn-primary btn-wide">
+							Join the waitlist
+						</Link>
+						<Link href="/art" className="btn btn-outline btn-wide text-neutral-content border-neutral-content hover:bg-neutral-content hover:text-neutral">
+							Bloomscroll
+						</Link>
+					</div>
 				</div>
 			</div>
 		</section>

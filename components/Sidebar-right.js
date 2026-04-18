@@ -75,6 +75,8 @@ export default function RightSidebar(props) {
           h-screen overflow-y-auto
         `}
       >
+        {/* Theme-reactive accent strip */}
+        <div className="sidebar-accent" />
         {/* Close Button - Left Edge Center of Sidebar when open */}
         {isRightSidebarVisible && (
           <button
@@ -90,7 +92,7 @@ export default function RightSidebar(props) {
         )}
 
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-4 border-b border-base-content/10 bg-base-300">
+        <div className="sidebar-inner-header flex items-center justify-between p-4 border-b border-base-content/10 bg-base-300">
           <h2 className="font-semibold text-lg text-base-content">Personal Space</h2>
           {/* Mobile close button in header */}
           {isMobile && (

@@ -9,7 +9,7 @@
 
  Open source · low-profit · human-first*/
  const jasonProfile = {
-	name: "Jason Allen, Esquire",
+	name: "Jason Allen, Esq.",
 	slug: "jason",
 	artForms: ["Sewing", "Nerding"],
 	linkToArtistPage: "/artists/tbd",

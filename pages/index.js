@@ -1,24 +1,34 @@
 /* This file is part of the Twisted Artists Guild project.
 
+
  Copyright (C) 2025 Twisted Artists Guild
+
 
  Licensed under the GNU General Public License v3.0
  (https://www.gnu.org/licenses/gpl-3.0.en.html).
 
+
  This software comes with NO WARRANTY; see the license for details.
 
+
  Open source · low-profit · human-first*/
+
+
 
 "use client"
 
 import React from "react"
 
-import styles from "/styles/pages/index.module.css"
+import styles from "@/styles/pages/index.module.css"
 import TagSEO from "@/components/TagSEO"
-import Hero from "@/components/Hero"
-import FAQ from "@/components/FAQ"
-import CTA from "@/components/CTA"
-import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import Hero from "@/components/homepage/Hero"
+import CardTools from "@/components/homepage/Card_Tools"
+import CardBloomscroll from "@/components/homepage/Card_Blookscroll"
+import CardMembershipBenefits from "@/components/homepage/Card_membership_benefits"
+import CardContests from "@/components/homepage/Card_Contests"
+import CardPricing from "@/components/homepage/Card_Pricing"
+import FAQ from "@/components/homepage/FAQ"
+import CTA from "@/components/homepage/CTA"
 
 /**
  * Home/index page component
@@ -51,23 +61,32 @@ export default function Home() {
           <section className={`${styles.parallax} flex flex-col`} aria-label="Featured Messages">
             <div className={`${styles.bgColor} bg-primary`}>
               <div className={`${styles.gradient} p-10`}>
-                <span className={`${styles.leftTextContent} text-2xl font-bold`}>A platform made for artists.</span>
+                <span className={`${styles.leftTextContent} text-2xl font-bold`}>A platform made for artists, by artists.</span>
               </div>
             </div>
             <div className={`${styles.bgColor} bg-secondary`}>
               <div className={`${styles.gradient} p-10`}>
-                <span className={`${styles.centerTextContent} text-2xl font-bold`}>A digital revolution.</span>
+                <span className={`${styles.centerTextContent} text-2xl font-bold`}>Building business tools is our art.</span>
               </div>
             </div>
             <div className={`${styles.bgColor} bg-accent`}>
               <div className={`${styles.gradient} p-10`}>
-                <span className={`${styles.rightTextContent} text-2xl font-bold`}>Tools at your fingertips.</span>
+                <span className={`${styles.rightTextContent} text-2xl font-bold`}>Join us, create more.</span>
               </div>
             </div>
           </section>
 
           {/* Main Content Sections */}
           <Hero />
+          <section className="bg-base-200">
+            <div className="max-w-7xl mx-auto px-8 py-20 space-y-8">
+              <CardTools />
+              <CardBloomscroll />
+              <CardMembershipBenefits />
+              <CardContests />
+              <CardPricing />
+            </div>
+          </section>
           <FAQ />
           <CTA />
         </div>
@@ -80,10 +99,12 @@ export default function Home() {
 Home.getInitialProps = async () => {
   // Sample data for left sidebar (navigation/filtering)
   const leftSidebarData = {
+    /*
     artists: [
       {
         id: 1,
         name: "Sarah Chen",
+        avatar: getRandomStockPhotoByCategory('artist'),
         avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Digital Art",
         rating: 4.9,
@@ -93,6 +114,7 @@ Home.getInitialProps = async () => {
         id: 2,
         name: "Marcus Rodriguez",
         avatar: getRandomStockPhotoByCategory('artist'),
+        avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Sculpture",
         rating: 4.8,
         location: "Austin, TX",
@@ -100,6 +122,7 @@ Home.getInitialProps = async () => {
       {
         id: 3,
         name: "Elena Volkov",
+        avatar: getRandomStockPhotoByCategory('artist'),
         avatar: getRandomStockPhotoByCategory('artist'),
         specialty: "Photography",
         rating: 4.9,
@@ -113,17 +136,20 @@ Home.getInitialProps = async () => {
       { label: "Photography", value: "photography" },
       { label: "Sculpture", value: "sculpture" },
       { label: "Performance", value: "performance" },
-    ],
+    ],*/
   }
 
   // Sample data for right sidebar (cart/stories)
   const rightSidebarData = {
     cartItems: [
+     /* 
       {
+        
         id: 1,
         name: "Digital Portrait Commission",
         price: 150.0,
         quantity: 1,
+        image: getRandomStockPhotoByCategory('painting'),
         image: getRandomStockPhotoByCategory('painting'),
         artist: "Sarah Chen",
       },
@@ -133,6 +159,7 @@ Home.getInitialProps = async () => {
         price: 450.0,
         quantity: 1,
         image: getRandomStockPhotoByCategory('painting'),
+        image: getRandomStockPhotoByCategory('painting'),
         artist: "Marcus Rodriguez",
       },
       {
@@ -141,13 +168,17 @@ Home.getInitialProps = async () => {
         price: 75.0,
         quantity: 2,
         image: getRandomStockPhotoByCategory('general'),
+        image: getRandomStockPhotoByCategory('general'),
         artist: "Elena Volkov",
       },
+      */
     ],
     stories: [
+      /*
       {
         id: 1,
         author: "You",
+        avatar: getRandomStockPhotoByCategory('artist'),
         avatar: getRandomStockPhotoByCategory('artist'),
         content: "Just finished my latest digital piece! Really excited about the color palette I chose.",
         timestamp: "2 hours ago",
@@ -156,6 +187,7 @@ Home.getInitialProps = async () => {
         id: 2,
         author: "Sarah Chen",
         avatar: getRandomStockPhotoByCategory('artist'),
+        avatar: getRandomStockPhotoByCategory('artist'),
         content: "Working on a new commission today. The client wants something really unique!",
         timestamp: "4 hours ago",
       },
@@ -163,9 +195,11 @@ Home.getInitialProps = async () => {
         id: 3,
         author: "Marcus Rodriguez",
         avatar: getRandomStockPhotoByCategory('artist'),
+        avatar: getRandomStockPhotoByCategory('artist'),
         content: "Found some amazing clay at the local art supply store. Can't wait to start sculpting!",
         timestamp: "1 day ago",
       },
+          */
     ],
   }
 
@@ -176,3 +210,4 @@ Home.getInitialProps = async () => {
     },
   }
 }
+

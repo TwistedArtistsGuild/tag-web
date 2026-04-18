@@ -1,20 +1,22 @@
 /* This file is part of the Twisted Artists Guild project.
 
+
  Copyright (C) 2025 Twisted Artists Guild
+
 
  Licensed under the GNU General Public License v3.0
  (https://www.gnu.org/licenses/gpl-3.0.en.html).
 
+
  This software comes with NO WARRANTY; see the license for details.
+
 
  Open source · low-profit · human-first*/
 
 
 
-import { useAppContext } from "/components/Context"
 import Link from "next/link"
-import MissionStatement from "/components/MissionStatement"
-
+import MissionStatement from "@/components/MissionStatement"
 /**
  * Footer component for website navigation and social media links
  * @returns {JSX.Element} Footer component
@@ -24,10 +26,12 @@ export default function Footer({ className }) {
   // Remove unused context
 
   return (
-    <footer className={`bg-base-200 border-t border-base-content/10 ${className}`}>
+    <footer className={`themed-footer bg-base-200 ${className}`}>
+      {/* Theme-reactive top accent */}
+      <div className="footer-brand-bar" />
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-wrap lg:items-start">
-          <div className="w-64 flex-shrink-0 text-left">
+          <div className="w-64 shrink-0 text-left">
             <Link href="/#" aria-current="page" className="flex gap-2 justify-start items-center">
               <strong className="font-bold text-lg">Twisted Artist Guild</strong>
             </Link>
@@ -68,7 +72,7 @@ export default function Footer({ className }) {
             <p className="mt-4 text-sm text-base-content/60">Copyright © {new Date().getFullYear()} - All rights reserved</p>
           </div>
 
-          <div className="flex-grow flex flex-wrap justify-start mt-6 md:mt-0 text-left">
+          <div className="grow flex flex-wrap justify-start mt-6 md:mt-0 text-left">
             <div className="lg:w-1/3 md:w-1/2 w-full px-2">
               <div className="font-semibold text-base-content tracking-widest text-sm mb-2 underline">ABOUT</div>
               <div className="flex flex-col items-start gap-1 mb-6 text-sm">
@@ -76,7 +80,7 @@ export default function Footer({ className }) {
                 <Link href="/about/pricing" className="link link-hover">Pricing</Link>
                 <Link href="/about/vendor" className="link link-hover">Vendor</Link>
                 <Link href="/about/development" className="link link-hover">Development</Link>
-                <Link href="/about/investing" className="link link-hover">Investing</Link>
+                {/* <Link href="/about/investing" className="link link-hover">Investing</Link> */}
               </div>
             </div>
             <div className="lg:w-1/3 md:w-1/2 w-full px-2">
@@ -106,3 +110,4 @@ export default function Footer({ className }) {
     </footer>
   )
 }
+

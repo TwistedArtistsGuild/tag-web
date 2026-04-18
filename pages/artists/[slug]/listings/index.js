@@ -17,7 +17,7 @@ import Image from "next/image" // Next v10+ (Not working and not called at this 
 // import ImageGallery from 'react-image-gallery'; //tested on home page with static images, looks pretty good
 import Link from "next/link"
 import { useState, useEffect } from "react" //Sidebar state
-import shortDateOptions from "/utils/shortdateoptions"
+import shortDateOptions from "@/utils/shortdateoptions"
 
 //process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0; // Dev environment only, allows for self-signed
 
