@@ -49,10 +49,9 @@ const themes = [
 
 export default function Header() {
   const { data: session } = useSession() // Use session for user data
-  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar } = useLayout()
+  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar, theme, updateTheme } = useLayout()
   const router = useRouter()
   const [active, setActive] = useState("") // State for active navigation link
-  const [theme, setTheme] = useState("tag-theme")
   const [isNotificationsDropdownOpen, setIsNotificationsDropdownOpen] = useState(false)
   const [isMessageAppletOpen, setIsMessageAppletOpen] = useState(false)
   const [notificationCount, setNotificationCount] = useState(3) // Mock notification count
@@ -66,12 +65,6 @@ export default function Header() {
 
   function handleActive(link) {
     setActive(link)
-  }
-
-  function handleThemeChange(newTheme) {
-    setTheme(newTheme)
-    document.documentElement.setAttribute("data-theme", newTheme)
-    localStorage.setItem("theme", newTheme)
   }
 
   function closeAllPopups() {
@@ -124,17 +117,6 @@ export default function Header() {
     }
     return `${baseTextClass} text-base-content enhanced-text-visibility`
   }
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "tag-theme"
-    if (savedTheme !== "tag-theme") {
-      setTheme(savedTheme)
-    }
-  }, [])
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme)
-  }, [theme])
 
   useEffect(() => {
     // Close mobile menu when route changes
@@ -262,7 +244,7 @@ export default function Header() {
           {/* Right: User Controls */}
           <div className="flex items-center space-x-2">
             {/* Theme Switcher */}
-            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={handleThemeChange} onClick={toggleTheme} isOpen={isThemeOpen} />
+            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={updateTheme} onClick={toggleTheme} isOpen={isThemeOpen} />
 
             {/* Notifications & Messages - Only if user logged in */}
             {session?.user && ( // Use session.user for logged-in check

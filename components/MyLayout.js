@@ -35,7 +35,7 @@ const ClientToaster = dynamic(
  * Layout Content Component - The actual layout implementation
  */
 function LayoutContent(props) {
-  const { isHeaderVisible, isLeftSidebarVisible, isRightSidebarVisible, isMobile } = useLayout()
+  const { isHeaderVisible, isLeftSidebarVisible, isRightSidebarVisible, isMobile, theme } = useLayout()
   const { sidebarProps = {} } = props
   const { pageSections = [] } = sidebarProps || {}
 
@@ -54,13 +54,13 @@ function LayoutContent(props) {
 
       <NextNProgress color={config.colors.main} options={{ showSpinner: false }} />
 
-      <div className="flex flex-col min-h-screen">
+      <div className={`site-shell${theme === "tag-theme" ? " theme-tag" : ""} flex min-h-screen flex-col`}>
         <Header pageSections={pageSections} />
         <LeftSidebar {...(sidebarProps?.leftSidebarData || {})} />
         <RightSidebar {...(sidebarProps?.rightSidebarData || {})} />
 
-        <main className={`flex-1 p-4 transition-all duration-300 ${topMargin} ${leftMargin} ${rightMargin}`}>
-          {props.children}
+        <main className={`site-main flex-1 p-4 transition-all duration-300 ${topMargin} ${leftMargin} ${rightMargin}`}>
+          <div className="site-main-inner">{props.children}</div>
         </main>
 
         <Footer className={`${leftMargin} ${rightMargin}`} />

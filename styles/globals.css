@@ -13,6 +13,11 @@
 @import './tag-theme.css';
 @import './light-theme.css';
 
+/* Tailwind v4: DaisyUI must be registered in CSS (tailwind.config.js plugin list is not sufficient). */
+@plugin "daisyui" {
+  themes: light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, valentine, halloween, garden, aqua, pastel, fantasy, black, luxury, dracula;
+}
+
 html,
 body {
   height: 100%;
@@ -20,6 +25,63 @@ body {
   margin: 0;
   font-family: "Roboto", "Open Sans", "Lato", sans-serif;
   overflow-x: hidden;
+}
+
+html {
+  /* each theme sets --color-base-100 (DaisyUI v5) or --b1 (v3) on [data-theme] */
+  background-color: var(--color-base-100, var(--b1, #ffffff));
+  background-attachment: fixed;
+}
+
+body.site-body {
+  min-height: 100%;
+  color: var(--color-base-content, var(--bc));
+  background: transparent; /* let html canvas color show through */
+}
+
+.site-shell {
+  position: relative;
+}
+
+/* neon gradient for tag-theme — class toggled by JS in MyLayout.js */
+.site-shell.theme-tag {
+  background:
+    radial-gradient(circle at top left,  color-mix(in oklab, var(--tag-secondary) 20%, transparent) 0, transparent 35%),
+    radial-gradient(circle at top right, color-mix(in oklab, var(--tag-primary)   20%, transparent) 0, transparent 30%),
+    radial-gradient(circle at 20% 70%,   color-mix(in oklab, var(--tag-primary)   10%, transparent) 0, transparent 32%),
+    radial-gradient(circle at 80% 40%,   color-mix(in oklab, var(--tag-secondary) 10%, transparent) 0, transparent 28%),
+    linear-gradient(180deg, var(--tag-base-200) 0%, var(--tag-base-100) 60%, var(--tag-base-200) 100%);
+  background-attachment: fixed;
+}
+
+/* grid texture — only visible for tag-theme */
+.site-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-base-content, var(--bc)) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-base-content, var(--bc)) 4%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 78%);
+  opacity: 0;
+  z-index: 0;
+  transition: opacity 0.4s ease;
+}
+
+.site-shell.theme-tag::before {
+  opacity: 0.4;
+}
+
+.site-main {
+  position: relative;
+  z-index: 1;
+}
+
+.site-main-inner {
+  width: min(100%, 1280px);
+  margin: 0 auto;
 }
 
 /* It makes the HTML progress bar filling smooth when value change. */
@@ -231,6 +293,51 @@ th {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* ── Theme-reactive shell chrome ─────────────────────────────────────── */
+
+/* Sidebar + footer accent strip */
+.sidebar-accent,
+.footer-brand-bar {
+  height: 3px;
+  width: 100%;
+  flex-shrink: 0;
+  background: linear-gradient(
+    90deg,
+    var(--color-primary, var(--p)),
+    var(--color-secondary, var(--s))
+  );
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+[data-theme="tag-theme"] .sidebar-accent,
+[data-theme="tag-theme"] .footer-brand-bar {
+  background: linear-gradient(
+    90deg,
+    var(--tag-primary),
+    var(--tag-secondary),
+    var(--tag-accent),
+    var(--tag-secondary)
+  );
+  box-shadow:
+    0 0 6px color-mix(in oklab, var(--tag-secondary) 70%, transparent),
+    0 0 14px color-mix(in oklab, var(--tag-primary) 40%, transparent);
+}
+
+/* Sidebar section header */
+.sidebar-inner-header {
+  border-bottom: 1px solid color-mix(in oklab, var(--color-primary, var(--p)) 35%, transparent);
+}
+
+[data-theme="tag-theme"] .sidebar-inner-header {
+  border-bottom: 1px solid color-mix(in oklab, var(--tag-accent) 55%, transparent);
+  box-shadow: 0 1px 6px color-mix(in oklab, var(--tag-accent) 20%, transparent);
+}
+
+/* Footer top accent — overrides the default muted border */
+footer.themed-footer {
+  border-top: none;
 }
 
 /* Fix for theme dropdown readability - ensures proper contrast */

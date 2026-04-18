@@ -9,10 +9,11 @@
 
  Open source · low-profit · human-first*/
 import { Html, Head, Main, NextScript } from "next/document";
+import config from "@/config";
 
 export default function Document() {
   return (
-    <Html lang="en" className="font-sans">
+    <Html lang="en" className="font-sans" data-theme={config.colors.theme}>
       <Head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -20,6 +21,7 @@ export default function Document() {
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Bebas+Neue&family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Courgette&family=Dancing+Script:wght@400;600;700&family=Great+Vibes&family=Oswald:wght@400;500;600&family=Pacifico&family=Parisienne&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Raleway:wght@400;500;600&family=Sacramento&family=Satisfy&display=swap"
         />
+        <meta name="theme-color" content={config.colors.main} />
         <link
           rel="apple-touch-icon"
           sizes="180x180"
@@ -39,7 +41,7 @@ export default function Document() {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <body>
+      <body className="site-body">
         <Main />
         <NextScript />
       </body>

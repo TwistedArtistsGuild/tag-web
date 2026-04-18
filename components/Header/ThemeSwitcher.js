@@ -58,43 +58,49 @@ export default function ThemeSwitcher({ themes, currentTheme, onThemeChange }) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-base-100 border border-base-300 rounded-md shadow-xl z-[100] animate-opacity overflow-auto max-h-96 theme-dropdown-container">
-          <div className="p-2">
-            <div className="text-sm font-semibold mb-2 px-2 text-primary">Select Theme</div>
-            {themes.map((theme) => (
+        <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-xl z-100 overflow-hidden theme-dropdown-container border border-base-300">
+          <div className="px-3 py-2 border-b border-base-300 bg-base-200">
+            <span className="text-sm font-semibold text-primary">Select Theme</span>
+          </div>
+          <div className="overflow-y-auto max-h-80 p-1 bg-base-100">
+            {themes.map((t) => (
               <button
-                key={theme}
+                key={t}
+                data-theme={t}
                 onClick={() => {
-                  onThemeChange(theme)
+                  onThemeChange(t)
                   handleToggle()
                 }}
-                className={`w-full text-left px-3 py-2 rounded-md transition-colors theme-option-row ${
-                  currentTheme === theme ? "theme-option-row-current" : ""
-                }`}
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "8px",
+                  padding: "8px 10px",
+                  borderRadius: "6px",
+                  marginBottom: "2px",
+                  cursor: "pointer",
+                  border: currentTheme === t
+                    ? "2px solid var(--p, #000)"
+                    : "2px solid transparent",
+                  backgroundColor: "var(--color-base-100, var(--b1, #fff))",
+                  color: "var(--color-base-content, var(--bc, #000))",
+                  transition: "border-color 0.15s ease",
+                }}
               >
-                <div className="flex items-center gap-3 justify-between">
-                  {/* Theme color preview dot - uses data-theme to actually show the theme's color */}
-                  <div
-                    data-theme={theme}
-                    className="theme-color-preview"
-                  >
-                    <span
-                      className="theme-swatch-primary"
-                      style={{ backgroundColor: "var(--color-primary, var(--p))" }}
-                    ></span>
-                    <span
-                      className="theme-swatch-secondary"
-                      style={{ backgroundColor: "var(--color-secondary, var(--s))" }}
-                    ></span>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  {/* Color swatches — these reference CSS vars scoped to data-theme on this button */}
+                  <div style={{ display: "flex", gap: "3px", flexShrink: 0 }}>
+                    <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "var(--color-primary, var(--p, #f00))", display: "inline-block" }} />
+                    <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "var(--color-secondary, var(--s, #0f0))", display: "inline-block" }} />
+                    <span style={{ width: "10px", height: "10px", borderRadius: "50%", backgroundColor: "var(--color-accent, var(--a, #00f))", display: "inline-block" }} />
                   </div>
-
-                  <div className="flex items-center justify-between flex-1 min-w-0">
-                    <span className="theme-name truncate">{formatThemeName(theme)}</span>
-                    <span className="theme-key">{theme}</span>
-                  </div>
-
-                  {currentTheme === theme ? <Check size={14} className="text-primary shrink-0" /> : null}
+                  <span style={{ fontSize: "13px", fontWeight: 500 }}>{formatThemeName(t)}</span>
                 </div>
+                {currentTheme === t && (
+                  <Check size={12} style={{ color: "var(--color-primary, var(--p, #000))", flexShrink: 0 }} />
+                )}
               </button>
             ))}
           </div>
