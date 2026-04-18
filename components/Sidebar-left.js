@@ -11,7 +11,6 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import { useLayout } from "./LayoutProvider"
 import ArtistCard from "@/components/cards/card_artist"
 import ListingCard from "@/components/cards/card_listing"

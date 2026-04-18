@@ -215,8 +215,6 @@ export default function TiptapEditor({
 
     const normalizedUrl = normalizeAndValidateUrl(actionValue);
     if (!normalizedUrl || actionLabelDirty) {
-      setTitleLookupStatus("idle");
-      setSuggestedLabel("");
       return;
     }
 
@@ -691,6 +689,10 @@ export default function TiptapEditor({
             value={actionValue}
             onChange={(event) => {
               setActionValue(event.target.value);
+              if (activeAction === "link") {
+                setTitleLookupStatus("idle");
+                setSuggestedLabel("");
+              }
               if (actionError) {
                 setActionError("");
               }
@@ -717,6 +719,8 @@ export default function TiptapEditor({
               onChange={(event) => {
                 setActionLabel(event.target.value);
                 setActionLabelDirty(true);
+                setTitleLookupStatus("idle");
+                setSuggestedLabel("");
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter") {

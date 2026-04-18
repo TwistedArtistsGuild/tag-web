@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 
 
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useCallback, memo } from "react";
 import DOMPurify from "dompurify";
 import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5";
 
@@ -19,6 +19,17 @@ import Image from "next/image";
 import { useRealtimeComments, useSocialRealtime } from './SocialRealtimeContext';
 import SocialReactions from './Reactions';
 import TiptapEditor from "@/components/widgets/tiptap-editor";
+
+function buildCommentsState(initialComments = []) {
+    return initialComments.map(comment => ({
+        ...comment,
+        isEditing: false,
+        replies: comment.replies?.map(reply => ({
+            ...reply,
+            isEditing: false
+        })) || []
+    }));
+}
 
 /**
  * SocialComments - A feature-rich comment system with inline editing, replies, likes, and media embedding
@@ -42,42 +53,18 @@ const SocialComments = ({
     contextId = "",
     currentUser = null,
     allowMedia = true,
-    readOnly = false,
-    theme = "light"
+    readOnly = false
 }) => {
     // State management for comments
-    const [comments, setComments] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [currentTheme, setCurrentTheme] = useState('tag-theme');
-
-    // Use useEffect to safely access localStorage on client-side only
-    useEffect(() => {
-        setCurrentTheme(localStorage.getItem("theme") || "tag-theme");
-    }, []);
-    
-    // Initialize with provided comments or fetch if needed
-    useEffect(() => {
-        if (initialComments && initialComments.length > 0) {
-            setComments(initialComments.map(comment => ({
-                ...comment,
-                isEditing: false, // Add editing state to each comment
-                replies: comment.replies?.map(reply => ({
-                    ...reply,
-                    isEditing: false // Add editing state to each reply
-                })) || []
-            })));
-            setIsLoading(false);
-        } else if (contextId) {
-            // If we have a contextId but no initial comments, we would normally fetch them
-            // For now, just set empty state
-            setComments([]);
-            setIsLoading(false);
-        } else {
-            // No context or initial comments
-            setIsLoading(false);
+    const [comments, setComments] = useState(() => buildCommentsState(initialComments));
+    const [isLoading] = useState(false);
+    const [currentTheme] = useState(() => {
+        if (typeof window === "undefined") {
+            return "tag-theme";
         }
-    }, [initialComments, contextId]);
+
+        return localStorage.getItem("theme") || "tag-theme";
+    });
     
     // Real-time functionality
     const { emit, isConnected } = useSocialRealtime();
@@ -601,18 +588,6 @@ const SocialComments = ({
     // Show loading state
     if (isLoading) {
         return <div className="p-4 animate-pulse">Loading comments...</div>;
-    }
-
-    // Show error state
-    if (error) {
-        return (
-            <div className="alert alert-error">
-                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Error loading comments: {error}</span>
-            </div>
-        );
     }
 
     return (

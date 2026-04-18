@@ -11,10 +11,8 @@
 
 
 
-import { useAppContext } from "@/components/Context"
 import Link from "next/link"
 import MissionStatement from "@/components/MissionStatement"
-
 /**
  * Footer component for website navigation and social media links
  * @returns {JSX.Element} Footer component

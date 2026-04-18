@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { X, Send, ChevronLeft } from 'lucide-react'
 
@@ -181,25 +181,25 @@ export default function MessagesApplet({ isOpen, onClose, anchorEl }) {
     }
   }
 
-  // Calculate position just below anchorEl (messages icon)
-  const [style, setStyle] = useState({})
-  useEffect(() => {
-    if (anchorEl && isOpen) {
-      const rect = anchorEl.getBoundingClientRect()
-      setStyle({
-        position: "fixed",
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
-        zIndex: 100,
-        width: 420,
-        maxWidth: "100vw",
-        maxHeight: "calc(100vh - " + (rect.bottom + 8) + "px)",
-        boxShadow: '0 0 0 4px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.18)',
-        borderLeft: "2px solid var(--fallback-b3, #d1d5db)", // fallback for DaisyUI theme
-        background: "var(--fallback-b1, #fff)", // fallback for DaisyUI theme
-        borderRadius: 0,
-        display: isOpen ? "block" : "none"
-      })
+  const style = useMemo(() => {
+    if (!anchorEl || !isOpen) {
+      return { display: "none" }
+    }
+
+    const rect = anchorEl.getBoundingClientRect()
+    return {
+      position: "fixed",
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+      zIndex: 100,
+      width: 420,
+      maxWidth: "100vw",
+      maxHeight: `calc(100vh - ${rect.bottom + 8}px)`,
+      boxShadow: '0 0 0 4px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.18)',
+      borderLeft: "2px solid var(--fallback-b3, #d1d5db)",
+      background: "var(--fallback-b1, #fff)",
+      borderRadius: 0,
+      display: "block",
     }
   }, [anchorEl, isOpen])
 

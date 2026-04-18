@@ -10,13 +10,13 @@
  Open source · low-profit · human-first*/
 
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import DOMPurify from "dompurify";
 import { IoSend, IoTimeOutline, IoCheckmarkSharp, IoCheckmarkDoneSharp } from "react-icons/io5";
 
 // Import components
 import Image from "next/image";
-import { useRealtimeMessages, useTypingIndicator, useUserPresence, useSocialRealtime } from './SocialRealtimeContext';
+import { useRealtimeMessages, useTypingIndicator, useSocialRealtime } from './SocialRealtimeContext';
 import TiptapEditor from "@/components/widgets/tiptap-editor";
 
 // Mock demo data for conversations
@@ -309,23 +309,27 @@ const DirectMessages = ({
     compact = false,
     allowMedia = true,
     readOnly = false,
-    theme = "light",
     maxHeight = compact ? 300 : 600,
     demoMode = false
 }) => {
     // State management for messages and composition
-    const [messageList, setMessageList] = useState([]);
+    const [messageList, setMessageList] = useState(() => messages || []);
     const [newMessageContent, setNewMessageContent] = useState("");
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [clientTheme, setClientTheme] = useState(theme);
+    const [isLoading] = useState(false);
+    const [clientTheme] = useState(() => {
+        if (typeof window === 'undefined') {
+            return 'tag-theme';
+        }
+
+        return localStorage.getItem("theme") || "tag-theme";
+    });
     
     // Demo mode states
     const [demoConversations, setDemoConversations] = useState(MOCK_CONVERSATIONS);
     const [demoMessages, setDemoMessages] = useState(MOCK_MESSAGES);
     const [activeConversation, setActiveConversation] = useState(null);
     const [showConversationList, setShowConversationList] = useState(true);
-    const [demoUser, setDemoUser] = useState(MOCK_CURRENT_USER);
+    const demoUser = MOCK_CURRENT_USER;
     
     // Ref for auto-scrolling to latest messages
     const messagesEndRef = useRef(null);
@@ -333,7 +337,6 @@ const DirectMessages = ({
     // Real-time functionality
     const { emit, isConnected } = useSocialRealtime();
     const [typingUsers, setTypingUsers] = useState([]);
-    const [onlineUsers, setOnlineUsers] = useState(new Set());
     
     // Handle real-time message updates
     const handleRealtimeMessage = (update) => {
@@ -377,47 +380,9 @@ const DirectMessages = ({
         });
     };
     
-    // Handle user presence updates
-    const handlePresenceUpdate = (presenceData) => {
-        setOnlineUsers(prev => {
-            const newSet = new Set(prev);
-            if (presenceData.data.isOnline) {
-                newSet.add(presenceData.data.userId);
-            } else {
-                newSet.delete(presenceData.data.userId);
-            }
-            return newSet;
-        });
-    };
-    
     // Subscribe to real-time updates
     useRealtimeMessages(activeConversation?.id || conversation?.id, handleRealtimeMessage);
     useTypingIndicator(activeConversation?.id || conversation?.id, handleTypingUpdate);
-    useUserPresence(handlePresenceUpdate);
-
-    // Get theme from localStorage on client-side only
-    useEffect(() => {
-        const storedTheme = typeof window !== 'undefined' ? localStorage.getItem("theme") : null;
-        if (storedTheme) {
-            setClientTheme(storedTheme);
-        }
-    }, []);
-    
-    // Initialize with provided messages or demo data
-    useEffect(() => {
-        if (demoMode) {
-            // In demo mode, start with conversation list
-            setIsLoading(false);
-        } else if (messages) {
-            setMessageList(messages);
-            setIsLoading(false);
-            // Scroll to bottom when messages change
-            scrollToBottom();
-        } else {
-            setMessageList([]);
-            setIsLoading(false);
-        }
-    }, [messages, demoMode]);
     
     // Scroll to the end of messages when new ones arrive
     const scrollToBottom = () => {
@@ -640,18 +605,6 @@ const DirectMessages = ({
         return <div className="p-4 animate-pulse">Loading messages...</div>;
     }
     
-    // Show error state
-    if (error) {
-        return (
-            <div className="alert alert-error">
-                <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Error loading messages: {error}</span>
-            </div>
-        );
-    }
-    
     // Demo Mode: Show conversation list
     if (demoMode && showConversationList) {
         return (
@@ -680,7 +633,7 @@ const DirectMessages = ({
                 </div>
                 
                 {/* Conversation list */}
-                <div className="flex-grow overflow-y-auto">
+                <div className="grow overflow-y-auto">
                     {demoConversations.map((conv) => (
                         <div 
                             key={conv.id}
@@ -859,7 +812,7 @@ const DirectMessages = ({
                 
                 {/* Messages area */}
                 <div 
-                    className="flex-grow overflow-y-auto p-3 space-y-4" 
+                    className="grow overflow-y-auto p-3 space-y-4" 
                     style={{ maxHeight: `${maxHeight}px` }}
                 >
                     {groupedMessages.length === 0 && (
@@ -931,7 +884,7 @@ const DirectMessages = ({
                                                 >
                                                     <div 
                                                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.content) }}
-                                                        className="prose prose-sm max-w-none break-words"
+                                                        className="prose prose-sm max-w-none wrap-break-word"
                                                     />
                                                 </div>
                                                 
@@ -1115,7 +1068,7 @@ const DirectMessages = ({
             
             {/* Messages area */}
             <div 
-                className="flex-grow overflow-y-auto p-3 space-y-4" 
+                className="grow overflow-y-auto p-3 space-y-4" 
                 style={{ maxHeight: `${maxHeight}px` }}
             >
                 {groupedMessages.length === 0 && (
@@ -1187,7 +1140,7 @@ const DirectMessages = ({
                                             >
                                                 <div 
                                                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.content) }}
-                                                    className="prose prose-sm max-w-none break-words"
+                                                    className="prose prose-sm max-w-none wrap-break-word"
                                                 />
                                             </div>
                                             

@@ -12,6 +12,35 @@
 import { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { useRealtimeReactions, useSocialRealtime } from './SocialRealtimeContext';
 
+function buildReactionMap(initialReactions = [], currentUser) {
+    const reactionMap = new Map();
+
+    initialReactions.forEach(reaction => {
+        if (!reactionMap.has(reaction.emoji)) {
+            reactionMap.set(reaction.emoji, {
+                emoji: reaction.emoji,
+                count: 0,
+                users: [],
+                hasReacted: false
+            });
+        }
+
+        const current = reactionMap.get(reaction.emoji);
+        current.count++;
+        current.users.push({
+            id: reaction.userId,
+            username: reaction.username,
+            timestamp: reaction.timestamp
+        });
+
+        if (currentUser && reaction.userId === currentUser.id) {
+            current.hasReacted = true;
+        }
+    });
+
+    return reactionMap;
+}
+
 /**
  * SocialReactions - Real-time reaction system for posts, comments, and messages
  * 
@@ -39,7 +68,7 @@ const SocialReactions = ({
     showQuickReactions = false,
     size = 'md'
 }) => {
-    const [reactions, setReactions] = useState(new Map());
+    const [reactions, setReactions] = useState(() => buildReactionMap(initialReactions, currentUser));
     const [isLoading, setIsLoading] = useState(false);
     const [showReactionPicker, setShowReactionPicker] = useState(false);
     const [animatingReactions, setAnimatingReactions] = useState(new Set());
@@ -76,38 +105,6 @@ const SocialReactions = ({
 
     // Quick reactions (first 4) and remaining reactions
     const quickReactions = availableReactions.slice(0, 4);
-    const remainingReactions = availableReactions.slice(4);
-
-    // Initialize reactions from props
-    useEffect(() => {
-        const reactionMap = new Map();
-        
-        // Process initial reactions
-        initialReactions.forEach(reaction => {
-            if (!reactionMap.has(reaction.emoji)) {
-                reactionMap.set(reaction.emoji, {
-                    emoji: reaction.emoji,
-                    count: 0,
-                    users: [],
-                    hasReacted: false
-                });
-            }
-            
-            const current = reactionMap.get(reaction.emoji);
-            current.count++;
-            current.users.push({
-                id: reaction.userId,
-                username: reaction.username,
-                timestamp: reaction.timestamp
-            });
-            
-            if (currentUser && reaction.userId === currentUser.id) {
-                current.hasReacted = true;
-            }
-        });
-        
-        setReactions(reactionMap);
-    }, [initialReactions, currentUser]);
 
     // Handle real-time reaction updates
     const handleRealtimeUpdate = useCallback((update) => {
@@ -476,7 +473,7 @@ const SocialReactions = ({
 
                     {/* Reaction Picker Dropdown */}
                     {showReactionPicker && (
-                        <div className="absolute bottom-full left-0 mb-2 p-4 bg-base-100 border border-base-300 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 min-w-[280px]">
+                        <div className="absolute bottom-full left-0 mb-2 p-4 bg-base-100 border border-base-300 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 min-w-70">
                             <div className="grid grid-cols-5 gap-4">
                                 {availableReactions.map((reactionOption) => (
                                     <button

@@ -11,7 +11,7 @@
 
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import Image from "next/image"
@@ -47,7 +47,7 @@ const themes = [
   "dracula",
 ]
 
-export default function Header({ pageSections = [] }) {
+export default function Header() {
   const { data: session } = useSession() // Use session for user data
   const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar } = useLayout()
   const router = useRouter()
@@ -126,12 +126,15 @@ export default function Header({ pageSections = [] }) {
   }
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem("theme") || "tag-theme"
+    const savedTheme = localStorage.getItem("theme") || "tag-theme"
+    if (savedTheme !== "tag-theme") {
       setTheme(savedTheme)
-      document.documentElement.setAttribute("data-theme", savedTheme)
     }
   }, [])
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme)
+  }, [theme])
 
   useEffect(() => {
     // Close mobile menu when route changes

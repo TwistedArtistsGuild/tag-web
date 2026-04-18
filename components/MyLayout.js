@@ -13,12 +13,9 @@
  "use client"
 
 import "react-tooltip/dist/react-tooltip.css"
-import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import { Inter } from "next/font/google"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/router"
 import NextNProgress from "nextjs-progressbar"
-import { Toaster } from "react-hot-toast"
 import { Tooltip } from "react-tooltip"
 import ErrorBoundary from "./ErrorBoundary"
 import config from "@/config"
@@ -29,6 +26,10 @@ import RightSidebar from "@/components/Sidebar-right"
 import { LayoutProvider, useLayout } from "./LayoutProvider"
 
 const font = Inter({ subsets: ["latin"] })
+const ClientToaster = dynamic(
+  () => import("react-hot-toast").then((module) => module.Toaster),
+  { ssr: false }
+)
 
 /**
  * Layout Content Component - The actual layout implementation
@@ -37,13 +38,6 @@ function LayoutContent(props) {
   const { isHeaderVisible, isLeftSidebarVisible, isRightSidebarVisible, isMobile } = useLayout()
   const { sidebarProps = {} } = props
   const { pageSections = [] } = sidebarProps || {}
-  const router = useRouter()
-  const { data } = useSession()
-  const [isMounted, setIsMounted] = useState(false)
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
 
   // Adjusted topMargin to match the new header height
   const topMargin = isHeaderVisible ? "mt-2" : "mt-0" // Changed from mt-20 to mt-16
@@ -72,15 +66,13 @@ function LayoutContent(props) {
         <Footer className={`${leftMargin} ${rightMargin}`} />
       </div>
 
-      {isMounted && (
-        <Toaster
-          toastOptions={{
-            duration: 3000,
-          }}
-        />
-      )}
+      <ClientToaster
+        toastOptions={{
+          duration: 3000,
+        }}
+      />
 
-      <Tooltip id="tooltip" className="z-[60] !opacity-100 max-w-sm shadow-lg" />
+      <Tooltip id="tooltip" className="z-60 opacity-100! max-w-sm shadow-lg" />
     </ErrorBoundary>
   )
 }
