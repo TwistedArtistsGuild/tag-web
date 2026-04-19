@@ -405,6 +405,14 @@ const SocialComments = ({
         });
     }, []);
 
+    const sanitizeHtml = (html) => {
+        // Check if we are in the browser (DOMPurify needs a window)
+        if (typeof window !== 'undefined') {
+            return DOMPurify.sanitize(html);
+        }
+        return html; // Fallback for Server-Side Rendering
+    };
+
     /**
      * Comment component - renders a single comment or reply
      */
@@ -514,7 +522,7 @@ const SocialComments = ({
                         
                         {/* Comment content with proper sanitization and styling */}
                         <div 
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comment.body) }} 
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(comment.body) }} 
                             className="py-2 prose max-w-none prose-img:rounded-lg prose-video:rounded-lg"
                         />
                         

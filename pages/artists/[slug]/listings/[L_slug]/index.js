@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 import { useState, useEffect } from "react"
 import ImageGallery from "react-image-gallery"
-import "react-image-gallery/styles/css/image-gallery.css"
+//import "react-image-gallery/styles/css/image-gallery.css"
 import SocialComments from "@/components/social/Comments" // Import SocialComments component
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import Image from "next/image"
