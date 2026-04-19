@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 
 
-
+import React, { useMemo } from "react";
 import DynaFormDB from "@/components/widgets/DynaFormDB"
 
 // Set the active API URL defaulting to prod
@@ -27,11 +27,39 @@ const formName = "BlogForm1";
  * @returns {JSX.Element}
  */
 export default function UpdateBlogForm1(props) {
-    props.metadataProp.FromURL = "/blogs/" + props.slug + "/update.js";
-    props.metadataProp.redirectURL = "/blogs/" + props.slug;
-    props.metadataProp.APIURL = process.env.NEXT_PUBLIC_TAG_API_URL + `blog/update`;
-    console.log(props.metadataProp.APIURL);
-    return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.blogdata} /></div>;
+    const enhancedMetadata = useMemo(() => {
+        // 1. Handle the case where metadataProp might be an array or object
+        const base = Array.isArray(props.metadataProp)
+            ? props.metadataProp[0]
+            : props.metadataProp;
+
+        // 2. If base is null/undefined, return null so DynaFormDB shows the error state
+        if (!base) return null;
+
+        // 3. Merge the new properties
+        return {
+            ...base,
+            FromURL: `/blogs/${props.slug}/update.js`,
+            redirectURL: `/blogs/${props.slug}`,
+            // Ensure there's a slash if your env variable doesn't have one
+            APIURL: `${process.env.NEXT_PUBLIC_TAG_API_URL}${process.env.NEXT_PUBLIC_TAG_API_URL?.endsWith('/') ? '' : '/'}blog/${props.blogdata?.blogID}`
+        };
+    }, [props.slug, props.blogdata, props.metadataProp]);
+
+    // Only render DynaFormDB if we actually have data, otherwise show a loader
+    if (!props.blogdata || !props.metadataProp) {
+        return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
+    }
+
+    return (
+        <div className="p-4">
+            <DynaFormDB
+                request="update"
+                metadataProp={enhancedMetadata}
+                formData={props.blogdata}
+            />
+        </div>
+    );
 }
 
 /**

@@ -112,7 +112,7 @@ export default function DynaForm(props) {
   useEffect(() => {
     // Check for direct APIURL first (takes precedence)
     if (metadata.APIURL) {
-      setEndpoint(metadata.APIURL);
+        setEndpoint(metadata.APIURL);
     } 
     // 2. Fall back to postfix - checking for the specific casing in your error log: apiurLpostfix
     else if (metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix) {
@@ -138,7 +138,7 @@ export default function DynaForm(props) {
       console.log("DynaFormDB endpoint set to:", endpoint);
       console.log("DynaFormDB request method:", method);
     }
-  }, [metadata, props.request, metadata.APIURL]);
+  }, [metadata.APIURL, metadata.apiurlpostfix, props.request]);
 
   /**
    * Handles input field changes and updates form state
