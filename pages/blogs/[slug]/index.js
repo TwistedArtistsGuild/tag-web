@@ -46,7 +46,7 @@ const BlogByslug = props => {
 			/>
 
 			<Link
-				href="/blogs/[blognum]/update"
+				href="/blogs/[slug]/update"
 				as={`/blogs/${props.slug}/update`}
 				className={`${defaultFieldClass} font-fredoka text-xl text-[#e9ecef] transition hover:tracking-wider hover:text-transparent hover:bg-gradient-to-r from-[#f1c0e8] to-[#8EECF5] hover:font-bold`}
 			>

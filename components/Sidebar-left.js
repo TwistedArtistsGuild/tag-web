@@ -15,6 +15,7 @@ import { useLayout } from "./LayoutProvider"
 import ArtistCardSmall from "@/components/cards/card_artist_small"
 import ListingCardSmall from "@/components/cards/card_listing_small"
 import { useRouter } from "next/router"
+import { PanelLeftOpen, PanelLeftClose, Search } from 'lucide-react';
 
 export default function LeftSidebar(props) {
   // Since MyLayout.js spreads the leftSidebarData, we access props directly
@@ -68,14 +69,66 @@ export default function LeftSidebar(props) {
 
   // Render content based on type
   const renderContent = () => {
-    // 1. Create a helper function to filter based on the active state
-    const filterItem = (item) => {
-        if (activeFilter === "-1" || activeFilter === -1) return true;
-       
-        const itemType = item.artCategoryID;
+      const filterItem = (item) => {
+          // 1. Category Filter Logic
+          const categoryMatch = activeFilter === "-1" || activeFilter === -1 || String(item.artCategoryID) === String(activeFilter);
 
-        return String(itemType) === String(activeFilter);
-    }; 
+          // 2. Multi-Property Search Logic
+          if (!searchTerm) return categoryMatch; // Performance optimization for empty search
+          const searchLower = searchTerm.toLowerCase();
+          console.log(searchLower);
+          console.log([
+              item.biography,
+              item.byline,
+              item.title,
+              item.path,
+              item.seotags,
+              item.statement
+          ]);
+          // 3. Type-Specific Property Checking
+          let searchMatch = false;
+
+          switch (displayType) {
+              case "artists":
+                  searchMatch = [
+                      item.biography,
+                      item.byline,
+                      item.title,
+                      item.path,
+                      item.seotags,
+                      item.statement
+                  ].some(prop =>
+                      String(prop || "").toLowerCase().includes(searchLower)
+                  );
+                  break;
+
+              case "events":
+                  searchMatch = [
+                      item.description,
+                      item.title,
+                      item.note,
+                      item.path,
+                  ].some(prop =>
+                      String(prop || "").toLowerCase().includes(searchLower)
+                  );
+                  break;
+              case "listings":
+              default:
+                  searchMatch = [
+                      item.description,
+                      item.title,
+                      item.culture,
+                      item.medium,
+                      item.path,
+                      item.artCategory
+                  ].some(prop =>
+                      String(prop || "").toLowerCase().includes(searchLower)
+                  );
+                  break;
+          }
+
+          return categoryMatch && searchMatch;
+      };
     switch (displayType) {
       case "listings":
         return (
@@ -90,7 +143,7 @@ export default function LeftSidebar(props) {
         return (
           <>
             <h3 className="font-medium text-base-content mb-3">Featured Artists</h3>
-            {artists.map((artist, index) => (
+            {artists.filter(filterItem).map((artist, index) => (
               <ArtistCardSmall key={artist.id || index} artist={artist} />
             ))}
           </>
@@ -99,7 +152,7 @@ export default function LeftSidebar(props) {
         return (
           <>
             <h3 className="font-medium text-base-content mb-3">Upcoming Events</h3>
-            {events.map((event, index) => (
+            {events.filter(filterItem).map((event, index) => (
               <div key={event.id || index} className="card card-compact bg-base-100 shadow">
                 <div className="card-body">
                   <h4 className="font-medium text-sm">{event.name}</h4>
@@ -132,17 +185,17 @@ export default function LeftSidebar(props) {
   return (
     <>
       {/* Open Button - Left Edge of Screen when closed */}
-      {!isLeftSidebarVisible && (
-        <button
-          onClick={toggleLeftSidebar}
-          className="fixed top-1/2 left-0 transform -translate-y-1/2 z-50 bg-primary text-primary-content px-2 py-4 rounded-r-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-          aria-label="Show left sidebar"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      )}
+          {!isLeftSidebarVisible && (
+              <button
+                  onClick={toggleLeftSidebar}
+                  className="fixed top-1/2 left-0 transform -translate-y-1/2 z-50 bg-primary text-primary-content 
+               p-1.5 rounded-r-md shadow-md hover:shadow-lg transition-all 
+               border-y border-r border-primary-focus"
+                  aria-label="Show left sidebar"
+              >
+                  <PanelLeftOpen size={20} strokeWidth={1.5} />
+              </button>
+          )}
 
       {/* Left Sidebar */}
       <aside
@@ -159,16 +212,15 @@ export default function LeftSidebar(props) {
 
         {/* Close Button - Right Edge Center of Sidebar when open */}
         {isLeftSidebarVisible && (
-          <button
-            onClick={toggleLeftSidebar}
-            className="absolute top-1/2 -right-3 transform -translate-y-1/2 bg-base-200 text-base-content hover:bg-base-300 px-2 py-4 rounded-r-lg border border-base-content/10 shadow-md transition-all duration-300 hover:scale-105 z-40 touch-manipulation"
-            aria-label="Hide left sidebar"
-            style={{ touchAction: 'manipulation' }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+            <button
+                onClick={toggleLeftSidebar}
+                className="absolute top-1/2 -right-1 transform -translate-y-1/2 bg-base-200 text-base-content 
+        hover:bg-base-300 p-1 rounded-md border border-base-content/20 
+        shadow-sm z-40"
+                aria-label="Hide left sidebar"
+            >
+                <PanelLeftClose size={18} strokeWidth={1.5} />
+            </button>
         )}
 
         {/* Sidebar Header */}

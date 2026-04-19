@@ -16,8 +16,8 @@ const LayoutContext = createContext()
 
 export function LayoutProvider({ children }) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
-  const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(true)
-  const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(true)
+  const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(false)
+    const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [theme, setTheme] = useState("tag-theme")
 
