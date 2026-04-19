@@ -29,7 +29,8 @@ const formName = "BlogForm1";
 export default function UpdateBlogForm1(props) {
     props.metadataProp.FromURL = "/blogs/" + props.slug + "/update.js";
     props.metadataProp.redirectURL = "/blogs/" + props.slug;
-    props.metadataProp.APIURL = process.env.NEXT_PUBLIC_TAG_API_URL + `${props.metadataProp.apiurlpostfix}/${props.slug}`;
+    props.metadataProp.APIURL = process.env.NEXT_PUBLIC_TAG_API_URL + `blog/update`;
+    console.log(props.metadataProp.APIURL);
     return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.blogdata} /></div>;
 }
 
@@ -48,7 +49,7 @@ UpdateBlogForm1.getInitialProps = async function (context) {
     let data = {};
     let metadata = {};
     try {
-        const res1 = await fetch(api_url + `blog/${slug}`);
+        const res1 = await fetch(api_url + `blog/path/${slug}`);
         data = await res1.json();
         const res2 = await fetch(api_url + `forms_metadata/BlogForm1`);
         metadata = await res2.json();

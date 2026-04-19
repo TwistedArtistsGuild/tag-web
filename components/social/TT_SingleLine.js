@@ -14,10 +14,10 @@ import TiptapEditor from "@/components/widgets/tiptap-editor";
 export default function TTSingleLine({ value, onChange }) {
 	return (
 		<div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
-			<h2 className="text-lg font-semibold">Single Line</h2>
-			<p className="text-sm text-base-content/70">
-				Short inline input for titles, taglines, and display names.
-			</p>
+			{/*<h2 className="text-lg font-semibold">Single Line</h2>*/}
+			{/*<p className="text-sm text-base-content/70">*/}
+			{/*	Short inline input for titles, taglines, and display names.*/}
+			{/*</p>*/}
 			<TiptapEditor
 				value={value}
 				onChange={onChange}

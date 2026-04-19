@@ -35,13 +35,13 @@ const BlogByslug = props => {
 		<div className="flex flex-col justify-evenly items-center h-screen w-full ">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug={`blogs/${props.blog.path}`} />
 			<div className="flex flex-col items-center">
-				<h1 className="font-poiret text-7xl text-[#98F5E1] shadow-text">{props.blog.title}</h1>
-				<div className="font-fredoka text-[#90dbf4] w-[75%]">{props.blog.byline}</div>
-				<div className="font-baloo text-xs text-[#fde4cf] shadow-dark">{new Date(props.blog.created).toLocaleDateString("en-US", options)}</div>
+				<h1 className="font-poiret text-7xl shadow-text" dangerouslySetInnerHTML={{ __html: props.blog.title }}></h1>
+				<div className="font-fredoka pt-2 w-[75%]" dangerouslySetInnerHTML={{ __html: props.blog.byline }}></div>
+				<div className="font-baloo text-xs shadow-dark">{new Date(props.blog.created).toLocaleDateString("en-US", options)}</div>
 			</div>
 
 			<p
-				className={`font-fredoka text-[#90dbf4] w-[75%] text-center`}
+				className={`font-fredoka w-[75%] text-center`}
 				dangerouslySetInnerHTML={{ __html: props.blog.body }}
 			/>
 
