@@ -479,6 +479,21 @@ export default function DynaForm(props) {
                   return (
                       <TTSingleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} />
                   );
+
+              case "tiptap_title":
+                  return (
+                      <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} />
+                  );
+
+              case "tiptap_portfolio":
+                  return (
+                      <TTPortfolio
+                          value={currentValue}
+                          onChange={(html) => handleFieldChange(field.name, html)}
+                          onSaveDraft={() => { }}
+                          onPublish={() => { }}
+                      />
+                  );
               
             // Handle other common input types
             default:
