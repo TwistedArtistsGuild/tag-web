@@ -13,6 +13,7 @@
 import { useState } from "react"
 import { useLayout } from "./LayoutProvider"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import { PanelRightOpen, PanelRightClose } from 'lucide-react';
 
 export default function RightSidebar(props) {
   // Since MyLayout.js spreads the rightSidebarData, we access props directly
@@ -55,13 +56,12 @@ export default function RightSidebar(props) {
       {/* Open Button - Right Edge of Screen when closed */}
       {!isRightSidebarVisible && (
         <button
-          onClick={toggleRightSidebar}
-          className="fixed top-1/2 right-0 transform -translate-y-1/2 z-50 bg-primary text-primary-content px-2 py-4 rounded-l-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-          aria-label="Show right sidebar"
+            onClick={toggleRightSidebar}
+            className="fixed top-1/2 right-0 transform -translate-y-1/2 z-50 
+            bg-primary text-primary-content 
+            pr-2 pl-1.5 py-3 rounded-l-md shadow-lg"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+            <PanelRightOpen size={20} strokeWidth={2} />
         </button>
       )}
 
@@ -79,16 +79,13 @@ export default function RightSidebar(props) {
         <div className="sidebar-accent" />
         {/* Close Button - Left Edge Center of Sidebar when open */}
         {isRightSidebarVisible && (
-          <button
-            onClick={toggleRightSidebar}
-            className="absolute top-1/2 -left-3 transform -translate-y-1/2 bg-base-200 text-base-content hover:bg-base-300 px-2 py-4 rounded-l-lg border border-base-content/10 shadow-md transition-all duration-300 hover:scale-105 z-40 touch-manipulation"
-            aria-label="Hide right sidebar"
-            style={{ touchAction: 'manipulation' }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+            <button
+                onClick={toggleRightSidebar}
+                className="absolute top-1/2 right-full transform translate-x-1/2 -translate-y-1/2 
+                bg-base-200 text-base-content p-1 rounded-md border border-base-content/20 shadow-sm z-40"
+            >
+                <PanelRightClose size={18} strokeWidth={2} />
+            </button>
         )}
 
         {/* Sidebar Header */}

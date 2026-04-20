@@ -7,49 +7,135 @@
 
  This software comes with NO WARRANTY; see the license for details.
 
- Open source · low-profit · human-first*/
+ Open source · low-profit · human-first*/ 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useLayout } from "./LayoutProvider"
-import ArtistCard from "@/components/cards/card_artist"
-import ListingCard from "@/components/cards/card_listing"
-import Image from "next/image"
+import ArtistCardSmall from "@/components/cards/card_artist_small"
+import ListingCardSmall from "@/components/cards/card_listing_small"
 import { useRouter } from "next/router"
-import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import { PanelLeftOpen, PanelLeftClose, Search } from 'lucide-react';
 
 export default function LeftSidebar(props) {
   // Since MyLayout.js spreads the leftSidebarData, we access props directly
   const artists = props.artists || [];
-  const listings = props.listings || [];
+  const [listings, setDisplayListings] = useState(props.listings || []);
+  const [displayType, setDisplayType] = useState("auto");
   const events = props.events || [];
   const filters = props.filters || [
-    { label: "All Art", value: "all" },
-    { label: "Paintings", value: "paintings" },
-    { label: "Sculpture", value: "sculpture" },
+    { label: "All Art", value: "-1" },
+    { label: "Paintings", value: "3" },
+    { label: "Sculpture", value: "30" },
   ];
-  const contentType = props.contentType || "auto"; // "artists", "listings", "events", or "auto"
-  
+  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+
+ useEffect(() => {
   // Auto-detect content type if not specified
-  const getContentToDisplay = () => {
-    if (contentType !== "auto") return contentType;
-    if (listings.length > 0) return "listings";
-    if (artists.length > 0) return "artists";
-    if (events.length > 0) return "events";
-    return "none";
-  };
-  
-  const displayType = getContentToDisplay();
+     const resolveContent = async () => {
+    // 2. Logic: If we already have data from props, use it.
+    if (props.contentType && props.contentType !== "auto") {
+        setDisplayType(props.contentType);
+        return;
+    }
+      if (artists.length > 0) {
+          setDisplayType("artists");
+      } else if (events.length > 0) {
+          setDisplayType("events");
+      } else if (props.listings && props.listings.length > 0) {
+          setDisplayType("listings");
+      } else {
+          try {
+              // Fetch the listings data
+              let status = 200
+              const res = await fetch(`${api_url}listing/`);
+              //TODO: Change to add new API in backend to fetch top n listings instead of fetching all
+              //listings and filter top 5 to show
+              status = res.status
+              if (!res.ok) {
+                  throw new Error(`HTTP error! status: ${status}`)
+              }
+              const data = await res.json();
+              setDisplayListings(data);
+              setDisplayType("listings");
+          } catch (error) {
+              console.error('Error in getInitialProps:', error);
+              setDisplayType("none");
+          }
+      }
+     }
+     resolveContent();
+ }, [props.listings, props.artists, props.events]); // Re-run if props change
 
   // Render content based on type
   const renderContent = () => {
+      const filterItem = (item) => {
+          // 1. Category Filter Logic
+          const categoryMatch = activeFilter === "-1" || activeFilter === -1 || String(item.artCategoryID) === String(activeFilter);
+
+          // 2. Multi-Property Search Logic
+          if (!searchTerm) return categoryMatch; // Performance optimization for empty search
+          const searchLower = searchTerm.toLowerCase();
+          console.log(searchLower);
+          console.log([
+              item.biography,
+              item.byline,
+              item.title,
+              item.path,
+              item.seotags,
+              item.statement
+          ]);
+          // 3. Type-Specific Property Checking
+          let searchMatch = false;
+
+          switch (displayType) {
+              case "artists":
+                  searchMatch = [
+                      item.biography,
+                      item.byline,
+                      item.title,
+                      item.path,
+                      item.seotags,
+                      item.statement
+                  ].some(prop =>
+                      String(prop || "").toLowerCase().includes(searchLower)
+                  );
+                  break;
+
+              case "events":
+                  searchMatch = [
+                      item.description,
+                      item.title,
+                      item.note,
+                      item.path,
+                  ].some(prop =>
+                      String(prop || "").toLowerCase().includes(searchLower)
+                  );
+                  break;
+              case "listings":
+              default:
+                  searchMatch = [
+                      item.description,
+                      item.title,
+                      item.culture,
+                      item.medium,
+                      item.path,
+                      item.artCategory
+                  ].some(prop =>
+                      String(prop || "").toLowerCase().includes(searchLower)
+                  );
+                  break;
+          }
+
+          return categoryMatch && searchMatch;
+      };
     switch (displayType) {
       case "listings":
         return (
           <>
             <h3 className="font-medium text-base-content mb-3">Featured Listings</h3>
-            {listings.map((listing, index) => (
-              <ListingCard key={listing.id || index} listing={listing} />
+            {listings.filter(filterItem).map((listing, index) => (
+              <ListingCardSmall key={listing.id || index} listing={listing} />
             ))}
           </>
         );
@@ -57,8 +143,8 @@ export default function LeftSidebar(props) {
         return (
           <>
             <h3 className="font-medium text-base-content mb-3">Featured Artists</h3>
-            {artists.map((artist, index) => (
-              <ArtistCard key={artist.id || index} artist={artist} />
+            {artists.filter(filterItem).map((artist, index) => (
+              <ArtistCardSmall key={artist.id || index} artist={artist} />
             ))}
           </>
         );
@@ -66,7 +152,7 @@ export default function LeftSidebar(props) {
         return (
           <>
             <h3 className="font-medium text-base-content mb-3">Upcoming Events</h3>
-            {events.map((event, index) => (
+            {events.filter(filterItem).map((event, index) => (
               <div key={event.id || index} className="card card-compact bg-base-100 shadow">
                 <div className="card-body">
                   <h4 className="font-medium text-sm">{event.name}</h4>
@@ -78,20 +164,20 @@ export default function LeftSidebar(props) {
           </>
         );
       default:
-        return (
-          <div className="text-center py-8 text-base-content/60">
-            <div className="flex flex-col items-center justify-center">
-              <Image src={getRandomStockPhotoByCategory('general')} width={48} height={48} alt="No content" className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No content available</p>
-            </div>
-          </div>
+        return (          
+            <>
+                <h3 className="font-medium text-base-content mb-3">Featured Listings</h3>
+                {listings.filter(filterItem).map((listing, index) => (
+                    <ListingCardSmall key={listing.id || index} listing={listing} />
+                ))}
+            </>
         );
     }
   };
   
   const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
   const [searchTerm, setSearchTerm] = useState("")
-  const [activeFilter, setActiveFilter] = useState("all")
+  const [activeFilter, setActiveFilter] = useState("-1")
   const router = useRouter()
 
   const topOffset = isHeaderVisible ? "top-20" : "top-0"
@@ -99,17 +185,17 @@ export default function LeftSidebar(props) {
   return (
     <>
       {/* Open Button - Left Edge of Screen when closed */}
-      {!isLeftSidebarVisible && (
-        <button
-          onClick={toggleLeftSidebar}
-          className="fixed top-1/2 left-0 transform -translate-y-1/2 z-50 bg-primary text-primary-content px-2 py-4 rounded-r-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-          aria-label="Show left sidebar"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      )}
+          {!isLeftSidebarVisible && (
+              <button
+                  onClick={toggleLeftSidebar}
+                  className="fixed top-1/2 left-0 transform -translate-y-1/2 z-50 bg-primary text-primary-content 
+               p-1.5 rounded-r-md shadow-md hover:shadow-lg transition-all 
+               border-y border-r border-primary-focus"
+                  aria-label="Show left sidebar"
+              >
+                  <PanelLeftOpen size={20} strokeWidth={1.5} />
+              </button>
+          )}
 
       {/* Left Sidebar */}
       <aside
@@ -126,16 +212,15 @@ export default function LeftSidebar(props) {
 
         {/* Close Button - Right Edge Center of Sidebar when open */}
         {isLeftSidebarVisible && (
-          <button
-            onClick={toggleLeftSidebar}
-            className="absolute top-1/2 -right-3 transform -translate-y-1/2 bg-base-200 text-base-content hover:bg-base-300 px-2 py-4 rounded-r-lg border border-base-content/10 shadow-md transition-all duration-300 hover:scale-105 z-40 touch-manipulation"
-            aria-label="Hide left sidebar"
-            style={{ touchAction: 'manipulation' }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+            <button
+                onClick={toggleLeftSidebar}
+                className="absolute top-1/2 -right-1 transform -translate-y-1/2 bg-base-200 text-base-content 
+        hover:bg-base-300 p-1 rounded-md border border-base-content/20 
+        shadow-sm z-40"
+                aria-label="Hide left sidebar"
+            >
+                <PanelLeftClose size={18} strokeWidth={1.5} />
+            </button>
         )}
 
         {/* Sidebar Header */}
