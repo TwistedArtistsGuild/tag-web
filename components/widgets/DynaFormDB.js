@@ -142,7 +142,6 @@ export default function DynaForm(props) {
       console.log("DynaFormDB request method:", method);
     }
   }, [metadata.APIURL, metadata.apiurlpostfix, props.request, api_url]);
-  }, [metadata.APIURL, metadata.apiurlpostfix, props.request]);
 
   /**
    * Handles input field changes and updates form state
