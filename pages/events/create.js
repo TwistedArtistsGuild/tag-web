@@ -9,7 +9,9 @@
 
  Open source · low-profit · human-first*/
 import DynaFormDB from "@/components/widgets/DynaFormDB";
+import getApiURL from "@/components/widgets/GetApiURL";
 
+const api_url = getApiURL();
 const formName = "EventForm1";
 //broken but don't care!!!!
 
@@ -17,12 +19,11 @@ export default function CreateEventForm1(props) {
     props.metadataProp = props.metadataProp || {};
     props.metadataProp.FromURL = "/events/create.js";
     props.metadataProp.redirectURL = "/events/";
-    props.metadataProp.APIURL = process.env.NEXT_PUBLIC_TAG_API_URL + `${props.metadataProp.apiurlpostfix}`;
+    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}`;
     return <div className="p-4"><DynaFormDB request="add" metadataProp={props.metadataProp} /></div>;
 }
 
 CreateEventForm1.getInitialProps = async function () {
-    const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
     let metadata = {};
     try {
         const res = await fetch(api_url + 'forms_metadata/'+ formName);

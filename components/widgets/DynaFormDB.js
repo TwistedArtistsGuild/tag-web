@@ -14,6 +14,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import DateInput from "./DynaDateInput";
 import { useSession } from "next-auth/react";
+import getApiURL from "@/components/widgets/GetApiURL";
 
 /**
  * Dynamic Form component that renders form fields based on metadata
@@ -27,6 +28,7 @@ import { useSession } from "next-auth/react";
 export default function DynaForm(props) {
   const router = useRouter();
   const { data: session } = useSession();
+  const api_url = getApiURL();
   
   // Unwrap the metadata object. If props.metadataProp is an array, take the first element.
   const rawMetadata = props.metadataProp || {};
@@ -97,7 +99,7 @@ export default function DynaForm(props) {
       console.group("🔍 DynaFormDB Debug Info - Initial Load");
       console.log("Form Metadata:", metadata);
       console.log("Form Initial Values:", initialValues);
-      console.log("API Endpoint:", metadata.APIURL || `${process.env.NEXT_PUBLIC_TAG_API_URL}${metadata.APIURLpostfix || metadata.apiurLpostfix || ''}`);
+      console.log("API Endpoint:", metadata.APIURL || `${api_url}${metadata.APIURLpostfix || metadata.apiurLpostfix || ''}`);
       console.log("Request Type:", props.request);
       console.log("Session Data:", session);
       console.groupEnd();
@@ -114,7 +116,7 @@ export default function DynaForm(props) {
     } 
     // Fall back to constructing URL from API URL postfix if present
     else if (metadata.apiurlpostfix || metadata.APIURLpostfix) {
-      const baseUrl = process.env.NEXT_PUBLIC_TAG_API_URL || "";
+      const baseUrl = api_url || "";
       const postfix = metadata.apiurlpostfix || metadata.APIURLpostfix || "";
       setEndpoint(`${baseUrl}${postfix}`);
     }
@@ -133,7 +135,7 @@ export default function DynaForm(props) {
       console.log("DynaFormDB endpoint set to:", endpoint);
       console.log("DynaFormDB request method:", method);
     }
-  }, [metadata, props.request]);
+  }, [metadata, props.request, api_url]);
 
   /**
    * Handles input field changes and updates form state

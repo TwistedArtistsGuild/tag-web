@@ -15,6 +15,7 @@
 import Link from "next/link"
 import shortDateOptions from "@/utils/shortdateoptions"
 import TagSEO from "@/components/TagSEO"
+import getApiURL from "@/components/widgets/GetApiURL"
 
 const Log = props => {
 	const options = shortDateOptions
@@ -82,7 +83,7 @@ const Log = props => {
 
 Log.getInitialProps = async function () {
 
-	const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+	const api_url = getApiURL()
     
 	//Staging API can be added here if needed
 

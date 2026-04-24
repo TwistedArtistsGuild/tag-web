@@ -13,6 +13,7 @@ import ImageGallery from "react-image-gallery"
 import "react-image-gallery/styles/image-gallery.css"
 import SocialComments from "@/components/social/TT_Comments" // Import SocialComments component
 import Image from "next/image"
+import getApiURL from "@/components/widgets/GetApiURL"
 
 const ListingDetails = ({ listing }) => {
   // Sample images for the slideshow
@@ -358,7 +359,7 @@ const ListingDetails = ({ listing }) => {
 
 ListingDetails.getInitialProps = async (context) => {
   const { slug, L_slug } = context.query
-  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+  const api_url = getApiURL()
   let data = {}
 
   try {

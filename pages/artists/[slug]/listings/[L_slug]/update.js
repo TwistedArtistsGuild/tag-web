@@ -11,11 +11,11 @@
 
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
+import getApiURL from "@/components/widgets/GetApiURL";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
-// Set the active API URL defaulting to prod
-const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+const api_url = getApiURL();
 const formName = "ListingForm1";
 
 /**
