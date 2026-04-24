@@ -39,9 +39,9 @@ export default function UpdateBlogForm1(props) {
             ...base,
             FromURL: `/blogs/${props.slug}/update.js`,
             redirectURL: `/blogs/${props.slug}`,
-            // Ensure there's a slash if your env variable doesn't have one
-            APIURL: `${process.env.NEXT_PUBLIC_TAG_API_URL}${api_url?.endsWith('/') ? '' : '/'}blog/${props.blogdata?.blogID}`
-            APIURL: `${process.env.NEXT_PUBLIC_TAG_API_URL}${process.env.NEXT_PUBLIC_TAG_API_URL?.endsWith('/') ? '' : '/'}blog/${props.blogdata?.blogID}`
+            // Reuse the normalized base URL from getApiURL() to keep env fallback/overrides consistent
+            APIURL: `${api_url}blog/${props.blogdata?.blogID}`
+
         };
     }, [props.slug, props.blogdata, props.metadataProp]);
 
@@ -77,7 +77,7 @@ UpdateBlogForm1.getInitialProps = async function (context) {
     try {
         const res1 = await fetch(api_url + `blog/path/${slug}`);
         data = await res1.json();
-        const res2 = await fetch(api_url + `forms_metadata/BlogForm1`);
+        const res2 = await fetch(api_url + `forms_metadata/${formName}`);
         metadata = await res2.json();
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);
