@@ -64,12 +64,6 @@ const nextConfig = {
       },
     ],
   },
-  env: {
-    DEBUG: "true", // Typically false for prod
-    // enabling local dev certs:
-    // https://andrewlock.net/how-to-set-the-hosting-environment-in-asp-net-core/
-    LOCALOVERRIDE: "true", // Typically false for prod
-  },
 };
 
 module.exports = nextConfig;
