@@ -14,6 +14,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
+import getApiURL from "@/components/widgets/GetApiURL"
 import longDateOptions from "@/utils/longdateoptions"
 import { useAppContext } from "@/components/Context"
 import ImageGallery from "react-image-gallery" // Keep this for the main gallery
@@ -698,7 +699,7 @@ const Artist = (props) => {
  */
 Artist.getInitialProps = async (context) => {
   const { slug } = context.query
-  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+  const api_url = getApiURL()
   const defaultPic = {
     picturenum: 1,
     context: "artists",

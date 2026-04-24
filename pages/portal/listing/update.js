@@ -9,8 +9,9 @@
 
  Open source · low-profit · human-first*/
 import DynaFormDB from "@/components/widgets/DynaFormDB";
+import getApiURL from "@/components/widgets/GetApiURL";
 
-const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+const api_url = getApiURL();
 const formName = "ListingForm1";
 
 //bnroken but don't care!!!!
@@ -18,7 +19,7 @@ const formName = "ListingForm1";
 export default function UpdateListingForm2(props) {
     props.metadataProp.FromURL = "/portal/listing/update.js";
     props.metadataProp.redirectURL = "/portal/listing/" + props.id;
-    props.metadataProp.APIURL = process.env.NEXT_PUBLIC_TAG_API_URL + `${props.metadataProp.apiurlpostfix}/${props.id}`;
+    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}/${props.id}`;
     return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} fieldsProp={props.metadataProp.forms_fields} formData={props.listingdata} /></div>;
 }
 

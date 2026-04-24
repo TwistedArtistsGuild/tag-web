@@ -13,6 +13,7 @@
 import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
+import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 
@@ -535,7 +536,7 @@ const Listings = (props) => {
 }
 
 Listings.getInitialProps = async (context) => {
-  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+  const api_url = getApiURL()
   const { query } = context
 
   let data = []

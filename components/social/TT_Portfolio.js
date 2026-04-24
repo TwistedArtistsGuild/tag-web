@@ -14,10 +14,10 @@ import TiptapEditor from "@/components/widgets/tiptap-editor";
 export default function TTPortfolio({ value, onChange, onSaveDraft, onPublish }) {
 	return (
 		<div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
-			<h2 className="text-lg font-semibold">Portfolio</h2>
-			<p className="text-sm text-base-content/70">
-				Full preset with Save Draft / Publish workflow.
-			</p>
+			{/*<h2 className="text-lg font-semibold">Portfolio</h2>*/}
+			{/*<p className="text-sm text-base-content/70">*/}
+			{/*	Full preset with Save Draft / Publish workflow.*/}
+			{/*</p>*/}
 			<TiptapEditor
 				value={value}
 				onChange={onChange}

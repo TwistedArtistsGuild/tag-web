@@ -11,6 +11,7 @@
 
 
 import DynaFormDB from "@/components/widgets/DynaFormDB"
+import getApiURL from "@/components/widgets/GetApiURL"
 import { useRouter } from "next/router"
 
 const formName = "ArtistForm1"
@@ -25,6 +26,7 @@ const formName = "ArtistForm1"
  */
 export default function UpdateArtistForm1(props) {
 	const router = useRouter();
+	const api_url = getApiURL();
 	
 	// Show error message if there was an error loading data
 	if (props.error) {
@@ -56,7 +58,7 @@ export default function UpdateArtistForm1(props) {
 		...props.metadataProp,
 		FromURL: "/artists/"+ props.slug +"/update.js",
 		redirectURL: "/artists/" + props.slug,
-		APIURL: process.env.NEXT_PUBLIC_TAG_API_URL + "artist/" + props.slug
+		APIURL: api_url + "artist/" + props.slug
 	};
 
 	return (
@@ -86,7 +88,7 @@ UpdateArtistForm1.getInitialProps = async function (context) {
 		}
 	}
 
-	const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+	const api_url = getApiURL()
 
 	// Debug logging
 	console.log("⬇️ UpdateArtistForm1 fetch starting");

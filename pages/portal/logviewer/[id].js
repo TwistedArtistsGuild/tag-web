@@ -12,6 +12,7 @@
 
 //change to displaying an individual log (from Blogs)
 import shortDateOptions from "@/utils/shortdateoptions"
+import getApiURL from "@/components/widgets/GetApiURL"
 
 const Logviewer = props => {
 	const options = shortDateOptions
@@ -66,7 +67,7 @@ const Logviewer = props => {
 Logviewer.getInitialProps = async function (context) {
 	const {id} = context.query
 
-	const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+	const api_url = getApiURL()
  
 	// If we are running in debug mode, log the active API URL
 	if (process.env.DEBUG === "true") {

@@ -9,6 +9,7 @@
 
  Open source · low-profit · human-first*/
 import ContactCard from "@/components/cards/card_contact"
+import getApiURL from "@/components/widgets/GetApiURL"
 
 const ContactsPage = ({ links }) => {
   return (
@@ -20,7 +21,7 @@ const ContactsPage = ({ links }) => {
 
 ContactsPage.getInitialProps = async (context) => {
   const { slug } = context.query
-  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+  const api_url = getApiURL()
 
   try {
     const response = await fetch(`${api_url}artists/${slug}/contacts`)
