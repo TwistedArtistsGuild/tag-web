@@ -11,6 +11,7 @@
 
 
 import DynaFormDB from '@/components/widgets/DynaFormDB';
+import getApiURL from "@/components/widgets/GetApiURL";
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -29,7 +30,7 @@ import { useState } from 'react';
 export default function UpdateFormsForm1(props) {
   const router = useRouter();
   const [selectedForm, setSelectedForm] = useState('');
-  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+  const api_url = getApiURL();
 
   // Filter out "UpdateFormsMeta" and "UpdateFormsFields" from the dropdown options
   const filteredFormNames = props.formNames.filter(
@@ -133,7 +134,7 @@ UpdateFormsForm1.getInitialProps = async function (context) {
     };
   }
 
-  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+  const api_url = getApiURL();
 
   try {
     // Fetch metadata for the specified form slug.

@@ -13,6 +13,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
+import getApiURL from "@/components/widgets/GetApiURL"
 import shortDateOptions from "@/utils/shortdateoptions"
 
 /**
@@ -66,14 +67,13 @@ Events.getInitialProps = async function () {
 	let data = []
 	let status = ""
 
-	// Set the active API URL defaulting to prod
-	var activeAPI_URL = process.env.NEXT_PUBLIC_TAG_API_URL
+	const api_url = getApiURL()
 
 	// If we are running in debug mode, log the active API URL
 	if (process.env.DEBUG === "true") {
-		console.log("regional event data fetch starting\n " + activeAPI_URL + "artist/") //broke!
+		console.log("regional event data fetch starting\n " + api_url + "artist/") //broke!
 	} 
-	const res = await fetch(activeAPI_URL + "event")
+	const res = await fetch(api_url + "event")
 		.then((res) => {
 			status = res.status
 			return res.json()

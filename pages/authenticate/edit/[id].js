@@ -19,8 +19,9 @@
  */
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
+import getApiURL from "@/components/widgets/GetApiURL";
 
-const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+const api_url = getApiURL();
 const formName = "UserForm1";
 
 /**
@@ -33,7 +34,7 @@ const formName = "UserForm1";
 export default function UpdateUserForm1(props) {
     props.metadataProp.FromURL = "/authenticate/edit/" + props.id + ".js";
     props.metadataProp.redirectURL = "/authenticate/edit/" + props.id;
-    props.metadataProp.APIURL = process.env.NEXT_PUBLIC_TAG_API_URL + `${props.metadataProp.apiurlpostfix}/${props.id}`;
+    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}/${props.id}`;
     return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.userdata} /></div>;
 }
 
@@ -48,7 +49,6 @@ UpdateUserForm1.getInitialProps = async function (context) {
     if (!id) {
         return { error: {message: "ID is missing from context query"} };
     }
-    const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
     let data = {};
     let metadata = {};
     try {

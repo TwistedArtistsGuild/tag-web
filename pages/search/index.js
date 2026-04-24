@@ -11,6 +11,7 @@
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
+import getApiURL from "@/components/widgets/GetApiURL"
 
 const SearchPage = ({ initialSearchTerm, results: initialResults = [], status }) => {
 	const [searchTerm, setSearchTerm] = useState(initialSearchTerm || "")
@@ -26,7 +27,7 @@ const SearchPage = ({ initialSearchTerm, results: initialResults = [], status })
 	}, [initialSearchTerm, initialResults])
 
 	const handleSearch = async () => {
-		const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+		const api_url = getApiURL()
 		let endpoint = `${api_url}utility_search/search?keyword=${searchTerm}`
 		try {
 			const res = await fetch(endpoint)
@@ -100,7 +101,7 @@ const SearchPage = ({ initialSearchTerm, results: initialResults = [], status })
 }
 
 SearchPage.getInitialProps = async function ({ query }) {
-	const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+	const api_url = getApiURL()
 	let data = []
 	let status = 200
 	const searchTerm = query.term || ""

@@ -15,6 +15,7 @@ import { buffer } from "micro"
 import { sendEmail } from "@/pages/api/sendEmail"
 import configFile from "@/config"
 import { findCheckoutSession } from "@/libs/stripe"
+import getApiURL from "@/components/widgets/GetApiURL"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -70,7 +71,7 @@ export default async function handler(req, res) {
 
 				let user
 
-				const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+				const api_url = getApiURL()
 
 				// Get or create the user. userId is normally pass in the checkout session (clientReferenceID) to identify the user when we get the webhook event
 				if (userId) {

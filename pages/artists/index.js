@@ -12,6 +12,7 @@ import Link from "next/link"
 import TagSEO from "@/components/TagSEO"
 import ArtistCard from "@/components/cards/card_artist"
 import ArtistCardWithPic from "@/components/cards/card_artist_wPic" // Import the new component
+import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
 /**
@@ -77,7 +78,7 @@ const Artists = (props) => {
 }
 
 Artists.getInitialProps = async () => {
-  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+  const api_url = getApiURL()
   let data = []
   let status = 200
 

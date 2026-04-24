@@ -17,6 +17,7 @@ import Image from "next/image" // Next v10+ (Not working and not called at this 
 // import ImageGallery from 'react-image-gallery'; //tested on home page with static images, looks pretty good
 import Link from "next/link"
 import { useState, useEffect } from "react" //Sidebar state
+import getApiURL from "@/components/widgets/GetApiURL"
 import shortDateOptions from "@/utils/shortdateoptions"
 
 //process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0; // Dev environment only, allows for self-signed
@@ -60,7 +61,7 @@ Listing.getInitialProps = async function (context) {
 	const { id } = context.query
 	let data = []
 
-	const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+    const api_url = getApiURL()
         
 	//Staging API can be added here if needed
 
@@ -112,7 +113,7 @@ const ArtistListings = ({ initialListings = [] }) => {
             if (!slug) return; // Wait until slug is available
 
             try {
-                const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+				const api_url = getApiURL();
                 const response = await fetch(`${api_url}artist/${slug}/listings`);
                 
                 if (!response.ok) {
@@ -185,7 +186,7 @@ const ArtistListings = ({ initialListings = [] }) => {
 
 ArtistListings.getInitialProps = async function (context) {
     const { slug } = context.query;
-    const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+    const api_url = getApiURL();
 
     // Only fetch on server-side to avoid duplicate requests
     if (!context.req) return { initialListings: [] };

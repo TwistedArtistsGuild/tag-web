@@ -13,6 +13,7 @@
 import Link from "next/link"
 import longDateOptions from "@/utils/longdateoptions"
 import TagSEO from "@/components/TagSEO"
+import getApiURL from "@/components/widgets/GetApiURL"
 import { defaultFieldClass } from "@/utils/formSettings"
 
 const BlogByslug = props => {
@@ -59,7 +60,7 @@ const BlogByslug = props => {
 BlogByslug.getInitialProps = async function (context) {
 	const {slug} = context.query
 
-	const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+	const api_url = getApiURL()
   
 	//Staging API can be added here if needed
 

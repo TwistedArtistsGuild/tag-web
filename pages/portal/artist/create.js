@@ -12,13 +12,9 @@
 
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
+import getApiURL from "@/components/widgets/GetApiURL";
 
-// Set the active API URL defaulting to prod
-var activeAPI_URL = process.env.NEXT_PUBLIC_TAG_API_URL
-
-//Staging API can be added here if needed
-
-const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+const api_url = getApiURL();
 const formName = "ArtistForm1";
 
 /**
@@ -30,12 +26,11 @@ const formName = "ArtistForm1";
 export default function CreateArtistForm1(props) {
     props.metadataProp.FromURL = "/portal/artist/create.js";
     props.metadataProp.redirectURL = "/portal/artist/";
-    props.metadataProp.APIURL = process.env.NEXT_PUBLIC_TAG_API_URL + `${props.metadataProp.apiurlpostfix}`;
+    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}`;
     return <div className="p-4"><DynaFormDB request="add" metadataProp={props.metadataProp} formData={null} /></div>;
 }
 
 CreateArtistForm1.getInitialProps = async function () {
-    const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
     let metadata = {};
     try {
         const res = await fetch(api_url + 'forms_metadata/'+ formName);
