@@ -14,6 +14,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import DateInput from "./DynaDateInput";
 import { useSession } from "next-auth/react";
+import getApiURL from "@/components/widgets/GetApiURL";
 import TTArticle from "@/components/social/TT_Article";
 import TTSingleLine from "@/components/social/TT_SingleLine";
 
@@ -29,6 +30,7 @@ import TTSingleLine from "@/components/social/TT_SingleLine";
 export default function DynaForm(props) {
   const router = useRouter();
   const { data: session } = useSession();
+  const api_url = getApiURL();
   
   // Unwrap the metadata object. If props.metadataProp is an array, take the first element.
   const rawMetadata = props.metadataProp || {};
@@ -99,7 +101,7 @@ export default function DynaForm(props) {
       console.group("🔍 DynaFormDB Debug Info - Initial Load");
       console.log("Form Metadata:", metadata);
       console.log("Form Initial Values:", initialValues);
-      console.log("API Endpoint:", metadata.APIURL || `${process.env.NEXT_PUBLIC_TAG_API_URL}${metadata.APIURLpostfix || metadata.apiurLpostfix || ''}`);
+      console.log("API Endpoint:", metadata.APIURL || `${api_url}${metadata.APIURLpostfix || metadata.apiurLpostfix || ''}`);
       console.log("Request Type:", props.request);
       console.log("Session Data:", session);
       console.groupEnd();
@@ -116,7 +118,7 @@ export default function DynaForm(props) {
     } 
     // 2. Fall back to postfix - checking for the specific casing in your error log: apiurLpostfix
     else if (metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix) {
-        const baseUrl = process.env.NEXT_PUBLIC_TAG_API_URL || "";
+        const baseUrl = api_url || "";
         const postfix = metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix || "";
 
         // Ensure there is a slash between base and postfix
@@ -138,7 +140,7 @@ export default function DynaForm(props) {
       console.log("DynaFormDB endpoint set to:", endpoint);
       console.log("DynaFormDB request method:", method);
     }
-  }, [metadata.APIURL, metadata.apiurlpostfix, props.request]);
+  }, [metadata.APIURL, metadata.apiurlpostfix, props.request, api_url]);
 
   /**
    * Handles input field changes and updates form state
@@ -478,6 +480,21 @@ export default function DynaForm(props) {
               case "tiptap_single":
                   return (
                       <TTSingleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} />
+                  );
+
+              case "tiptap_title":
+                  return (
+                      <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} />
+                  );
+
+              case "tiptap_portfolio":
+                  return (
+                      <TTPortfolio
+                          value={currentValue}
+                          onChange={(html) => handleFieldChange(field.name, html)}
+                          onSaveDraft={() => { }}
+                          onPublish={() => { }}
+                      />
                   );
               
             // Handle other common input types

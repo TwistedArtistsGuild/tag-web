@@ -12,6 +12,7 @@
 import Link from "next/link"
 import Image from "next/image" // Import Image component
 import TagSEO from "@/components/TagSEO"
+import getApiURL from "@/components/widgets/GetApiURL"
 import longDateOptions from "@/utils/longdateoptions"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { MessageCircleIcon, HeartIcon, ShareIcon } from "lucide-react"
@@ -145,7 +146,7 @@ const Blog = (props) => {
 }
 
 Blog.getInitialProps = async () => {
-  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+  const api_url = getApiURL()
   let data = []
   let status = 200
   // If we are running in debug mode, log the active API URL

@@ -12,13 +12,11 @@
 
 
 import DynaFormDB from "@/components/widgets/DynaFormDB"
+import getApiURL from "@/components/widgets/GetApiURL"
 
 //broken but don't care!!!!
 
-// Set the active API URL defaulting to prod
-var activeAPI_URL = process.env.NEXT_PUBLIC_TAG_API_URL
-
-const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+const api_url = getApiURL();
 const formName = "EventForm1";
 
 /**
@@ -31,7 +29,7 @@ const formName = "EventForm1";
 export default function UpdateEventForm1(props) {
     props.metadataProp.FromURL = "/events/" + props.slug + "/update.js";
     props.metadataProp.redirectURL = "/events/" + props.slug;
-    props.metadataProp.APIURL = process.env.NEXT_PUBLIC_TAG_API_URL + `${props.metadataProp.apiurlpostfix}/${props.slug}`;
+    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}/${props.slug}`;
     return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.eventdata} /></div>;
 }
 
@@ -46,7 +44,6 @@ UpdateEventForm1.getInitialProps = async function (context) {
     if (!slug) {
         return { error: { message: "Event slug is missing from context query" } };
     }
-    const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
     let data = {};
     let metadata = {};
     try {

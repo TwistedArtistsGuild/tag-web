@@ -12,6 +12,7 @@
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "../auth/[...nextauth]"
 import { createCheckout } from "@/libs/stripe"
+import getApiURL from "@/components/widgets/GetApiURL"
 
 // This function is used to create a Stripe Checkout Session
 // It's called by the <ButtonCheckout /> component
@@ -34,7 +35,7 @@ export default async function handler(req, res) {
 			}
 
 			try {
-				const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
+				const api_url = getApiURL()
 				const userRes = await fetch(`${api_url}users/${id}`)
 				const user = await userRes.json()
 

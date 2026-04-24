@@ -12,11 +12,9 @@
 
 import React, { useMemo } from "react";
 import DynaFormDB from "@/components/widgets/DynaFormDB"
+import getApiURL from "@/components/widgets/GetApiURL"
 
-// Set the active API URL defaulting to prod
-var activeAPI_URL = process.env.NEXT_PUBLIC_TAG_API_URL
-
-const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+const api_url = getApiURL();
 const formName = "BlogForm1";
 
 /**
@@ -41,8 +39,9 @@ export default function UpdateBlogForm1(props) {
             ...base,
             FromURL: `/blogs/${props.slug}/update.js`,
             redirectURL: `/blogs/${props.slug}`,
-            // Ensure there's a slash if your env variable doesn't have one
-            APIURL: `${process.env.NEXT_PUBLIC_TAG_API_URL}${process.env.NEXT_PUBLIC_TAG_API_URL?.endsWith('/') ? '' : '/'}blog/${props.blogdata?.blogID}`
+            // Reuse the normalized base URL from getApiURL() to keep env fallback/overrides consistent
+            APIURL: `${api_url}blog/${props.blogdata?.blogID}`
+
         };
     }, [props.slug, props.blogdata, props.metadataProp]);
 
@@ -73,13 +72,12 @@ UpdateBlogForm1.getInitialProps = async function (context) {
     if (!slug) {
         return { error: { message: "Blog's slug is missing from context query" } };
     }
-    const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
     let data = {};
     let metadata = {};
     try {
         const res1 = await fetch(api_url + `blog/path/${slug}`);
         data = await res1.json();
-        const res2 = await fetch(api_url + `forms_metadata/BlogForm1`);
+        const res2 = await fetch(api_url + `forms_metadata/${formName}`);
         metadata = await res2.json();
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);
