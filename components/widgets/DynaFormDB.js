@@ -119,6 +119,7 @@ export default function DynaForm(props) {
     // 2. Fall back to postfix - checking for the specific casing in your error log: apiurLpostfix
     else if (metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix) {
         const baseUrl = api_url || "";
+        const baseUrl = process.env.NEXT_PUBLIC_TAG_API_URL || "";
         const postfix = metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix || "";
 
         // Ensure there is a slash between base and postfix
@@ -141,6 +142,7 @@ export default function DynaForm(props) {
       console.log("DynaFormDB request method:", method);
     }
   }, [metadata.APIURL, metadata.apiurlpostfix, props.request, api_url]);
+  }, [metadata.APIURL, metadata.apiurlpostfix, props.request]);
 
   /**
    * Handles input field changes and updates form state

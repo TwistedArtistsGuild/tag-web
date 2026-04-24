@@ -41,6 +41,7 @@ export default function UpdateBlogForm1(props) {
             redirectURL: `/blogs/${props.slug}`,
             // Ensure there's a slash if your env variable doesn't have one
             APIURL: `${process.env.NEXT_PUBLIC_TAG_API_URL}${api_url?.endsWith('/') ? '' : '/'}blog/${props.blogdata?.blogID}`
+            APIURL: `${process.env.NEXT_PUBLIC_TAG_API_URL}${process.env.NEXT_PUBLIC_TAG_API_URL?.endsWith('/') ? '' : '/'}blog/${props.blogdata?.blogID}`
         };
     }, [props.slug, props.blogdata, props.metadataProp]);
 
