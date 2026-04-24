@@ -94,7 +94,7 @@ const Blog = (props) => {
                     >
                       {blog.title}
                     </Link>
-                    <p className="text-lg text-gray-700 line-clamp-3">{blog.byline}</p>
+                    <p className="text-lg text-gray-700 line-clamp-3"  dangerouslySetInnerHTML={{ __html: blog.byline }}></p>
                     
                     {/* Enhanced Social Section */}
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">

@@ -15,6 +15,8 @@ import { useRouter } from "next/router";
 import DateInput from "./DynaDateInput";
 import { useSession } from "next-auth/react";
 import getApiURL from "@/components/widgets/GetApiURL";
+import TTArticle from "@/components/social/TT_Article";
+import TTSingleLine from "@/components/social/TT_SingleLine";
 
 /**
  * Dynamic Form component that renders form fields based on metadata
@@ -112,13 +114,16 @@ export default function DynaForm(props) {
   useEffect(() => {
     // Check for direct APIURL first (takes precedence)
     if (metadata.APIURL) {
-      setEndpoint(metadata.APIURL);
+        setEndpoint(metadata.APIURL);
     } 
-    // Fall back to constructing URL from API URL postfix if present
-    else if (metadata.apiurlpostfix || metadata.APIURLpostfix) {
-      const baseUrl = api_url || "";
-      const postfix = metadata.apiurlpostfix || metadata.APIURLpostfix || "";
-      setEndpoint(`${baseUrl}${postfix}`);
+    // 2. Fall back to postfix - checking for the specific casing in your error log: apiurLpostfix
+    else if (metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix) {
+        const baseUrl = api_url || "";
+        const postfix = metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix || "";
+
+        // Ensure there is a slash between base and postfix
+        const separator = (baseUrl.endsWith('/') || postfix.startsWith('/')) ? '' : '/';
+        setEndpoint(`${baseUrl}${separator}${postfix}`);
     }
     
     // Map request type to HTTP method
@@ -135,7 +140,7 @@ export default function DynaForm(props) {
       console.log("DynaFormDB endpoint set to:", endpoint);
       console.log("DynaFormDB request method:", method);
     }
-  }, [metadata, props.request, api_url]);
+  }, [metadata.APIURL, metadata.apiurlpostfix, props.request, api_url]);
 
   /**
    * Handles input field changes and updates form state
@@ -460,6 +465,37 @@ export default function DynaForm(props) {
                   className={isReadOnly ? `checkbox bg-base-300 cursor-not-allowed` : "checkbox"}
                 />
               );
+
+              case "tiptap_article":
+                  return (
+                    <TTArticle
+                        value={currentValue}
+                        onChange={(html) => handleFieldChange(field.name, html)}
+                        onSubmit={() => { }}
+                        onCancel={() => { }}
+                        minHeight={field.height || field.Height}
+                    />
+                  );
+
+              case "tiptap_single":
+                  return (
+                      <TTSingleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} />
+                  );
+
+              case "tiptap_title":
+                  return (
+                      <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} />
+                  );
+
+              case "tiptap_portfolio":
+                  return (
+                      <TTPortfolio
+                          value={currentValue}
+                          onChange={(html) => handleFieldChange(field.name, html)}
+                          onSaveDraft={() => { }}
+                          onPublish={() => { }}
+                      />
+                  );
               
             // Handle other common input types
             default:
