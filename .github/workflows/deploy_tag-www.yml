@@ -29,6 +29,9 @@ jobs:
 
       - name: Build application
         run: npm run build
+        env:
+          NEXT_PUBLIC_TAG_API_URL: ${{ secrets.NEXT_PUBLIC_TAG_API_URL }}
+          NEXT_PUBLIC_APPINSIGHTS: ${{ secrets.NEXT_PUBLIC_APPINSIGHTS }}
 
       - name: Create deployment package
         run: |
