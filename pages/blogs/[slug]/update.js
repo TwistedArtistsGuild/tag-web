@@ -26,15 +26,18 @@ const formName = "BlogForm1";
  */
 export default function UpdateBlogForm1(props) {
     const enhancedMetadata = useMemo(() => {
-        // 1. Handle the case where metadataProp might be an array or object
         const base = Array.isArray(props.metadataProp)
             ? props.metadataProp[0]
             : props.metadataProp;
 
-        // 2. If base is null/undefined, return null so DynaFormDB shows the error state
-        if (!base) return null;
+        if (process.env.NODE_ENV === 'development') {
+            console.log('UpdateBlogForm1 props:', { base, blogdata: props.blogdata, slug: props.slug });
+        }
 
-        // 3. Merge the new properties
+        // If metadata is missing, return null so DynaFormDB shows the error state
+        if (!base || Object.keys(base).length === 0) return null;
+
+        // Merge dynamic URL properties
         return {
             ...base,
             FromURL: `/blogs/${props.slug}/update.js`,
@@ -46,7 +49,7 @@ export default function UpdateBlogForm1(props) {
     }, [props.slug, props.blogdata, props.metadataProp]);
 
     // Only render DynaFormDB if we actually have data, otherwise show a loader
-    if (!props.blogdata || !props.metadataProp) {
+    if (!props.blogdata || !enhancedMetadata) {
         return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
     }
 
@@ -73,18 +76,26 @@ UpdateBlogForm1.getInitialProps = async function (context) {
         return { error: { message: "Blog's slug is missing from context query" } };
     }
     let data = {};
-    let metadata = {};
+    let metadata = null;
     try {
         const res1 = await fetch(api_url + `blog/path/${slug}`);
         data = await res1.json();
-        const res2 = await fetch(api_url + `forms_metadata/${formName}`);
-        metadata = await res2.json();
+
+        const metadataResponse = await fetch(`${api_url}formsmetadata/${formName}`);
+        if (metadataResponse.ok) {
+            metadata = await metadataResponse.json();
+        }
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);
+        if (typeof window !== 'undefined') {
+            console.log('getInitialProps result:', { data, metadata, slug });
+        }
+
     }
+
     return {
         blogdata: data,
         slug: slug,
-        metadataProp: metadata
+        metadataProp: metadata || {}
     };
 };
