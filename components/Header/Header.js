@@ -22,7 +22,7 @@ import { useLayout } from "@/components/LayoutProvider"
 import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu, Search } from "lucide-react"
 import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
 import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
-import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import { getSeededStockPhotoByCategory } from "@/utils/stockPhotos"
 
 // Available themes
 const themes = [
@@ -319,7 +319,7 @@ export default function Header() {
               {
                 id: 1,
                 name: "Sarah Johnson",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("Sarah Johnson", 'artist'),
                 messages: [
                   { id: 1, sender: "Sarah Johnson", text: "Hey, how are you?", time: "10:00 AM" },
                   { id: 2, sender: "You", text: "I'm good, thanks! How about you?", time: "10:05 AM" },
@@ -329,7 +329,7 @@ export default function Header() {
               {
                 id: 2,
                 name: "John Doe",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("John Doe", 'artist'),
                 messages: [
                   { id: 4, sender: "John Doe", text: "Meeting at 2 PM?", time: "Yesterday" },
                   { id: 5, sender: "You", text: "Yes, confirmed!", time: "Yesterday" },
@@ -338,7 +338,7 @@ export default function Header() {
               {
                 id: 3,
                 name: "Community Chat",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("Community Chat", 'general'),
                 messages: [
                   { id: 6, sender: "Admin", text: "Welcome to the community!", time: "2 days ago" },
                   { id: 7, sender: "User1", text: "Thanks!", time: "2 days ago" },
@@ -357,91 +357,91 @@ export default function Header() {
                 title: "New Follower",
                 body: "Alex started following you.",
                 time: "Just now",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("New Follower", 'artist'),
               },
               {
                 title: "Comment",
                 body: "Sarah commented on your post.",
                 time: "5m ago",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("Comment", 'artist'),
               },
               {
                 title: "Sale",
                 body: "You sold 'Sunset Overdrive'!",
                 time: "1h ago",
-                avatar: getRandomStockPhotoByCategory('painting'),
+                avatar: getSeededStockPhotoByCategory("Sale", 'painting'),
               },
               {
                 title: "Event Reminder",
                 body: "Art show starts in 1 hour.",
                 time: "Today",
-                avatar: getRandomStockPhotoByCategory('performance'),
+                avatar: getSeededStockPhotoByCategory("Event Reminder", 'performance'),
               },
               {
                 title: "Blog Update",
                 body: "New blog post: 'The Art of Color'",
                 time: "Yesterday",
-                avatar: getRandomStockPhotoByCategory('painting'),
+                avatar: getSeededStockPhotoByCategory("Blog Update", 'painting'),
               },
               {
                 title: "Mention",
                 body: "You were mentioned in a comment.",
                 time: "2h ago",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("Mention", 'artist'),
               },
               {
                 title: "Collaboration Invite",
                 body: "John invited you to collaborate.",
                 time: "3h ago",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("Collaboration Invite", 'artist'),
               },
               {
                 title: "New Message",
                 body: "You have a new message from Emily.",
                 time: "4h ago",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("New Message", 'artist'),
               },
               {
                 title: "Profile View",
                 body: "Your profile was viewed 10 times today.",
                 time: "Today",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("Profile View", 'general'),
               },
               {
                 title: "Art Liked",
                 body: "Your artwork 'Blue Dream' got 5 new likes.",
                 time: "Today",
-                avatar: getRandomStockPhotoByCategory('painting'),
+                avatar: getSeededStockPhotoByCategory("Art Liked", 'painting'),
               },
               {
                 title: "Payment Received",
                 body: "You received a payment for a commission.",
                 time: "Yesterday",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("Payment Received", 'general'),
               },
               {
                 title: "System Update",
                 body: "Platform maintenance scheduled for Sunday.",
                 time: "Yesterday",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("System Update", 'general'),
               },
               {
                 title: "Contest Winner",
                 body: "Congrats! You won the monthly art contest.",
                 time: "2d ago",
-                avatar: getRandomStockPhotoByCategory('performance'),
+                avatar: getSeededStockPhotoByCategory("Contest Winner", 'performance'),
               },
               {
                 title: "New Resource",
                 body: "A new tutorial is available in Resources.",
                 time: "2d ago",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("New Resource", 'general'),
               },
               {
                 title: "Feedback Request",
                 body: "Please provide feedback on your last sale.",
                 time: "3d ago",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("Feedback Request", 'general'),
               },
             ]}
             onClose={() => setIsNotificationsDropdownOpen(false)}

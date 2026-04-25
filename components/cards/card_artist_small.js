@@ -15,6 +15,12 @@ import Image from "next/image"
 import { HeartIcon, ThumbsUpIcon, UsersIcon, MessageCircleIcon, SmileIcon } from "lucide-react"
 import { useState } from "react"
 
+const getSeededCount = (seed, max, min = 1, salt = "") => {
+  const base = `${seed || "artist"}-${salt}`
+  const hash = base.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return (hash % max) + min
+}
+
 /**
  * Card component for displaying artist information in landscape orientation
  * @param {Object} props - Component properties
@@ -22,16 +28,18 @@ import { useState } from "react"
  * @returns {JSX.Element} - Artist card component
  */
 const ArtistCardSmall = ({ artist }) => {
+  const artistSeed = artist?.artistid || artist?.path || artist?.title
+
   // Initialize state for each counter with values from props
   const [loves, setLoves] = useState(artist.loves)
   const [likes, setLikes] = useState(artist.likes)
   const [followers, setFollowers] = useState(artist.followers)
   const [showQuickReactions, setShowQuickReactions] = useState(false)
   const [reactionCounts, setReactionCounts] = useState({
-    '❤️': Math.floor(Math.random() * 50) + 1,
-    '👏': Math.floor(Math.random() * 30) + 1,
-    '🎨': Math.floor(Math.random() * 25) + 1,
-    '🔥': Math.floor(Math.random() * 20) + 1,
+    '❤️': artist.reactions?.heart ?? getSeededCount(artistSeed, 50, 1, "heart"),
+    '👏': artist.reactions?.clap ?? getSeededCount(artistSeed, 30, 1, "clap"),
+    '🎨': artist.reactions?.art ?? getSeededCount(artistSeed, 25, 1, "art"),
+    '🔥': artist.reactions?.fire ?? getSeededCount(artistSeed, 20, 1, "fire"),
   })
 
   // Function to handle quick reactions
