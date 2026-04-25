@@ -288,8 +288,7 @@ export default function Header() {
               </button>
             )}
           </div>
-          {/* Inner div for the circus tent/drip effect */}
-          {theme === "tag-theme" && <div className="header-drip-effect" />}
+          {/* tag-theme visual treatment is handled with CSS pseudo-elements */}
         </div>
 
         {/* Header Close Button - Bottom Center when open */}

@@ -9,24 +9,34 @@ This software comes with NO WARRANTY; see the license for details.
 
 Open source · low-profit · human-first*/
 
-/* TAG Unofficial Theme for DaisyUI 
-* This theme leverages vibrant neon colors for a bold and energetic design system
+/* TAG Theme for DaisyUI
+* Brand palette (Designer 2026):
+* Ghost White #F5F5FC
+* Electric Indigo #6233FF
+* Onyx #151318
+* Chartreuse #CEFF1D
 */
 
 :root {
-  /* TAG brand colors - circus neon scheme */
-  --tag-primary: #7cff00; /* Vibrant Green */
-  --tag-secondary: #ff00ff; /* Vibrant Magenta/Pink */
-  --tag-accent: #bb86fc; /* Vibrant Purple */
-  --tag-neutral: #121212; /* Dark background */
-  --tag-base-100: #18181b; /* Slightly lighter than pure black for surfaces */
-  --tag-base-200: #27272a; /* Dark gray for cards/containers */
-  --tag-base-300: #3f3f46; /* Medium gray for hover states */
-  --tag-base-content: #ecedee; /* Light text for readability */
-  --tag-info: #3abff8; /* Info blue */
-  --tag-success: #36d399; /* Success green */
-  --tag-warning: #fbbd23; /* Warning yellow */
-  --tag-error: #f87272; /* Error red */
+  /* TAG brand palette */
+  --tag-ghost-white: #f5f5fc;
+  --tag-electric-indigo: #6233ff;
+  --tag-onyx: #151318;
+  --tag-chartreuse: #ceff1d;
+
+  /* Semantic aliases used throughout TAG styles */
+  --tag-primary: var(--tag-electric-indigo);
+  --tag-secondary: var(--tag-chartreuse);
+  --tag-accent: var(--tag-ghost-white);
+  --tag-neutral: #100f13;
+  --tag-base-100: var(--tag-onyx);
+  --tag-base-200: #1d1a24;
+  --tag-base-300: #2a2633;
+  --tag-base-content: var(--tag-ghost-white);
+  --tag-info: #8f72ff;
+  --tag-success: #b9e614;
+  --tag-warning: #ffd166;
+  --tag-error: #ff5d73;
 }
 
 /* DaisyUI theme configuration 
@@ -35,13 +45,13 @@ Open source · low-profit · human-first*/
 [data-theme="tag-theme"] {
   /* Base colors */
   --p: var(--tag-primary);
-  --pc: #000000; /* Black text on neon green for contrast */
+  --pc: var(--tag-ghost-white); /* High contrast text on indigo */
   --s: var(--tag-secondary);
-  --sc: #000000; /* Black text on neon pink for contrast */
+  --sc: var(--tag-onyx); /* High contrast text on chartreuse */
   --a: var(--tag-accent);
-  --ac: #000000; /* Black text on neon purple for contrast */
+  --ac: var(--tag-onyx);
   --n: var(--tag-neutral);
-  --nc: var(--tag-base-content); /* Light text on dark background */
+  --nc: var(--tag-base-content);
   --b1: var(--tag-base-100);
   --b2: var(--tag-base-200);
   --b3: var(--tag-base-300);
@@ -49,13 +59,13 @@ Open source · low-profit · human-first*/
 
   /* State colors */
   --in: var(--tag-info);
-  --inc: #000000;
+  --inc: var(--tag-ghost-white);
   --su: var(--tag-success);
-  --suc: #000000;
+  --suc: var(--tag-onyx);
   --wa: var(--tag-warning);
-  --wac: #000000;
+  --wac: var(--tag-onyx);
   --er: var(--tag-error);
-  --erc: #000000;
+  --erc: var(--tag-ghost-white);
 
   /* Typography settings */
   font-family: "Roboto", "Open Sans", "Lato", sans-serif;
@@ -86,65 +96,92 @@ Open source · low-profit · human-first*/
 /* Header base styling */
 .header-paint-drip {
   position: relative;
-  background: linear-gradient(90deg, var(--tag-primary), var(--tag-secondary), var(--tag-accent));
-  filter: drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3)); /* Apply shadow to the whole header */
+  overflow: visible;
+  isolation: isolate;
+  background:
+    radial-gradient(140% 120% at 0% 0%, color-mix(in oklab, var(--tag-primary) 20%, transparent) 0%, transparent 45%),
+    radial-gradient(160% 130% at 100% 0%, color-mix(in oklab, var(--tag-secondary) 25%, transparent) 0%, transparent 48%),
+    linear-gradient(180deg, color-mix(in oklab, var(--tag-base-200) 80%, var(--tag-base-100) 20%), var(--tag-base-100));
+  border-bottom: 1px solid color-mix(in oklab, var(--tag-ghost-white) 18%, transparent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
 }
 
-/* Inner div for the circus tent/drip effect */
-.header-drip-effect {
+/* Subtle top sheen and a 4-color prism rail for brand identity */
+.header-paint-drip::before,
+.header-paint-drip::after {
+  content: "";
   position: absolute;
-  bottom: 0;
   left: 0;
-  width: 100%;
-  height: 40px; /* Height of the "drip" shapes */
-  background-image: radial-gradient(ellipse at center top, var(--tag-primary) 60%, transparent 60%),
-    radial-gradient(ellipse at center top, var(--tag-secondary) 60%, transparent 60%),
-    radial-gradient(ellipse at center top, var(--tag-accent) 60%, transparent 60%),
-    radial-gradient(ellipse at center top, var(--tag-secondary) 60%, transparent 60%); /* Repeating colors */
-  background-size: 25% 100%; /* Each segment takes 25% width */
-  background-repeat: repeat-x;
-  background-position: 0% 0, 25% 0, 50% 0, 75% 0; /* Position each block */
-  transform: translateY(10px); /* Slight offset to make it appear to hang */
+  right: 0;
+  pointer-events: none;
 }
 
-/* Neon glow effects for elements */
+.header-paint-drip::before {
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    color-mix(in oklab, var(--tag-ghost-white) 70%, transparent),
+    color-mix(in oklab, var(--tag-ghost-white) 20%, transparent));
+  opacity: 0.7;
+}
+
+.header-paint-drip::after {
+  bottom: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--tag-ghost-white) 0%,
+    var(--tag-electric-indigo) 32%,
+    var(--tag-chartreuse) 68%,
+    var(--tag-onyx) 100%
+  );
+  opacity: 0.95;
+}
+
+/* Glow helpers aligned to the new palette */
 .neon-glow-green {
-  text-shadow: 0 0 5px var(--tag-primary), 0 0 10px var(--tag-primary), 0 0 15px var(--tag-primary);
-  box-shadow: 0 0 5px var(--tag-primary), 0 0 10px var(--tag-primary);
+  text-shadow: 0 0 5px color-mix(in oklab, var(--tag-secondary) 75%, transparent),
+    0 0 10px color-mix(in oklab, var(--tag-secondary) 55%, transparent);
+  box-shadow: 0 0 5px color-mix(in oklab, var(--tag-secondary) 65%, transparent),
+    0 0 10px color-mix(in oklab, var(--tag-secondary) 45%, transparent);
 }
 
 .neon-glow-pink {
-  text-shadow: 0 0 5px var(--tag-secondary), 0 0 10px var(--tag-secondary), 0 0 15px var(--tag-secondary);
-  box-shadow: 0 0 5px var(--tag-secondary), 0 0 10px var(--tag-secondary);
+  text-shadow: 0 0 5px color-mix(in oklab, var(--tag-primary) 75%, transparent),
+    0 0 10px color-mix(in oklab, var(--tag-primary) 55%, transparent);
+  box-shadow: 0 0 5px color-mix(in oklab, var(--tag-primary) 65%, transparent),
+    0 0 10px color-mix(in oklab, var(--tag-primary) 45%, transparent);
 }
 
 .neon-glow-purple {
-  text-shadow: 0 0 5px var(--tag-accent), 0 0 10px var(--tag-accent), 0 0 15px var(--tag-accent);
-  box-shadow: 0 0 5px var(--tag-accent), 0 0 10px var(--tag-accent);
+  text-shadow: 0 0 5px color-mix(in oklab, var(--tag-accent) 65%, transparent),
+    0 0 10px color-mix(in oklab, var(--tag-accent) 45%, transparent);
+  box-shadow: 0 0 5px color-mix(in oklab, var(--tag-accent) 50%, transparent),
+    0 0 10px color-mix(in oklab, var(--tag-accent) 35%, transparent);
 }
 
-/* Custom button styles with neon effect */
+/* Custom button styles */
 .btn-tag-neon {
-  background: var(--tag-neutral);
-  color: var(--tag-primary);
+  background: var(--tag-base-100);
+  color: var(--tag-secondary);
   border: 2px solid var(--tag-primary);
   transition: all 0.3s ease;
-  box-shadow: 0 0 5px var(--tag-primary), 0 0 10px var(--tag-primary);
-  text-shadow: 0 0 5px var(--tag-primary);
+  box-shadow: 0 0 8px color-mix(in oklab, var(--tag-primary) 40%, transparent);
 }
 
 .btn-tag-neon:hover {
   background: var(--tag-primary);
-  color: var(--tag-neutral);
-  box-shadow: 0 0 10px var(--tag-primary), 0 0 20px var(--tag-primary), 0 0 30px var(--tag-primary);
+  color: var(--tag-ghost-white);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--tag-primary) 70%, transparent),
+    0 0 20px color-mix(in oklab, var(--tag-primary) 45%, transparent);
   transform: translateY(-2px);
 }
 
 /* Gradient button with new colors */
 .btn-tag-gradient {
-  background-image: linear-gradient(to right, var(--tag-primary), var(--tag-secondary), var(--tag-accent));
+  background-image: linear-gradient(to right, var(--tag-primary), color-mix(in oklab, var(--tag-primary) 65%, var(--tag-secondary) 35%), var(--tag-secondary));
   background-size: 300% 300%;
-  color: black;
+  color: var(--tag-ghost-white);
   font-weight: bold;
   border: none;
   transition: all 0.3s ease;
@@ -153,8 +190,9 @@ Open source · low-profit · human-first*/
 }
 
 .btn-tag-gradient:hover {
-  filter: brightness(1.2);
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
+  filter: brightness(1.08);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--tag-secondary) 35%, transparent),
+    0 0 20px color-mix(in oklab, var(--tag-primary) 30%, transparent);
   transform: translateY(-2px);
 }
 
@@ -169,7 +207,7 @@ Open source · low-profit · human-first*/
 /* Input and form elements styling with neon accents */
 .input-tag {
   background-color: var(--tag-base-200);
-  border: 2px solid var(--tag-secondary);
+  border: 2px solid color-mix(in oklab, var(--tag-primary) 60%, var(--tag-base-300) 40%);
   border-radius: 4px;
   color: var(--tag-base-content);
   padding: 0.5rem;
@@ -177,15 +215,15 @@ Open source · low-profit · human-first*/
 }
 
 .input-tag:focus {
-  border-color: var(--tag-secondary);
-  box-shadow: 0 0 5px var(--tag-secondary), 0 0 10px var(--tag-secondary);
+  border-color: var(--tag-primary);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--tag-primary) 45%, transparent);
   outline: none;
 }
 
 .select-tag {
   height: 2rem;
   background-color: var(--tag-base-200);
-  border: 2px solid var(--tag-accent);
+  border: 2px solid color-mix(in oklab, var(--tag-secondary) 55%, var(--tag-base-300) 45%);
   border-radius: 4px;
   color: var(--tag-base-content);
   padding: 0.5rem;
@@ -193,8 +231,8 @@ Open source · low-profit · human-first*/
 }
 
 .select-tag:focus {
-  border-color: var(--tag-accent);
-  box-shadow: 0 0 5px var(--tag-accent), 0 0 10px var(--tag-accent);
+  border-color: var(--tag-secondary);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--tag-secondary) 35%, transparent);
   outline: none;
 }
 
@@ -217,14 +255,14 @@ Open source · low-profit · human-first*/
 }
 
 .tag-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--tag-secondary);
+  background-color: color-mix(in oklab, var(--tag-primary) 70%, var(--tag-base-300) 30%);
   border-radius: 8px;
   transition: background-color 0.3s ease-in-out;
 }
 
 .tag-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: var(--tag-accent);
-  box-shadow: 0 0 5px var(--tag-accent), 0 0 10px var(--tag-accent);
+  background-color: color-mix(in oklab, var(--tag-secondary) 70%, var(--tag-primary) 30%);
+  box-shadow: 0 0 5px color-mix(in oklab, var(--tag-secondary) 45%, transparent);
 }
 
 .tag-scrollbar::-webkit-scrollbar-track {
@@ -235,29 +273,29 @@ Open source · low-profit · human-first*/
 /* Custom card styles with TAG branding */
 .card-tag {
   background-color: var(--tag-base-200);
-  border: 2px solid var(--tag-accent);
+  border: 1px solid color-mix(in oklab, var(--tag-primary) 35%, var(--tag-base-300) 65%);
   border-radius: 8px;
-  box-shadow: 0 0 5px var(--tag-accent);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
   transition: all 0.3s ease;
   padding: 0.5rem;
 }
 
 .card-tag:hover {
-  border-color: var(--tag-secondary);
-  box-shadow: 0 0 10px var(--tag-accent), 0 0 15px var(--tag-accent);
+  border-color: color-mix(in oklab, var(--tag-secondary) 70%, var(--tag-base-300) 30%);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
   transform: translateY(-2px);
 }
 
 /* Add smooth hover effects to links with neon glow */
 .link-tag {
-  color: var(--tag-primary);
+  color: color-mix(in oklab, var(--tag-secondary) 75%, var(--tag-ghost-white) 25%);
   transition: all 0.3s ease;
   text-decoration: none;
 }
 
 .link-tag:hover {
   color: var(--tag-secondary);
-  text-shadow: 0 0 5px var(--tag-secondary), 0 0 10px var(--tag-secondary);
+  text-shadow: none;
 }
 
 /* Table styles with neon accents */
@@ -271,12 +309,11 @@ Open source · low-profit · human-first*/
 
 .table-tag th {
   background-color: var(--tag-base-300);
-  color: var(--tag-primary);
+  color: var(--tag-ghost-white);
   padding: 0.5rem;
   text-align: left;
   font-weight: bold;
-  border-bottom: 2px solid var(--tag-primary);
-  text-shadow: 0 0 5px var(--tag-primary);
+  border-bottom: 2px solid color-mix(in oklab, var(--tag-primary) 60%, transparent);
 }
 
 .table-tag td {
@@ -287,7 +324,7 @@ Open source · low-profit · human-first*/
 }
 
 .table-tag tr:hover {
-  background-color: rgba(57, 255, 20, 0.1);
+  background-color: color-mix(in oklab, var(--tag-primary) 12%, transparent);
 }
 
 /* Effect depth for interactive elements */
@@ -313,7 +350,11 @@ textarea:focus {
   font-family: "Roboto", "Open Sans", "Lato", sans-serif;
   background-color: var(--tag-neutral);
   color: var(--tag-base-content);
-  background-image: radial-gradient(circle at 50% 50%, rgba(187, 134, 252, 0.1) 0%, transparent 50%);
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklab, var(--tag-primary) 12%, transparent) 0%,
+    transparent 55%
+  );
 }
 
 /* Outline text class for better readability on any background */
@@ -350,11 +391,11 @@ textarea:focus {
     transparent,
     var(--tag-primary),
     var(--tag-secondary),
-    var(--tag-accent),
+    var(--tag-primary),
     transparent
   );
   border: none;
   border-radius: 3px;
   margin: 1.5rem 0;
-  box-shadow: 0 0 10px var(--tag-secondary), 0 0 20px var(--tag-accent);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--tag-secondary) 45%, transparent);
 }
