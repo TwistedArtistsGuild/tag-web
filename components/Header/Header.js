@@ -90,14 +90,12 @@ export default function Header() {
   }
 
   function toggleLogin() {
-    setIsNotificationsDropdownOpen(false)
-    setIsMessageAppletOpen(false)
+    if (!isLoginOpen) closeAllPopups()
     setIsLoginOpen((open) => !open)
   }
 
   function toggleTheme() {
-    setIsNotificationsDropdownOpen(false)
-    setIsMessageAppletOpen(false)
+    if (!isThemeOpen) closeAllPopups()
     setIsThemeOpen((open) => !open)
   }
 
@@ -143,8 +141,8 @@ export default function Header() {
     maxWidth: "100vw",
     height: "calc(100vh - 88px)",
     boxShadow: '0 0 0 4px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.18)',
-    borderLeft: "2px solid var(--fallback-b3, #d1d5db)",
-    background: "var(--fallback-b1, #fff)",
+    borderLeft: "2px solid var(--color-base-300, var(--b3, #d1d5db))",
+    background: "var(--color-base-100, var(--b1, #1a1a1a))",
     borderRadius: 0,
     display: isNotificationsDropdownOpen || isMessageAppletOpen ? "block" : "none"
   }
@@ -187,7 +185,7 @@ export default function Header() {
           <nav className="hidden lg:flex items-center space-x-6">
             {/* Search icon - opens sidebar and focuses search */}
             <button
-              className="btn btn-ghost btn-sm btn-circle"
+              className="btn btn-ghost btn-sm btn-circle text-base-content enhanced-text-visibility"
               aria-label="Open search"
               onClick={() => {
                 if (!isLeftSidebarVisible) toggleLeftSidebar()
@@ -249,7 +247,7 @@ export default function Header() {
           {/* Right: User Controls */}
           <div className="flex items-center space-x-2">
             {/* Theme Switcher */}
-            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={updateTheme} onClick={toggleTheme} isOpen={isThemeOpen} />
+            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={updateTheme} onToggle={toggleTheme} isOpen={isThemeOpen} />
 
             {/* Notifications & Messages - Only if user logged in */}
             {session?.user && ( // Use session.user for logged-in check
@@ -257,7 +255,7 @@ export default function Header() {
                 <button
                   ref={messagesIconRef}
                   onClick={toggleMessageApplet}
-                  className={`btn btn-ghost btn-sm btn-circle relative${isMessageAppletOpen ? " bg-primary text-primary-content ring-2 ring-primary/60" : ""}`}
+                  className={`btn btn-ghost btn-sm btn-circle relative${isMessageAppletOpen ? " bg-primary text-primary-content ring-2 ring-primary/60" : " text-base-content enhanced-text-visibility"}`}
                   aria-label="Messages"
                 >
                   <MessageSquare size={18} />
@@ -270,7 +268,7 @@ export default function Header() {
                 <button
                   ref={notificationsIconRef}
                   onClick={toggleNotificationsDropdown}
-                  className={`btn btn-ghost btn-sm btn-circle relative${isNotificationsDropdownOpen ? " bg-primary text-primary-content ring-2 ring-primary/60" : ""}`}
+                  className={`btn btn-ghost btn-sm btn-circle relative${isNotificationsDropdownOpen ? " bg-primary text-primary-content ring-2 ring-primary/60" : " text-base-content enhanced-text-visibility"}`}
                   aria-label="Notifications"
                 >
                   <Bell size={18} />
@@ -284,7 +282,7 @@ export default function Header() {
             )}
 
             {/* Login Profile */}
-            <LoginProfile className="btn btn-ghost btn-sm" isOpen={isLoginOpen} onToggle={toggleLogin} onClick={toggleLogin} />
+            <LoginProfile className="btn btn-ghost btn-sm" isOpen={isLoginOpen} onToggle={toggleLogin} />
 
             {/* Mobile Right Sidebar Toggle Button */}
             {isMobile && (

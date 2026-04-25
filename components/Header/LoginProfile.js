@@ -18,9 +18,19 @@ import Link from "next/link"
 import Image from "next/image"
 import { User, Settings, LogOut } from "lucide-react" // Import Lucide icons
 
-export default function LoginProfile({ className = "" }) {
+export default function LoginProfile({ className = "", isOpen: controlledIsOpen, onToggle }) {
   const { data: session } = useSession()
-  const [isOpen, setIsOpen] = useState(false)
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
+  const isControlled = typeof controlledIsOpen === "boolean" && typeof onToggle === "function"
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen
+
+  const setOpenValue = (nextOpen) => {
+    if (isControlled) {
+      if (nextOpen !== isOpen) onToggle()
+      return
+    }
+    setInternalIsOpen(nextOpen)
+  }
 
   if (!session) {
     return (
@@ -35,7 +45,7 @@ export default function LoginProfile({ className = "" }) {
       <button
         type="button"
         className={`btn btn-ghost btn-circle avatar ${className}`}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setOpenValue(!isOpen)}
         aria-label="User menu"
         aria-expanded={isOpen}
       >
@@ -51,26 +61,26 @@ export default function LoginProfile({ className = "" }) {
       {isOpen && (
         <>
           {/* Click-outside backdrop */}
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="fixed inset-0 z-40" onClick={() => setOpenValue(false)} />
           <ul className="absolute right-0 top-full mt-2 z-50 w-52 rounded-box bg-base-100 p-2 shadow-lg border border-base-content/10 menu menu-sm">
             <li className="menu-title">
               <span>{session.user?.name || "User"}</span>
             </li>
             <li>
-              <Link href="/user/profile" onClick={() => setIsOpen(false)}>
+              <Link href="/user/profile" onClick={() => setOpenValue(false)}>
                 <User className="w-4 h-4" />
                 Profile
               </Link>
             </li>
             <li>
-              <Link href="/user/settings" onClick={() => setIsOpen(false)}>
+              <Link href="/user/settings" onClick={() => setOpenValue(false)}>
                 <Settings className="w-4 h-4" />
                 Settings
               </Link>
             </li>
             <div className="divider my-1"></div>
             <li>
-              <button onClick={() => signOut()} className="text-error">
+              <button onClick={() => { setOpenValue(false); signOut() }} className="text-error">
                 <LogOut className="w-4 h-4" />
                 Sign Out
               </button>
