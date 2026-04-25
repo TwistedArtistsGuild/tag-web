@@ -499,13 +499,11 @@ export default function DynaForm(props) {
                   );
 
               case "tiptap_title":
-                case "tiptap_titleline":
                   return (
                       <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} />
                   );
 
               case "tiptap_portfolio":
-                case "tiptap_full":
                   return (
                       <TTPortfolio
                           value={currentValue}

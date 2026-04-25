@@ -26,6 +26,7 @@ const formName = "BlogForm1";
  */
 export default function UpdateBlogForm1(props) {
     const enhancedMetadata = useMemo(() => {
+        // 1. Handle the case where metadataProp might be an array or object
         const base = Array.isArray(props.metadataProp)
             ? props.metadataProp[0]
             : props.metadataProp;
