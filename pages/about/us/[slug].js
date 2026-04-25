@@ -10,9 +10,8 @@
  Open source · low-profit · human-first*/
 import { useRouter } from "next/router";
 import profiles from "@/content/us/profiles";
-import ImageGallery from "react-image-gallery";
-import "react-image-gallery/styles/image-gallery.css";
 import Link from "next/link";
+import PhotoGallery from "@/components/cards/card_photoGallery";
 
 export default function ProfilePage() {
 	const router = useRouter();
@@ -39,13 +38,12 @@ export default function ProfilePage() {
 			
 			{profile.images.length > 0 && (
 				<div className="mb-8">
-					<ImageGallery
-						items={profile.images.map((url) => ({ original: url, thumbnail: url }))}
-						showThumbnails={true}
-						showPlayButton={false}
+					<PhotoGallery
+						images={profile.images.map((url) => ({ original: url, thumbnail: url }))}
 					/>
 				</div>
 			)}
+
             <div className="mb-8">
 				<p className="text-base-content/80">{profile.bio}</p>
 			</div>

@@ -10,12 +10,9 @@
  Open source · low-profit · human-first*/
 
 
-import { useState } from "react";
 import TagSEO from "@/components/TagSEO";
-import Link from "next/link";
-import ImageGallery from "react-image-gallery";
-import "react-image-gallery/styles/image-gallery.css";
 import profiles from "@/content/us/profiles";
+import AboutProfileCard from "@/components/cards/card_about_profile";
 
 export default function AboutUs() {
 	const pageMetaData = {
@@ -57,47 +54,11 @@ export default function AboutUs() {
 			</div>
 
 			<h3 className="text-2xl font-semibold mb-4 mt-8">Meet Our Team</h3>
-			<table className="table table-zebra w-full">
-				<tbody>
-					{profiles.map((profile, index) => (
-						<tr key={profile.name}>
-							{index % 2 === 0 && (
-								<td className="w-1/2 p-4 text-center">
-									<img
-										src={profile.images[0] || "/blank_image.png"}
-										alt={`${profile.name}'s profile`}
-										className="w-64 h-64 object-cover mx-auto rounded-full shadow-lg"
-									/>
-								</td>
-							)}
-							<td className="w-1/2 p-4 text-center">
-								<Link href={`/about/us/${profile.slug}`} className="text-primary hover:underline">
-									<h4 className="text-xl font-bold">{profile.name}</h4>
-								</Link>
-								<p className="text-sm font-semibold text-base-content/80">{profile.title}</p>
-								<p className="text-sm text-base-content/70">{profile.roleSummary}</p>
-								<p className="text-sm text-base-content/70 mt-2">
-									<strong>Art Forms:</strong> {profile.artForms.join(", ")}
-								</p>
-								<p className="text-sm text-primary mt-2">
-									<a href={profile.linkToArtistPage} target="_blank" rel="noopener noreferrer" className="hover:underline">
-										View Artist Page
-									</a>
-								</p>
-							</td>
-							{index % 2 !== 0 && (
-								<td className="w-1/2 p-4 text-center">
-									<img
-										src={profile.images[0] || "/blank_image.png"}
-										alt={`${profile.name}'s profile`}
-										className="w-64 h-64 object-cover mx-auto rounded-full shadow-lg"
-									/>
-								</td>
-							)}
-						</tr>
-					))}
-				</tbody>
-			</table>
+			<div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+				{profiles.map((profile) => (
+					<AboutProfileCard key={profile.slug} profile={profile} />
+				))}
+			</div>
 		</div>
 	);
 }

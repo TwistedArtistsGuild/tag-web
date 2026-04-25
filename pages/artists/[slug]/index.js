@@ -17,8 +17,8 @@ import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import longDateOptions from "@/utils/longdateoptions"
 import { useAppContext } from "@/components/Context"
-import ImageGallery from "react-image-gallery" // Keep this for the main gallery
-import "react-image-gallery/styles/image-gallery.css" // Import gallery styles
+import ImageGallery from "react-image-gallery"
+import "react-image-gallery/styles/image-gallery.css"
 import {
   HeartIcon,
   ThumbsUpIcon,
