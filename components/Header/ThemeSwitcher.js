@@ -45,6 +45,7 @@ export default function ThemeSwitcher({ themes, currentTheme, onThemeChange, isO
 
   // Format the theme name for display (capitalize and replace hyphens)
   const formatThemeName = (theme) => {
+    if (theme === "tag-theme") return "TAG Theme"
     return theme
       .split("-")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -55,7 +56,7 @@ export default function ThemeSwitcher({ themes, currentTheme, onThemeChange, isO
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={handleToggle}
-        className="btn btn-ghost btn-sm flex items-center gap-1 text-base-content enhanced-text-visibility"
+        className="btn btn-ghost btn-sm flex items-center gap-1 text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >

@@ -108,11 +108,11 @@ export default function Header() {
   }
 
   function getTextColorClass(isActive = false) {
-    const baseTextClass = "font-josefin-sans font-extrabold transition-all"
+    const baseTextClass = "font-josefin-sans font-extrabold transition-all px-2 py-1 rounded-md backdrop-blur-sm"
     if (isActive) {
-      return `${baseTextClass} text-primary enhanced-text-visibility`
+      return `${baseTextClass} text-primary enhanced-text-visibility bg-primary/10 border border-primary/20`
     }
-    return `${baseTextClass} text-base-content enhanced-text-visibility`
+    return `${baseTextClass} text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24`
   }
 
   useEffect(() => {
@@ -173,7 +173,11 @@ export default function Header() {
                 <Menu className="w-6 h-6" />
               </button>
             )}
-            <Link href="/" className="flex items-center space-x-2" onClick={() => setActive("")}>
+            <Link
+              href="/"
+              className="flex items-center space-x-2 px-2 py-1 rounded-md backdrop-blur-sm bg-base-100/18 border border-base-content/10 hover:bg-base-100/24 transition-all"
+              onClick={() => setActive("")}
+            >
               <Image src="/tag_logo.png" alt="Home" height={40} width={80} />
               <span className="font-josefin-sans text-xl font-extrabold italic hidden sm:block">
                 Twisted Artists Guild
@@ -255,7 +259,7 @@ export default function Header() {
                 <button
                   ref={messagesIconRef}
                   onClick={toggleMessageApplet}
-                  className={`btn btn-ghost btn-sm btn-circle relative${isMessageAppletOpen ? " bg-primary text-primary-content ring-2 ring-primary/60" : " text-base-content enhanced-text-visibility"}`}
+                  className={`btn btn-ghost btn-sm btn-circle relative${isMessageAppletOpen ? " bg-primary text-primary-content ring-2 ring-primary/60 border border-primary/35" : " text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24"}`}
                   aria-label="Messages"
                 >
                   <MessageSquare size={18} />
@@ -268,7 +272,7 @@ export default function Header() {
                 <button
                   ref={notificationsIconRef}
                   onClick={toggleNotificationsDropdown}
-                  className={`btn btn-ghost btn-sm btn-circle relative${isNotificationsDropdownOpen ? " bg-primary text-primary-content ring-2 ring-primary/60" : " text-base-content enhanced-text-visibility"}`}
+                  className={`btn btn-ghost btn-sm btn-circle relative${isNotificationsDropdownOpen ? " bg-primary text-primary-content ring-2 ring-primary/60 border border-primary/35" : " text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24"}`}
                   aria-label="Notifications"
                 >
                   <Bell size={18} />
@@ -282,7 +286,7 @@ export default function Header() {
             )}
 
             {/* Login Profile */}
-            <LoginProfile className="btn btn-ghost btn-sm" isOpen={isLoginOpen} onToggle={toggleLogin} />
+            <LoginProfile className="text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24" isOpen={isLoginOpen} onToggle={toggleLogin} />
 
             {/* Mobile Right Sidebar Toggle Button */}
             {isMobile && (
