@@ -15,7 +15,7 @@
 
 /* Tailwind v4: DaisyUI must be registered in CSS (tailwind.config.js plugin list is not sufficient). */
 @plugin "daisyui" {
-  themes: light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, valentine, halloween, garden, aqua, pastel, fantasy, black, luxury, dracula;
+  themes: neon, light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, valentine, halloween, garden, aqua, pastel, fantasy, black, luxury, dracula;
 }
 
 html,
@@ -63,6 +63,19 @@ body.site-body {
   position: relative;
 }
 
+/* neon backdrop treatment for neon theme */
+.site-shell.theme-neon {
+  background:
+    radial-gradient(ellipse 520px 360px at 12% 10%, color-mix(in oklab, var(--tag-primary) 26%, transparent) 0, transparent 45%),
+    radial-gradient(ellipse 480px 330px at 88% 14%, color-mix(in oklab, var(--tag-secondary) 26%, transparent) 0, transparent 45%),
+    radial-gradient(circle 260px at 20% 78%, color-mix(in oklab, var(--tag-accent) 22%, transparent) 0, transparent 52%),
+    radial-gradient(ellipse 720px 480px at 85% 78%, color-mix(in oklab, var(--tag-primary) 18%, transparent) 0, transparent 46%),
+    linear-gradient(180deg, color-mix(in oklab, var(--tag-base-200) 95%, var(--tag-primary) 5%) 0%, var(--tag-base-100) 52%, color-mix(in oklab, var(--tag-base-200) 94%, var(--tag-secondary) 6%) 100%);
+  background-attachment: fixed;
+  background-size: 100% 100%;
+  position: relative;
+}
+
 /* grid texture — only visible for tag-theme */
 .site-shell::before {
   content: "";
@@ -81,6 +94,10 @@ body.site-body {
 
 .site-shell.theme-tag::before {
   opacity: 0.5;
+}
+
+.site-shell.theme-neon::before {
+  opacity: 0.65;
 }
 
 /* Accent prismatic accent bars for tag-theme — adds visual flair */
@@ -112,6 +129,35 @@ body.site-body {
     ) 100% 0 / 2px 100% no-repeat;
   z-index: 0;
   animation: accent-shimmer 8s ease-in-out infinite;
+}
+
+.site-shell.theme-neon::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent),
+      color-mix(in oklab, var(--tag-primary) 14%, transparent) 18%,
+      color-mix(in oklab, var(--tag-secondary) 14%, transparent) 50%,
+      color-mix(in oklab, var(--tag-accent) 13%, transparent) 78%,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent)
+    ) 0 0 / 100% 4px no-repeat,
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--tag-secondary) 0%, transparent),
+      color-mix(in oklab, var(--tag-secondary) 9%, transparent) 20%,
+      color-mix(in oklab, var(--tag-accent) 6%, transparent) 55%,
+      color-mix(in oklab, var(--tag-secondary) 0%, transparent)
+    ) 0 0 / 3px 100% no-repeat,
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent),
+      color-mix(in oklab, var(--tag-primary) 9%, transparent) 22%,
+      color-mix(in oklab, var(--tag-accent) 5%, transparent) 58%,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent)
+    ) 100% 0 / 3px 100% no-repeat;
+  z-index: 0;
+  animation: accent-shimmer 6s ease-in-out infinite;
 }
 
 @keyframes accent-shimmer {

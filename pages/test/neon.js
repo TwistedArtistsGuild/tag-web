@@ -12,6 +12,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useLayout } from '@/components/LayoutProvider';
 
 /**
  * NeonArtCard - A component that displays artwork with neon styling
@@ -347,12 +348,28 @@ const NeonInfoBlock = ({ info }) => {
  * @returns {React.ReactElement} Test page with art cards using neon styling
  */
 export default function NeonTest() {
+  const { updateTheme } = useLayout();
   // State to track scroll position and page dimensions
   const [scrollPosition, setScrollPosition] = useState(0);
   const [pageHeight, setPageHeight] = useState(0);
   const [windowHeight, setWindowHeight] = useState(0);
   // Flag to prevent hydration mismatches by only showing certain elements client-side
   const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const previousTheme =
+      document.documentElement.getAttribute('data-theme') ||
+      localStorage.getItem('theme') ||
+      'tag-theme';
+
+    if (previousTheme !== 'neon') {
+      updateTheme('neon');
+    }
+
+    return () => {
+      updateTheme(previousTheme);
+    };
+  }, [updateTheme]);
   
   // Track scroll position and page height for debugging
   useEffect(() => {

@@ -27,6 +27,7 @@ import { getSeededStockPhotoByCategory } from "@/utils/stockPhotos"
 // Available themes
 const themes = [
   "tag-theme",
+  "neon",
   "light",
   "dark",
   "cupcake",
@@ -103,6 +104,9 @@ export default function Header() {
     const baseClasses = "flex justify-between items-center border-b border-base-300 w-full px-8 py-2 min-h-[88px]"
     if (theme === "tag-theme") {
       return `${baseClasses} header-paint-drip`
+    }
+    if (theme === "neon") {
+      return `${baseClasses} header-neon-drip`
     }
     return baseClasses
   }

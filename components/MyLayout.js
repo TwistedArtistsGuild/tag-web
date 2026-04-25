@@ -43,6 +43,7 @@ function LayoutContent(props) {
   const topMargin = isHeaderVisible ? "mt-2" : "mt-0" // Changed from mt-20 to mt-16
   const leftMargin = !isMobile && isLeftSidebarVisible ? "lg:ml-80" : ""
   const rightMargin = !isMobile && isRightSidebarVisible ? "lg:mr-80" : ""
+  const themeShellClass = theme === "tag-theme" ? " theme-tag" : theme === "neon" ? " theme-neon" : ""
 
   return (
     <ErrorBoundary>
@@ -54,7 +55,7 @@ function LayoutContent(props) {
 
       <NextNProgress color={config.colors.main} options={{ showSpinner: false }} />
 
-      <div className={`site-shell${theme === "tag-theme" ? " theme-tag" : ""} flex min-h-screen flex-col`}>
+      <div className={`site-shell${themeShellClass} flex min-h-screen flex-col`}>
         <Header pageSections={pageSections} />
         <LeftSidebar {...(sidebarProps?.leftSidebarData || {})} />
         <RightSidebar {...(sidebarProps?.rightSidebarData || {})} />
