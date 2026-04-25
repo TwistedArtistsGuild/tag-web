@@ -117,7 +117,7 @@ const archivedContests = [
 
 export default function VoteArchive() {
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300 py-10 px-4">
+		<div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 py-10 px-4">
 			<div className="container mx-auto max-w-6xl">
 				<section className="text-center mb-10">
 					<h1 className="text-5xl md:text-6xl font-extrabold mb-4 text-primary">Contest Archive</h1>

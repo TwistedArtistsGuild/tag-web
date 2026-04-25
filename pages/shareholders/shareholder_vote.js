@@ -29,7 +29,7 @@ const ShareholderVote = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300 p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 p-8 flex flex-col items-center">
       <h1 className="text-4xl font-bold text-primary mb-6">Shareholder Vote</h1>
       <p className="text-lg text-base-content mb-4">Should we donate an additional 5% of profits to an art community project for the following fiscal year?</p>
 

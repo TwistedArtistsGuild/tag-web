@@ -44,7 +44,7 @@ const Listings = (props) => {
 
 				<div className="mb-6">
 					<h2 className="text-2xl font-bold text-center">{`Explore ${props.supercat || "Art"}`}</h2>
-					<p className="text-center text-gray-600">{`Discover ${props.supercat || "art"} in the category of ${props.cat || "all categories"}.`}</p>
+					<p className="text-center text-base-content/70">{`Discover ${props.supercat || "art"} in the category of ${props.cat || "all categories"}.`}</p>
 					<div className="text-center mt-2">
 						<div className="badge badge-info">✨ Enhanced with Social Features</div>
 					</div>

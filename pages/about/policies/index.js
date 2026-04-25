@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 
-import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import Link from "next/link"
 
@@ -30,42 +29,52 @@ export default function About() {
 	}
 
 	return (
-		<div className="container mx-auto p-4">
+		<div className="container mx-auto max-w-5xl p-4 md:p-6">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="about/policies" />
 
-			<h2 className="text-2xl font-bold mb-4">
+			<h1 className="text-4xl md:text-5xl font-bold text-primary mb-6 text-center">
         Information about the Twisted Artists&apos; Guild
-			</h2>
+			</h1>
 			<div className="space-y-4">
-				<div>
-					<Link href="/about/policies/refunds" className="text-blue-500 hover:underline">
+				<div className="card bg-base-100 border border-base-300 shadow-sm">
+					<div className="card-body">
+					<Link href="/about/policies/refunds" className="link link-primary font-medium">
 						Refund Policy
 					</Link>
-					<p>Our policy on refunds for purchases.</p>
+					<p className="text-base-content/80">Our policy on refunds for purchases.</p>
+					</div>
 				</div>
-				<div>
-					<Link href="/about/policies/pricing" className="text-blue-500 hover:underline">
+				<div className="card bg-base-100 border border-base-300 shadow-sm">
+					<div className="card-body">
+					<Link href="/about/policies/pricing" className="link link-primary font-medium">
 						Pricing Policy
 					</Link>
-					<p>Our policy on pricing for products and services.</p>
+					<p className="text-base-content/80">Our policy on pricing for products and services.</p>
+					</div>
 				</div>
-				<div>
-					<Link href="/about/policies/dispute_resolution" className="text-blue-500 hover:underline">
+				<div className="card bg-base-100 border border-base-300 shadow-sm">
+					<div className="card-body">
+					<Link href="/about/policies/dispute_resolution" className="link link-primary font-medium">
 						Dispute Resolution Policy
 					</Link>
-					<p>Our policy on resolving disputes.</p>
+					<p className="text-base-content/80">Our policy on resolving disputes.</p>
+					</div>
 				</div>
-				<div>
-					<Link href="/about/policies/cybersecurity" className="text-blue-500 hover:underline">
+				<div className="card bg-base-100 border border-base-300 shadow-sm">
+					<div className="card-body">
+					<Link href="/about/policies/cybersecurity" className="link link-primary font-medium">
 						Cybersecurity Policy
 					</Link>
-					<p>Our policy on cybersecurity measures.</p>
+					<p className="text-base-content/80">Our policy on cybersecurity measures.</p>
+					</div>
 				</div>
-				<div>
-					<Link href="/about/policies/copyrights" className="text-blue-500 hover:underline">
+				<div className="card bg-base-100 border border-base-300 shadow-sm">
+					<div className="card-body">
+					<Link href="/about/policies/copyrights" className="link link-primary font-medium">
 						Copyright Policy
 					</Link>
-					<p>Our policy on copyrights and intellectual property.</p>
+					<p className="text-base-content/80">Our policy on copyrights and intellectual property.</p>
+					</div>
 				</div>
 			</div>
 		</div>

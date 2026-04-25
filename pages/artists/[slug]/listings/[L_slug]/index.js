@@ -177,7 +177,7 @@ const ListingDetails = ({ listing }) => {
   return (
     <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
       <div className="mb-8">
-        <div className="card shadow-lg p-4 bg-base-100 rounded-box">
+        <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
           <div className="flex flex-col md:flex-row gap-6">
             <div className="md:w-1/2">
               <h1 className="text-3xl font-bold mb-4 text-primary">{listing.title || "Untitled"}</h1>

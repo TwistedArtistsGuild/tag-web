@@ -17,8 +17,8 @@ import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import longDateOptions from "@/utils/longdateoptions"
 import { useAppContext } from "@/components/Context"
-import ImageGallery from "react-image-gallery" // Keep this for the main gallery
-import "react-image-gallery/styles/image-gallery.css" // Import gallery styles
+import ImageGallery from "react-image-gallery"
+import "react-image-gallery/styles/image-gallery.css"
 import {
   HeartIcon,
   ThumbsUpIcon,
@@ -298,7 +298,7 @@ const Artist = (props) => {
   }
 
   return (
-    <div className="mx-auto p-4 relative max-w-6xl bg-gray-100 text-base-content">
+    <div className="mx-auto p-4 relative max-w-6xl bg-base-200 text-base-content">
       <TagSEO metadataProp={pageMetaData} canonicalSlug={`artists/${props.slug}`} />
 
       {/* Cover Picture */}
@@ -313,13 +313,13 @@ const Artist = (props) => {
       </div>
 
       {/* Loading Message */}
-      {!props.artist && <p className="text-center text-gray-500 mt-4">Loading artist details... Please wait.</p>}
+      {!props.artist && <p className="text-center text-base-content/60 mt-4">Loading artist details... Please wait.</p>}
 
       {/* Artist Details */}
       {props.artist && (
         <>
           <div id="profile" className="card lg:card-side bg-base-100 shadow-xl mt-8">
-            <figure className="p-4 flex-shrink-0">
+            <figure className="p-4 shrink-0">
               <div className="relative w-64 h-64 rounded-xl overflow-hidden shadow-lg border-2 border-gray-200">
                 {" "}
                 {/* Larger profile pic container */}
@@ -332,7 +332,7 @@ const Artist = (props) => {
                 />
               </div>
             </figure>
-            <div className="card-body p-6 flex-grow">
+            <div className="card-body p-6 grow">
               <div className="flex flex-wrap justify-between items-start gap-4">
                 <div>
                   <h1 className="card-title text-3xl font-bold text-primary mb-1">
@@ -451,7 +451,7 @@ const Artist = (props) => {
                   />
                 </div>
               ) : (
-                <div className="text-center text-gray-500 p-4">
+                <div className="text-center text-base-content/60 p-4">
                   <p>No featured artwork available for this artist yet.</p>
                   <p className="text-sm mt-1">Check back soon for updates!</p>
                 </div>
@@ -472,7 +472,7 @@ const Artist = (props) => {
                   <div key={event.id} className="card bg-base-100 shadow-md hover:shadow-xl transition-shadow">
                     <div className="card-body p-4">
                       <h3 className="card-title text-primary text-lg">{event.title}</h3>
-                      <div className="flex items-center text-sm mb-1 text-gray-600">
+                      <div className="flex items-center text-sm mb-1 text-base-content/70">
                         <CalendarIcon className="w-4 h-4 mr-1" />
                         {new Date(event.date).toLocaleDateString("en-US", {
                           year: "numeric",
@@ -480,11 +480,11 @@ const Artist = (props) => {
                           day: "numeric",
                         })}
                       </div>
-                      <div className="flex items-center text-sm mb-3 text-gray-600">
+                      <div className="flex items-center text-sm mb-3 text-base-content/70">
                         <MapPinIcon className="w-4 h-4 mr-1" />
                         {event.location}
                       </div>
-                      <p className="text-sm text-gray-700">{event.description}</p>
+                      <p className="text-sm text-base-content/80">{event.description}</p>
                       <div className="card-actions justify-end mt-2">
                         <button className="btn btn-sm btn-outline btn-primary">Details</button>
                       </div>
@@ -493,7 +493,7 @@ const Artist = (props) => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No upcoming events for this artist.</p>
+              <p className="text-base-content/60">No upcoming events for this artist.</p>
             )}
           </div>
 
@@ -524,7 +524,7 @@ const Artist = (props) => {
                           {listing.title || "Untitled"}
                         </h3>
                       </Link>
-                      <p className="text-sm line-clamp-2 text-gray-700">
+                      <p className="text-sm line-clamp-2 text-base-content/80">
                         {listing.description || "No description available."}
                       </p>
                       <div className="flex justify-between items-center mt-2">
@@ -548,7 +548,7 @@ const Artist = (props) => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No listings available for this artist.</p>
+              <p className="text-base-content/60">No listings available for this artist.</p>
             )}
           </div>
 
@@ -572,16 +572,16 @@ const Artist = (props) => {
                 </div>
               </div>
               <div className="flex flex-wrap gap-3 mb-4">
-                <span className="text-sm font-medium mr-2 text-gray-700">Quick Filters:</span>
+                <span className="text-sm font-medium mr-2 text-base-content/80">Quick Filters:</span>
                 <button className="btn btn-sm btn-outline">Paintings</button>
                 <button className="btn btn-sm btn-outline">Digital Art</button>
                 <button className="btn btn-sm btn-outline">Sculptures</button>
                 <button className="btn btn-sm btn-outline">Photography</button>
                 <button className="btn btn-sm btn-outline">Recent Works</button>
               </div>
-              <div className="bg-base-200 p-4 rounded-lg text-center text-gray-700">
+              <div className="bg-base-200 p-4 rounded-lg text-center text-base-content/80">
                 <p>Enter search terms above to find works by this artist</p>
-                <p className="text-sm text-gray-500 mt-1">Advanced search options coming soon!</p>
+                <p className="text-sm text-base-content/60 mt-1">Advanced search options coming soon!</p>
               </div>
             </div>
           </div>
@@ -631,15 +631,15 @@ const Artist = (props) => {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h3 className="font-medium text-primary">{comment.author}</h3>
-                          <span className="text-sm text-gray-500">{comment.date}</span>
+                          <span className="text-sm text-base-content/60">{comment.date}</span>
                         </div>
-                        <p className="mt-1 text-gray-800">{comment.content}</p>
+                        <p className="mt-1 text-base-content">{comment.content}</p>
                         <div className="mt-2 flex items-center gap-4">
-                          <button className="text-sm flex items-center gap-1 text-gray-500 hover:text-primary">
+                          <button className="text-sm flex items-center gap-1 text-base-content/60 hover:text-primary">
                             <HeartIcon className="w-4 h-4" />
                             {comment.likes} likes
                           </button>
-                          <button className="text-sm flex items-center gap-1 text-gray-500 hover:text-primary">
+                          <button className="text-sm flex items-center gap-1 text-base-content/60 hover:text-primary">
                             <ReplyIcon className="w-4 h-4" />
                             Reply
                           </button>
@@ -660,11 +660,11 @@ const Artist = (props) => {
                             <div className="flex-1">
                               <div className="flex items-center justify-between">
                                 <h4 className="font-medium text-primary">{reply.author}</h4>
-                                <span className="text-sm text-gray-500">{reply.date}</span>
+                                <span className="text-sm text-base-content/60">{reply.date}</span>
                               </div>
-                              <p className="mt-1 text-gray-800">{reply.content}</p>
+                              <p className="mt-1 text-base-content">{reply.content}</p>
                               <div className="mt-2 flex items-center gap-4">
-                                <button className="text-sm flex items-center gap-1 text-gray-500 hover:text-primary">
+                                <button className="text-sm flex items-center gap-1 text-base-content/60 hover:text-primary">
                                   <HeartIcon className="w-4 h-4" />
                                   {reply.likes} likes
                                 </button>

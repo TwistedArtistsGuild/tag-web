@@ -247,7 +247,7 @@ const Buyback = () => {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300">
+    <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
       <Head>
         <title>Stock Buyback Program | Twisted Artists Guild</title>
         <meta name="description" content="Learn about the Private Stock Repurchase Plan (PSRP) for TAG shareholders." />

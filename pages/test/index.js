@@ -43,6 +43,11 @@ export default function TestIndex() {
 				  /test/tiptap
 				</Link>
 			</div>
+			<div className="mt-2">
+				<Link href="/test/themeSampler" className="link link-primary">
+				  /test/themeSampler
+				</Link>
+			</div>
 		</div>
 	);
 }

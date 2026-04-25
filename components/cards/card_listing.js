@@ -15,17 +15,25 @@ import Image from "next/image"
 import { HeartIcon, ThumbsUpIcon, UsersIcon, MessageCircleIcon, SmileIcon } from "lucide-react" // Import Lucide icons
 import { useState } from "react" // Import useState
 
+const getSeededCount = (seed, max, min = 1, salt = "") => {
+  const base = `${seed || "listing"}-${salt}`
+  const hash = base.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return (hash % max) + min
+}
+
 const ListingCard = ({ listing }) => {
+  const listingSeed = listing?.listingid || listing?.path || listing?.title
+
   // Initialize state for each counter with values from props
   const [loves, setLoves] = useState(listing.loves || 0)
   const [likes, setLikes] = useState(listing.likes || 0)
   const [followers, setFollowers] = useState(listing.followers || 0)
   const [showQuickReactions, setShowQuickReactions] = useState(false)
   const [reactionCounts, setReactionCounts] = useState({
-    '❤️': Math.floor(Math.random() * 20) + 1,
-    '👏': Math.floor(Math.random() * 15) + 1,
-    '🔥': Math.floor(Math.random() * 10) + 1,
-    '😍': Math.floor(Math.random() * 8) + 1,
+    '❤️': listing.reactions?.heart ?? getSeededCount(listingSeed, 20, 1, "heart"),
+    '👏': listing.reactions?.clap ?? getSeededCount(listingSeed, 15, 1, "clap"),
+    '🔥': listing.reactions?.fire ?? getSeededCount(listingSeed, 10, 1, "fire"),
+    '😍': listing.reactions?.love ?? getSeededCount(listingSeed, 8, 1, "love"),
   })
 
   // Function to handle quick reactions
@@ -63,7 +71,7 @@ const ListingCard = ({ listing }) => {
 
   return (
     <div 
-      className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full rounded-box group"
+      className="card bg-base-100 text-base-content shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full rounded-box group border border-base-300"
       onMouseEnter={() => setShowQuickReactions(true)}
       onMouseLeave={() => setShowQuickReactions(false)}
     >
@@ -104,15 +112,15 @@ const ListingCard = ({ listing }) => {
         >
           {listing?.title || "Untitled"}
         </Link>
-        <p className="text-lg text-neutral-content line-clamp-3">
+        <p className="text-lg text-base-content/90 line-clamp-3">
           {listing?.description || "No description available"}
         </p>
-        <p className="text-sm text-neutral-content mt-2">
+        <p className="text-sm text-base-content/80 mt-2">
           Listing created:{" "}
           {listing?.created ? new Date(listing.created).toLocaleDateString("en-US") : "No date available"}
         </p>
-        <p className="text-sm text-neutral-content">Artist: {listing?.artist?.title || "No artist found"}</p>
-        <p className="text-sm text-neutral-content">
+        <p className="text-sm text-base-content/80">Artist: {listing?.artist?.title || "No artist found"}</p>
+        <p className="text-sm text-base-content/80">
           Category: {listing?.artCategory?.category || "No category found"}
         </p>
 
@@ -141,7 +149,7 @@ const ListingCard = ({ listing }) => {
             </span>
             <MessageCircleIcon className="w-4 h-4 text-base-content/60 ml-2" />
             <span className="text-sm text-base-content/60">
-              {Math.floor(Math.random() * 15) + 1} comments
+              {listing.commentCount ?? getSeededCount(listingSeed, 15, 1, "comments")} comments
             </span>
           </div>
         </div>

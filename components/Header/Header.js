@@ -18,16 +18,16 @@ import Image from "next/image"
 import { useSession } from "next-auth/react" // Using useSession for authentication
 import LoginProfile from "@/components/Header/LoginProfile"
 import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
-import DropdownMenu from "@/components/Header/DropdownMenu"
 import { useLayout } from "@/components/LayoutProvider"
-import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu } from "lucide-react"
+import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu, Search } from "lucide-react"
 import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
 import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
-import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import { getSeededStockPhotoByCategory } from "@/utils/stockPhotos"
 
 // Available themes
 const themes = [
   "tag-theme",
+  "neon",
   "light",
   "dark",
   "cupcake",
@@ -49,7 +49,7 @@ const themes = [
 
 export default function Header() {
   const { data: session } = useSession() // Use session for user data
-  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar, theme, updateTheme } = useLayout()
+  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar, isLeftSidebarVisible, theme, updateTheme } = useLayout()
   const router = useRouter()
   const [active, setActive] = useState("") // State for active navigation link
   const [isNotificationsDropdownOpen, setIsNotificationsDropdownOpen] = useState(false)
@@ -91,14 +91,12 @@ export default function Header() {
   }
 
   function toggleLogin() {
-    setIsNotificationsDropdownOpen(false)
-    setIsMessageAppletOpen(false)
+    if (!isLoginOpen) closeAllPopups()
     setIsLoginOpen((open) => !open)
   }
 
   function toggleTheme() {
-    setIsNotificationsDropdownOpen(false)
-    setIsMessageAppletOpen(false)
+    if (!isThemeOpen) closeAllPopups()
     setIsThemeOpen((open) => !open)
   }
 
@@ -107,15 +105,18 @@ export default function Header() {
     if (theme === "tag-theme") {
       return `${baseClasses} header-paint-drip`
     }
+    if (theme === "neon") {
+      return `${baseClasses} header-neon-drip`
+    }
     return baseClasses
   }
 
   function getTextColorClass(isActive = false) {
-    const baseTextClass = "font-josefin-sans font-extrabold transition-all"
+    const baseTextClass = "font-josefin-sans font-extrabold transition-all px-2 py-1 rounded-md backdrop-blur-sm"
     if (isActive) {
-      return `${baseTextClass} text-primary enhanced-text-visibility`
+      return `${baseTextClass} text-primary enhanced-text-visibility bg-primary/10 border border-primary/20`
     }
-    return `${baseTextClass} text-base-content enhanced-text-visibility`
+    return `${baseTextClass} text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24`
   }
 
   useEffect(() => {
@@ -144,8 +145,8 @@ export default function Header() {
     maxWidth: "100vw",
     height: "calc(100vh - 88px)",
     boxShadow: '0 0 0 4px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.18)',
-    borderLeft: "2px solid var(--fallback-b3, #d1d5db)",
-    background: "var(--fallback-b1, #fff)",
+    borderLeft: "2px solid var(--color-base-300, var(--b3, #d1d5db))",
+    background: "var(--color-base-100, var(--b1, #1a1a1a))",
     borderRadius: 0,
     display: isNotificationsDropdownOpen || isMessageAppletOpen ? "block" : "none"
   }
@@ -176,7 +177,11 @@ export default function Header() {
                 <Menu className="w-6 h-6" />
               </button>
             )}
-            <Link href="/" className="flex items-center space-x-2" onClick={() => setActive("")}>
+            <Link
+              href="/"
+              className="flex items-center space-x-2 px-2 py-1 rounded-md backdrop-blur-sm bg-base-100/18 border border-base-content/10 hover:bg-base-100/24 transition-all"
+              onClick={() => setActive("")}
+            >
               <Image src="/tag_logo.png" alt="Home" height={40} width={80} />
               <span className="font-josefin-sans text-xl font-extrabold italic hidden sm:block">
                 Twisted Artists Guild
@@ -186,6 +191,25 @@ export default function Header() {
 
           {/* Center: Main Navigation - Desktop */}
           <nav className="hidden lg:flex items-center space-x-6">
+            {/* Search icon - opens sidebar and focuses search */}
+            <button
+              className="btn btn-ghost btn-sm btn-circle text-base-content enhanced-text-visibility"
+              aria-label="Open search"
+              onClick={() => {
+                if (!isLeftSidebarVisible) toggleLeftSidebar()
+                window.dispatchEvent(new CustomEvent("sidebarSearchFocus"))
+              }}
+            >
+              <Search size={20} />
+            </button>
+            <Link
+              href="/art/"
+              className={`text-lg ${getTextColorClass(active === "art")}`}
+              onClick={() => handleActive("art")}
+              name="art"
+            >
+              Bloomscroll
+            </Link>
             <Link
               href="/artists"
               className={`text-lg ${getTextColorClass(active === "artist")}`}
@@ -194,19 +218,6 @@ export default function Header() {
             >
               Artists
             </Link>
-            <DropdownMenu
-              title="Art"
-              titleHref="/art/"
-              active={active === "art"}
-              onActivate={() => handleActive("art")}
-              options={[
-                { label: "Physical", href: "/art/physical" },
-                { label: "Digital", href: "/art/digital" },
-                { label: "Performance", href: "/art/performance" },
-                { label: "Search", href: "/search/" },
-              ]}
-              className={`text-lg ${getTextColorClass(active === "art")}`}
-            />
             <Link
               href="/events"
               className={`text-lg ${getTextColorClass(active === "events")}`}
@@ -244,7 +255,7 @@ export default function Header() {
           {/* Right: User Controls */}
           <div className="flex items-center space-x-2">
             {/* Theme Switcher */}
-            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={updateTheme} onClick={toggleTheme} isOpen={isThemeOpen} />
+            <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={updateTheme} onToggle={toggleTheme} isOpen={isThemeOpen} />
 
             {/* Notifications & Messages - Only if user logged in */}
             {session?.user && ( // Use session.user for logged-in check
@@ -252,7 +263,7 @@ export default function Header() {
                 <button
                   ref={messagesIconRef}
                   onClick={toggleMessageApplet}
-                  className={`btn btn-ghost btn-sm btn-circle relative${isMessageAppletOpen ? " bg-primary text-primary-content ring-2 ring-primary/60" : ""}`}
+                  className={`btn btn-ghost btn-sm btn-circle relative${isMessageAppletOpen ? " bg-primary text-primary-content ring-2 ring-primary/60 border border-primary/35" : " text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24"}`}
                   aria-label="Messages"
                 >
                   <MessageSquare size={18} />
@@ -265,7 +276,7 @@ export default function Header() {
                 <button
                   ref={notificationsIconRef}
                   onClick={toggleNotificationsDropdown}
-                  className={`btn btn-ghost btn-sm btn-circle relative${isNotificationsDropdownOpen ? " bg-primary text-primary-content ring-2 ring-primary/60" : ""}`}
+                  className={`btn btn-ghost btn-sm btn-circle relative${isNotificationsDropdownOpen ? " bg-primary text-primary-content ring-2 ring-primary/60 border border-primary/35" : " text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24"}`}
                   aria-label="Notifications"
                 >
                   <Bell size={18} />
@@ -279,7 +290,7 @@ export default function Header() {
             )}
 
             {/* Login Profile */}
-            <LoginProfile className="btn btn-ghost btn-sm" isOpen={isLoginOpen} onToggle={toggleLogin} onClick={toggleLogin} />
+            <LoginProfile className="text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24" isOpen={isLoginOpen} onToggle={toggleLogin} />
 
             {/* Mobile Right Sidebar Toggle Button */}
             {isMobile && (
@@ -288,8 +299,7 @@ export default function Header() {
               </button>
             )}
           </div>
-          {/* Inner div for the circus tent/drip effect */}
-          {theme === "tag-theme" && <div className="header-drip-effect" />}
+          {/* tag-theme visual treatment is handled with CSS pseudo-elements */}
         </div>
 
         {/* Header Close Button - Bottom Center when open */}
@@ -315,7 +325,7 @@ export default function Header() {
               {
                 id: 1,
                 name: "Sarah Johnson",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("Sarah Johnson", 'artist'),
                 messages: [
                   { id: 1, sender: "Sarah Johnson", text: "Hey, how are you?", time: "10:00 AM" },
                   { id: 2, sender: "You", text: "I'm good, thanks! How about you?", time: "10:05 AM" },
@@ -325,7 +335,7 @@ export default function Header() {
               {
                 id: 2,
                 name: "John Doe",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("John Doe", 'artist'),
                 messages: [
                   { id: 4, sender: "John Doe", text: "Meeting at 2 PM?", time: "Yesterday" },
                   { id: 5, sender: "You", text: "Yes, confirmed!", time: "Yesterday" },
@@ -334,7 +344,7 @@ export default function Header() {
               {
                 id: 3,
                 name: "Community Chat",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("Community Chat", 'general'),
                 messages: [
                   { id: 6, sender: "Admin", text: "Welcome to the community!", time: "2 days ago" },
                   { id: 7, sender: "User1", text: "Thanks!", time: "2 days ago" },
@@ -353,91 +363,91 @@ export default function Header() {
                 title: "New Follower",
                 body: "Alex started following you.",
                 time: "Just now",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("New Follower", 'artist'),
               },
               {
                 title: "Comment",
                 body: "Sarah commented on your post.",
                 time: "5m ago",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("Comment", 'artist'),
               },
               {
                 title: "Sale",
                 body: "You sold 'Sunset Overdrive'!",
                 time: "1h ago",
-                avatar: getRandomStockPhotoByCategory('painting'),
+                avatar: getSeededStockPhotoByCategory("Sale", 'painting'),
               },
               {
                 title: "Event Reminder",
                 body: "Art show starts in 1 hour.",
                 time: "Today",
-                avatar: getRandomStockPhotoByCategory('performance'),
+                avatar: getSeededStockPhotoByCategory("Event Reminder", 'performance'),
               },
               {
                 title: "Blog Update",
                 body: "New blog post: 'The Art of Color'",
                 time: "Yesterday",
-                avatar: getRandomStockPhotoByCategory('painting'),
+                avatar: getSeededStockPhotoByCategory("Blog Update", 'painting'),
               },
               {
                 title: "Mention",
                 body: "You were mentioned in a comment.",
                 time: "2h ago",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("Mention", 'artist'),
               },
               {
                 title: "Collaboration Invite",
                 body: "John invited you to collaborate.",
                 time: "3h ago",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("Collaboration Invite", 'artist'),
               },
               {
                 title: "New Message",
                 body: "You have a new message from Emily.",
                 time: "4h ago",
-                avatar: getRandomStockPhotoByCategory('artist'),
+                avatar: getSeededStockPhotoByCategory("New Message", 'artist'),
               },
               {
                 title: "Profile View",
                 body: "Your profile was viewed 10 times today.",
                 time: "Today",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("Profile View", 'general'),
               },
               {
                 title: "Art Liked",
                 body: "Your artwork 'Blue Dream' got 5 new likes.",
                 time: "Today",
-                avatar: getRandomStockPhotoByCategory('painting'),
+                avatar: getSeededStockPhotoByCategory("Art Liked", 'painting'),
               },
               {
                 title: "Payment Received",
                 body: "You received a payment for a commission.",
                 time: "Yesterday",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("Payment Received", 'general'),
               },
               {
                 title: "System Update",
                 body: "Platform maintenance scheduled for Sunday.",
                 time: "Yesterday",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("System Update", 'general'),
               },
               {
                 title: "Contest Winner",
                 body: "Congrats! You won the monthly art contest.",
                 time: "2d ago",
-                avatar: getRandomStockPhotoByCategory('performance'),
+                avatar: getSeededStockPhotoByCategory("Contest Winner", 'performance'),
               },
               {
                 title: "New Resource",
                 body: "A new tutorial is available in Resources.",
                 time: "2d ago",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("New Resource", 'general'),
               },
               {
                 title: "Feedback Request",
                 body: "Please provide feedback on your last sale.",
                 time: "3d ago",
-                avatar: getRandomStockPhotoByCategory('general'),
+                avatar: getSeededStockPhotoByCategory("Feedback Request", 'general'),
               },
             ]}
             onClose={() => setIsNotificationsDropdownOpen(false)}

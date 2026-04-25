@@ -13,7 +13,7 @@ import Link from 'next/link';
 
 const Shareholders = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300 p-8">
+    <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 p-8">
       <h1 className="text-4xl font-bold text-primary mb-6">Shareholders Portal</h1>
 
       <section className="mb-8">

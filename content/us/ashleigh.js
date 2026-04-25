@@ -15,7 +15,8 @@
 	linkToArtistPage: "/artists/ashleighTBD",
 	title: "Treasurer of the Board, Chief Accounting Officer",
 	roleSummary: "Manages finances, forecasting, investments, and artist compensation flows.",
-	bio: `ashleigh TBD.`,
+	bio: `<p>Ashleigh's full bio is coming soon. Stay tuned!</p>`,
+	// Bio is tiptap-compatible HTML
 	images: [],
 };
 

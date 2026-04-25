@@ -32,7 +32,7 @@ export default function CodeOfConduct({ content }) {
 				</h2>
 				<div dangerouslySetInnerHTML={{ __html: content }} />
 			</div>
-			<footer className="mt-8 text-center text-gray-500">
+			<footer className="mt-8 text-center text-base-content/60">
 			</footer>
 		</div>
 	)
@@ -46,5 +46,6 @@ export async function getStaticProps() {
 		},
 	}
 }
+
 
 

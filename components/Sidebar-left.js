@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/ 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useLayout } from "./LayoutProvider"
 import ArtistCardSmall from "@/components/cards/card_artist_small"
 import ListingCardSmall from "@/components/cards/card_listing_small"
@@ -30,6 +30,15 @@ export default function LeftSidebar(props) {
     { label: "Sculpture", value: "30" },
   ];
   const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+
+  // All hooks declared up front before any function definitions
+  const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
+  const [activeTab, setActiveTab] = useState("browse")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [activeFilter, setActiveFilter] = useState("-1")
+  const [searchHighlight, setSearchHighlight] = useState(false)
+  const searchInputRef = useRef(null)
+  const router = useRouter()
 
  useEffect(() => {
   // Auto-detect content type if not specified
@@ -176,13 +185,20 @@ export default function LeftSidebar(props) {
     }
   };
   
-  const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
-  const [activeTab, setActiveTab] = useState("browse")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [activeFilter, setActiveFilter] = useState("-1")
-  const router = useRouter()
-
   const topOffset = isHeaderVisible ? "top-20" : "top-0"
+
+  useEffect(() => {
+    const handleSidebarSearchFocus = () => {
+      setActiveTab("browse")
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+        setSearchHighlight(true)
+        setTimeout(() => setSearchHighlight(false), 3000)
+      }, 350) // wait for sidebar open animation
+    }
+    window.addEventListener("sidebarSearchFocus", handleSidebarSearchFocus)
+    return () => window.removeEventListener("sidebarSearchFocus", handleSidebarSearchFocus)
+  }, [])
 
   return (
     <>
@@ -263,6 +279,7 @@ export default function LeftSidebar(props) {
               <div className="p-2 border border-base-content/10 bg-base-100 rounded-md">
                 <div className="flex gap-2 items-center">
                   <input
+                    ref={searchInputRef}
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -271,7 +288,7 @@ export default function LeftSidebar(props) {
                     onKeyDown={e => { if (e.key === 'Enter') { router.push(`/search?term=${encodeURIComponent(searchTerm)}`) } }}
                   />
                   <button
-                    className="btn btn-primary btn-xs"
+                    className={`btn btn-primary btn-xs transition-all duration-200 ${searchHighlight ? "ring-2 ring-offset-1 ring-primary animate-pulse" : ""}`}
                     onClick={() => router.push(`/search?term=${encodeURIComponent(searchTerm)}`)}
                     aria-label="Search"
                   >

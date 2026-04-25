@@ -10,12 +10,9 @@
  Open source · low-profit · human-first*/
 
 
-import { useState } from "react";
 import TagSEO from "@/components/TagSEO";
-import Link from "next/link";
-import ImageGallery from "react-image-gallery";
-import "react-image-gallery/styles/image-gallery.css";
 import profiles from "@/content/us/profiles";
+import AboutProfileCard from "@/components/cards/card_about_profile";
 
 export default function AboutUs() {
 	const pageMetaData = {
@@ -32,10 +29,11 @@ export default function AboutUs() {
 	};
 
 	return (
-		<div className="container mx-auto p-4">
+		<div className="container mx-auto max-w-6xl p-4 md:p-6">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="about/us" />
-			<h2 className="text-3xl font-bold text-center mb-6">About the Twisted Artists Guild</h2>
-			<div className="mb-8">
+			<h1 className="text-4xl md:text-5xl font-bold text-center text-primary mb-6">About the Twisted Artists Guild</h1>
+			<div className="card bg-base-100 border border-base-300 shadow-md mb-8">
+				<div className="card-body">
 				<p className="mb-4">
 					The Twisted Artists Guild was founded with a vision to create a
 					community where creativity, resilience, and collaboration thrive. Our
@@ -48,57 +46,25 @@ export default function AboutUs() {
 					Explore our team below to learn more about the individuals who make
 					this guild a vibrant and inspiring space.
 				</p>
+				</div>
 			</div>
-			<h3 className="text-2xl font-semibold mb-4">Our Mission Statement (Draft)</h3>
-			<div className="bg-base-100 shadow-md p-4 rounded-lg">
-				<p className="text-lg">
+			<h2 className="text-2xl md:text-3xl font-semibold text-primary mb-4">Our Mission Statement (Draft)</h2>
+			<div className="card bg-base-100 border border-base-300 shadow-md mb-8">
+				<div className="card-body">
+				<p className="text-lg text-base-content/80">
 					TAG envisions a future where independent artists thrive through innovation, sustainability, and creative entrepreneurship.
 				</p>
+				</div>
 			</div>
 
-			<h3 className="text-2xl font-semibold mb-4 mt-8">Meet Our Team</h3>
-			<table className="table table-zebra w-full">
-				<tbody>
-					{profiles.map((profile, index) => (
-						<tr key={profile.name}>
-							{index % 2 === 0 && (
-								<td className="w-1/2 p-4 text-center">
-									<img
-										src={profile.images[0] || "/blank_image.png"}
-										alt={`${profile.name}'s profile`}
-										className="w-64 h-64 object-cover mx-auto rounded-full shadow-lg"
-									/>
-								</td>
-							)}
-							<td className="w-1/2 p-4 text-center">
-								<Link href={`/about/us/${profile.slug}`} className="text-primary hover:underline">
-									<h4 className="text-xl font-bold">{profile.name}</h4>
-								</Link>
-								<p className="text-sm font-semibold text-gray-700">{profile.title}</p>
-								<p className="text-sm text-gray-600">{profile.roleSummary}</p>
-								<p className="text-sm text-gray-600 mt-2">
-									<strong>Art Forms:</strong> {profile.artForms.join(", ")}
-								</p>
-								<p className="text-sm text-primary mt-2">
-									<a href={profile.linkToArtistPage} target="_blank" rel="noopener noreferrer" className="hover:underline">
-										View Artist Page
-									</a>
-								</p>
-							</td>
-							{index % 2 !== 0 && (
-								<td className="w-1/2 p-4 text-center">
-									<img
-										src={profile.images[0] || "/blank_image.png"}
-										alt={`${profile.name}'s profile`}
-										className="w-64 h-64 object-cover mx-auto rounded-full shadow-lg"
-									/>
-								</td>
-							)}
-						</tr>
-					))}
-				</tbody>
-			</table>
+			<h2 className="text-2xl md:text-3xl font-semibold text-primary mb-4 mt-8">Meet Our Team</h2>
+			<div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+				{profiles.map((profile) => (
+					<AboutProfileCard key={profile.slug} profile={profile} />
+				))}
+			</div>
 		</div>
 	);
 }
+
 

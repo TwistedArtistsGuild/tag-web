@@ -18,9 +18,19 @@ import Link from "next/link"
 import Image from "next/image"
 import { User, Settings, LogOut } from "lucide-react" // Import Lucide icons
 
-export default function LoginProfile({ className = "" }) {
+export default function LoginProfile({ className = "", isOpen: controlledIsOpen, onToggle }) {
   const { data: session } = useSession()
-  const [isOpen, setIsOpen] = useState(false)
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
+  const isControlled = typeof controlledIsOpen === "boolean" && typeof onToggle === "function"
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen
+
+  const setOpenValue = (nextOpen) => {
+    if (isControlled) {
+      if (nextOpen !== isOpen) onToggle()
+      return
+    }
+    setInternalIsOpen(nextOpen)
+  }
 
   if (!session) {
     return (
@@ -31,14 +41,15 @@ export default function LoginProfile({ className = "" }) {
   }
 
   return (
-    <div className="dropdown dropdown-end">
-      <div
-        tabIndex={0}
-        role="button"
+    <div className="relative">
+      <button
+        type="button"
         className={`btn btn-ghost btn-circle avatar ${className}`}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setOpenValue(!isOpen)}
+        aria-label="User menu"
+        aria-expanded={isOpen}
       >
-        <div className="w-8 rounded-full">
+        <div className="w-8 rounded-full overflow-hidden">
           <Image
             alt="User avatar"
             src={session.user?.image || "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"}
@@ -46,33 +57,36 @@ export default function LoginProfile({ className = "" }) {
             height={32}
           />
         </div>
-      </div>
+      </button>
       {isOpen && (
-        <ul className="menu menu-sm dropdown-content bg-base-100 rounded-box z-50 mt-3 w-52 p-2 shadow-lg border border-base-content/10">
-          <li className="menu-title">
-            <span>{session.user?.name || "User"}</span>
-          </li>
-          <li>
-            <Link href="/user/profile" onClick={() => setIsOpen(false)}>
-              <User className="w-4 h-4" />
-              Profile
-            </Link>
-          </li>
-          <li>
-            <Link href="/user/settings" onClick={() => setIsOpen(false)}>
-              <Settings className="w-4 h-4" />
-              Settings
-            </Link>
-          </li>
-
-          <div className="divider my-1"></div>
-          <li>
-            <button onClick={() => signOut()} className="text-error">
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </button>
-          </li>
-        </ul>
+        <>
+          {/* Click-outside backdrop */}
+          <div className="fixed inset-0 z-40" onClick={() => setOpenValue(false)} />
+          <ul className="absolute right-0 top-full mt-2 z-50 w-52 rounded-box bg-base-100 p-2 shadow-lg border border-base-content/10 menu menu-sm">
+            <li className="menu-title">
+              <span>{session.user?.name || "User"}</span>
+            </li>
+            <li>
+              <Link href="/user/profile" onClick={() => setOpenValue(false)}>
+                <User className="w-4 h-4" />
+                Profile
+              </Link>
+            </li>
+            <li>
+              <Link href="/user/settings" onClick={() => setOpenValue(false)}>
+                <Settings className="w-4 h-4" />
+                Settings
+              </Link>
+            </li>
+            <div className="divider my-1"></div>
+            <li>
+              <button onClick={() => { setOpenValue(false); signOut() }} className="text-error">
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </li>
+          </ul>
+        </>
       )}
     </div>
   )

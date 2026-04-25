@@ -46,12 +46,12 @@ const Events = (props) => {
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				{props.events.map((event) => (
-					<div key={event.eventnum} className="card shadow-lg">
+					<div key={event.eventnum} className="card bg-base-100 text-base-content border border-base-300 shadow-lg">
 						<div className="card-body">
 							<Link href={`/events/${event.path}`}>
 								<a className="card-title text-primary">{event.title}</a>
 							</Link>
-							<p className="text-sm text-gray-500">{event.byline}</p>
+							<p className="text-sm text-base-content/70">{event.byline}</p>
 							<p className="text-sm">
 								{new Date(event.applied).toLocaleDateString("en-US", options)}
 							</p>

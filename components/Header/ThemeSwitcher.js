@@ -10,20 +10,30 @@
  Open source · low-profit · human-first*/
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Check, ChevronDown, Palette } from "lucide-react" // Using Lucide React icons
 
-export default function ThemeSwitcher({ themes, currentTheme, onThemeChange }) {
-  const [isOpen, setIsOpen] = useState(false)
+export default function ThemeSwitcher({ themes, currentTheme, onThemeChange, isOpen: controlledIsOpen, onToggle }) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
   const dropdownRef = useRef(null)
+  const isControlled = typeof controlledIsOpen === "boolean" && typeof onToggle === "function"
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen
 
-  const handleToggle = () => setIsOpen((prev) => !prev)
+  const setOpenValue = useCallback((nextOpen) => {
+    if (isControlled) {
+      if (nextOpen !== isOpen) onToggle()
+      return
+    }
+    setInternalIsOpen(nextOpen)
+  }, [isControlled, isOpen, onToggle])
+
+  const handleToggle = () => setOpenValue(!isOpen)
 
   // Handle clicking outside to close dropdown
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        if (isOpen) setIsOpen(false)
+        if (isOpen) setOpenValue(false)
       }
     }
 
@@ -31,10 +41,11 @@ export default function ThemeSwitcher({ themes, currentTheme, onThemeChange }) {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [isOpen])
+  }, [isOpen, setOpenValue])
 
   // Format the theme name for display (capitalize and replace hyphens)
   const formatThemeName = (theme) => {
+    if (theme === "tag-theme") return "TAG Theme"
     return theme
       .split("-")
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -45,7 +56,7 @@ export default function ThemeSwitcher({ themes, currentTheme, onThemeChange }) {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={handleToggle}
-        className="btn btn-ghost btn-sm flex items-center gap-1"
+        className="btn btn-ghost btn-sm flex items-center gap-1 text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
@@ -69,7 +80,7 @@ export default function ThemeSwitcher({ themes, currentTheme, onThemeChange }) {
                 data-theme={t}
                 onClick={() => {
                   onThemeChange(t)
-                  handleToggle()
+                  setOpenValue(false)
                 }}
                 style={{
                   display: "flex",

@@ -13,7 +13,7 @@ import getApiURL from "@/components/widgets/GetApiURL"
 
 const ContactsPage = ({ links }) => {
   return (
-    <div className="card shadow-lg p-4 bg-base-100 rounded-box">
+    <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
       <ContactCard links={links} />
     </div>
   )
