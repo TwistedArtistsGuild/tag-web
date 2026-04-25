@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 
-import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import Link from "next/link"
 
@@ -30,42 +29,52 @@ export default function About() {
 	}
 
 	return (
-		<div className="container mx-auto p-4">
+		<div className="container mx-auto max-w-5xl p-4 md:p-6">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="about/codeofconduct" />
 
-			<h2 className="text-2xl font-bold mb-4">
+			<h1 className="text-4xl md:text-5xl font-bold text-primary mb-6 text-center">
 				Information about the Twisted Artists&apos; Guild
-			</h2>
+			</h1>
 			<div className="space-y-4">
-				<div>
-					<Link href="/about/codeofconduct/coc0" className="text-blue-500 hover:underline">
+				<div className="card bg-base-100 border border-base-300 shadow-sm">
+					<div className="card-body">
+					<Link href="/about/codeofconduct/coc0" className="link link-primary font-medium">
 						Code of Conduct for All Parties
 					</Link>
-					<p>The basics to the code of conduct for any and everyone that we interact with.</p>
+					<p className="text-base-content/80">The basics to the code of conduct for any and everyone that we interact with.</p>
+					</div>
 				</div>
-				<div>
-					<Link href="/about/codeofconduct/coc1" className="text-blue-500 hover:underline">
+				<div className="card bg-base-100 border border-base-300 shadow-sm">
+					<div className="card-body">
+					<Link href="/about/codeofconduct/coc1" className="link link-primary font-medium">
 						Code of Conduct for Public Customers
 					</Link>
-					<p>The code of conduct for public website users who browse and buy art.</p>
+					<p className="text-base-content/80">The code of conduct for public website users who browse and buy art.</p>
+					</div>
 				</div>
-				<div>
-					<Link href="/about/codeofconduct/coc2" className="text-blue-500 hover:underline">
+				<div className="card bg-base-100 border border-base-300 shadow-sm">
+					<div className="card-body">
+					<Link href="/about/codeofconduct/coc2" className="link link-primary font-medium">
 						Code of Conduct for Investors
 					</Link>
-					<p>The code of conduct for investors to stay in good standing.</p>
+					<p className="text-base-content/80">The code of conduct for investors to stay in good standing.</p>
+					</div>
 				</div>
-				<div>
-					<Link href="/about/codeofconduct/coc3" className="text-blue-500 hover:underline">
+				<div className="card bg-base-100 border border-base-300 shadow-sm">
+					<div className="card-body">
+					<Link href="/about/codeofconduct/coc3" className="link link-primary font-medium">
 						Code of Conduct for Artist Members
 					</Link>
-					<p>The code of conduct for artist members.</p>
+					<p className="text-base-content/80">The code of conduct for artist members.</p>
+					</div>
 				</div>
-				<div>
-					<Link href="/about/codeofconduct/coc4" className="text-blue-500 hover:underline">
+				<div className="card bg-base-100 border border-base-300 shadow-sm">
+					<div className="card-body">
+					<Link href="/about/codeofconduct/coc4" className="link link-primary font-medium">
 						Code of Conduct for Guild Employees
 					</Link>
-					<p>The code of conduct for guild employees, staff, board, and vendors.</p>
+					<p className="text-base-content/80">The code of conduct for guild employees, staff, board, and vendors.</p>
+					</div>
 				</div>
 			</div>
 		</div>

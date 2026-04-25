@@ -130,9 +130,9 @@ export default function About() {
 						<div className="absolute inset-0 flex items-center justify-center">
 							<div className="w-24 h-24 rounded-full bg-primary opacity-10"></div>
 						</div>
-						<h2 className="text-4xl md:text-5xl font-bold relative z-10 mb-3 text-primary">
-							About the <span className="text-secondary">Twisted Artists&apos; Guild</span>
-						</h2>
+						<h1 className="text-4xl md:text-5xl font-bold relative z-10 mb-3 text-primary">
+							About the <span className="text-secondary">Twisted Artists Guild</span>
+						</h1>
 						<p className="text-lg opacity-75 max-w-2xl mx-auto">
 							Discover our mission, members, and the creative vision that drives our community
 						</p>
@@ -161,17 +161,20 @@ export default function About() {
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{navCards.map((card, index) => (
 						<Link key={index} href={card.href} className="group">
-							<div className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-base-300 hover:border-primary h-full">
-								<div className="card-body">
-									<div className="flex items-center gap-3 mb-2">
-										<div className="text-primary group-hover:scale-110 transition-transform duration-300">
+							<div className="card relative h-full overflow-hidden border border-base-300 bg-base-100/80 shadow-lg backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/70 hover:shadow-xl">
+								<div className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-secondary/10 opacity-70 transition-opacity duration-300 group-hover:opacity-100" />
+								<div className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full bg-primary/15 blur-2xl transition-transform duration-300 group-hover:scale-110" />
+								<div className="pointer-events-none absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-secondary/15 blur-2xl transition-transform duration-300 group-hover:scale-110" />
+								<div className="card-body relative">
+									<div className="mb-2 flex items-center gap-3">
+										<div className="text-primary transition-transform duration-300 group-hover:scale-110">
 											{card.icon}
 										</div>
 										<h3 className="card-title text-lg text-primary">{card.title}</h3>
 									</div>
-									<p className="text-sm opacity-75">{card.description}</p>
-									<div className="card-actions justify-end mt-4">
-										<span className="text-primary text-sm font-medium group-hover:translate-x-1 transition-transform duration-300">
+									<p className="text-sm text-base-content/80">{card.description}</p>
+									<div className="card-actions mt-4 justify-end">
+										<span className="text-sm font-medium text-primary transition-transform duration-300 group-hover:translate-x-1">
 											Learn more →
 										</span>
 									</div>

@@ -15,7 +15,7 @@ import { getMarkdownContent } from "@/components/widgets/markdown"
 
 export default function CodeOfConduct({ content }) {
 	return (
-		<div className="container mx-auto p-4">
+		<div className="container mx-auto max-w-5xl p-4 md:p-6">
 			<Head>
 				<title>TAG Terms of Service</title>
 				<meta name="description" content="How we expect to interact with the world" key="desc" />
@@ -26,10 +26,10 @@ export default function CodeOfConduct({ content }) {
 				<meta property="og:title" content="TAG Code of Conduct" />
 				<meta property="og:description" content="How we expect to interact with the world" />
 			</Head>
-			<div className="prose lg:prose-xl mx-auto">
-				<h2 className="text-2xl font-bold text-center my-4">
-					Our website's terms of service
-				</h2>
+			<div className="prose prose-base-content max-w-none lg:prose-xl">
+				<h1 className="text-4xl md:text-5xl font-bold text-primary text-center my-6">
+					Our website&apos;s terms of service
+				</h1>
 				<div dangerouslySetInnerHTML={{ __html: content }} />
 			</div>
 		</div>

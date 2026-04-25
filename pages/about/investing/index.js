@@ -163,7 +163,7 @@ const Investing = () => {
           </a>
           <iframe
             src="https://tagstatic.blob.core.windows.net/content/TAG%20Stock%20Plan%20Flowchart.pdf#toolbar=0&navpanes=0"
-            className="w-full h-[48rem] mt-6 border rounded-lg"
+            className="w-full h-192 mt-6 border rounded-lg"
             title="TAG Stock Plan Flowchart"
           ></iframe>
         </div>
