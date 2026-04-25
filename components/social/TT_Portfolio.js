@@ -11,7 +11,13 @@
 
 import TiptapEditor from "@/components/widgets/tiptap-editor";
 
-export default function TTPortfolio({ value, onChange, onSaveDraft, onPublish }) {
+export default function TTPortfolio({
+	value,
+	onChange,
+	onSaveDraft,
+	onPublish,
+	showActionButtons = true,
+}) {
 	return (
 		<div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
 			{/*<h2 className="text-lg font-semibold">Portfolio</h2>*/}
@@ -25,7 +31,7 @@ export default function TTPortfolio({ value, onChange, onSaveDraft, onPublish })
 				preset="full"
 				fontScope="portfolio"
 				minHeight={240}
-				actionPreset="save-publish"
+				actionPreset={showActionButtons ? "save-publish" : "none"}
 				saveDraftLabel="Save Draft"
 				publishLabel="Publish"
 				emptySubmitMessage="Add some content before saving."
