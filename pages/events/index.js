@@ -54,7 +54,7 @@ export default function EventsLanding() {
       <div className="relative h-[60vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black/50 z-10"></div>
         <div className="relative z-20 text-center px-4 max-w-5xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-transparent bg-clip-text bg-linear-to-r from-purple-400 to-pink-600">
             Experience Performance Art Event Management Like Never Before
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white">
@@ -92,7 +92,7 @@ export default function EventsLanding() {
         <section className="py-12 bg-base-100 rounded-box shadow-lg px-6 mb-12">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">Our Vision</h2>
-            <p className="text-lg md:text-xl mb-8 text-gray-700">
+            <p className="text-lg md:text-xl mb-8 text-base-content/80">
               At Twisted Artists Guild, we believe in creating transformative experiences through the power of art. Our
               events bring together diverse artistic expressions, fostering community engagement and cultural enrichment
               while supporting artists in their creative journeys.
@@ -209,7 +209,7 @@ export default function EventsLanding() {
             </div>
           </div>
           <div className="mt-12 text-center">
-            <div className="p-6 bg-base-200 rounded-lg max-w-2xl mx-auto text-gray-700">
+            <div className="p-6 bg-base-200 rounded-lg max-w-2xl mx-auto text-base-content/80">
               <p className="text-lg mb-4">
                 <span className="font-bold">Every event offers tickets</span> - whether free or for purchase - providing
                 access to extraordinary artistic experiences.
@@ -233,12 +233,12 @@ export default function EventsLanding() {
                 <BuildingIcon className="w-12 h-12 text-white" />
               </div>
               <h3 className="text-2xl font-bold mb-4 text-primary">Museums & Exhibitions</h3>
-              <p className="text-lg text-gray-700">
+              <p className="text-lg text-base-content/80">
                 We partner with museums and galleries to bring curated exhibitions that showcase diverse artistic
                 expressions. These collaborations create spaces where art can be experienced, contemplated, and
                 discussed.
               </p>
-              <ul className="mt-6 space-y-2 text-gray-700">
+              <ul className="mt-6 space-y-2 text-base-content/80">
                 <li className="flex items-center">
                   <span className="bg-purple-500 rounded-full p-1 mr-2">
                     <CheckIcon className="h-4 w-4 text-white" />
@@ -264,12 +264,12 @@ export default function EventsLanding() {
                 <GraduationCapIcon className="w-12 h-12 text-white" />
               </div>
               <h3 className="text-2xl font-bold mb-4 text-primary">Classes & Workshops</h3>
-              <p className="text-lg text-gray-700">
+              <p className="text-lg text-base-content/80">
                 Our educational programs connect aspiring artists with experts in various fields. From beginner
                 workshops to advanced masterclasses, we foster learning environments that encourage growth and
                 experimentation.
               </p>
-              <ul className="mt-6 space-y-2 text-gray-700">
+              <ul className="mt-6 space-y-2 text-base-content/80">
                 <li className="flex items-center">
                   <span className="bg-purple-500 rounded-full p-1 mr-2">
                     <CheckIcon className="h-4 w-4 text-white" />
@@ -293,10 +293,10 @@ export default function EventsLanding() {
           </div>
         </section>
         {/* Call to Action */}
-        <section className="py-16 bg-gradient-to-r from-purple-800 to-pink-700 rounded-box shadow-lg px-6 mb-12">
+        <section className="py-16 bg-linear-to-r from-purple-800 to-pink-700 rounded-box shadow-lg px-6 mb-12">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Ready to Experience the Art?</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto text-white">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-base-100">Ready to Experience the Art?</h2>
+            <p className="text-xl mb-8 max-w-2xl mx-auto text-base-100">
               Join us at our next event or workshop and become part of our creative community.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -328,13 +328,13 @@ export default function EventsLanding() {
                     </svg>
                   ))}
                 </div>
-                <p className="text-gray-700">
+                <p className="text-base-content/80">
                   "The dance performance was absolutely mesmerizing. I've never seen such a perfect blend of technique
                   and emotion. Worth every penny!"
                 </p>
                 <div className="mt-4">
                   <h3 className="font-bold text-primary">Maria J.</h3>
-                  <p className="text-sm opacity-70 text-gray-600">Dance performance attendee</p>
+                  <p className="text-sm opacity-70 text-base-content/70">Dance performance attendee</p>
                 </div>
               </div>
             </div>
@@ -353,13 +353,13 @@ export default function EventsLanding() {
                     </svg>
                   ))}
                 </div>
-                <p className="text-gray-700">
+                <p className="text-base-content/80">
                   "The sculpture workshop completely changed how I approach my art. The instructor was knowledgeable and
                   provided personalized guidance."
                 </p>
                 <div className="mt-4">
                   <h3 className="font-bold text-primary">David R.</h3>
-                  <p className="text-sm opacity-70 text-gray-600">Workshop participant</p>
+                  <p className="text-sm opacity-70 text-base-content/70">Workshop participant</p>
                 </div>
               </div>
             </div>
@@ -378,13 +378,13 @@ export default function EventsLanding() {
                     </svg>
                   ))}
                 </div>
-                <p className="text-gray-700">
+                <p className="text-base-content/80">
                   "The exhibition was incredible - such diverse perspectives and styles. I left feeling inspired and
                   with a deeper appreciation for contemporary art."
                 </p>
                 <div className="mt-4">
                   <h3 className="font-bold text-primary">Sarah T.</h3>
-                  <p className="text-sm opacity-70 text-gray-600">Exhibition visitor</p>
+                  <p className="text-sm opacity-70 text-base-content/70">Exhibition visitor</p>
                 </div>
               </div>
             </div>
@@ -552,3 +552,4 @@ EventsLanding.getInitialProps = async () => {
     }
   }
 }
+

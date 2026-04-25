@@ -75,7 +75,7 @@ const Blog = (props) => {
               return (
                 <div
                   key={blog.path}
-                  className="card bg-base-200 shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out group"
+                  className="card bg-base-200 text-base-content shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out group"
                 >
                   <figure className="relative h-48 w-full">
                     <Image
@@ -94,7 +94,7 @@ const Blog = (props) => {
                     >
                       {blog.title}
                     </Link>
-                    <p className="text-lg text-gray-700 line-clamp-3"  dangerouslySetInnerHTML={{ __html: blog.byline }}></p>
+                    <p className="text-lg text-base-content/80 line-clamp-3"  dangerouslySetInnerHTML={{ __html: blog.byline }}></p>
                     
                     {/* Enhanced Social Section */}
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">
@@ -119,7 +119,7 @@ const Blog = (props) => {
                         </button>
                       </div>
                       
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-base-content/70">
                         {new Date(blog.created).toLocaleDateString("en-US", options)}
                       </span>
                     </div>

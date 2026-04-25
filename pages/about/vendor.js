@@ -178,7 +178,7 @@ const Vendor = () => {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300">
+    <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
       <Head>
         <title>Supporting Vendor Information | Twisted Artists Guild</title>
         <meta name="description" content="Details for vendors working with the Twisted Artists Guild." />

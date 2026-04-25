@@ -45,7 +45,7 @@ const Logviewer = props => {
 									<td>{props.log.shorttext}</td>
 									<td>{props.log.longtext}</td>
 									<td>{props.log.critical.toString()}</td>
-									<td> <div className="text-xs text-gray-500">
+									<td> <div className="text-xs text-base-content/60">
 										{new Date(props.log.logtimestamp.toString()).toLocaleDateString("en-US", options)}
 									</div> </td>
 									<td>{props.log.userfk}</td>

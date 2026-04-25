@@ -93,7 +93,7 @@ const SearchPage = ({ initialSearchTerm, results: initialResults = [], status })
 						))}
 					</ul>
 				) : (
-					<p className="text-gray-500">No results found</p>
+					<p className="text-base-content/60">No results found</p>
 				)}
 			</div>
 		</div>
@@ -134,3 +134,4 @@ SearchPage.getInitialProps = async function ({ query }) {
 }
 
 export default SearchPage
+

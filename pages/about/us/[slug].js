@@ -27,8 +27,8 @@ export default function ProfilePage() {
 	return (
 		<div className="container mx-auto p-4">
 			<h1 className="text-3xl font-bold text-center mb-6">{profile.name}</h1>
-			<h2 className="text-xl font-semibold text-center text-gray-700 mb-4">{profile.title}</h2>
-			<h3 className="text-lg font-semibold text-center text-gray-800 mb-4">
+			<h2 className="text-xl font-semibold text-center text-base-content/80 mb-4">{profile.title}</h2>
+			<h3 className="text-lg font-semibold text-center text-base-content mb-4">
 				<strong>Art Forms:</strong> {profile.artForms.join(", ")}{" "}
 				<span className="text-primary">
 					<Link href={profile.linkToArtistPage} className="link link-primary">
@@ -47,7 +47,7 @@ export default function ProfilePage() {
 				</div>
 			)}
             <div className="mb-8">
-				<p className="text-gray-700">{profile.bio}</p>
+				<p className="text-base-content/80">{profile.bio}</p>
 			</div>
 			<div className="text-center">
 				<button

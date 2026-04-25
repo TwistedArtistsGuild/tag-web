@@ -74,9 +74,9 @@ export default function AboutUs() {
 								<Link href={`/about/us/${profile.slug}`} className="text-primary hover:underline">
 									<h4 className="text-xl font-bold">{profile.name}</h4>
 								</Link>
-								<p className="text-sm font-semibold text-gray-700">{profile.title}</p>
-								<p className="text-sm text-gray-600">{profile.roleSummary}</p>
-								<p className="text-sm text-gray-600 mt-2">
+								<p className="text-sm font-semibold text-base-content/80">{profile.title}</p>
+								<p className="text-sm text-base-content/70">{profile.roleSummary}</p>
+								<p className="text-sm text-base-content/70 mt-2">
 									<strong>Art Forms:</strong> {profile.artForms.join(", ")}
 								</p>
 								<p className="text-sm text-primary mt-2">
@@ -101,4 +101,5 @@ export default function AboutUs() {
 		</div>
 	);
 }
+
 

@@ -77,7 +77,7 @@ export default function News() {
             Amplifying artist voices. Exploring the pulse of creativity.
           </p>
           <div className="max-w-4xl mx-auto text-center mb-12">
-            <p className="text-lg text-gray-700 mb-6">
+            <p className="text-lg text-base-content/80 mb-6">
               The TAG News Service is a storytelling initiative powered by our marketing department, designed to
               spotlight the lives, ideas, and creative journeys of our cooperative’s members. Through rich interviews,
               cultural coverage, and market research, we document what it means to be a working artist today—with
@@ -86,12 +86,12 @@ export default function News() {
             <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2 text-primary">
               ✨ Our Purpose
             </h3>
-            <p className="text-lg text-gray-700">
+            <p className="text-lg text-base-content/80">
               Our journalist team works at the intersection of marketing and editorial, blending narrative storytelling
               with cooperative insight. They conduct interviews from scripted research prompts, capture close-up
               conversations with artists, and produce engaging social content that benefits visibility and discovery.
             </p>
-            <p className="text-lg text-gray-700 mt-4">
+            <p className="text-lg text-base-content/80 mt-4">
               While rooted in marketing, this branch of TAG follows ethical journalistic standards. In addition to
               research-driven interviews, our writers pursue broader art coverage—from gallery openings and emerging
               trends to artist-led movements—always centered on the voices of creators.
@@ -102,7 +102,7 @@ export default function News() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Article Card 1: Amina Rodriguez - Multidisciplinary Storyteller */}
-            <div className="card bg-base-200 shadow-xl overflow-hidden group">
+            <div className="card bg-base-200 text-base-content shadow-xl overflow-hidden group">
               <figure className="relative h-48 w-full">
                 <Image
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg"
@@ -116,7 +116,7 @@ export default function News() {
                 <h4 className="card-title text-xl text-primary">
                   Beyond the Canvas: Meet Amina Rodriguez, a Multidisciplinary Storyteller
                 </h4>
-                <p className="text-gray-700 text-sm">
+                <p className="text-base-content/80 text-sm">
                   Amina blends textile, digital collage, and immersive installations to explore identity and memory. We
                   unpack her process, her cooperative mindset, and how shared authorship shapes her latest exhibition.
                 </p>
@@ -157,7 +157,7 @@ export default function News() {
               </div>
             </div>
             {/* Article Card 2: What Artists Really Need - Insights from Interviews */}
-            <div className="card bg-base-200 shadow-xl overflow-hidden">
+            <div className="card bg-base-200 text-base-content shadow-xl overflow-hidden">
               <figure className="relative h-48 w-full">
                 <Image
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg"
@@ -170,7 +170,7 @@ export default function News() {
                 <h4 className="card-title text-xl text-primary">
                   What Artists Really Need: Insights from Our Member Interviews
                 </h4>
-                <p className="text-gray-700 text-sm">
+                <p className="text-base-content/80 text-sm">
                   From tools to pricing, our journalists analyzed data from extended interviews with TAG members to
                   uncover what drives artist success—and what platforms must evolve to meet their needs.
                 </p>
@@ -182,7 +182,7 @@ export default function News() {
               </div>
             </div>
             {/* Article Card 3: Art & Algorithms - Hacking AI for Good */}
-            <div className="card bg-base-200 shadow-xl overflow-hidden">
+            <div className="card bg-base-200 text-base-content shadow-xl overflow-hidden">
               <figure className="relative h-48 w-full">
                 <Image
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg"
@@ -195,7 +195,7 @@ export default function News() {
                 <h4 className="card-title text-xl text-primary">
                   Art & Algorithms: How Creatives Are Hacking AI for Good
                 </h4>
-                <p className="text-gray-700 text-sm">
+                <p className="text-base-content/80 text-sm">
                   We explore how TAG artists are turning generative tech into collaborative tools—from training models
                   on personal portfolios to co-authoring with bots. This isn’t automation; it’s augmentation.
                 </p>
@@ -207,7 +207,7 @@ export default function News() {
               </div>
             </div>
             {/* Article Card 4: The Studio is the Cooperative - Shared Governance */}
-            <div className="card bg-base-200 shadow-xl overflow-hidden">
+            <div className="card bg-base-200 text-base-content shadow-xl overflow-hidden">
               <figure className="relative h-48 w-full">
                 <Image
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg"
@@ -220,7 +220,7 @@ export default function News() {
                 <h4 className="card-title text-xl text-primary">
                   The Studio is the Cooperative: Why Shared Governance Fuels Better Art
                 </h4>
-                <p className="text-gray-700 text-sm">
+                <p className="text-base-content/80 text-sm">
                   A deep dive into how collective decision-making—from stock buybacks to platform features—is rewriting
                   what creative ownership can look like. Hear from members building this new reality.
                 </p>
@@ -234,10 +234,10 @@ export default function News() {
           </div>
         </section>
         {/* Call to Action / Footer */}
-        <section className="py-16 bg-gradient-to-r from-purple-800 to-pink-700 rounded-box shadow-lg px-6">
+        <section className="py-16 bg-linear-to-r from-purple-800 to-pink-700 rounded-box shadow-lg px-6">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Stay Informed with TAG News</h2>
-            <p className="text-xl mb-8 max-w-2xl mx-auto text-white">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-base-100">Stay Informed with TAG News</h2>
+            <p className="text-xl mb-8 max-w-2xl mx-auto text-base-100">
               Subscribe to our newsletter for the latest articles, artist spotlights, and industry insights.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -252,3 +252,4 @@ export default function News() {
     </SocialRealtimeProvider>
   )
 }
+

@@ -63,7 +63,7 @@ const ListingCard = ({ listing }) => {
 
   return (
     <div 
-      className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full rounded-box group"
+      className="card bg-base-100 text-base-content shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full rounded-box group border border-base-300"
       onMouseEnter={() => setShowQuickReactions(true)}
       onMouseLeave={() => setShowQuickReactions(false)}
     >
@@ -104,15 +104,15 @@ const ListingCard = ({ listing }) => {
         >
           {listing?.title || "Untitled"}
         </Link>
-        <p className="text-lg text-neutral-content line-clamp-3">
+        <p className="text-lg text-base-content/90 line-clamp-3">
           {listing?.description || "No description available"}
         </p>
-        <p className="text-sm text-neutral-content mt-2">
+        <p className="text-sm text-base-content/80 mt-2">
           Listing created:{" "}
           {listing?.created ? new Date(listing.created).toLocaleDateString("en-US") : "No date available"}
         </p>
-        <p className="text-sm text-neutral-content">Artist: {listing?.artist?.title || "No artist found"}</p>
-        <p className="text-sm text-neutral-content">
+        <p className="text-sm text-base-content/80">Artist: {listing?.artist?.title || "No artist found"}</p>
+        <p className="text-sm text-base-content/80">
           Category: {listing?.artCategory?.category || "No category found"}
         </p>
 

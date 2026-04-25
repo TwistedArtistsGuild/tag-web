@@ -67,7 +67,7 @@ const Log = props => {
 										<td>{log.shorttext}</td>
 										<td>{log.longtext}</td>
 										<td>{log.critical}</td>
-										<td> <div className="text-xs text-gray-500">
+										<td> <div className="text-xs text-base-content/60">
 	{log.logtimestamp ? new Date(log.logtimestamp.toString()).toLocaleDateString("en-US", options) : "-"}
 </div> </td>
 									</tr>
@@ -96,4 +96,5 @@ Log.getInitialProps = async function () {
 }
 
 export default Log
+
 

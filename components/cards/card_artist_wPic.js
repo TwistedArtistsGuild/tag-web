@@ -67,11 +67,11 @@ const ArtistCardWithPic = ({ artist }) => {
   }
 
   return (
-    <div className="card lg:card-side bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl border border-base-300">
+    <div className="card lg:card-side bg-base-100 text-base-content shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl border border-base-300 rounded-box">
       {/* Main content area, excluding social icons */}
-      <Link href={`/artists/${artist.path}`} passHref className="flex flex-grow cursor-pointer">
+      <Link href={`/artists/${artist.path}`} passHref className="flex grow cursor-pointer">
         {/* Image Slideshow Section */}
-        <figure className="p-4 flex-shrink-0 w-48 h-48 relative">
+        <figure className="p-4 shrink-0 w-48 h-48 relative">
           <div className="carousel w-full h-full rounded-box overflow-hidden">
             {artist.images && artist.images.length > 0 ? (
               artist.images.map((image, index) => (
@@ -105,8 +105,8 @@ const ArtistCardWithPic = ({ artist }) => {
         </figure>
 
         {/* Artist Details Section */}
-        <div className="card-body p-4 flex-grow justify-center">
-          <h2 className="card-title text-lg font-semibold">{artist.title}</h2>
+        <div className="card-body p-4 grow justify-center">
+          <h2 className="card-title text-lg font-semibold text-base-content">{artist.title}</h2>
           <p className="text-sm text-base-content/60">{artist.byline}</p>
         </div>
       </Link>

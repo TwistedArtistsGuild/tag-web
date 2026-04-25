@@ -69,7 +69,7 @@ export default function Contact() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-base-100 via-base-200 to-base-300 text-base-content">
+    <div className="min-h-screen bg-linear-to-br from-base-100 via-base-200 to-base-300 text-base-content">
       <TagSEO metadataProp={pageMetaData} canonicalSlug="contact" />
 
       {/* Hero Section */}
@@ -102,7 +102,7 @@ export default function Contact() {
                 onMouseEnter={() => setHoveredSocial(index)}
                 onMouseLeave={() => setHoveredSocial(null)}
               >
-                <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-2">
+                <div className="bg-base-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-2">
                   <svg
                     className="w-12 h-12 mx-auto mb-3 transition-colors duration-300"
                     fill={hoveredSocial === index ? social.hoverColor : social.color}
@@ -111,15 +111,15 @@ export default function Contact() {
                   >
                     <path d={social.icon} />
                   </svg>
-                  <p className="font-semibold text-gray-800 group-hover:text-primary transition-colors duration-300">
+                  <p className="font-semibold text-base-content group-hover:text-primary transition-colors duration-300">
                     {social.name}
                   </p>
                 </div>
                 {/* Tooltip */}
                 {hoveredSocial === index && (
-                  <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-lg text-sm whitespace-nowrap z-10">
+                  <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-neutral text-neutral-content px-3 py-1 rounded-lg text-sm whitespace-nowrap z-10">
                     Follow us on {social.name}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-neutral"></div>
                   </div>
                 )}
               </a>
@@ -138,7 +138,7 @@ export default function Contact() {
           <p className="text-lg text-base-content/70 mb-6">
             Let us know you're interested and we'll put you on the onboarding list!
           </p>
-          <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl mx-auto mb-4" style={{ minHeight: 700 }}>
+          <div className="bg-base-100 rounded-3xl shadow-2xl p-8 max-w-2xl mx-auto mb-4" style={{ minHeight: 700 }}>
             <div className="w-full" style={{ minHeight: 600 }}>
               <iframe
                 src="https://api.leadconnectorhq.com/widget/form/jqVGvHmn4pv8gb67G3zU"
@@ -185,3 +185,4 @@ export default function Contact() {
     </div>
   )
 }
+

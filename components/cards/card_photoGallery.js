@@ -18,7 +18,7 @@ import 'react-image-gallery/styles/image-gallery.css';
 const PhotoGallery = ({ images }) => {
 	return (
 		<div className="container mx-auto my-8">
-			<div className="card shadow-lg bg-base-100">
+			<div className="card shadow-lg bg-base-100 text-base-content border border-base-300">
 				<ImageGallery
 					items={images}
 					showThumbnails={true} // Enable thumbnails
@@ -33,12 +33,12 @@ const PhotoGallery = ({ images }) => {
 			<style jsx global>{`
 				.custom-gallery .image-gallery-slide img {
 					border-radius: 0.5rem;
-					border: 0.125rem solid #000;
+					border: 0.125rem solid hsl(var(--bc) / 0.25);
 				}
 				.custom-gallery .image-gallery-thumbnail img {
 					width: 6.25rem !important; 
 					height: 4.125rem !important; 
-					border: 0.0625rem solid #000; 
+					border: 0.0625rem solid hsl(var(--bc) / 0.3); 
 					margin: 0.3125rem; 
 				}
 				.custom-gallery .image-gallery-thumbnails-wrapper {

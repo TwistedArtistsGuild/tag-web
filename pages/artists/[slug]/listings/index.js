@@ -30,7 +30,7 @@ const Listing = props => {
 	const options = shortDateOptions
 
 	return (
-		<div className="card shadow-lg p-4">
+        <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
 			<Image
 				src={props.listing?.profilePic?.url || "/blank_image.png"}
 				alt={props.listing?.profilePic?.alttext || `${props.listing?.title || 'Unknown'}'s picture`}
@@ -160,7 +160,7 @@ const ArtistListings = ({ initialListings = [] }) => {
                     <Link 
                         href={`/artists/${slug}/listings/${listing.path}`} 
                         key={listing.listingID}
-                        className="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow duration-300"
+                        className="card bg-base-100 text-base-content border border-base-300 shadow-xl hover:shadow-2xl transition-shadow duration-300"
                     >
                         <figure className="h-48">
                             <img 

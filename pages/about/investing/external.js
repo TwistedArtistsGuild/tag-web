@@ -30,7 +30,7 @@ const External = () => {
   }, [setPageSections])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300">
+    <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
       <Head>
         <title>External Investors | Twisted Artists Guild</title>
         <meta
