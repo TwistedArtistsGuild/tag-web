@@ -11,130 +11,40 @@
 "use client"
 
 import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
-import { useState } from "react"
+import { useLayout } from "@/components/LayoutProvider"
+
+const themes = [
+  "tag-theme",
+  "neon",
+  "light",
+  "dark",
+  "cupcake",
+  "bumblebee",
+  "emerald",
+  "corporate",
+  "synthwave",
+  "retro",
+  "valentine",
+  "halloween",
+  "garden",
+  "aqua",
+  "pastel",
+  "fantasy",
+  "black",
+  "luxury",
+  "dracula",
+]
 
 const ThemeSampler = () => {
-  // Use local state for theme selection
-  const [currentTheme, setTheme] = useState("light")
-  const themes = [
-    "light",
-    "dark",
-    "cupcake",
-    "bumblebee",
-    "emerald",
-    "corporate",
-    "synthwave",
-    "retro",
-    "cyberpunk",
-    "valentine",
-    "halloween",
-    "garden",
-    "forest",
-    "aqua",
-    "lofi",
-    "pastel",
-    "fantasy",
-    "wireframe",
-    "black",
-    "luxury",
-    "dracula",
-    "cmyk",
-    "autumn",
-    "business",
-    "acid",
-    "lemonade",
-    "night",
-    "winter",
-    "dim",
-    "nord",
-    "sunset",
-    // Custom themes
-    "light-custom",
-    "dark-custom",
-    "cupcake-custom",
-    "bumblebee-custom",
-    "emerald-custom",
-    // Add more experimental or preview themes here
-    "rose",
-    "oceanic",
-    "midnight",
-    "solarized",
-    "gruvbox",
-    "material",
-    "nordic",
-  ]
-
-  // Set the theme on the html tag for DaisyUI
-  // This ensures the preview updates live
-  if (typeof window !== "undefined") {
-    document.documentElement.setAttribute("data-theme", currentTheme)
-  }
+  const { theme, updateTheme } = useLayout()
 
   return (
     <div className="p-8 min-h-screen bg-base-200 text-base-content">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8 text-center">daisyUI Theme Sampler</h1>
 
-        <div className="mb-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <label htmlFor="theme-select" className="text-lg font-medium">
-            Select Theme:
-          </label>
-          <select
-            id="theme-select"
-            value={currentTheme}
-            onChange={(e) => setTheme(e.target.value)}
-            className="select select-bordered w-full max-w-xs"
-          >
-            {themes.map((theme) => (
-              <option key={theme} value={theme}>
-                {theme.charAt(0).toUpperCase() + theme.slice(1).replace(/-/g, " ")}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Optionally show the ThemeSwitcher for comparison, but with a limited set */}
         <div className="mb-8 flex flex-col items-center">
-          <ThemeSwitcher
-            themes={[
-              "light",
-              "dark",
-              "cupcake",
-              "bumblebee",
-              "emerald",
-              "corporate",
-              "synthwave",
-              "retro",
-              "cyberpunk",
-              "valentine",
-              "halloween",
-              "garden",
-              "forest",
-              "aqua",
-              "lofi",
-              "pastel",
-              "fantasy",
-              "wireframe",
-              "black",
-              "luxury",
-              "dracula",
-              "cmyk",
-              "autumn",
-              "business",
-              "acid",
-              "lemonade",
-              "night",
-              "winter",
-              "dim",
-              "nord",
-              "sunset",
-            ]}
-            currentTheme={currentTheme}
-            onThemeChange={setTheme}
-          />
-          <span className="text-xs text-base-content/60 mt-2">
-            ThemeSwitcher only shows official themes
-          </span>
+          <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={updateTheme} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
