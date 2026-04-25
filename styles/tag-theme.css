@@ -43,29 +43,27 @@ Open source · low-profit · human-first*/
 * For more info: https://daisyui.com/docs/themes/
 */
 [data-theme="tag-theme"] {
-  /* Base colors */
-  --p: var(--tag-primary);
-  --pc: var(--tag-ghost-white); /* High contrast text on indigo */
-  --s: var(--tag-secondary);
-  --sc: var(--tag-onyx); /* High contrast text on chartreuse */
-  --a: var(--tag-accent);
-  --ac: var(--tag-onyx);
-  --n: var(--tag-neutral);
-  --nc: var(--tag-base-content);
-  --b1: var(--tag-base-100);
-  --b2: var(--tag-base-200);
-  --b3: var(--tag-base-300);
-  --bc: var(--tag-base-content);
-
-  /* State colors */
-  --in: var(--tag-info);
-  --inc: var(--tag-ghost-white);
-  --su: var(--tag-success);
-  --suc: var(--tag-onyx);
-  --wa: var(--tag-warning);
-  --wac: var(--tag-onyx);
-  --er: var(--tag-error);
-  --erc: var(--tag-ghost-white);
+  /* daisyUI v5 color variables */
+  --color-primary: var(--tag-primary);
+  --color-primary-content: var(--tag-ghost-white);
+  --color-secondary: var(--tag-secondary);
+  --color-secondary-content: var(--tag-onyx);
+  --color-accent: var(--tag-accent);
+  --color-accent-content: var(--tag-onyx);
+  --color-neutral: var(--tag-neutral);
+  --color-neutral-content: var(--tag-base-content);
+  --color-base-100: var(--tag-base-100);
+  --color-base-200: var(--tag-base-200);
+  --color-base-300: var(--tag-base-300);
+  --color-base-content: var(--tag-base-content);
+  --color-info: var(--tag-info);
+  --color-info-content: var(--tag-ghost-white);
+  --color-success: var(--tag-success);
+  --color-success-content: var(--tag-onyx);
+  --color-warning: var(--tag-warning);
+  --color-warning-content: var(--tag-onyx);
+  --color-error: var(--tag-error);
+  --color-error-content: var(--tag-ghost-white);
 
   /* Typography settings */
   font-family: "Roboto", "Open Sans", "Lato", sans-serif;
@@ -136,6 +134,34 @@ Open source · low-profit · human-first*/
     var(--tag-onyx) 100%
   );
   opacity: 0.95;
+}
+
+/* Subtle accent shadow for body text — lifts non-highlighted text off dark backgrounds */
+.tag-text-accent-shadow {
+  text-shadow:
+    0 0 6px color-mix(in oklab, var(--tag-primary) 50%, transparent),
+    0 1px 3px color-mix(in oklab, var(--tag-primary) 30%, transparent);
+}
+
+/* Glow effect for primary buttons to improve visibility on dark cards */
+.tag-btn-glow {
+  box-shadow:
+    0 0 8px color-mix(in oklab, var(--tag-primary) 100%, transparent),
+    0 0 20px color-mix(in oklab, var(--tag-primary) 80%, transparent),
+    0 0 40px color-mix(in oklab, var(--tag-primary) 50%, transparent);
+}
+
+.tag-btn-glow:hover {
+  box-shadow:
+    0 0 12px color-mix(in oklab, var(--tag-primary) 100%, transparent),
+    0 0 30px color-mix(in oklab, var(--tag-primary) 90%, transparent),
+    0 0 60px color-mix(in oklab, var(--tag-primary) 60%, transparent);
+}
+
+/* Force readable text on primary buttons regardless of daisyUI v5 theme resolution */
+[data-theme="tag-theme"] .btn-primary {
+  color: var(--tag-ghost-white);
+  background-color: var(--tag-electric-indigo);
 }
 
 /* Glow helpers aligned to the new palette */
