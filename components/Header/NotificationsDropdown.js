@@ -13,7 +13,6 @@
 import Link from "next/link"
 import Image from "next/image"
 import { X } from 'lucide-react' // Import X icon
-import { useMemo } from "react"
 
 const notificationLinks = [
   "/artists",
@@ -24,30 +23,8 @@ const notificationLinks = [
 ]
 
 export default function NotificationsDropdown({ notifications = [], isOpen, onClose, anchorEl }) {
-  const style = useMemo(() => {
-    if (!anchorEl || !isOpen) {
-      return { display: "none" }
-    }
-
-    const rect = anchorEl.getBoundingClientRect()
-    return {
-      position: "fixed",
-      top: rect.bottom + 8,
-      right: window.innerWidth - rect.right,
-      zIndex: 100,
-      width: 420,
-      maxWidth: "100vw",
-      maxHeight: `calc(100vh - ${rect.bottom + 8}px)`,
-      boxShadow: '0 0 0 4px rgba(0,0,0,0.08), 0 8px 32px rgba(0,0,0,0.18)',
-      borderLeft: "2px solid var(--fallback-b3, #d1d5db)",
-      background: "var(--fallback-b1, #fff)",
-      borderRadius: 0,
-      display: "block",
-    }
-  }, [anchorEl, isOpen])
-
   return (
-    <div style={style} className="shadow-lg flex flex-col max-h-[80vh]">
+    <div className="h-full w-full flex flex-col max-h-[80vh] overflow-hidden shadow-lg">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-base-200 bg-base-200 text-base-content">
         <h3 className="text-xl font-bold">Notifications</h3>

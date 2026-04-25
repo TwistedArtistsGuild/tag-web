@@ -18,9 +18,8 @@ import Image from "next/image"
 import { useSession } from "next-auth/react" // Using useSession for authentication
 import LoginProfile from "@/components/Header/LoginProfile"
 import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
-import DropdownMenu from "@/components/Header/DropdownMenu"
 import { useLayout } from "@/components/LayoutProvider"
-import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu } from "lucide-react"
+import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu, Search } from "lucide-react"
 import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
 import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
@@ -49,7 +48,7 @@ const themes = [
 
 export default function Header() {
   const { data: session } = useSession() // Use session for user data
-  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar, theme, updateTheme } = useLayout()
+  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar, isLeftSidebarVisible, theme, updateTheme } = useLayout()
   const router = useRouter()
   const [active, setActive] = useState("") // State for active navigation link
   const [isNotificationsDropdownOpen, setIsNotificationsDropdownOpen] = useState(false)
@@ -186,6 +185,25 @@ export default function Header() {
 
           {/* Center: Main Navigation - Desktop */}
           <nav className="hidden lg:flex items-center space-x-6">
+            {/* Search icon - opens sidebar and focuses search */}
+            <button
+              className="btn btn-ghost btn-sm btn-circle"
+              aria-label="Open search"
+              onClick={() => {
+                if (!isLeftSidebarVisible) toggleLeftSidebar()
+                window.dispatchEvent(new CustomEvent("sidebarSearchFocus"))
+              }}
+            >
+              <Search size={20} />
+            </button>
+            <Link
+              href="/art/"
+              className={`text-lg ${getTextColorClass(active === "art")}`}
+              onClick={() => handleActive("art")}
+              name="art"
+            >
+              Bloomscroll
+            </Link>
             <Link
               href="/artists"
               className={`text-lg ${getTextColorClass(active === "artist")}`}
@@ -194,19 +212,6 @@ export default function Header() {
             >
               Artists
             </Link>
-            <DropdownMenu
-              title="Art"
-              titleHref="/art/"
-              active={active === "art"}
-              onActivate={() => handleActive("art")}
-              options={[
-                { label: "Physical", href: "/art/physical" },
-                { label: "Digital", href: "/art/digital" },
-                { label: "Performance", href: "/art/performance" },
-                { label: "Search", href: "/search/" },
-              ]}
-              className={`text-lg ${getTextColorClass(active === "art")}`}
-            />
             <Link
               href="/events"
               className={`text-lg ${getTextColorClass(active === "events")}`}
