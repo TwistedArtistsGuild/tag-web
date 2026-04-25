@@ -20,39 +20,77 @@ export default function ProfilePage() {
 	const profile = profiles.find((p) => p.slug === slug);
 
 	if (!profile) {
-		return <p className="text-center mt-10 text-error">Profile not found.</p>;
+		return (
+			<div className="min-h-screen flex items-center justify-center bg-base-200">
+				<div className="alert alert-error max-w-sm">
+					<span>Profile not found.</span>
+				</div>
+			</div>
+		);
 	}
 
 	return (
-		<div className="container mx-auto p-4">
-			<h1 className="text-3xl font-bold text-center mb-6">{profile.name}</h1>
-			<h2 className="text-xl font-semibold text-center text-base-content/80 mb-4">{profile.title}</h2>
-			<h3 className="text-lg font-semibold text-center text-base-content mb-4">
-				<strong>Art Forms:</strong> {profile.artForms.join(", ")}{" "}
-				<span className="text-primary">
-					<Link href={profile.linkToArtistPage} className="link link-primary">
-						(View {profile.name.split(" ")[0]}'s Artist Page)
-					</Link>
-				</span>
-			</h3>
-			
+		<div className="min-h-screen bg-base-200 py-8 px-4">
+
+			{/* Gallery — 80% width, centered */}
 			{profile.images.length > 0 && (
-				<div className="mb-8">
+				<div className="mx-auto mb-8" style={{ width: "80%" }}>
 					<PhotoGallery
 						images={profile.images.map((url) => ({ original: url, thumbnail: url }))}
 					/>
 				</div>
 			)}
 
-            <div className="mb-8">
-				<p className="text-base-content/80">{profile.bio}</p>
+			{/* Hero identity card */}
+			<div className="card bg-base-100 border border-base-300 shadow-xl mx-auto mb-6 max-w-3xl">
+				<div className="card-body items-center text-center gap-2">
+					<h1 className="card-title text-4xl font-extrabold text-primary">
+						{profile.name}
+					</h1>
+					<h2 className="text-lg font-semibold text-base-content/80">
+						{profile.title}
+					</h2>
+					{profile.roleSummary && (
+						<p className="text-sm text-base-content/60 italic max-w-xl">
+							{profile.roleSummary}
+						</p>
+					)}
+					<div className="divider my-1" />
+					{/* Art form badges */}
+					<div className="flex flex-wrap justify-center gap-2">
+						{profile.artForms.map((form) => (
+							<span key={form} className="badge badge-primary badge-outline text-sm px-3 py-3">
+								{form}
+							</span>
+						))}
+					</div>
+					<div className="card-actions mt-2">
+						<Link href={profile.linkToArtistPage} className="btn btn-primary btn-sm">
+							View {profile.name.trim().split(" ")[0]}&apos;s Artist Page →
+						</Link>
+					</div>
+				</div>
 			</div>
+
+			{/* Bio panel */}
+			<div className="card bg-base-100 border border-base-300 shadow-md mx-auto mb-8 max-w-3xl">
+				<div className="card-body">
+					<div
+						className="prose prose-base max-w-none text-base-content
+							prose-h2:text-primary prose-h2:font-bold prose-h2:mt-6 prose-h2:mb-2
+							prose-p:leading-relaxed prose-strong:text-base-content
+							prose-ul:list-disc prose-ul:pl-5 prose-li:mb-1
+							prose-blockquote:border-l-4 prose-blockquote:border-primary
+							prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-base-content/70"
+						dangerouslySetInnerHTML={{ __html: profile.bio }}
+					/>
+				</div>
+			</div>
+
+			{/* Footer nav */}
 			<div className="text-center">
-				<button
-					className="btn btn-primary"
-					onClick={() => router.back()}
-				>
-					Go Back
+				<button className="btn btn-ghost" onClick={() => router.back()}>
+					← Go Back
 				</button>
 			</div>
 		</div>
