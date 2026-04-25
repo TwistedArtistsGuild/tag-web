@@ -14,13 +14,7 @@ import TiptapEditor from "@/components/widgets/tiptap-editor";
 export default function TTTitleLine({ value, onChange, allowedFonts = [] }) {
   return (
     <div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
-      <h2 className="text-lg font-semibold">Title Line (H1/H2/H3)</h2>
-      <p className="text-sm text-base-content/70">
-        Single-line title editor with playful display and script fonts plus heading controls.
-      </p>
-      <p className="text-xs text-base-content/60">
-        Reminder: pass allowedFonts to restrict this to a smaller approved set.
-      </p>
+
       <TiptapEditor
         value={value}
         onChange={onChange}

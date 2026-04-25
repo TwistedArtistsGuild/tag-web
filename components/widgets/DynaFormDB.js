@@ -17,6 +17,8 @@ import { useSession } from "next-auth/react";
 import getApiURL from "@/components/widgets/GetApiURL";
 import TTArticle from "@/components/social/TT_Article";
 import TTSingleLine from "@/components/social/TT_SingleLine";
+import TTTitleLine from "@/components/social/TT_TitleLine";
+import TTPortfolio from "@/components/social/TT_Portfolio";
 
 /**
  * Dynamic Form component that renders form fields based on metadata
@@ -34,10 +36,26 @@ export default function DynaForm(props) {
   
   // Unwrap the metadata object. If props.metadataProp is an array, take the first element.
   const rawMetadata = props.metadataProp || {};
-  const metadata = useMemo(() => 
-    Array.isArray(rawMetadata) ? rawMetadata[0] : rawMetadata, 
-    [rawMetadata]
-  );
+  const metadata = useMemo(() => {
+    if (Array.isArray(rawMetadata)) {
+      return rawMetadata[0] || null;
+    }
+
+    // Some callers accidentally spread an array into an object, producing a "0" key.
+    if (rawMetadata && typeof rawMetadata === "object" && rawMetadata[0] && !rawMetadata.forms_Fields) {
+      return {
+        ...rawMetadata[0],
+        APIURL: rawMetadata.APIURL || rawMetadata[0].APIURL,
+        APIURLpostfix: rawMetadata.APIURLpostfix || rawMetadata[0].APIURLpostfix,
+        apiurlpostfix: rawMetadata.apiurlpostfix || rawMetadata[0].apiurlpostfix,
+        apiurLpostfix: rawMetadata.apiurLpostfix || rawMetadata[0].apiurLpostfix,
+        FromURL: rawMetadata.FromURL || rawMetadata[0].FromURL,
+        redirectURL: rawMetadata.redirectURL || rawMetadata[0].redirectURL,
+      };
+    }
+
+    return rawMetadata;
+  }, [rawMetadata]);
   
   // Form state - clone initial data to avoid direct prop mutation
   const [formValues, setFormValues] = useState({});
@@ -46,7 +64,6 @@ export default function DynaForm(props) {
   const [requestMethod, setRequestMethod] = useState("POST");
   const [endpoint, setEndpoint] = useState("");
 
-  const [submissionError, setSubmissionError] = useState(null);
   const [browserInfo, setBrowserInfo] = useState(null);
   
   // Get browser info for anonymous users
@@ -135,7 +152,7 @@ export default function DynaForm(props) {
     
     const method = requestMap[props.request] || "POST";
     setRequestMethod(method);
-    
+
     if (process.env.NODE_ENV === 'development') {
       console.log("DynaFormDB endpoint set to:", endpoint);
       console.log("DynaFormDB request method:", method);
@@ -292,7 +309,6 @@ export default function DynaForm(props) {
     } catch (error) {
       console.error("Error during form submission:", error);
       setFormError(`Submission failed: ${error.message}`);
-      setSubmissionError(error.message);
       
       // Debug error in console
       if (process.env.NODE_ENV === 'development') {
@@ -492,6 +508,7 @@ export default function DynaForm(props) {
                       <TTPortfolio
                           value={currentValue}
                           onChange={(html) => handleFieldChange(field.name, html)}
+                          showActionButtons={false}
                           onSaveDraft={() => { }}
                           onPublish={() => { }}
                       />
