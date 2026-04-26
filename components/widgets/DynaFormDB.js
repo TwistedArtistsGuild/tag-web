@@ -35,8 +35,9 @@ export default function DynaForm(props) {
   const api_url = getApiURL();
   
   // Unwrap the metadata object. If props.metadataProp is an array, take the first element.
-  const rawMetadata = props.metadataProp || {};
   const metadata = useMemo(() => {
+    const rawMetadata = props.metadataProp || {};
+
     if (Array.isArray(rawMetadata)) {
       return rawMetadata[0] || null;
     }
@@ -55,44 +56,58 @@ export default function DynaForm(props) {
     }
 
     return rawMetadata;
-  }, [rawMetadata]);
+  }, [props.metadataProp]);
+
+  const browserInfo = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    return {
+      userAgent: window.navigator.userAgent,
+      language: window.navigator.language,
+      doNotTrack: window.navigator.doNotTrack,
+      cookiesEnabled: window.navigator.cookieEnabled,
+      platform: window.navigator.platform,
+      screenWidth: window.screen.width,
+      screenHeight: window.screen.height,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      referrer: document.referrer || null,
+      urlPath: window.location.pathname,
+      formAccessTime: new Date().toISOString(),
+    };
+  }, []);
+
+  const endpoint = useMemo(() => {
+    if (metadata.APIURL) {
+      return metadata.APIURL;
+    }
+
+    if (metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix) {
+      const baseUrl = api_url || "";
+      const postfix = metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix || "";
+      const separator = baseUrl.endsWith('/') || postfix.startsWith('/') ? '' : '/';
+
+      return `${baseUrl}${separator}${postfix}`;
+    }
+
+    return "";
+  }, [api_url, metadata.APIURL, metadata.APIURLpostfix, metadata.apiurlpostfix, metadata.apiurLpostfix]);
+
+  const requestMethod = useMemo(() => {
+    const requestMap = {
+      add: "POST",
+      update: "PUT",
+      delete: "DELETE"
+    };
+
+    return requestMap[props.request] || "POST";
+  }, [props.request]);
   
   // Form state - clone initial data to avoid direct prop mutation
   const [formValues, setFormValues] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
-  const [requestMethod, setRequestMethod] = useState("POST");
-  const [endpoint, setEndpoint] = useState("");
-
-  const [browserInfo, setBrowserInfo] = useState(null);
-  
-  // Get browser info for anonymous users
-  useEffect(() => {
-    // Only collect browser info if we're in a browser environment
-    if (typeof window !== 'undefined') {
-      const browserDetails = {
-        // Safe, non-intrusive data collection
-        userAgent: window.navigator.userAgent,
-        language: window.navigator.language,
-        doNotTrack: window.navigator.doNotTrack,
-        cookiesEnabled: window.navigator.cookieEnabled,
-        platform: window.navigator.platform,
-        screenWidth: window.screen.width,
-        screenHeight: window.screen.height,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        referrer: document.referrer || null,
-        urlPath: window.location.pathname,
-        // Add a timestamp for when the form was accessed
-        formAccessTime: new Date().toISOString()
-      };
-      
-      setBrowserInfo(browserDetails);
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Anonymous user browser info:", browserDetails);
-      }
-    }
-  }, []);
 
   // Initialize form data from props
   useEffect(() => {
@@ -111,7 +126,9 @@ export default function DynaForm(props) {
       });
     }
     
-    setFormValues(initialValues);
+    const frameId = window.requestAnimationFrame(() => {
+      setFormValues(initialValues);
+    });
     
     // Debug output immediately on load - not waiting for form submission
     if (process.env.NODE_ENV === 'development') {
@@ -123,41 +140,8 @@ export default function DynaForm(props) {
       console.log("Session Data:", session);
       console.groupEnd();
     }
-  }, [props.formData, metadata, session]);
-
-  /**
-   * Set up API endpoint and request method
-   */
-  useEffect(() => {
-    // Check for direct APIURL first (takes precedence)
-    if (metadata.APIURL) {
-        setEndpoint(metadata.APIURL);
-    } 
-    // 2. Fall back to postfix - checking for the specific casing in your error log: apiurLpostfix
-    else if (metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix) {
-        const baseUrl = api_url || "";
-        const postfix = metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix || "";
-
-        // Ensure there is a slash between base and postfix
-        const separator = (baseUrl.endsWith('/') || postfix.startsWith('/')) ? '' : '/';
-        setEndpoint(`${baseUrl}${separator}${postfix}`);
-    }
-    
-    // Map request type to HTTP method
-    const requestMap = {
-      add: "POST",
-      update: "PUT",
-      delete: "DELETE"
-    };
-    
-    const method = requestMap[props.request] || "POST";
-    setRequestMethod(method);
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log("DynaFormDB endpoint set to:", endpoint);
-      console.log("DynaFormDB request method:", method);
-    }
-  }, [metadata.APIURL, metadata.apiurlpostfix, props.request, api_url]);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [api_url, endpoint, metadata, props.formData, props.request, session]);
 
   /**
    * Handles input field changes and updates form state

@@ -32,7 +32,7 @@ const appInsights = new ApplicationInsights({
  * Enhanced App Component - keeps your original structure but adds collapsible layout
  */
 export default function App({ Component, pageProps: { session, sidebarProps, ...pageProps } }) {
-  const [showDevBanner, setShowDevBanner] = useState(true)
+  const [dismissedBannerPath, setDismissedBannerPath] = useState(null)
   const router = useRouter()
 
   // Allow pages to override the default layout if needed
@@ -40,8 +40,6 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
 
   // Initialize Application Insights
   useEffect(() => {
-    setShowDevBanner(true)
-
     if (!appInsightsInitialized) {
       const connectionString = process.env.APPINSIGHTS || process.env.NEXT_PUBLIC_APPINSIGHTS
 
@@ -68,8 +66,10 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
   }, [Component])
 
   const closeBanner = () => {
-    setShowDevBanner(false)
+    setDismissedBannerPath(router.asPath)
   }
+
+  const showDevBanner = dismissedBannerPath !== router.asPath
 
   const canonicalSlug = (router.asPath || "/").split("?")[0].split("#")[0].replace(/^\//, "")
   const fallbackTitle = canonicalSlug

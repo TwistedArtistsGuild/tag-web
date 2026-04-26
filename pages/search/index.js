@@ -8,13 +8,12 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import React, { useState, useEffect } from "react"
-import { useRouter } from "next/router"
+import React, { useState } from "react"
 import Link from "next/link"
 import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 
-const SearchPage = ({ initialSearchTerm, results: initialResults = [], status }) => {
+const SearchPage = ({ initialSearchTerm, results: initialResults = [] }) => {
 	const pageMetaData = {
 		title: "Search",
 		description: "Search artists, listings, and related content across Platform.",
@@ -30,13 +29,6 @@ const SearchPage = ({ initialSearchTerm, results: initialResults = [], status })
 	const [searchType, setSearchType] = useState("artist")
 	const [orderBy, setOrderBy] = useState("relevance")
 	const [results, setResults] = useState(initialResults)
-	const router = useRouter()
-
-	useEffect(() => {
-		if (initialSearchTerm) {
-			setResults(initialResults)
-		}
-	}, [initialSearchTerm, initialResults])
 
 	const handleSearch = async () => {
 		const api_url = getApiURL()

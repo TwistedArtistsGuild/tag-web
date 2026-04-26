@@ -9,7 +9,6 @@
 
  Open source · low-profit · human-first*/
 
-import ListingCard from "@/components/cards/card_listing"
 //Imports
 import {useRouter} from "next/router"
 //import Picture from '../../components/picture/[context]/[slug].js' 
@@ -18,7 +17,6 @@ import Image from "next/image" // Next v10+ (Not working and not called at this 
 import Link from "next/link"
 import { useState, useEffect } from "react" //Sidebar state
 import getApiURL from "@/components/widgets/GetApiURL"
-import shortDateOptions from "@/utils/shortdateoptions"
 import TagSEO from "@/components/TagSEO"
 
 //process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0; // Dev environment only, allows for self-signed
@@ -28,8 +26,6 @@ import TagSEO from "@/components/TagSEO"
  * @param {object} props 
  */
 const Listing = props => {
-	const options = shortDateOptions
-
 	return (
         <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
 			<Image
@@ -177,10 +173,13 @@ const ArtistListings = ({ initialListings = [] }) => {
                         className="card bg-base-100 text-base-content border border-base-300 shadow-xl hover:shadow-2xl transition-shadow duration-300"
                     >
                         <figure className="h-48">
-                            <img 
+                            <Image 
                                 src={listing.profilePic?.url || '/blank_image.png'} 
                                 alt={listing.title || "Listing image"} 
+                                width={640}
+                                height={192}
                                 className="w-full h-full object-cover"
+                                unoptimized
                             />
                         </figure>
                         <div className="card-body p-4">

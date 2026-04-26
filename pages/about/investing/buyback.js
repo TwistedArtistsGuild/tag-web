@@ -17,6 +17,17 @@ import StockProgramBanner from "@/components/StockProgramBanner"
 
 import TagSEO from "@/components/TagSEO"
 
+const buybackSections = [
+  { id: "psrp-overview", label: "PSRP Overview" },
+  { id: "why-it-exists", label: "Why It Exists" },
+  { id: "program-highlights", label: "Program Highlights" },
+  { id: "repurchase-mechanics", label: "Repurchase Mechanics" },
+  { id: "eligibility-rules", label: "Eligibility & Share Class Rules" },
+  { id: "timing-waitlist", label: "Timing & Waitlist Logic" },
+  { id: "governance-disclosures", label: "Board & Governance Disclosures" },
+  { id: "liquidity-roadmap", label: "Long-Term Liquidity Roadmap" },
+]
+
 const Buyback = () => {
   const { setPageSections } = useAppContext()
   const pageMetaData = {
@@ -29,19 +40,8 @@ const Buyback = () => {
     },
   }
 
-  const sections = [
-    { id: "psrp-overview", label: "PSRP Overview" },
-    { id: "why-it-exists", label: "Why It Exists" },
-    { id: "program-highlights", label: "Program Highlights" },
-    { id: "repurchase-mechanics", label: "Repurchase Mechanics" },
-    { id: "eligibility-rules", label: "Eligibility & Share Class Rules" },
-    { id: "timing-waitlist", label: "Timing & Waitlist Logic" },
-    { id: "governance-disclosures", label: "Board & Governance Disclosures" },
-    { id: "liquidity-roadmap", label: "Long-Term Liquidity Roadmap" },
-  ]
-
   useEffect(() => {
-    setPageSections(sections)
+    setPageSections(buybackSections)
     return () => {
       setPageSections([])
     }

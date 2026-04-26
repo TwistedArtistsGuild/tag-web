@@ -19,11 +19,9 @@
  */
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
-import TagSEO from "@/components/TagSEO"
+import getApiURL from "@/components/widgets/GetApiURL";
 
 const api_url = getApiURL();
-const formName = "UserForm1";
 
 /**
  * Component for updating user details.

@@ -12,8 +12,8 @@
 
 import Image from "next/image" // Import Image component
 import Link from "next/link" // Import Link component
-import { SparklesIcon, BookOpenIcon, HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon } from "lucide-react" // Import Lucide icons
-import { SocialRealtimeProvider } from "../../components/social/SocialRealtimeContext"
+import { HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon } from "lucide-react" // Import Lucide icons
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 

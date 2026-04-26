@@ -50,7 +50,7 @@ export default function UpdateArtistForm1(props) {
 	// Make sure metadata and artist data are properly loaded before rendering the form
 	if (!props.metadataProp || !props.artistdata) {
 		return (
-      <div className="flex justify-center items-center min-h-[200px]">
+      <div className="flex justify-center items-center min-h-50">
       <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/update" />
 				<div className="loading loading-spinner loading-lg"></div>
 			</div>

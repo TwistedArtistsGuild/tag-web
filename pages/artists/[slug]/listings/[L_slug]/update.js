@@ -12,7 +12,6 @@
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 
 import TagSEO from "@/components/TagSEO"
@@ -52,8 +51,8 @@ export default function UpdateListingForm1(props) {
 
     // Make sure metadata and listing data are properly loaded before rendering the form
     if (!props.metadata || !props.listingData) {
-        return (
-      <div className="flex justify-center items-center min-h-[200px]">
+                return (
+            <div className="flex justify-center items-center min-h-50">
       <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Listings L Slug Update", description: "Explore Github Projects Web Pages Artists Slug Listings L Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Listings L Slug Update", description: "Explore Github Projects Web Pages Artists Slug Listings L Slug Update on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/listings/[L_slug]/update" />
                 <div className="loading loading-spinner loading-lg"></div>
             </div>
@@ -88,7 +87,7 @@ export default function UpdateListingForm1(props) {
  * @returns {Object} - Props for component
  */
 UpdateListingForm1.getInitialProps = async function (context) {
-    const { slug, L_slug } = context.query;
+    const { L_slug } = context.query;
     
     // If we don't have a listing slug, return an error
     if (!L_slug) { 

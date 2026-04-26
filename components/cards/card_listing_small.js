@@ -12,13 +12,6 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useState } from "react" // Import useState
-
-const getSeededCount = (seed, max, min = 1, salt = "") => {
-  const base = `${seed || "listing"}-${salt}`
-  const hash = base.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return (hash % max) + min
-}
 
 const ListingCardSmall = ({ listing }) => {
   return (

@@ -15,10 +15,20 @@
  * Static Page - Contact - Shows how to get in touch with the guild
  * @returns Next and React components
  */
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import Image from "next/image";
 import { useAppContext } from "@/components/Context";
 import TagSEO from "@/components/TagSEO";
-import Header from "@/components/Header/Header";
+
+const careerSections = [
+  { id: "director-of-technology", label: "Director of Technology" },
+  { id: "frontend-developer", label: "Frontend Developer" },
+  { id: "backend-developer", label: "Backend Developer" },
+  { id: "director-of-artist-relations", label: "Director of Artist Relations" },
+  { id: "director-of-supply-chain", label: "Director of Supply Chain" },
+  { id: "director-of-events", label: "Director of Events" },
+  { id: "director-of-customer-care", label: "Director of Customer Care" },
+]
 
 export default function Careers() {
   const { setPageSections } = useAppContext();
@@ -130,12 +140,9 @@ export default function Careers() {
     },
   ];
 
-  // Navigation sections for quick jump
-  const sections = jobListings.map((job) => ({ id: job.id, label: job.title }));
-
   // Set page sections in context when component mounts
   useEffect(() => {
-    setPageSections(sections);
+    setPageSections(careerSections);
 
     // Clean up when component unmounts
     return () => {
@@ -157,7 +164,7 @@ export default function Careers() {
           <div className="card-body">
             <h2 className="text-2xl font-semibold mb-2">{job.title}</h2>
             <p className="mb-2">{job.description}</p>
-            <img src={job.graphic} alt={job.title} className="w-full h-48 object-cover rounded-lg mb-4" />
+            <Image src={job.graphic} alt={job.title} width={1200} height={192} className="w-full h-48 object-cover rounded-lg mb-4" />
             <h3 className="font-medium">Key Responsibilities:</h3>
             <ul className="list-disc list-inside ml-4">
               {job.responsibilities.map((responsibility, idx) => (

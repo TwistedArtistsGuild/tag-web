@@ -26,7 +26,7 @@ export default function SlideShow() {
 	return (
 		<div >
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="about/slideshow" />
-			<div className="flex justify-center items-center w-full h-[600px] bg-base-200">
+			<div className="flex justify-center items-center w-full h-150 bg-base-200">
 				<iframe
 					src="https://view.officeapps.live.com/op/embed.aspx?src=https://tagstatic.blob.core.windows.net/content/TAG_Values_and_MVP_Features.pptx"
 					width="65%"

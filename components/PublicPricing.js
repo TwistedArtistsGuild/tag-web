@@ -12,7 +12,7 @@ import React from 'react';
 
 const PublicPricing = () => {
   return (
-    <section className="py-16 bg-gradient-to-b from-base-100 to-base-200">
+    <section className="py-16 bg-linear-to-b from-base-100 to-base-200">
       <div className="container mx-auto px-4 text-center">
         <h1 className="text-5xl font-extrabold mb-6 text-primary">Transparent Pricing</h1>
         <p className="text-xl mb-8 text-base-content">

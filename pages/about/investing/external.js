@@ -17,6 +17,8 @@ import StockProgramBanner from "@/components/StockProgramBanner"
 
 import TagSEO from "@/components/TagSEO"
 
+const externalSections = [{ id: "external-investors", label: "External Investors" }]
+
 const External = () => {
   const { setPageSections } = useAppContext()
   const pageMetaData = {
@@ -30,10 +32,8 @@ const External = () => {
   }
 
   // Define sections for this page (can be just one or more)
-  const sections = [{ id: "external-investors", label: "External Investors" }]
-
   useEffect(() => {
-    setPageSections(sections)
+    setPageSections(externalSections)
     return () => {
       setPageSections([])
     }

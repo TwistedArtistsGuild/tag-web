@@ -135,7 +135,7 @@ export default async function handler(req, res) {
 			case "customer.subscription.updated": {
 				// The customer might have changed the plan.
 
-				const subscription = await stripe.subscriptions.retrieve(data.object.id)
+				await stripe.subscriptions.retrieve(data.object.id)
 				// Do any operation here
 				break
 			}

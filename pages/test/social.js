@@ -8,7 +8,6 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-
 import { useEffect, useState } from 'react';
 import SocialComponentsDemo from '@/components/social/SocialComponentsDemo';
 
@@ -32,7 +31,11 @@ export default function SocialTest() {
     }
 
     useEffect(() => {
-        setMounted(true);
+        const frameId = window.requestAnimationFrame(() => {
+            setMounted(true);
+        });
+
+        return () => window.cancelAnimationFrame(frameId);
     }, []);
 
     if (!mounted) {

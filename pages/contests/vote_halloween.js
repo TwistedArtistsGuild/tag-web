@@ -172,7 +172,7 @@ export default function HalloweenContest() {
                       <input
                         type="text"
                         placeholder="Add a comment..."
-                        className="input input-bordered input-sm flex-grow"
+                        className="input input-bordered input-sm grow"
                         value={newCommentText}
                         onChange={(e) => setNewCommentText(e.target.value)}
                         onKeyDown={(e) => {

@@ -11,7 +11,6 @@
 
 
 import Link from "next/link"
-import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import shortDateOptions from "@/utils/shortdateoptions"
@@ -65,7 +64,6 @@ const Events = (props) => {
 
 Events.getInitialProps = async function () {
 	let data = []
-	let status = ""
 
 	const api_url = getApiURL()
 
@@ -75,7 +73,6 @@ Events.getInitialProps = async function () {
 	} 
 	const res = await fetch(api_url + "event")
 		.then((res) => {
-			status = res.status
 			return res.json()
 		})
 		.then((res) => (data = res))

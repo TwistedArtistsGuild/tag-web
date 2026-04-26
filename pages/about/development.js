@@ -84,7 +84,7 @@ const Development = () => {
 
       <DocumentationSection id="open-source" title="🔓 Open Source & Community-Driven" bgColor="bg-base-200">
         <p className="text-lg mb-4 text-base-content">
-          We're not just building software—we're building shared infrastructure. Both our front-end and back-end source code are fully open and MIT licensed:
+          We&apos;re not just building software, we&apos;re building shared infrastructure. Both our front-end and back-end source code are fully open and MIT licensed:
         </p>
         <ul className="list-disc list-inside text-lg text-base-content space-y-2 mb-4">
           <li>
@@ -175,7 +175,7 @@ const Development = () => {
 
       <DocumentationSection id="developer-philosophy" title="🎯 Developer Philosophy" bgColor="bg-base-100" centered>
         <p className="text-xl mb-8 text-base-content">
-          At TAG, code is community. If your contributions foster creator equity, sustainability, or visibility—we're eager to support you.
+          At TAG, code is community. If your contributions foster creator equity, sustainability, or visibility, we&apos;re eager to support you.
         </p>
       </DocumentationSection>
     </div>

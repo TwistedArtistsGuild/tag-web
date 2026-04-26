@@ -8,7 +8,7 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import ImageGallery from "react-image-gallery"
 //import "react-image-gallery/styles/css/image-gallery.css"
 import SocialComments from "@/components/social/Comments" // Import SocialComments component
@@ -176,16 +176,6 @@ const ListingDetails = ({ listing }) => {
     console.log("Comment liked:", comment, "Parent ID:", parentId)
     // In a real implementation, this would update like count on the backend
   }
-
-  // Load theme from localStorage
-  const [theme, setTheme] = useState("tag-theme")
-  useEffect(() => {
-    // Check if we're in the browser environment before accessing localStorage
-    if (typeof window !== "undefined") {
-      const savedTheme = localStorage.getItem("theme") || "tag-theme"
-      setTheme(savedTheme)
-    }
-  }, [])
 
   return (
     <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">

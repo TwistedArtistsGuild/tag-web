@@ -334,8 +334,8 @@ export default function EventsLanding() {
                   ))}
                 </div>
                 <p className="text-base-content/80">
-                  "The dance performance was absolutely mesmerizing. I've never seen such a perfect blend of technique
-                  and emotion. Worth every penny!"
+                  &ldquo;The dance performance was absolutely mesmerizing. I&apos;ve never seen such a perfect blend of technique
+                  and emotion. Worth every penny!&rdquo;
                 </p>
                 <div className="mt-4">
                   <h3 className="font-bold text-primary">Maria J.</h3>
@@ -359,8 +359,8 @@ export default function EventsLanding() {
                   ))}
                 </div>
                 <p className="text-base-content/80">
-                  "The sculpture workshop completely changed how I approach my art. The instructor was knowledgeable and
-                  provided personalized guidance."
+                  &ldquo;The sculpture workshop completely changed how I approach my art. The instructor was knowledgeable and
+                  provided personalized guidance.&rdquo;
                 </p>
                 <div className="mt-4">
                   <h3 className="font-bold text-primary">David R.</h3>
@@ -384,8 +384,8 @@ export default function EventsLanding() {
                   ))}
                 </div>
                 <p className="text-base-content/80">
-                  "The exhibition was incredible - such diverse perspectives and styles. I left feeling inspired and
-                  with a deeper appreciation for contemporary art."
+                  &ldquo;The exhibition was incredible - such diverse perspectives and styles. I left feeling inspired and
+                  with a deeper appreciation for contemporary art.&rdquo;
                 </p>
                 <div className="mt-4">
                   <h3 className="font-bold text-primary">Sarah T.</h3>
