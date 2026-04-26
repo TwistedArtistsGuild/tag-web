@@ -23,11 +23,11 @@ import TagSEO from "@/components/TagSEO"
 export default function EventsLanding() {
   const pageMetaData = {
     title: "Events | Twisted Artists Guild",
-    description: "Discover performance art events and educational experiences hosted by Twisted Artists Guild.",
-    keywords: "events, performance art, educational programs, artist showcases",
+    description: "Find upcoming art events, performances, and workshops. Attend, promote, and build community with TAG.",
+    keywords: "art events, performances, showcases, creative workshops, artist community",
     og: {
-      title: "TAG Events",
-      description: "Discover performance art events and educational experiences hosted by Twisted Artists Guild.",
+      title: "Twisted Artists Guild Events",
+      description: "Find art events, performances, and workshops across the Twisted Artists Guild community.",
     },
   }
 

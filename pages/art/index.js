@@ -474,21 +474,21 @@ const generateFakeListings = () => {
  */
 const Listings = (props) => {
   const pageMetaData = {
-    title: "TAG Art Listings Main Page",
-    description: "Explore art through Bloomscrolling",
-    keywords: "art, sculpture, painting, digital, gallery",
+    title: "Art Listings | Twisted Artists Guild",
+    description: "Shop and explore curated paintings, sculpture, digital work, and more from independent creators.",
+    keywords: "art listings, paintings, sculpture, digital art, gallery, buy art",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "TAG Art Listings Main Page",
-      description: "Explore art through Bloomscrolling",
+      title: "Explore Art Listings on Twisted Artists Guild",
+      description: "Browse curated artwork across mediums and categories from independent creators.",
     },
   }
   return (
     <SocialRealtimeProvider>
       <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
-        <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
+        <TagSEO metadataProp={pageMetaData} canonicalSlug="art" />
         {/* Hero Section */}
         <section className="text-center py-12">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">

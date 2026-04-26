@@ -48,21 +48,21 @@ const Blog = (props) => {
     }))
   }
   const pageMetaData = {
-    title: "TAG Blog Main Page",
-    description: "A list of our blog entries",
-    keywords: "blog, art, business, news",
+    title: "Blog | Twisted Artists Guild",
+    description: "Read artist spotlights, platform updates, and practical guides for building visibility and creative income.",
+    keywords: "art blog, artist stories, creator insights, platform updates",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "Social Title for Blog Entries",
-      description: "Social list of our blog entries",
+      title: "Twisted Artists Guild Blog",
+      description: "Artist spotlights, platform updates, and practical insights for creative growth.",
     },
   }
   return (
     <SocialRealtimeProvider>
       <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
-        <TagSEO metadataProp={pageMetaData} canonicalSlug="blog" />
+        <TagSEO metadataProp={pageMetaData} canonicalSlug="blogs" />
         {/* Hero Section */}
         <section className="text-center py-12">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">

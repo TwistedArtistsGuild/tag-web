@@ -17,11 +17,12 @@ import TagSEO from "@/components/TagSEO"
 const SearchPage = ({ initialSearchTerm, results: initialResults = [], status }) => {
 	const pageMetaData = {
 		title: "Search | Twisted Artists Guild",
-		description: "Search artists and listings across Twisted Artists Guild.",
-		keywords: "search artists, search listings, TAG search",
+		description: "Search artists, listings, and related content across Twisted Artists Guild.",
+		keywords: "search artists, search listings, discover creators, TAG search",
+		robots: "noindex, follow",
 		og: {
-			title: "Search TAG",
-			description: "Search artists and listings across Twisted Artists Guild.",
+			title: "Search Twisted Artists Guild",
+			description: "Find artists, listings, and content across the TAG platform.",
 		},
 	}
 

@@ -21,15 +21,15 @@ import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
  */
 const Artists = (props) => {
 	const pageMetaData = {
-		title: "TAG Artists Links",
-		description: "A list of our artist members",
-		keywords: "art, artist member, sales, portfolio",
+  title: "Artists and Portfolios | Twisted Artists Guild",
+  description: "Find independent artists, explore portfolios, and connect directly for commissions, collaborations, and support.",
+    keywords: "artists, portfolios, creator profiles, discover artists, art community",
 		robots: "index, follow",
 		author: "Bobb Shields",
 		viewport: "width=device-width, initial-scale=1.0",
 		og: {
-			title: "TAG Artists Links",
-			description: "A list of our artist members",
+    title: "Find Independent Artists on Twisted Artists Guild",
+    description: "Explore artist portfolios and connect directly with creators in the TAG community.",
 		},
 	}
 

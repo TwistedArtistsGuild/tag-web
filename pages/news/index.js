@@ -19,12 +19,12 @@ import TagSEO from "@/components/TagSEO"
 
 export default function News() {
   const pageMetaData = {
-    title: "News | Twisted Artists Guild",
-    description: "Read artist stories, interviews, and cultural coverage from the TAG news service.",
-    keywords: "artist news, interviews, art coverage, TAG news",
+    title: "News Service | Twisted Artists Guild",
+    description: "Read artist interviews, community stories, and cultural coverage from the TAG News Service.",
+    keywords: "artist interviews, art news, community stories, TAG news service",
     og: {
-      title: "TAG News Service",
-      description: "Read artist stories, interviews, and cultural coverage from the TAG news service.",
+      title: "TAG News Service | Artist Stories and Coverage",
+      description: "Artist interviews, community stories, and cultural coverage from Twisted Artists Guild.",
     },
   }
 
