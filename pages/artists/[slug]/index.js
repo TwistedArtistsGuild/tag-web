@@ -77,15 +77,15 @@ const Artist = (props) => {
   }, [setPageSections])
 
   const pageMetaData = {
-    title: `TAG Artist Member - ${props.artist?.title || "Unknown Artist"}`,
-    description: props.artist?.byline || "Artist details unavailable.",
-    keywords: props.artist?.seoTags || "",
+    title: `${props.artist.title}`,
+    description: props.artist.byline,
+    keywords: props.artist.seoTags,
     robots: "index, follow",
-    author: props.artist?.title || "Unknown",
+    author: props.artist.title,
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: props.artist?.title || "Unknown Artist",
-      description: props.artist?.byline || "Artist details unavailable.",
+      title: props.artist.title,
+      description: props.artist.byline,
     },
   }
 

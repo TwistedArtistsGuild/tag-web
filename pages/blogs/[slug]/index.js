@@ -18,23 +18,27 @@ import { defaultFieldClass } from "@/utils/formSettings"
 
 const BlogByslug = props => {
 	const options =  longDateOptions
+	const blog = props.blog
+	const seoKeywords = `blog, post, article, ${blog.searchterms}`
+	const canonicalSlug = `blogs/${blog.path}`
 
 	const pageMetaData = {
-		title: props.blog.title,
-		description: props.blog.byline,
-		keywords: props.blog.searchterms,
+		title: blog.title,
+		description: blog.byline,
+		keywords: seoKeywords,
 		robots: "index, follow",
-		author: props.blog.title,
+		author: blog.title,
 		viewport: "width=device-width, initial-scale=1.0",
 		 og: {
-			title: props.blog.title,
-			description: props.blog.byline,
+			title: blog.title,
+			description: blog.byline,
+			image: blog.image,
 		},
 	}
 
 	return (
 		<div className="flex flex-col justify-evenly items-center h-screen w-full ">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug={`blogs/${props.blog.path}`} />
+			<TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
 			<div className="flex flex-col items-center">
 				<h1 className="font-poiret text-7xl shadow-text" dangerouslySetInnerHTML={{ __html: props.blog.title }}></h1>
 				<div className="font-fredoka pt-2 w-[75%]" dangerouslySetInnerHTML={{ __html: props.blog.byline }}></div>

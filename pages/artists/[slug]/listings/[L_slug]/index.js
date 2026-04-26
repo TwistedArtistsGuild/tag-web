@@ -18,16 +18,15 @@ import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 
 const ListingDetails = ({ listing }) => {
-  const slug = listing?.artist?.path
-  const listingSlug = listing?.path
-  const canonicalSlug = slug && listingSlug ? `artists/${slug}/listings/${listingSlug}` : "artists"
+  const canonicalSlug = listing.seoCanonicalSlug
   const pageMetaData = {
-    title: `${listing?.title || "Listing"} | Twisted Artists Guild`,
-    description: listing?.description || "View artwork details, images, and discussion on Twisted Artists Guild.",
-    keywords: "art listing, artwork details, artist listing",
+    title: listing.seoTitle,
+    description: listing.seoDescription,
+    keywords: listing.seoKeywords,
     og: {
-      title: `${listing?.title || "Listing"} | Twisted Artists Guild`,
-      description: listing?.description || "View artwork details, images, and discussion on Twisted Artists Guild.",
+      title: listing.seoOgTitle,
+      description: listing.seoOgDescription,
+      image: listing.seoImage,
     },
   }
 
