@@ -22,7 +22,7 @@ import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContex
  * @returns
  */
 const Listings = (props) => {
-  const [open, setOpen] = useState(false) // This state is not used in the current JSX, but kept for consistency
+
 
   const pageMetaData = {
     title: `TAG Art Listings - ${props.supercat || "Art"}`,

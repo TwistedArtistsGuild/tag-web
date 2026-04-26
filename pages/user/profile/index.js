@@ -12,9 +12,9 @@
 
 import { useState } from "react"
 import { signOut } from "next-auth/react"
+import Image from "next/image"
 import apiClient from "@/libs/api"
 import { usePrivate } from "@/hooks/usePrivate"
-import TagSEO from "@/components/TagSEO"
 import UploadPictureForm1 from "@/components/widgets/uploadPic"
 
 export default function Dashboard() {
@@ -107,7 +107,9 @@ export default function Dashboard() {
 							onUploadComplete={(url) => setProfilePicture(url)}
 						/>
 						{profilePicture && (
-							<img src={profilePicture} alt="Profile Picture" className="mt-4 rounded-lg" />
+							<div className="relative w-full h-64">
+								<Image src={profilePicture} alt="Profile Picture" fill style={{ objectFit: 'cover' }} className="rounded-lg" />
+							</div>
 						)}
 					</div>
 					<div className="flex space-x-4">

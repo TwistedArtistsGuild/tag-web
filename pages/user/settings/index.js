@@ -10,17 +10,13 @@
  Open source · low-profit · human-first*/
 
 
-import { useState } from "react"
 import { signOut } from "next-auth/react"
-import apiClient from "@/libs/api"
 import { usePrivate } from "@/hooks/usePrivate"
-import TagSEO from "@/components/TagSEO"
 import Link from "next/link"
 
 export default function Settings() {
 	// Custom hook to make private pages easier to deal with (see /hooks folder)
 	const [session, status] = usePrivate({})
-	const [isLoading, setIsLoading] = useState(false)
 
 	// Show a loader when the session is loading. Not needed but recommended if you show user data like email/name
 	if (status === "loading") {

@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 
 
-import { useState, useEffect } from "react"
+
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
 import getApiURL from "@/components/widgets/GetApiURL"

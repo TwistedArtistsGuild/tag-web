@@ -136,7 +136,6 @@ export default async function handler(req, res) {
 				// The customer might have changed the plan.
 
 				const subscription = await stripe.subscriptions.retrieve(data.object.id)
-				const planId = subscription?.items?.data[0]?.price?.id
 				// Do any operation here
 				break
 			}

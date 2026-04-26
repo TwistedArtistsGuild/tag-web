@@ -11,7 +11,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import TestimonialsAvatars from "../TestimonialsAvatars"
+import TestimonialsAvatars from "@/components/TestimonialsAvatars"
 
 const Hero = () => {
 	return (

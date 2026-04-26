@@ -10,6 +10,7 @@
  Open source · low-profit · human-first*/
 "use client"
 
+import Image from "next/image"
 import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
 import { useLayout } from "@/components/LayoutProvider"
 
@@ -88,8 +89,8 @@ const ThemeSampler = () => {
 
           {/* Cards */}
           <div className="card bg-base-100 shadow-xl">
-            <figure>
-              <img src="/placeholder.svg?height=200&width=400" alt="Abstract pattern" />
+            <figure className="relative h-48 w-full overflow-hidden">
+              <Image src="/placeholder.svg?height=200&width=400" alt="Abstract pattern" fill style={{ objectFit: 'cover' }} />
             </figure>
             <div className="card-body">
               <h2 className="card-title">
