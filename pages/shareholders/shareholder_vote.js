@@ -10,6 +10,8 @@
  Open source · low-profit · human-first*/
 import React, { useState } from 'react';
 
+import TagSEO from "@/components/TagSEO"
+
 const ShareholderVote = () => {
   const [vote, setVote] = useState(null);
   const [submitted, setSubmitted] = useState(false);
@@ -29,7 +31,8 @@ const ShareholderVote = () => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 p-8 flex flex-col items-center">
+      <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 p-8 flex flex-col items-center">
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Shareholders Shareholder Vote", description: "Explore Github Projects Web Pages Shareholders Shareholder Vote on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Shareholders Shareholder Vote", description: "Explore Github Projects Web Pages Shareholders Shareholder Vote on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/shareholders/shareholder_vote" />
       <h1 className="text-4xl font-bold text-primary mb-6">Shareholder Vote</h1>
       <p className="text-lg text-base-content mb-4">Should we donate an additional 5% of profits to an art community project for the following fiscal year?</p>
 

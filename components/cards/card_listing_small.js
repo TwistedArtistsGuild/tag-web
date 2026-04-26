@@ -12,75 +12,19 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { HeartIcon, ThumbsUpIcon, UsersIcon, MessageCircleIcon, SmileIcon } from "lucide-react" // Import Lucide icons
-import { useState } from "react" // Import useState
-
-const getSeededCount = (seed, max, min = 1, salt = "") => {
-  const base = `${seed || "listing"}-${salt}`
-  const hash = base.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return (hash % max) + min
-}
 
 const ListingCardSmall = ({ listing }) => {
-  const listingSeed = listing?.listingid || listing?.path || listing?.title
-
-  // Initialize state for each counter with values from props
-  const [loves, setLoves] = useState(listing.loves || 0)
-  const [likes, setLikes] = useState(listing.likes || 0)
-  const [followers, setFollowers] = useState(listing.followers || 0)
-  const [showQuickReactions, setShowQuickReactions] = useState(false)
-  const [reactionCounts, setReactionCounts] = useState({
-    '❤️': listing.reactions?.heart ?? getSeededCount(listingSeed, 20, 1, "heart"),
-    '👏': listing.reactions?.clap ?? getSeededCount(listingSeed, 15, 1, "clap"),
-    '🔥': listing.reactions?.fire ?? getSeededCount(listingSeed, 10, 1, "fire"),
-    '😍': listing.reactions?.love ?? getSeededCount(listingSeed, 8, 1, "love"),
-  })
-
-  // Function to handle quick reactions
-  const handleQuickReaction = (emoji) => {
-    setReactionCounts(prev => ({
-      ...prev,
-      [emoji]: prev[emoji] + 1
-    }))
-    console.log(`Quick reaction ${emoji} added to listing ${listing.listingid}`)
-  }
-
-  // Function to handle social icon clicks
-  const handleSocialClick = async (type) => {
-    // Optimistically update UI
-    if (type === "loves") setLoves((prev) => prev + 1)
-    if (type === "likes") setLikes((prev) => prev + 1)
-    if (type === "followers") setFollowers((prev) => prev + 1)
-
-    // Simulate API call (replace with actual API endpoint)
-    try {
-      // In a real app, you'd send a request to your backend here
-      // const res = await fetch(`/api/listing/${listing.listingid}/${type}`, { method: "POST" });
-      // if (!res.ok) {
-      //   throw new Error(`Failed to update ${type}`);
-      // }
-      console.log(`Simulating update for listing ${listing.listingid}: ${type} increased!`)
-    } catch (error) {
-      console.error("Error sending social update:", error)
-      // Revert UI update on error
-      if (type === "loves") setLoves((prev) => prev - 1)
-      if (type === "likes") setLikes((prev) => prev - 1)
-      if (type === "followers") setFollowers((prev) => prev - 1)
-    }
-  }
-
   return (
     <div 
       className="card bg-base-100 text-base-content shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full rounded-box group border border-base-300"
-      onMouseEnter={() => setShowQuickReactions(true)}
-      onMouseLeave={() => setShowQuickReactions(false)}
     >
       <figure className="relative h-32 w-full overflow-hidden">
-        <Link href={`/artists/${listing?.artist?.path}/listings/${listing?.path}`}>
+        <Link href={`/artists/${listing?.artist?.path}/listings/${listing?.path}`} className="relative block h-full w-full">
           <Image
             src={listing?.profilePic?.url || "/blank_image.png"}
             alt={listing?.profilePic?.alttext || `${listing?.title || "Unknown"}'s picture`}
             fill
+            sizes="(max-width: 768px) 100vw, 320px"
             style={{ objectFit: "cover" }}
             className="rounded-t-box group-hover:scale-105 transition-transform duration-300"
           />

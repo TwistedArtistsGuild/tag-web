@@ -9,5 +9,27 @@
 
  Open source · low-profit · human-first*/
 import Listings from "@/pages/art/[supercat]/[cat]/[medium]/[subcat]";
+import TagSEO from "@/components/TagSEO"
 
-export default Listings;
+const CategoryListings = (props) => {
+	const pageMetaData = {
+		title: "Art by Category",
+		description: "Explore art listings by category on Platform.",
+		keywords: "art category, listing browser, TAG art",
+		og: {
+			title: "Category Listings",
+			description: "Explore art listings by category on Platform.",
+		},
+	}
+
+	return (
+		<>
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="art/[supercat]/[cat]" />
+			<Listings {...props} />
+		</>
+	)
+}
+
+CategoryListings.getInitialProps = Listings.getInitialProps
+
+export default CategoryListings;

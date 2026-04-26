@@ -10,14 +10,24 @@
  Open source · low-profit · human-first*/
 
 
-import Head from "next/head"
 import Image from "next/image" // Import Image component
 import Link from "next/link" // Import Link component
-import { SparklesIcon, BookOpenIcon, HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon } from "lucide-react" // Import Lucide icons
-import { SocialRealtimeProvider } from "../../components/social/SocialRealtimeContext"
+import { HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon } from "lucide-react" // Import Lucide icons
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { useState } from "react"
+import TagSEO from "@/components/TagSEO"
 
 export default function News() {
+  const pageMetaData = {
+    title: "News Service",
+    description: "Read artist interviews, community stories, and cultural coverage from the News Service.",
+    keywords: "artist interviews, art news, community stories, TAG news service",
+    og: {
+      title: "News Service | Artist Stories and Coverage",
+      description: "Artist interviews, community stories, and cultural coverage from Platform.",
+    },
+  }
+
   // Social data state for articles
   const [socialData, setSocialData] = useState({
     "beyond-canvas": { views: 1234, loves: 89, comments: 23, shares: 45 },
@@ -39,6 +49,7 @@ export default function News() {
   return (
     <SocialRealtimeProvider>
     <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="news" />
       {/* Hero Section */}
       <section className="text-center py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/50 z-10"></div>
@@ -61,6 +72,7 @@ export default function News() {
             alt="News service background image"
             fill
             priority
+            sizes="100vw"
             className="object-cover"
             style={{ objectFit: "cover" }}
             unoptimized
@@ -108,7 +120,8 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg"
                   alt="Artist painting on a canvas"
                   fill
-                  objectFit="cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  style={{ objectFit: "cover" }}
                   className="group-hover:scale-105 transition-transform duration-300"
                 />
               </figure>
@@ -163,7 +176,8 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg"
                   alt="Artist's paint palette with brushes"
                   fill
-                  objectFit="cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  style={{ objectFit: "cover" }}
                 />
               </figure>
               <div className="card-body p-6">
@@ -188,7 +202,8 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg"
                   alt="Artist painting a large mural"
                   fill
-                  objectFit="cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  style={{ objectFit: "cover" }}
                 />
               </figure>
               <div className="card-body p-6">
@@ -213,7 +228,8 @@ export default function News() {
                   src="https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg"
                   alt="Artist working on a large mural in a studio"
                   fill
-                  objectFit="cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  style={{ objectFit: "cover" }}
                 />
               </figure>
               <div className="card-body p-6">

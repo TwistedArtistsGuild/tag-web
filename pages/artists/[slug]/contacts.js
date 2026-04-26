@@ -11,9 +11,12 @@
 import ContactCard from "@/components/cards/card_contact"
 import getApiURL from "@/components/widgets/GetApiURL"
 
+import TagSEO from "@/components/TagSEO"
+
 const ContactsPage = ({ links }) => {
   return (
-    <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
+      <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Contacts", description: "Explore Github Projects Web Pages Artists Slug Contacts on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Contacts", description: "Explore Github Projects Web Pages Artists Slug Contacts on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/contacts" />
       <ContactCard links={links} />
     </div>
   )

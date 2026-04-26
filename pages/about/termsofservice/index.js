@@ -10,22 +10,23 @@
  Open source · low-profit · human-first*/
 
 
-import Head from "next/head"
 import { getMarkdownContent } from "@/components/widgets/markdown"
+import TagSEO from "@/components/TagSEO"
 
 export default function CodeOfConduct({ content }) {
+	const pageMetaData = {
+		title: "Terms of Service",
+		description: "Read the Platform terms of service and platform usage expectations.",
+		keywords: "terms of service, platform rules, usage terms",
+		og: {
+			title: "Terms of Service",
+			description: "Read the Platform terms of service and platform usage expectations.",
+		},
+	}
+
 	return (
 		<div className="container mx-auto max-w-5xl p-4 md:p-6">
-			<Head>
-				<title>TAG Terms of Service</title>
-				<meta name="description" content="How we expect to interact with the world" key="desc" />
-				<meta name="keywords" content="art, guild, rules, boundaries, code of conduct, acceptable behaviors, penalties" />
-				<meta name="robots" content="index, follow" />
-				<meta name="author" content="Bobb Shields" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<meta property="og:title" content="TAG Code of Conduct" />
-				<meta property="og:description" content="How we expect to interact with the world" />
-			</Head>
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="about/termsofservice" />
 			<div className="prose prose-base-content max-w-none lg:prose-xl">
 				<h1 className="text-4xl md:text-5xl font-bold text-primary text-center my-6">
 					Our website&apos;s terms of service

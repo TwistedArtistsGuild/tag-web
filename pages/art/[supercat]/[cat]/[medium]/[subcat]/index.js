@@ -9,8 +9,6 @@
 
  Open source · low-profit · human-first*/
 
-
-import { useState } from "react";
 import TagSEO from "@/components/TagSEO";
 import ListingCard from "@/components/cards/card_listing";
 import getApiURL from "@/components/widgets/GetApiURL";
@@ -22,25 +20,26 @@ import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContex
  * @returns
  */
 const Listings = (props) => {
-  const [open, setOpen] = useState(false) // This state is not used in the current JSX, but kept for consistency
+
+  const canonicalSlug = `art/${props.supercat}/${props.cat}/${props.medium}/${props.subcat}`
 
   const pageMetaData = {
-    title: `TAG Art Listings - ${props.supercat || "Art"}`,
-    description: `Explore ${props.supercat || "art"} in various categories`,
-    keywords: `${props.supercat || "art"}, listing, sales, e-commerce`,
+    title: `${props.supercat} Listings`,
+    description: `Explore ${props.supercat} listings across ${props.cat} (${props.subcat}).`,
+    keywords: `${props.supercat}, ${props.cat}, ${props.medium}, ${props.subcat}, listing, gallery`,
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: `TAG Art Listings - ${props.supercat || "Art"}`,
-      description: `Explore ${props.supercat || "art"} in various categories`,
+      title: `${props.supercat} Listings`,
+      description: `Explore ${props.supercat} listings across ${props.cat} (${props.subcat}).`,
     },
   }
 
 	return (
 		<SocialRealtimeProvider>
 			<div className="container mx-auto p-4">
-				<TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
+        <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
 
 				<div className="mb-6">
 					<h2 className="text-2xl font-bold text-center">{`Explore ${props.supercat || "Art"}`}</h2>

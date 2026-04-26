@@ -11,12 +11,22 @@
 "use client"
 
 import { useEffect } from "react"
-import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
 import CTA from "@/components/homepage/CTA"
+import TagSEO from "@/components/TagSEO"
 
 const Pricing = () => {
+  const pageMetaData = {
+    title: "Pricing",
+    description: "Transparent pricing and membership options for creators and supporters.",
+    keywords: "pricing, membership, artist plans",
+    og: {
+      title: "Pricing",
+      description: "Transparent pricing and membership options for creators and supporters.",
+    },
+  }
+
   const { setPageSections } = useAppContext() // Get access to context to set sections
 
   useEffect(() => {
@@ -223,32 +233,9 @@ const Pricing = () => {
     </section>
   )
 
-  const CommunityAndVisibility = () => (
-    <section id="community-visibility" className="py-16 bg-base-200">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-8">{"🤝 Community & Visibility"}</h2>
-        <p className="text-lg text-center mb-8">{"We’re more than a marketplace. We’re a movement."}</p>
-        <ul className="list-disc list-inside space-y-3 text-lg max-w-2xl mx-auto">
-          <li>{"Ongoing monthly, quarterly, and annual art prompt contests to win prizes and bragging rights"}</li>
-          <li>{"Unified messaging tools to engage fans across all platforms"}</li>
-          <li>{"Both guild-sponsored promotion and self-initiated ad campaigns will spotlight your work"}</li>
-          <li>{"Studio and event support: booking, ticketing, contracts"}</li>
-          <li>{"Integrated vendor marketplace with trusted services at member discounts"}</li>
-          <li>{"Art News Agency to showcase member achievements"}</li>
-        </ul>
-      </div>
-    </section>
-  )
-
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
-      <Head>
-        <title>Pricing | Twisted Artists Guild</title>
-        <meta
-          name="description"
-          content="Transparent pricing and benefits for artists and public on the Twisted Artists Guild platform."
-        />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/pricing" />
       {/* Navigation Pane */}
       <nav className="bg-base-100 shadow-md py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">

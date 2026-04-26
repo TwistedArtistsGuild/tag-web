@@ -11,33 +11,37 @@
 "use client"
 
 import { useEffect } from "react"
-import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
 import StockProgramBanner from "@/components/StockProgramBanner"
 
+import TagSEO from "@/components/TagSEO"
+
+const externalSections = [{ id: "external-investors", label: "External Investors" }]
+
 const External = () => {
   const { setPageSections } = useAppContext()
+  const pageMetaData = {
+    title: "External Investors",
+    description: "Information for external stakeholders interested in investing in the platform.",
+    keywords: "external investors, fixed dividend shares, investor relations",
+    og: {
+      title: "External Investors",
+      description: "Information for external stakeholders interested in investing in the platform.",
+    },
+  }
 
   // Define sections for this page (can be just one or more)
-  const sections = [{ id: "external-investors", label: "External Investors" }]
-
   useEffect(() => {
-    setPageSections(sections)
+    setPageSections(externalSections)
     return () => {
       setPageSections([])
     }
   }, [setPageSections])
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
-      <Head>
-        <title>External Investors | Twisted Artists Guild</title>
-        <meta
-          name="description"
-          content="Information for external stakeholders interested in investing in Twisted Artists Guild."
-        />
-      </Head>
+      <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/investing/external" />
       {/* Navigation Pane (can be a shared component or similar to other pages) */}
       <nav className="bg-base-100 shadow-md py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">

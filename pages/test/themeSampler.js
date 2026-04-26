@@ -10,8 +10,11 @@
  Open source · low-profit · human-first*/
 "use client"
 
+import Image from "next/image"
 import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
 import { useLayout } from "@/components/LayoutProvider"
+
+import TagSEO from "@/components/TagSEO"
 
 const themes = [
   "tag-theme",
@@ -39,7 +42,8 @@ const ThemeSampler = () => {
   const { theme, updateTheme } = useLayout()
 
   return (
-    <div className="p-8 min-h-screen bg-base-200 text-base-content">
+      <div className="p-8 min-h-screen bg-base-200 text-base-content">
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Test Themesampler", description: "Explore Github Projects Web Pages Test Themesampler on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Test Themesampler", description: "Explore Github Projects Web Pages Test Themesampler on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/themeSampler" />
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8 text-center">daisyUI Theme Sampler</h1>
 
@@ -88,8 +92,8 @@ const ThemeSampler = () => {
 
           {/* Cards */}
           <div className="card bg-base-100 shadow-xl">
-            <figure>
-              <img src="/placeholder.svg?height=200&width=400" alt="Abstract pattern" />
+            <figure className="relative h-48 w-full overflow-hidden">
+              <Image src="/placeholder.svg?height=200&width=400" alt="Abstract pattern" fill style={{ objectFit: 'cover' }} />
             </figure>
             <div className="card-body">
               <h2 className="card-title">

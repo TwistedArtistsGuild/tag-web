@@ -22,7 +22,7 @@ const notificationLinks = [
   "/blogs",
 ]
 
-export default function NotificationsDropdown({ notifications = [], isOpen, onClose, anchorEl }) {
+export default function NotificationsDropdown({ notifications = [], onClose }) {
   return (
     <div className="h-full w-full flex flex-col max-h-[80vh] overflow-hidden shadow-lg">
       {/* Header */}

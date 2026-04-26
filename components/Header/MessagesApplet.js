@@ -14,7 +14,7 @@ import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { X, Send, ChevronLeft } from 'lucide-react'
 
-export default function MessagesApplet({ isOpen, onClose, anchorEl }) {
+export default function MessagesApplet({ onClose }) {
   // Mock data for conversations
   const [conversations, setConversations] = useState([
     {

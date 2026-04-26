@@ -13,14 +13,28 @@
  
 import { useRouter } from "next/navigation"
 import { defaultButtonClass } from "@/utils/formSettings"
+import TagSEO from "@/components/TagSEO"
  
 export default function Page() {
 	const router = useRouter()
+	const pageMetaData = {
+		title: "Test Form Redirect",
+		description: "Internal test page for updateForms routing behavior.",
+		keywords: "test, forms, routing",
+		robots: "noindex, nofollow",
+		og: {
+			title: "Test Form Redirect",
+			description: "Internal test page for updateForms routing behavior.",
+		},
+	}
  
 	return (
-		<button type="button" className={defaultButtonClass} onClick={() => router.push("/test/updateForms/testform")}>
-			Redirect to /test/updateForms/testform
-		</button>
+		<>
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="test/updateForms" />
+			<button type="button" className={defaultButtonClass} onClick={() => router.push("/test/updateForms/testform")}>
+				Redirect to /test/updateForms/testform
+			</button>
+		</>
 	)
 }
 

@@ -12,6 +12,8 @@
 import { useState } from "react"
 import { defaultButtonClass } from "@/utils/formSettings";
 
+import TagSEO from "@/components/TagSEO"
+
 export default function TestMail() {
 	const [status, setStatus] = useState("")
 
@@ -29,7 +31,8 @@ export default function TestMail() {
 	}
 
 	return (
-		<div>
+      <div>
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Test Testmail", description: "Explore Github Projects Web Pages Test Testmail on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Test Testmail", description: "Explore Github Projects Web Pages Test Testmail on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testmail" />
 			<h1>Send Test Email</h1>
 				<button className={defaultButtonClass} onClick={handleSendTestEmail}>
 					Send Test Email

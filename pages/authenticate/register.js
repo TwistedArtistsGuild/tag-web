@@ -32,7 +32,7 @@ export default function RegisterUserForm1(props) {
  * @param {Object} context
  * @returns {Object}
  */
-RegisterUserForm1.getInitialProps = async function (context) {
+RegisterUserForm1.getInitialProps = async function () {
     // If we are running in debug mode, log the active API URL
     if (process.env.DEBUG === "true") {
         console.log("RegisterUserForm1 fetch starting\n " + api_url );

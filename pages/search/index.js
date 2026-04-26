@@ -8,23 +8,27 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import React, { useState, useEffect } from "react"
-import { useRouter } from "next/router"
+import React, { useState } from "react"
 import Link from "next/link"
 import getApiURL from "@/components/widgets/GetApiURL"
+import TagSEO from "@/components/TagSEO"
 
-const SearchPage = ({ initialSearchTerm, results: initialResults = [], status }) => {
+const SearchPage = ({ initialSearchTerm, results: initialResults = [] }) => {
+	const pageMetaData = {
+		title: "Search",
+		description: "Search artists, listings, and related content across Platform.",
+		keywords: "search artists, search listings, discover creators, TAG search",
+		robots: "noindex, follow",
+		og: {
+			title: "Search Platform",
+			description: "Find artists, listings, and content across the platform.",
+		},
+	}
+
 	const [searchTerm, setSearchTerm] = useState(initialSearchTerm || "")
 	const [searchType, setSearchType] = useState("artist")
 	const [orderBy, setOrderBy] = useState("relevance")
 	const [results, setResults] = useState(initialResults)
-	const router = useRouter()
-
-	useEffect(() => {
-		if (initialSearchTerm) {
-			setResults(initialResults)
-		}
-	}, [initialSearchTerm, initialResults])
 
 	const handleSearch = async () => {
 		const api_url = getApiURL()
@@ -44,6 +48,7 @@ const SearchPage = ({ initialSearchTerm, results: initialResults = [], status })
 
 	return (
 		<div className="p-4">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="search" />
 			<h1 className="text-2xl font-bold mb-4">Search Page</h1>
 			<div className="flex flex-col gap-4 mb-6">
 				<input

@@ -76,11 +76,12 @@ const ListingCard = ({ listing }) => {
       onMouseLeave={() => setShowQuickReactions(false)}
     >
       <figure className="relative h-48 w-full overflow-hidden">
-        <Link href={`/artists/${listing?.artist?.path}/listings/${listing?.path}`}>
+        <Link href={`/artists/${listing?.artist?.path}/listings/${listing?.path}`} className="relative block h-full w-full">
           <Image
             src={listing?.profilePic?.url || "/blank_image.png"}
             alt={listing?.profilePic?.alttext || `${listing?.title || "Unknown"}'s picture`}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             style={{ objectFit: "cover" }}
             className="rounded-t-box group-hover:scale-105 transition-transform duration-300"
           />

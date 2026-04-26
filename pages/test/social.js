@@ -8,10 +8,10 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-
 import { useEffect, useState } from 'react';
-import Head from 'next/head';
 import SocialComponentsDemo from '@/components/social/SocialComponentsDemo';
+
+import TagSEO from "@/components/TagSEO"
 
 /**
  * Social Components Test Page
@@ -19,26 +19,37 @@ import SocialComponentsDemo from '@/components/social/SocialComponentsDemo';
  */
 export default function SocialTest() {
     const [mounted, setMounted] = useState(false);
+    const pageMetaData = {
+        title: "Social Components Demo",
+        description: "Real-time social components demonstration with live updates, reactions, and messaging",
+        keywords: "social components, live reactions, messaging demo",
+        robots: "noindex, nofollow",
+        og: {
+            title: "Social Components Demo",
+            description: "Real-time social components demonstration with live updates, reactions, and messaging",
+        },
+    }
 
     useEffect(() => {
-        setMounted(true);
+        const frameId = window.requestAnimationFrame(() => {
+            setMounted(true);
+        });
+
+        return () => window.cancelAnimationFrame(frameId);
     }, []);
 
     if (!mounted) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
+            <TagSEO metadataProp={pageMetaData} canonicalSlug="test/social" />
                 <div className="loading loading-spinner loading-lg"></div>
             </div>
         );
     }
 
     return (
-        <>
-            <Head>
-                <title>Social Components Demo - Twisted Artists Guild</title>
-                <meta name="description" content="Real-time social components demonstration with live updates, reactions, and messaging" />
-                <meta name="robots" content="noindex, nofollow" />
-            </Head>
+      <>
+            <TagSEO metadataProp={pageMetaData} canonicalSlug="test/social" />
             
             <div className="min-h-screen bg-base-200">
                 <SocialComponentsDemo />

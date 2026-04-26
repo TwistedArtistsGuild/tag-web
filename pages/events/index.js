@@ -8,19 +8,29 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import Head from "next/head"
 import Image from "next/image"
 import Link from "next/link"
 import { BuildingIcon, GraduationCapIcon, CheckIcon, HeartIcon, MessageCircleIcon, EyeIcon, CalendarIcon } from "lucide-react"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { useState } from "react"
+import TagSEO from "@/components/TagSEO"
 
 /**
  * Events landing page showcasing the vision for TAG events
  * Features both performance art events and academic support offerings
  */
 export default function EventsLanding() {
+  const pageMetaData = {
+    title: "Events",
+    description: "Find upcoming art events, performances, and workshops. Attend, promote, and build community with.",
+    keywords: "art events, performances, showcases, creative workshops, artist community",
+    og: {
+      title: "Platform Events",
+      description: "Find art events, performances, and workshops across the Platform community.",
+    },
+  }
+
   // Social data state for events
   const [socialData, setSocialData] = useState({
     "music-events": { views: 2145, loves: 234, comments: 87, shares: 156, attending: 89 },
@@ -43,13 +53,7 @@ export default function EventsLanding() {
   return (
     <SocialRealtimeProvider>
     <div className="min-h-screen bg-gray-100 text-base-content">
-      <Head>
-        <title>Twisted Artists Guild | Events</title>
-        <meta
-          name="description"
-          content="Discover extraordinary performances and educational experiences with Twisted Artists Guild"
-        />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="events" />
       {/* Hero Section */}
       <div className="relative h-[60vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black/50 z-10"></div>
@@ -80,6 +84,7 @@ export default function EventsLanding() {
             alt="Band performing for a crowd at an event"
             fill
             priority
+            sizes="100vw"
             className="object-cover"
             unoptimized
             style={{ objectFit: "cover" }}
@@ -329,8 +334,8 @@ export default function EventsLanding() {
                   ))}
                 </div>
                 <p className="text-base-content/80">
-                  "The dance performance was absolutely mesmerizing. I've never seen such a perfect blend of technique
-                  and emotion. Worth every penny!"
+                  &ldquo;The dance performance was absolutely mesmerizing. I&apos;ve never seen such a perfect blend of technique
+                  and emotion. Worth every penny!&rdquo;
                 </p>
                 <div className="mt-4">
                   <h3 className="font-bold text-primary">Maria J.</h3>
@@ -354,8 +359,8 @@ export default function EventsLanding() {
                   ))}
                 </div>
                 <p className="text-base-content/80">
-                  "The sculpture workshop completely changed how I approach my art. The instructor was knowledgeable and
-                  provided personalized guidance."
+                  &ldquo;The sculpture workshop completely changed how I approach my art. The instructor was knowledgeable and
+                  provided personalized guidance.&rdquo;
                 </p>
                 <div className="mt-4">
                   <h3 className="font-bold text-primary">David R.</h3>
@@ -379,8 +384,8 @@ export default function EventsLanding() {
                   ))}
                 </div>
                 <p className="text-base-content/80">
-                  "The exhibition was incredible - such diverse perspectives and styles. I left feeling inspired and
-                  with a deeper appreciation for contemporary art."
+                  &ldquo;The exhibition was incredible - such diverse perspectives and styles. I left feeling inspired and
+                  with a deeper appreciation for contemporary art.&rdquo;
                 </p>
                 <div className="mt-4">
                   <h3 className="font-bold text-primary">Sarah T.</h3>

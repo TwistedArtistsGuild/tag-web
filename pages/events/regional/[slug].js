@@ -11,7 +11,6 @@
 
 
 import Link from "next/link"
-import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import shortDateOptions from "@/utils/shortdateoptions"
@@ -24,14 +23,14 @@ import shortDateOptions from "@/utils/shortdateoptions"
 const Events = (props) => {
 	const options = shortDateOptions
 	const pageMetaData = {
-		title: "TAG Regional Events Main Page",
+		title: "Regional Events Main Page",
 		description: "A list of regional events",
 		keywords: "events, ticket, art, performances, classes, teaching",
 		robots: "index, follow",
 		author: "Bobb Shields",
 		viewport: "width=device-width, initial-scale=1.0",
 		og: {
-			title: "TAG Regional Events Main Page",
+			title: "Regional Events Main Page",
 			description: "A list of regional events",
 		},
 	}
@@ -65,7 +64,6 @@ const Events = (props) => {
 
 Events.getInitialProps = async function () {
 	let data = []
-	let status = ""
 
 	const api_url = getApiURL()
 
@@ -75,7 +73,6 @@ Events.getInitialProps = async function () {
 	} 
 	const res = await fetch(api_url + "event")
 		.then((res) => {
-			status = res.status
 			return res.json()
 		})
 		.then((res) => (data = res))

@@ -36,6 +36,14 @@ import {
   FaPinterest as PinterestIcon,
 } from "react-icons/fa6"
 
+const artistSections = [
+  { id: "profile", label: "Profile" },
+  { id: "artwork", label: "Featured Artwork" },
+  { id: "events", label: "Events & Exhibitions" },
+  { id: "listings", label: "Art Listings" },
+  { id: "comments", label: "Comments & Feedback" },
+]
+
 /**
  * @desc Displays an individual artist's details by the shortname, passed by POST
  * @param {object} props - Component props containing artist data and related information
@@ -58,17 +66,9 @@ const Artist = (props) => {
   const [commentText, setCommentText] = useState("")
 
   // Navigation sections for quick jump
-  const sections = [
-    { id: "profile", label: "Profile" },
-    { id: "artwork", label: "Featured Artwork" },
-    { id: "events", label: "Events & Exhibitions" },
-    { id: "listings", label: "Art Listings" },
-    { id: "comments", label: "Comments & Feedback" },
-  ]
-
   // Set page sections in context when component mounts
   useEffect(() => {
-    setPageSections(sections)
+    setPageSections(artistSections)
 
     // Clean up when component unmounts
     return () => {
@@ -77,15 +77,15 @@ const Artist = (props) => {
   }, [setPageSections])
 
   const pageMetaData = {
-    title: `TAG Artist Member - ${props.artist?.title || "Unknown Artist"}`,
-    description: props.artist?.byline || "Artist details unavailable.",
-    keywords: props.artist?.seoTags || "",
+    title: `${props.artist.title}`,
+    description: props.artist.byline,
+    keywords: props.artist.seoTags,
     robots: "index, follow",
-    author: props.artist?.title || "Unknown",
+    author: props.artist.title,
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: props.artist?.title || "Unknown Artist",
-      description: props.artist?.byline || "Artist details unavailable.",
+      title: props.artist.title,
+      description: props.artist.byline,
     },
   }
 
@@ -238,8 +238,6 @@ const Artist = (props) => {
   }
 
   const listings = props.listings || []
-  const links = props.links || []
-
   // Dummy events data
   const events = [
     {
@@ -288,14 +286,6 @@ const Artist = (props) => {
       console.warn("Artist data failed to load.")
     }
   }, [props.artist])
-
-  // Scroll to section function
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id)
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" })
-    }
-  }
 
   return (
     <div className="mx-auto p-4 relative max-w-6xl bg-base-200 text-base-content">
@@ -429,20 +419,28 @@ const Artist = (props) => {
                     lazyLoad={true}
                     renderItem={(item) => (
                       <div className="image-gallery-image">
-                        <img
-                          src={item.original || "/placeholder.svg"}
-                          alt={item.description}
-                          style={{ objectFit: "contain", maxHeight: "500px", margin: "0 auto" }}
-                        />
+                        <div className="relative mx-auto h-[500px] w-full max-w-4xl">
+                          <Image
+                            src={item.original || "/placeholder.svg"}
+                            alt={item.description || item.title || "Featured artwork"}
+                            fill
+                            unoptimized
+                            sizes="(max-width: 1024px) 100vw, 896px"
+                            style={{ objectFit: "contain" }}
+                          />
+                        </div>
                         {item.description && <div className="image-gallery-description">{item.description}</div>}
                       </div>
                     )}
                     renderThumbInner={(item) => (
                       <div className="image-gallery-thumbnail-inner">
-                        <img
+                        <Image
                           src={item.thumbnail || "/placeholder.svg"}
-                          alt={item.description}
+                          alt={item.description || item.title || "Artwork thumbnail"}
                           className="image-gallery-thumbnail-image"
+                          width={120}
+                          height={80}
+                          unoptimized
                           style={{ objectFit: "cover", height: "80px" }}
                         />
                         <div className="image-gallery-thumbnail-label">{item.title}</div>
@@ -457,7 +455,7 @@ const Artist = (props) => {
                 </div>
               )}
               <div className="mt-4 flex justify-between items-center">
-                <p className="text-lg font-medium">Browse the artist's featured collection</p>
+                <p className="text-lg font-medium">Browse the artist&apos;s featured collection</p>
                 <button className="btn btn-primary btn-sm">View All Works</button>
               </div>
             </div>
@@ -625,7 +623,13 @@ const Artist = (props) => {
                     <div className="flex gap-4">
                       <div className="avatar">
                         <div className="w-12 h-12 rounded-full overflow-hidden">
-                          <img src={comment.avatar || "/placeholder.svg"} alt={`${comment.author}'s avatar`} />
+                          <Image
+                            src={comment.avatar || "/placeholder.svg"}
+                            alt={`${comment.author}'s avatar`}
+                            width={48}
+                            height={48}
+                            unoptimized
+                          />
                         </div>
                       </div>
                       <div className="flex-1">
@@ -654,7 +658,13 @@ const Artist = (props) => {
                           <div key={reply.id} className="flex gap-4">
                             <div className="avatar">
                               <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <img src={reply.avatar || "/placeholder.svg"} alt={`${reply.author}'s avatar`} />
+                                <Image
+                                  src={reply.avatar || "/placeholder.svg"}
+                                  alt={`${reply.author}'s avatar`}
+                                  width={40}
+                                  height={40}
+                                  unoptimized
+                                />
                               </div>
                             </div>
                             <div className="flex-1">

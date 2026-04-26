@@ -10,22 +10,27 @@
  Open source · low-profit · human-first*/
 
 
-import Head from "next/head"
 import { getMarkdownContent } from "@/components/widgets/markdown"
 
+import TagSEO from "@/components/TagSEO"
+
 export default function CodeOfConduct({ content }) {
+	const pageMetaData = {
+		title: "Cybersecurity Policy",
+		description: "How we expect to interact with the world",
+		keywords: "art, guild, rules, boundaries, code of conduct, acceptable behaviors, penalties",
+		robots: "index, follow",
+		author: "Bobb Shields",
+		viewport: "width=device-width, initial-scale=1.0",
+		og: {
+			title: "Cybersecurity Policy",
+			description: "How we expect to interact with the world",
+		},
+	}
+
 	return (
-		<div className="container mx-auto p-4">
-			<Head>
-				<title>TAG Code of Conduct - Public Customers</title>
-				<meta name="description" content="How we expect to interact with the world" key="desc" />
-				<meta name="keywords" content="art, guild, rules, boundaries, code of conduct, acceptable behaviors, penalties" />
-				<meta name="robots" content="index, follow" />
-				<meta name="author" content="Bobb Shields" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<meta property="og:title" content="TAG Code of Conduct" />
-				<meta property="og:description" content="How we expect to interact with the world" />
-			</Head>
+      <div className="container mx-auto p-4">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="about/policies/cybersecurity" />
 			<div className="prose">
 				<h2 className="text-2xl font-bold mb-4">
           The code of conduct for public website users who browse and buy art: 

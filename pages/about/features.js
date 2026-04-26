@@ -9,12 +9,22 @@
 
  Open source · low-profit · human-first*/
 import React from 'react';
-import Head from 'next/head';
 import Image from 'next/image';
 import FAQ from '@/components/homepage/FAQ';
+import TagSEO from "@/components/TagSEO"
 
 // Features Page - Showcasing platform's core functionalities
 const Features = () => {
+  const pageMetaData = {
+    title: "Features",
+    description: "Discover core platform features for artists, vendors, and event hosts.",
+    keywords: "features, artists, events, platform tools",
+    og: {
+      title: "Features",
+      description: "Discover core platform features for artists, vendors, and event hosts.",
+    },
+  }
+
   // Features data with sections and details
   const featureSections = [
     {
@@ -93,10 +103,7 @@ const Features = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
-      <Head>
-        <title>Features | Our Creative Platform</title>
-        <meta name="description" content="Discover the powerful features of our platform designed for artists, event hosts, and creative entrepreneurs." />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/features" />
 
       {/* Hero Section */}
       <div className="hero py-16 bg-base-100">

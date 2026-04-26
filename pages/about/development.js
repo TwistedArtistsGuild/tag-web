@@ -11,11 +11,21 @@
 "use client"
 
 import { useEffect } from "react"
-import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context"
 import DocumentationSection from "@/components/DocumentationSection"
+import TagSEO from "@/components/TagSEO"
 const Development = () => {
+  const pageMetaData = {
+    title: "Development",
+    description: "Explore development architecture, tooling, and open-source direction.",
+    keywords: "development, architecture, open source, TAG",
+    og: {
+      title: "Development",
+      description: "Explore development architecture, tooling, and open-source direction.",
+    },
+  }
+
   const { setPageSections } = useAppContext() // Get access to context to set sections
 
   useEffect(() => {
@@ -39,13 +49,7 @@ const Development = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 text-base-content">
-      <Head>
-        <title>Developer Resources | Twisted Artists Guild</title>
-        <meta
-          name="description"
-          content="Explore our API documentation and developer resources to integrate with the Twisted Artists Guild platform."
-        />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/development" />
       {/* Navigation Pane */}
       <nav className="sticky top-0 z-20 border-b border-base-300 bg-base-100/90 py-3 shadow-sm backdrop-blur">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-3 px-4">
@@ -80,7 +84,7 @@ const Development = () => {
 
       <DocumentationSection id="open-source" title="🔓 Open Source & Community-Driven" bgColor="bg-base-200">
         <p className="text-lg mb-4 text-base-content">
-          We're not just building software—we're building shared infrastructure. Both our front-end and back-end source code are fully open and MIT licensed:
+          We&apos;re not just building software, we&apos;re building shared infrastructure. Both our front-end and back-end source code are fully open and MIT licensed:
         </p>
         <ul className="list-disc list-inside text-lg text-base-content space-y-2 mb-4">
           <li>
@@ -171,7 +175,7 @@ const Development = () => {
 
       <DocumentationSection id="developer-philosophy" title="🎯 Developer Philosophy" bgColor="bg-base-100" centered>
         <p className="text-xl mb-8 text-base-content">
-          At TAG, code is community. If your contributions foster creator equity, sustainability, or visibility—we're eager to support you.
+          At TAG, code is community. If your contributions foster creator equity, sustainability, or visibility, we&apos;re eager to support you.
         </p>
       </DocumentationSection>
     </div>

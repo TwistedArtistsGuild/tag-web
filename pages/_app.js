@@ -11,9 +11,11 @@
 "use client"
 
 import { SessionProvider } from "next-auth/react"
+import { useRouter } from "next/router"
 import "@/styles/globals.css"
 import EnhancedLayout from "@/components/MyLayout"
 import { AppWrapper } from "@/components/Context"
+import TagSEO from "@/components/TagSEO"
 import { useEffect, useState } from "react"
 import { ApplicationInsights } from "@microsoft/applicationinsights-web"
 
@@ -30,15 +32,14 @@ const appInsights = new ApplicationInsights({
  * Enhanced App Component - keeps your original structure but adds collapsible layout
  */
 export default function App({ Component, pageProps: { session, sidebarProps, ...pageProps } }) {
-  const [showDevBanner, setShowDevBanner] = useState(true)
+  const [dismissedBannerPath, setDismissedBannerPath] = useState(null)
+  const router = useRouter()
 
   // Allow pages to override the default layout if needed
   const getLayout = Component.getLayout || ((page) => page)
 
   // Initialize Application Insights
   useEffect(() => {
-    setShowDevBanner(true)
-
     if (!appInsightsInitialized) {
       const connectionString = process.env.APPINSIGHTS || process.env.NEXT_PUBLIC_APPINSIGHTS
 
@@ -65,7 +66,23 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
   }, [Component])
 
   const closeBanner = () => {
-    setShowDevBanner(false)
+    setDismissedBannerPath(router.asPath)
+  }
+
+  const showDevBanner = dismissedBannerPath !== router.asPath
+
+  const canonicalSlug = (router.asPath || "/").split("?")[0].split("#")[0].replace(/^\//, "")
+  const fallbackTitle = canonicalSlug
+    ? `${canonicalSlug.replace(/[-_/]/g, " ")} | Twisted Artists Guild`
+    : "Twisted Artists Guild"
+  const fallbackSeo = {
+    title: fallbackTitle,
+    description: "A creator-focused community and marketplace for artists and supporters.",
+    keywords: "artists, art community, marketplace",
+    og: {
+      title: fallbackTitle,
+      description: "A creator-focused community and marketplace for artists and supporters.",
+    },
   }
 
   return (
@@ -92,6 +109,7 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
       {getLayout(
         <AppWrapper>
           <EnhancedLayout sidebarProps={sidebarProps}>
+            <TagSEO metadataProp={fallbackSeo} canonicalSlug={canonicalSlug} />
             <Component {...pageProps} />
           </EnhancedLayout>
         </AppWrapper>,

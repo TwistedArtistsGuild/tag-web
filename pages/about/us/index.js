@@ -16,15 +16,15 @@ import AboutProfileCard from "@/components/cards/card_about_profile";
 
 export default function AboutUs() {
 	const pageMetaData = {
-		title: "About Us - Twisted Artists Guild",
-		description: "Meet the members of the Twisted Artists Guild",
+		title: "About Us",
+		description: "Meet the members of the Platform",
 		keywords: "about us, artists, guild members, profiles",
 		robots: "index, follow",
 		author: "Twisted Artists Guild",
 		viewport: "width=device-width, initial-scale=1.0",
 		og: {
-			title: "About Us - Twisted Artists Guild",
-			description: "Meet the members of the Twisted Artists Guild",
+			title: "About Us",
+			description: "Meet the members of the Platform",
 		},
 	};
 

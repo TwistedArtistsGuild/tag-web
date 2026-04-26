@@ -11,27 +11,37 @@
 "use client"
 
 import { useEffect } from "react"
-import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
 import StockProgramBanner from "@/components/StockProgramBanner"
 
+import TagSEO from "@/components/TagSEO"
+
+const buybackSections = [
+  { id: "psrp-overview", label: "PSRP Overview" },
+  { id: "why-it-exists", label: "Why It Exists" },
+  { id: "program-highlights", label: "Program Highlights" },
+  { id: "repurchase-mechanics", label: "Repurchase Mechanics" },
+  { id: "eligibility-rules", label: "Eligibility & Share Class Rules" },
+  { id: "timing-waitlist", label: "Timing & Waitlist Logic" },
+  { id: "governance-disclosures", label: "Board & Governance Disclosures" },
+  { id: "liquidity-roadmap", label: "Long-Term Liquidity Roadmap" },
+]
+
 const Buyback = () => {
   const { setPageSections } = useAppContext()
-
-  const sections = [
-    { id: "psrp-overview", label: "PSRP Overview" },
-    { id: "why-it-exists", label: "Why It Exists" },
-    { id: "program-highlights", label: "Program Highlights" },
-    { id: "repurchase-mechanics", label: "Repurchase Mechanics" },
-    { id: "eligibility-rules", label: "Eligibility & Share Class Rules" },
-    { id: "timing-waitlist", label: "Timing & Waitlist Logic" },
-    { id: "governance-disclosures", label: "Board & Governance Disclosures" },
-    { id: "liquidity-roadmap", label: "Long-Term Liquidity Roadmap" },
-  ]
+  const pageMetaData = {
+    title: "Stock Buyback Program",
+    description: "Learn about the Private Stock Repurchase Plan (PSRP) for platform shareholders.",
+    keywords: "stock buyback, private stock repurchase plan, shareholder liquidity",
+    og: {
+      title: "Stock Buyback Program",
+      description: "Learn about the Private Stock Repurchase Plan (PSRP) for platform shareholders.",
+    },
+  }
 
   useEffect(() => {
-    setPageSections(sections)
+    setPageSections(buybackSections)
     return () => {
       setPageSections([])
     }
@@ -247,11 +257,8 @@ const Buyback = () => {
   )
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
-      <Head>
-        <title>Stock Buyback Program | Twisted Artists Guild</title>
-        <meta name="description" content="Learn about the Private Stock Repurchase Plan (PSRP) for TAG shareholders." />
-      </Head>
+      <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/investing/buyback" />
       {/* Navigation Pane */}
       <nav className="bg-base-100 shadow-md py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">
