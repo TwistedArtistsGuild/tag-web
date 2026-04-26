@@ -10,10 +10,22 @@
  Open source · low-profit · human-first*/
 import React from 'react';
 import Link from 'next/link';
+import TagSEO from "@/components/TagSEO"
 
 const Shareholders = () => {
+  const pageMetaData = {
+    title: "Shareholders | Twisted Artists Guild",
+    description: "Access shareholder updates, governance information, and voting links.",
+    keywords: "shareholders, governance, voting",
+    og: {
+      title: "TAG Shareholders",
+      description: "Access shareholder updates, governance information, and voting links.",
+    },
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 p-8">
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="shareholders" />
       <h1 className="text-4xl font-bold text-primary mb-6">Shareholders Portal</h1>
 
       <section className="mb-8">

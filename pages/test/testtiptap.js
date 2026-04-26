@@ -19,7 +19,8 @@ import TTArticle from "@/components/social/TT_Article";
 import TTPortfolio from "@/components/social/TT_Portfolio";
 import { TTCommentsEditorCard } from "@/components/social/TT_Comments";
 import TTDirectMessages from "@/components/social/TT_DirectMessages";
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
+import TagSEO from "@/components/TagSEO"
 
 function sanitize(html) {
   if (!html) return "";
@@ -31,7 +32,8 @@ function PreviewCard({ title, html }) {
   const sanitizedPreview = useMemo(() => sanitize(html), [html]);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Testtiptap | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testtiptap on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Testtiptap | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testtiptap on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testtiptap" />
       <div className="rounded-lg border border-base-300 bg-base-100 p-4">
         <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-base-content/70">
           {title} HTML Output
@@ -65,7 +67,8 @@ export default function TiptapTestPage() {
   const [portfolioPublished, setPortfolioPublished] = useState("");
 
   return (
-    <>
+      <>
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Testtiptap | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testtiptap on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Testtiptap | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testtiptap on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testtiptap" />
       <Head>
         <title>Wysiwyg Module Test - Twisted Artists Guild</title>
         <meta

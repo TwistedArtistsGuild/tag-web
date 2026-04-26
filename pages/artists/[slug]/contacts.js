@@ -9,11 +9,13 @@
 
  Open source · low-profit · human-first*/
 import ContactCard from "@/components/cards/card_contact"
-import getApiURL from "@/components/widgets/GetApiURL"
+import getApiURL from "@/components/widgets/GetApiURL"
+import TagSEO from "@/components/TagSEO"
 
 const ContactsPage = ({ links }) => {
   return (
-    <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
+      <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Artists Slug Contacts | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Artists Slug Contacts on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Artists Slug Contacts | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Artists Slug Contacts on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/contacts" />
       <ContactCard links={links} />
     </div>
   )

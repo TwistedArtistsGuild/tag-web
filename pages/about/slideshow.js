@@ -10,28 +10,22 @@
  Open source · low-profit · human-first*/
 
 
-import Head from "next/head";
+import TagSEO from "@/components/TagSEO"
 
 export default function SlideShow() {
+	const pageMetaData = {
+		title: "Slideshow | Twisted Artists Guild",
+		description: "Review TAG values and MVP vision through the embedded slideshow.",
+		keywords: "slideshow, values, roadmap",
+		og: {
+			title: "TAG Slideshow",
+			description: "Review TAG values and MVP vision through the embedded slideshow.",
+		},
+	}
+
 	return (
 		<div >
-			<Head>
-				<title>TAG Slideshow</title>
-				<meta
-					name="description"
-					content="A slideshow explaining the idea behind and guiding ideals of the Twisted Artist Guild"
-					key="desc"
-				/>
-				<meta name="keywords" content="art, guild, organization, reason, purpose, transparency" />
-				<meta name="robots" content="index, follow" />
-				<meta name="author" content="Bobb Shields" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<meta property="og:title" content="TAG Slideshow" />
-				<meta
-					property="og:description"
-					content="A slideshow explaining the idea behind and guiding ideals of the Twisted Artist Guild"
-				/>
-			</Head>
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="about/slideshow" />
 			<div className="flex justify-center items-center w-full h-[600px] bg-base-200">
 				<iframe
 					src="https://view.officeapps.live.com/op/embed.aspx?src=https://tagstatic.blob.core.windows.net/content/TAG_Values_and_MVP_Features.pptx"

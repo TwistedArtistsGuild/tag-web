@@ -11,10 +11,23 @@
 
 
 import Link from "next/link";
+import TagSEO from "@/components/TagSEO"
 
 export default function TestIndex() {
+	const pageMetaData = {
+		title: "Testing Hub | Twisted Artists Guild",
+		description: "Internal testing links and feature sandboxes for Twisted Artists Guild.",
+		keywords: "testing, sandbox, internal tools",
+		robots: "noindex, nofollow",
+		og: {
+			title: "TAG Testing Hub",
+			description: "Internal testing links and feature sandboxes.",
+		},
+	}
+
 	return (
 		<div className="p-4 bg-base-200">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="test" />
 			<h2 className="text-2xl font-bold text-primary">
         Links to Portal Resources
 			</h2>

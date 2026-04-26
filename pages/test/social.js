@@ -11,7 +11,8 @@
 
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import SocialComponentsDemo from '@/components/social/SocialComponentsDemo';
+import SocialComponentsDemo from '@/components/social/SocialComponentsDemo';
+import TagSEO from "@/components/TagSEO"
 
 /**
  * Social Components Test Page
@@ -26,14 +27,16 @@ export default function SocialTest() {
 
     if (!mounted) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Social | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Social on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Social | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Social on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/social" />
                 <div className="loading loading-spinner loading-lg"></div>
             </div>
         );
     }
 
     return (
-        <>
+      <>
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Social | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Social on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Social | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Social on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/social" />
             <Head>
                 <title>Social Components Demo - Twisted Artists Guild</title>
                 <meta name="description" content="Real-time social components demonstration with live updates, reactions, and messaging" />

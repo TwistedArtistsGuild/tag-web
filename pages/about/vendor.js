@@ -11,11 +11,21 @@
 "use client"
 
 import { useEffect } from "react"
-import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context"
 import DocumentationSection from "@/components/DocumentationSection"
+import TagSEO from "@/components/TagSEO"
 const Vendor = () => {
+  const pageMetaData = {
+    title: "Vendor Information | Twisted Artists Guild",
+    description: "Guidance and partnership information for vendors working with TAG.",
+    keywords: "vendors, partnerships, requirements",
+    og: {
+      title: "TAG Vendor Information",
+      description: "Guidance and partnership information for vendors working with TAG.",
+    },
+  }
+
   const { setPageSections } = useAppContext() // Get access to context to set sections
 
   useEffect(() => {
@@ -37,10 +47,7 @@ const Vendor = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 text-base-content">
-      <Head>
-        <title>Supporting Vendor Information | Twisted Artists Guild</title>
-        <meta name="description" content="Details for vendors working with the Twisted Artists Guild." />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/vendor" />
       {/* Navigation Pane */}
       <nav className="sticky top-0 z-20 border-b border-base-300 bg-base-100/90 py-3 shadow-sm backdrop-blur">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-3 px-4">

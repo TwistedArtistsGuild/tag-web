@@ -10,22 +10,23 @@
  Open source · low-profit · human-first*/
 
 
-import Head from "next/head";
 import Link from "next/link";
+import TagSEO from "@/components/TagSEO"
 
 export default function About() {
+	const pageMetaData = {
+		title: "Active Projects | Twisted Artists Guild",
+		description: "Explore active projects and artist interview initiatives at Twisted Artists Guild.",
+		keywords: "active projects, artist interviews, guild initiatives",
+		og: {
+			title: "TAG Active Projects",
+			description: "Explore active projects and artist interview initiatives at Twisted Artists Guild.",
+		},
+	}
+
 	return (
 		<div className="container mx-auto max-w-5xl p-4 md:p-6">
-			<Head>
-				<title>TAG Active Projects Main Page</title>
-				<meta name="description" content="Shows our past and current projects" key="desc" />
-				<meta name="keywords" content="art, guild, non-profit, charitable, projects, beneficiaries" />
-				<meta name="robots" content="index, follow" />
-				<meta name="author" content="Bobb Shields" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<meta property="og:title" content="TAG Active Projects Main Page" />
-				<meta property="og:description" content="Shows our past and current projects" />
-			</Head>
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="about/activeprojects" />
 			<h1 className="text-4xl md:text-5xl font-bold text-primary mb-6 text-center">
 				Links to active projects being pursued by the guild.
 			</h1>

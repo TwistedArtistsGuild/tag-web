@@ -10,14 +10,24 @@
  Open source · low-profit · human-first*/
 
 
-import Head from "next/head"
 import Image from "next/image" // Import Image component
 import Link from "next/link" // Import Link component
 import { SparklesIcon, BookOpenIcon, HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon } from "lucide-react" // Import Lucide icons
 import { SocialRealtimeProvider } from "../../components/social/SocialRealtimeContext"
 import { useState } from "react"
+import TagSEO from "@/components/TagSEO"
 
 export default function News() {
+  const pageMetaData = {
+    title: "News | Twisted Artists Guild",
+    description: "Read artist stories, interviews, and cultural coverage from the TAG news service.",
+    keywords: "artist news, interviews, art coverage, TAG news",
+    og: {
+      title: "TAG News Service",
+      description: "Read artist stories, interviews, and cultural coverage from the TAG news service.",
+    },
+  }
+
   // Social data state for articles
   const [socialData, setSocialData] = useState({
     "beyond-canvas": { views: 1234, loves: 89, comments: 23, shares: 45 },
@@ -39,6 +49,7 @@ export default function News() {
   return (
     <SocialRealtimeProvider>
     <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="news" />
       {/* Hero Section */}
       <section className="text-center py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/50 z-10"></div>

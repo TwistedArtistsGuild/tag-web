@@ -12,8 +12,19 @@ import React, { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import getApiURL from "@/components/widgets/GetApiURL"
+import TagSEO from "@/components/TagSEO"
 
 const SearchPage = ({ initialSearchTerm, results: initialResults = [], status }) => {
+	const pageMetaData = {
+		title: "Search | Twisted Artists Guild",
+		description: "Search artists and listings across Twisted Artists Guild.",
+		keywords: "search artists, search listings, TAG search",
+		og: {
+			title: "Search TAG",
+			description: "Search artists and listings across Twisted Artists Guild.",
+		},
+	}
+
 	const [searchTerm, setSearchTerm] = useState(initialSearchTerm || "")
 	const [searchType, setSearchType] = useState("artist")
 	const [orderBy, setOrderBy] = useState("relevance")
@@ -44,6 +55,7 @@ const SearchPage = ({ initialSearchTerm, results: initialResults = [], status })
 
 	return (
 		<div className="p-4">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="search" />
 			<h1 className="text-2xl font-bold mb-4">Search Page</h1>
 			<div className="flex flex-col gap-4 mb-6">
 				<input

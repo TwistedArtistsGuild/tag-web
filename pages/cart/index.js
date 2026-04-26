@@ -13,9 +13,23 @@
 
 
 
+import TagSEO from "@/components/TagSEO"
+
 export default function Portal_Artist() {
+	const pageMetaData = {
+		title: "Cart | Twisted Artists Guild",
+		description: "Review selected items and continue checkout on Twisted Artists Guild.",
+		keywords: "cart, checkout, art purchases",
+		robots: "noindex, nofollow",
+		og: {
+			title: "TAG Cart",
+			description: "Review selected items and continue checkout on Twisted Artists Guild.",
+		},
+	}
+
 	return (
 		<div className="p-4 bg-base-200">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="cart" />
 			<h2 className="text-2xl font-bold text-primary">
         Landing page for Cart view
 			</h2>

@@ -11,11 +11,13 @@
 
 
 import Head from "next/head"
-import { getMarkdownContent } from "@/components/widgets/markdown"
+import { getMarkdownContent } from "@/components/widgets/markdown"
+import TagSEO from "@/components/TagSEO"
 
 export default function CodeOfConduct({ content }) {
 	return (
-		<div className="container mx-auto p-4">
+      <div className="container mx-auto p-4">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages About Codeofconduct Coc4 | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Codeofconduct Coc4 on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages About Codeofconduct Coc4 | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Codeofconduct Coc4 on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/codeofconduct/coc4" />
 			<Head>
 				<title>TAG Code of Conduct - Guild Employees</title>
 				<meta name="description" content="How we expect to interact with the world" key="desc" />

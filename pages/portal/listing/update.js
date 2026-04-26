@@ -9,7 +9,8 @@
 
  Open source · low-profit · human-first*/
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
+import getApiURL from "@/components/widgets/GetApiURL";
+import TagSEO from "@/components/TagSEO"
 
 const api_url = getApiURL();
 const formName = "ListingForm1";

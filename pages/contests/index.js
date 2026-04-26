@@ -12,10 +12,22 @@
  "use client"
 
 import Link from "next/link"
+import TagSEO from "@/components/TagSEO"
 
 function ContestsIndex() {
+  const pageMetaData = {
+    title: "Contests | Twisted Artists Guild",
+    description: "Explore active contests, voting, and contest archives across Twisted Artists Guild.",
+    keywords: "art contests, artist voting, contest archive",
+    og: {
+      title: "TAG Contests",
+      description: "Explore active contests and community voting on Twisted Artists Guild.",
+    },
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+    <TagSEO metadataProp={pageMetaData} canonicalSlug="contests" />
       {/* Hero Section */}
       <section className="text-center py-12">
         <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">Art Contests</h1>

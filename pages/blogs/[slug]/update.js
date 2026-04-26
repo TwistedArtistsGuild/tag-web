@@ -12,7 +12,8 @@
 
 import React, { useMemo } from "react";
 import DynaFormDB from "@/components/widgets/DynaFormDB"
-import getApiURL from "@/components/widgets/GetApiURL"
+import getApiURL from "@/components/widgets/GetApiURL"
+import TagSEO from "@/components/TagSEO"
 
 const api_url = getApiURL();
 const formName = "BlogForm1";
@@ -55,7 +56,8 @@ export default function UpdateBlogForm1(props) {
     }
 
     return (
-        <div className="p-4">
+      <div className="p-4">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Blogs Slug Update | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Blogs Slug Update on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Blogs Slug Update | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Blogs Slug Update on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/blogs/[slug]/update" />
             <DynaFormDB
                 request="update"
                 metadataProp={enhancedMetadata}

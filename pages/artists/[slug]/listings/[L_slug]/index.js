@@ -15,8 +15,22 @@ import SocialComments from "@/components/social/Comments" // Import SocialCommen
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import Image from "next/image"
 import getApiURL from "@/components/widgets/GetApiURL"
+import TagSEO from "@/components/TagSEO"
 
 const ListingDetails = ({ listing }) => {
+  const slug = listing?.artist?.path
+  const listingSlug = listing?.path
+  const canonicalSlug = slug && listingSlug ? `artists/${slug}/listings/${listingSlug}` : "artists"
+  const pageMetaData = {
+    title: `${listing?.title || "Listing"} | Twisted Artists Guild`,
+    description: listing?.description || "View artwork details, images, and discussion on Twisted Artists Guild.",
+    keywords: "art listing, artwork details, artist listing",
+    og: {
+      title: `${listing?.title || "Listing"} | Twisted Artists Guild`,
+      description: listing?.description || "View artwork details, images, and discussion on Twisted Artists Guild.",
+    },
+  }
+
   // Sample images for the slideshow
   const sampleImages = [
     {
@@ -176,6 +190,7 @@ const ListingDetails = ({ listing }) => {
 
   return (
     <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
+      <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
       <div className="mb-8">
         <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
           <div className="flex flex-col md:flex-row gap-6">
@@ -379,7 +394,7 @@ ListingDetails.getInitialProps = async (context) => {
     console.error("Error fetching listing details:", error)
   }
 
-  return { listing: data }
+  return { listing: data, slug, L_slug }
 }
 
 export default ListingDetails

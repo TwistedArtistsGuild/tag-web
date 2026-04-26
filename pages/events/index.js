@@ -8,19 +8,29 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import Head from "next/head"
 import Image from "next/image"
 import Link from "next/link"
 import { BuildingIcon, GraduationCapIcon, CheckIcon, HeartIcon, MessageCircleIcon, EyeIcon, CalendarIcon } from "lucide-react"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { useState } from "react"
+import TagSEO from "@/components/TagSEO"
 
 /**
  * Events landing page showcasing the vision for TAG events
  * Features both performance art events and academic support offerings
  */
 export default function EventsLanding() {
+  const pageMetaData = {
+    title: "Events | Twisted Artists Guild",
+    description: "Discover performance art events and educational experiences hosted by Twisted Artists Guild.",
+    keywords: "events, performance art, educational programs, artist showcases",
+    og: {
+      title: "TAG Events",
+      description: "Discover performance art events and educational experiences hosted by Twisted Artists Guild.",
+    },
+  }
+
   // Social data state for events
   const [socialData, setSocialData] = useState({
     "music-events": { views: 2145, loves: 234, comments: 87, shares: 156, attending: 89 },
@@ -43,13 +53,7 @@ export default function EventsLanding() {
   return (
     <SocialRealtimeProvider>
     <div className="min-h-screen bg-gray-100 text-base-content">
-      <Head>
-        <title>Twisted Artists Guild | Events</title>
-        <meta
-          name="description"
-          content="Discover extraordinary performances and educational experiences with Twisted Artists Guild"
-        />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="events" />
       {/* Hero Section */}
       <div className="relative h-[60vh] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black/50 z-10"></div>

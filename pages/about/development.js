@@ -11,11 +11,21 @@
 "use client"
 
 import { useEffect } from "react"
-import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context"
 import DocumentationSection from "@/components/DocumentationSection"
+import TagSEO from "@/components/TagSEO"
 const Development = () => {
+  const pageMetaData = {
+    title: "Development | Twisted Artists Guild",
+    description: "Explore TAG development architecture, tooling, and open-source direction.",
+    keywords: "development, architecture, open source, TAG",
+    og: {
+      title: "TAG Development",
+      description: "Explore TAG development architecture, tooling, and open-source direction.",
+    },
+  }
+
   const { setPageSections } = useAppContext() // Get access to context to set sections
 
   useEffect(() => {
@@ -39,13 +49,7 @@ const Development = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 text-base-content">
-      <Head>
-        <title>Developer Resources | Twisted Artists Guild</title>
-        <meta
-          name="description"
-          content="Explore our API documentation and developer resources to integrate with the Twisted Artists Guild platform."
-        />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/development" />
       {/* Navigation Pane */}
       <nav className="sticky top-0 z-20 border-b border-base-300 bg-base-100/90 py-3 shadow-sm backdrop-blur">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-3 px-4">

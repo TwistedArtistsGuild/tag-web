@@ -11,12 +11,22 @@
 "use client"
 
 import { useEffect } from "react"
-import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
 import CTA from "@/components/homepage/CTA"
+import TagSEO from "@/components/TagSEO"
 
 const Pricing = () => {
+  const pageMetaData = {
+    title: "Pricing | Twisted Artists Guild",
+    description: "Transparent pricing and membership options for creators and supporters.",
+    keywords: "pricing, membership, artist plans",
+    og: {
+      title: "TAG Pricing",
+      description: "Transparent pricing and membership options for creators and supporters.",
+    },
+  }
+
   const { setPageSections } = useAppContext() // Get access to context to set sections
 
   useEffect(() => {
@@ -225,13 +235,7 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
-      <Head>
-        <title>Pricing | Twisted Artists Guild</title>
-        <meta
-          name="description"
-          content="Transparent pricing and benefits for artists and public on the Twisted Artists Guild platform."
-        />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/pricing" />
       {/* Navigation Pane */}
       <nav className="bg-base-100 shadow-md py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">

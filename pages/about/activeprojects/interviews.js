@@ -10,11 +10,13 @@
  Open source · low-profit · human-first*/
 
 
-import Head from "next/head"
+import Head from "next/head"
+import TagSEO from "@/components/TagSEO"
 
 export default function CodeOfConduct() {
 	return (
-		<div className="container mx-auto p-4">
+      <div className="container mx-auto p-4">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages About Activeprojects Interviews | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Activeprojects Interviews on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages About Activeprojects Interviews | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Activeprojects Interviews on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/activeprojects/interviews" />
 			<Head>
 				<title>TAG Interview Disclosure Page</title>
 				<meta name="description" content="Shows our interview guide for questions we want to ask participating artists" key="desc" />

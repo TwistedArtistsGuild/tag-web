@@ -14,7 +14,8 @@ import { useEffect } from "react"
 import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
-import StockProgramBanner from "@/components/StockProgramBanner"
+import StockProgramBanner from "@/components/StockProgramBanner"
+import TagSEO from "@/components/TagSEO"
 
 const External = () => {
   const { setPageSections } = useAppContext()
@@ -30,7 +31,8 @@ const External = () => {
   }, [setPageSections])
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
+      <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages About Investing External | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Investing External on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages About Investing External | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Investing External on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/investing/external" />
       <Head>
         <title>External Investors | Twisted Artists Guild</title>
         <meta

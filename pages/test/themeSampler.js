@@ -12,7 +12,8 @@
 
 import Image from "next/image"
 import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
-import { useLayout } from "@/components/LayoutProvider"
+import { useLayout } from "@/components/LayoutProvider"
+import TagSEO from "@/components/TagSEO"
 
 const themes = [
   "tag-theme",
@@ -40,7 +41,8 @@ const ThemeSampler = () => {
   const { theme, updateTheme } = useLayout()
 
   return (
-    <div className="p-8 min-h-screen bg-base-200 text-base-content">
+      <div className="p-8 min-h-screen bg-base-200 text-base-content">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Themesampler | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Themesampler on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Themesampler | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Themesampler on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/themeSampler" />
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8 text-center">daisyUI Theme Sampler</h1>
 

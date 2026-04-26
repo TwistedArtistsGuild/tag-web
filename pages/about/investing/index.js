@@ -11,10 +11,10 @@
 "use client"
 
 import { useEffect } from "react"
-import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
 import StockProgramBanner from "@/components/StockProgramBanner"
+import TagSEO from "@/components/TagSEO"
 
 const sections = [
   { id: "overview", label: "TAG Stock Plan Overview" },
@@ -28,6 +28,16 @@ const sections = [
 ]
 
 const Investing = () => {
+  const pageMetaData = {
+    title: "Investing | Twisted Artists Guild",
+    description: "Learn about TAG's stock plan, artist ownership model, and investor pathways.",
+    keywords: "investing, stock plan, artist ownership, AMSPP, ESPP",
+    og: {
+      title: "TAG Investing",
+      description: "Learn about TAG's stock plan, artist ownership model, and investor pathways.",
+    },
+  }
+
   const { setPageSections } = useAppContext() // Get access to context to set sections
 
   useEffect(() => {
@@ -173,13 +183,7 @@ const Investing = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
-      <Head>
-        <title>Investing | Twisted Artists Guild</title>
-        <meta
-          name="description"
-          content="Learn about the TAG Stock Plan Overview, including ESPP, AMSPP, and Buyback Program."
-        />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/investing" />
       {/* Navigation Pane */}
       <nav className="bg-base-100 shadow-md py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">

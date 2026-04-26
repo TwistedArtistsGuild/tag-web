@@ -19,6 +19,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react" //Sidebar state
 import getApiURL from "@/components/widgets/GetApiURL"
 import shortDateOptions from "@/utils/shortdateoptions"
+import TagSEO from "@/components/TagSEO"
 
 //process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0; // Dev environment only, allows for self-signed
 
@@ -107,6 +108,16 @@ const ArtistListings = ({ initialListings = [] }) => {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const { slug } = router.query;
+    const canonicalSlug = slug ? `artists/${slug}/listings` : "artists"
+    const pageMetaData = {
+        title: "Artist Listings | Twisted Artists Guild",
+        description: "Browse listings published by this artist on Twisted Artists Guild.",
+        keywords: "artist listings, artist portfolio, TAG artists",
+        og: {
+            title: "TAG Artist Listings",
+            description: "Browse listings published by this artist on Twisted Artists Guild.",
+        },
+    }
 
     useEffect(() => {
         const fetchListings = async () => {
@@ -137,6 +148,7 @@ const ArtistListings = ({ initialListings = [] }) => {
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
+                <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
                 <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary"></div>
             </div>
         );
@@ -145,6 +157,7 @@ const ArtistListings = ({ initialListings = [] }) => {
     if (listings.length === 0) {
         return (
             <div className="text-center py-12">
+                <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
                 <h2 className="text-2xl font-bold mb-4">No listings found for this artist</h2>
                 <p>Check back later or explore other artists.</p>
             </div>
@@ -153,6 +166,7 @@ const ArtistListings = ({ initialListings = [] }) => {
 
     return (
         <div className="container mx-auto py-8 px-4">
+            <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
             <h1 className="text-3xl font-bold mb-6">Artist Listings</h1>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

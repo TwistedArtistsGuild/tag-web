@@ -12,6 +12,7 @@
 
 import { signOut } from "next-auth/react"
 import { usePrivate } from "@/hooks/usePrivate"
+import TagSEO from "@/components/TagSEO"
 import Link from "next/link"
 
 export default function Settings() {

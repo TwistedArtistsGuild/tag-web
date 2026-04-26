@@ -13,7 +13,8 @@
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/router";
+import TagSEO from "@/components/TagSEO"
 
 const api_url = getApiURL();
 const formName = "ListingForm1";
@@ -34,7 +35,8 @@ export default function UpdateListingForm1(props) {
     // Show error message if there was an error loading data
     if (props.error) {
         return (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/listings/[L_slug]/update" />
                 <h2 className="text-xl font-bold text-red-700">Oh crud!</h2>
                 <p className="text-red-600">{props.error.message}</p>
                 <button 
@@ -50,7 +52,8 @@ export default function UpdateListingForm1(props) {
     // Make sure metadata and listing data are properly loaded before rendering the form
     if (!props.metadata || !props.listingData) {
         return (
-            <div className="flex justify-center items-center min-h-[200px]">
+      <div className="flex justify-center items-center min-h-[200px]">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/listings/[L_slug]/update" />
                 <div className="loading loading-spinner loading-lg"></div>
             </div>
         );
@@ -65,7 +68,8 @@ export default function UpdateListingForm1(props) {
     };
 
     return (
-        <div className="p-4">
+      <div className="p-4">
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Artists Slug Listings L Slug Update on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/listings/[L_slug]/update" />
             <h1 className="text-2xl font-bold mb-4">Update Listing</h1>
             <DynaFormDB 
                 request="update" 

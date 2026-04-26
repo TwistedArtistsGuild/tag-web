@@ -13,14 +13,16 @@
 
 import { useState } from "react"
 import UploadPictureForm1 from "@/components/widgets/uploadPic"
-import { defaultFieldClass } from "@/utils/formSettings";
+import { defaultFieldClass } from "@/utils/formSettings";
+import TagSEO from "@/components/TagSEO"
 
 export default function UploadPicPage(props) {
 	const [context, setContext] = useState("twistedpassions")
 	const [topFolder, setTopFolder] = useState("listing")
 
 	return (
-		<div>
+      <div>
+      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Testuploadpic | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testuploadpic on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Testuploadpic | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testuploadpic on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testuploadpic" />
 			<h1>Upload Picture</h1>
 			<form className="form-control">
 				<div className="form-control">
