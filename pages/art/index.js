@@ -506,8 +506,8 @@ const Listings = (props) => {
         <div className="mb-16">
           <h3 className="text-2xl font-bold mb-6">Featured Art</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {props.listings.map((listing) => (
-              <div key={listing.listingid} className="flex justify-center">
+            {props.listings.map((listing, index) => (
+              <div key={listing.path || listing.listingid || `${listing.title || "listing"}-${index}`} className="flex justify-center">
                 <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-3xl">
                   <ListingCard listing={listing} />
                 </div>
@@ -520,8 +520,8 @@ const Listings = (props) => {
           <h3 className="text-3xl font-bold mb-8 text-center">Coming Soon: Bloomscrolling</h3>
           <p className="mb-12 text-xl text-center max-w-4xl mx-auto">Imagine endlessly viewing listings from our artistic community, with no advertisements!.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {props.fakeListings.map((listing) => (
-              <div key={listing.listingid} className="flex justify-center">
+            {props.fakeListings.map((listing, index) => (
+              <div key={listing.path || listing.listingid || `${listing.title || "fake-listing"}-${index}`} className="flex justify-center">
                 <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl">
                   <ListingCard listing={listing} />
                 </div>

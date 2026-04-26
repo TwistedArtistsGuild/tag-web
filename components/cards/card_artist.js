@@ -15,6 +15,11 @@ import Image from "next/image"
 import { HeartIcon, ThumbsUpIcon, UsersIcon, MessageCircleIcon, SmileIcon } from "lucide-react"
 import { useState } from "react"
 
+const getSafeArtistImageSrc = (artist) => {
+  const candidate = artist?.profilePic?.url
+  return candidate || "/blank_image.png"
+}
+
 const getSeededCount = (seed, max, min = 1, salt = "") => {
   const base = `${seed || "artist"}-${salt}`
   const hash = base.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
@@ -29,6 +34,7 @@ const getSeededCount = (seed, max, min = 1, salt = "") => {
  */
 const ArtistCard = ({ artist }) => {
   const artistSeed = artist?.artistid || artist?.path || artist?.title
+  const [imageSrc, setImageSrc] = useState(getSafeArtistImageSrc(artist))
 
   // Initialize state for each counter with values from props
   const [loves, setLoves] = useState(artist.loves)
@@ -90,13 +96,15 @@ const ArtistCard = ({ artist }) => {
       onMouseLeave={() => setShowQuickReactions(false)}
     >
       {/* Wrap the main content (excluding social icons) with Link */}
-      <Link href={`/artists/${artist.path}`} passHref className="flex flex-grow cursor-pointer relative">
-        <figure className="p-4 flex-shrink-0 relative">
+      <Link href={`/artists/${artist.path}`} passHref className="flex grow cursor-pointer relative">
+        <figure className="p-4 shrink-0 relative">
           <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-base-300">
             <Image
-              src={artist?.profilePic?.url || "/blank_image.png"}
+              src={imageSrc}
               alt={artist?.profilePic?.alttext || `${artist?.title}'s profile picture`}
-              layout="fill"
+              fill
+              sizes="96px"
+              onError={() => setImageSrc("/blank_image.png")}
               style={{ objectFit: "cover" }}
               className="rounded-full group-hover:scale-105 transition-transform duration-300"
             />
@@ -121,7 +129,7 @@ const ArtistCard = ({ artist }) => {
             </div>
           )}
         </figure>
-        <div className="card-body p-4 flex-grow justify-center">
+        <div className="card-body p-4 grow justify-center">
           <h2 className="card-title text-lg font-semibold text-primary">{artist.title}</h2>
           <p className="text-sm text-base-content/60">{artist.byline}</p>
           

@@ -182,7 +182,12 @@ export default function Header() {
               className="flex items-center space-x-2 px-2 py-1 rounded-md backdrop-blur-sm bg-base-100/18 border border-base-content/10 hover:bg-base-100/24 transition-all"
               onClick={() => setActive("")}
             >
-              <Image src="/tag_logo.png" alt="Home" height={40} width={80} />
+              <Image
+                src="/tag_logo.png"
+                alt="Home"
+                height={40}
+                width={80}
+              />
               <span className="font-josefin-sans text-xl font-extrabold italic hidden sm:block">
                 Twisted Artists Guild
               </span>

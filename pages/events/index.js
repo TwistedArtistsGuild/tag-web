@@ -80,6 +80,7 @@ export default function EventsLanding() {
             alt="Band performing for a crowd at an event"
             fill
             priority
+            sizes="100vw"
             className="object-cover"
             unoptimized
             style={{ objectFit: "cover" }}

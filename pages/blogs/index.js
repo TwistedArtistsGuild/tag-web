@@ -53,7 +53,7 @@ const Blog = (props) => {
     keywords: "blog, art, business, news",
     robots: "index, follow",
     author: "Bobb Shields",
-    viewport: "width=device-width, initial-scale-1.0",
+    viewport: "width=device-width, initial-scale=1.0",
     og: {
       title: "Social Title for Blog Entries",
       description: "Social list of our blog entries",
@@ -86,6 +86,7 @@ const Blog = (props) => {
                       src={blog.image || getSeededStockPhoto(blog.path)}
                       alt="Blog post cover image"
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       style={{ objectFit: "cover" }}
                       className="rounded-t-box group-hover:scale-105 transition-transform duration-300"
                     />
