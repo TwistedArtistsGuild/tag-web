@@ -10,17 +10,34 @@
  Open source · low-profit · human-first*/
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
+import React, { useMemo } from "react";
 
 const api_url = getApiURL();
 const formName = "ListingForm1";
 
-//bnroken but don't care!!!!
-
 export default function UpdateListingForm2(props) {
-    props.metadataProp.FromURL = "/portal/listing/update.js";
-    props.metadataProp.redirectURL = "/portal/listing/" + props.id;
-    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}/${props.id}`;
-    return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} fieldsProp={props.metadataProp.forms_fields} formData={props.listingdata} /></div>;
+    const enhancedMetadata = useMemo(() => {
+        const base = Array.isArray(props.metadataProp)
+            ? props.metadataProp[0]
+            : props.metadataProp;
+
+        if (!base || Object.keys(base).length === 0 || !props.id) {
+            return null;
+        }
+
+        return {
+            ...base,
+            FromURL: "/portal/listing/update.js",
+            redirectURL: `/portal/listing/${props.id}`,
+            APIURL: `${api_url}listing/byID/${props.id}`
+        };
+    }, [props.metadataProp, props.id]);
+
+    if (!enhancedMetadata || !props.listingdata) {
+        return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
+    }
+
+    return <div className="p-4"><DynaFormDB request="update" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={props.listingdata} /></div>;
 }
 
 UpdateListingForm2.getInitialProps = async function (context) {
@@ -31,10 +48,23 @@ UpdateListingForm2.getInitialProps = async function (context) {
     let data = {};
     let metadata = {};
     try {
-        const res1 = await fetch(api_url + `listingByID/${id}`);
-        data = await res1.json();
-        const res2 = await fetch(api_url + 'forms_metadata/'+ formName);
-        metadata = await res2.json();
+        const res1 = await fetch(`${api_url}listing/byID/${id}`);
+        if (res1.ok) {
+            data = await res1.json();
+        } else {
+            console.error(`Failed to fetch listing ${id}: ${res1.status} ${res1.statusText}`);
+        }
+
+        let res2 = await fetch(`${api_url}formsmetadata/${formName}`);
+
+        // Backward compatibility with older endpoint naming.
+        if (!res2.ok) {
+            res2 = await fetch(`${api_url}forms_metadata/${formName}`);
+        }
+
+        if (res2.ok) {
+            metadata = await res2.json();
+        }
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);
     }
