@@ -20,12 +20,12 @@ import UploadPictureForm1 from "@/components/widgets/uploadPic"
 
 export default function Dashboard() {
 	const pageMetaData = {
-		title: "User Profile | Twisted Artists Guild",
+		title: "User Profile",
 		description: "Manage your profile details, creative bio, and profile media.",
 		keywords: "user profile, artist bio, account profile",
 		robots: "noindex, nofollow",
 		og: {
-			title: "TAG User Profile",
+			title: "User Profile",
 			description: "Manage your profile details, creative bio, and profile media.",
 		},
 	}

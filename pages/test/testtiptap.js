@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useMemo, useState } from "react";
-import Head from "next/head";
 import Link from "next/link";
 import DOMPurify from "dompurify";
 import TTSingleLine from "@/components/social/TT_SingleLine";
@@ -19,7 +18,8 @@ import TTArticle from "@/components/social/TT_Article";
 import TTPortfolio from "@/components/social/TT_Portfolio";
 import { TTCommentsEditorCard } from "@/components/social/TT_Comments";
 import TTDirectMessages from "@/components/social/TT_DirectMessages";
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
+
 import TagSEO from "@/components/TagSEO"
 
 function sanitize(html) {
@@ -33,7 +33,6 @@ function PreviewCard({ title, html }) {
 
   return (
       <div className="grid gap-4 md:grid-cols-2">
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Testtiptap | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testtiptap on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Testtiptap | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testtiptap on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testtiptap" />
       <div className="rounded-lg border border-base-300 bg-base-100 p-4">
         <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-base-content/70">
           {title} HTML Output
@@ -56,6 +55,17 @@ function PreviewCard({ title, html }) {
 }
 
 export default function TiptapTestPage() {
+  const pageMetaData = {
+    title: "Wysiwyg Module Test",
+    description: "Test page for validating production TiptapEditor presets and rich text behavior",
+    keywords: "wysiwyg, tiptap, rich text editor test",
+    robots: "noindex, nofollow",
+    og: {
+      title: "Wysiwyg Module Test",
+      description: "Test page for validating production TiptapEditor presets and rich text behavior",
+    },
+  }
+
   const [titleLineValue, setTitleLineValue] = useState("");
   const [singleLineValue, setSingleLineValue] = useState("");
   const [commentValue, setCommentValue] = useState("");
@@ -68,15 +78,7 @@ export default function TiptapTestPage() {
 
   return (
       <>
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Testtiptap | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testtiptap on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Testtiptap | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testtiptap on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testtiptap" />
-      <Head>
-        <title>Wysiwyg Module Test - Twisted Artists Guild</title>
-        <meta
-          name="description"
-          content="Test page for validating production TiptapEditor presets and rich text behavior"
-        />
-        <meta name="robots" content="noindex, nofollow" />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="test/testtiptap" />
 
       <main className="min-h-screen bg-base-200 p-4 md:p-8">
         <section className="mx-auto max-w-5xl space-y-4">

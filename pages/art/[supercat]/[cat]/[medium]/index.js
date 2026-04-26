@@ -13,12 +13,12 @@ import TagSEO from "@/components/TagSEO"
 
 const MediumListings = (props) => {
 	const pageMetaData = {
-		title: "Art by Medium | Twisted Artists Guild",
-		description: "Explore art listings by medium on Twisted Artists Guild.",
+		title: "Art by Medium",
+		description: "Explore art listings by medium on Platform.",
 		keywords: "art medium, creative medium listings, TAG art",
 		og: {
-			title: "TAG Medium Listings",
-			description: "Explore art listings by medium on Twisted Artists Guild.",
+			title: "Medium Listings",
+			description: "Explore art listings by medium on Platform.",
 		},
 	}
 

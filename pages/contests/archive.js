@@ -12,7 +12,8 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+
 import TagSEO from "@/components/TagSEO"
 
 const getRandomStockPhoto = () => getRandomStockPhotoByCategory("general")
@@ -119,7 +120,7 @@ const archivedContests = [
 export default function VoteArchive() {
 	return (
       <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 py-10 px-4">
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Contests Archive | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Contests Archive on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Contests Archive | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Contests Archive on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/contests/archive" />
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Contests Archive", description: "Explore Github Projects Web Pages Contests Archive on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Contests Archive", description: "Explore Github Projects Web Pages Contests Archive on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/contests/archive" />
 			<div className="container mx-auto max-w-6xl">
 				<section className="text-center mb-10">
 					<h1 className="text-5xl md:text-6xl font-extrabold mb-4 text-primary">Contest Archive</h1>

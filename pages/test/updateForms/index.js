@@ -18,12 +18,12 @@ import TagSEO from "@/components/TagSEO"
 export default function Page() {
 	const router = useRouter()
 	const pageMetaData = {
-		title: "Test Form Redirect | Twisted Artists Guild",
+		title: "Test Form Redirect",
 		description: "Internal test page for updateForms routing behavior.",
 		keywords: "test, forms, routing",
 		robots: "noindex, nofollow",
 		og: {
-			title: "TAG Test Form Redirect",
+			title: "Test Form Redirect",
 			description: "Internal test page for updateForms routing behavior.",
 		},
 	}

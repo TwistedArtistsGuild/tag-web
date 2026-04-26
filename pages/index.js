@@ -35,14 +35,14 @@ import CTA from "@/components/homepage/CTA"
  */
 export default function Home() {
   const pageMetaData = {
-    title: "Twisted Artists Guild | Discover Artists, Events, and Creative Tools",
+    title: "Discover Artists, Events, and Creative Tools",
     description: "Browse artist portfolios, discover original work, and grow your creative business with contests, events, and creator-first tools.",
     keywords: "artists, portfolios, art marketplace, creative community, events, contests, creator tools",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "Twisted Artists Guild | Creator-First Art Community",
+      title: "Creator-First Art Community",
       description: "Discover artists, original work, and practical tools designed for sustainable creative growth.",
     },
   }

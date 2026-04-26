@@ -12,7 +12,8 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import axios from "axios"
-import { defaultFieldClass } from "@/utils/formSettings"
+import { defaultFieldClass } from "@/utils/formSettings"
+
 import TagSEO from "@/components/TagSEO"
 
 export default function TestList() {
@@ -60,7 +61,7 @@ export default function TestList() {
 
 	return (
       <div>
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Testlist | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testlist on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Testlist | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testlist on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testlist" />
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Test Testlist", description: "Explore Github Projects Web Pages Test Testlist on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Test Testlist", description: "Explore Github Projects Web Pages Test Testlist on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testlist" />
 			<h1>Select a Blob Container</h1>
 			<form className="form-control">
 				<label className="label" htmlFor="containerSelect">Container:</label>

@@ -110,12 +110,12 @@ const ArtistListings = ({ initialListings = [] }) => {
     const { slug } = router.query;
     const canonicalSlug = slug ? `artists/${slug}/listings` : "artists"
     const pageMetaData = {
-        title: "Artist Listings | Twisted Artists Guild",
-        description: "Browse listings published by this artist on Twisted Artists Guild.",
+        title: "Artist Listings",
+        description: "Browse listings published by this artist on Platform.",
         keywords: "artist listings, artist portfolio, TAG artists",
         og: {
-            title: "TAG Artist Listings",
-            description: "Browse listings published by this artist on Twisted Artists Guild.",
+            title: "Artist Listings",
+            description: "Browse listings published by this artist on Platform.",
         },
     }
 

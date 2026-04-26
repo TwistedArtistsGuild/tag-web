@@ -9,14 +9,15 @@
 
  Open source · low-profit · human-first*/
 
-import Link from "next/link"
+import Link from "next/link"
+
 import TagSEO from "@/components/TagSEO"
 
 
 export default function Custom404() {
 	return (
       <section className="relative bg-base-100 text-base-content h-screen w-full flex flex-col justify-center gap-8 items-center p-10">
-      <TagSEO metadataProp={{ title: "Server Error | Twisted Artists Guild", description: "An internal server error occurred on Twisted Artists Guild.", keywords: "artists, art community, marketplace", robots: "noindex, nofollow", og: { title: "Server Error | Twisted Artists Guild", description: "An internal server error occurred on Twisted Artists Guild." } }} canonicalSlug="500" />
+      <TagSEO metadataProp={{ title: "Server Error", description: "An internal server error occurred on Platform.", keywords: "artists, art community, marketplace", robots: "noindex, nofollow", og: { title: "Server Error", description: "An internal server error occurred on Platform." } }} canonicalSlug="500" />
 			<p className="text-xl md:text-2xl font-medium">Something went wrong</p>
 
 			<Link href="/" className="btn btn-primary">

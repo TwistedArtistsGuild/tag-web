@@ -12,7 +12,8 @@
 
 //change to displaying an individual log (from Blogs)
 import shortDateOptions from "@/utils/shortdateoptions"
-import getApiURL from "@/components/widgets/GetApiURL"
+import getApiURL from "@/components/widgets/GetApiURL"
+
 import TagSEO from "@/components/TagSEO"
 
 const Logviewer = props => {
@@ -20,7 +21,7 @@ const Logviewer = props => {
 
 	return (
       <div className="flex flex-col items-center justify-evenly min-h-screen w-full">
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Portal Logviewer Id | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Portal Logviewer Id on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Portal Logviewer Id | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Portal Logviewer Id on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/portal/logviewer/[id]" />
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Portal Logviewer Id", description: "Explore Github Projects Web Pages Portal Logviewer Id on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Portal Logviewer Id", description: "Explore Github Projects Web Pages Portal Logviewer Id on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/portal/logviewer/[id]" />
 			<div className="w-full max-w-4xl p-4">
 				<h1 className="text-4xl font-bold mb-8 text-primary">Log viewer</h1>
         

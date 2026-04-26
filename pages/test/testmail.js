@@ -10,7 +10,8 @@
  Open source · low-profit · human-first*/
 
 import { useState } from "react"
-import { defaultButtonClass } from "@/utils/formSettings";
+import { defaultButtonClass } from "@/utils/formSettings";
+
 import TagSEO from "@/components/TagSEO"
 
 export default function TestMail() {
@@ -31,7 +32,7 @@ export default function TestMail() {
 
 	return (
       <div>
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Testmail | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testmail on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Testmail | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Testmail on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testmail" />
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Test Testmail", description: "Explore Github Projects Web Pages Test Testmail on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Test Testmail", description: "Explore Github Projects Web Pages Test Testmail on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testmail" />
 			<h1>Send Test Email</h1>
 				<button className={defaultButtonClass} onClick={handleSendTestEmail}>
 					Send Test Email

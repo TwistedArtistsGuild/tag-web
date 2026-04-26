@@ -16,14 +16,14 @@ import Link from "next/link"
 export default function About() {
 
 	const pageMetaData = {
-		title: "About the Twisted Artists Guild",
+		title: "About the Platform",
 		description: "Information about our non-profit organization",
 		keywords: "about, art, business, organizational charter, guild, sales, cloud platform",
 		robots: "index, follow",
 		author: "Bobb Shields",
 		viewport: "width=device-width, initial-scale=1.0",
 		og: {
-			title: "About the Twisted Artists Guild",
+			title: "About the Platform",
 			description: "Information about our organization",
 		},
 	}

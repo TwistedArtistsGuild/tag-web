@@ -29,12 +29,12 @@ const sections = [
 
 const Investing = () => {
   const pageMetaData = {
-    title: "Investing | Twisted Artists Guild",
-    description: "Learn about TAG's stock plan, artist ownership model, and investor pathways.",
+    title: "Investing",
+    description: "Learn about platform's stock plan, artist ownership model, and investor pathways.",
     keywords: "investing, stock plan, artist ownership, AMSPP, ESPP",
     og: {
-      title: "TAG Investing",
-      description: "Learn about TAG's stock plan, artist ownership model, and investor pathways.",
+      title: "Investing",
+      description: "Learn about platform's stock plan, artist ownership model, and investor pathways.",
     },
   }
 

@@ -14,7 +14,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { ThumbsUpIcon, MessageSquareIcon } from "lucide-react" // Import icons for voting and comments
-import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+
 import TagSEO from "@/components/TagSEO"
 
 const getRandomStockPhoto = () => getRandomStockPhotoByCategory('general')
@@ -92,7 +93,7 @@ export default function HalloweenContest() {
 
   return (
       <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 py-8 px-4" data-theme="halloween">
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Contests Vote Halloween | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Contests Vote Halloween on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Contests Vote Halloween | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Contests Vote Halloween on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/contests/vote_halloween" />
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Contests Vote Halloween", description: "Explore Github Projects Web Pages Contests Vote Halloween on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Contests Vote Halloween", description: "Explore Github Projects Web Pages Contests Vote Halloween on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/contests/vote_halloween" />
       <div className="container mx-auto">
         {/* Hero Section for Halloween Contest */}
         <section className="text-center mb-12">

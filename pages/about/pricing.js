@@ -18,11 +18,11 @@ import TagSEO from "@/components/TagSEO"
 
 const Pricing = () => {
   const pageMetaData = {
-    title: "Pricing | Twisted Artists Guild",
+    title: "Pricing",
     description: "Transparent pricing and membership options for creators and supporters.",
     keywords: "pricing, membership, artist plans",
     og: {
-      title: "TAG Pricing",
+      title: "Pricing",
       description: "Transparent pricing and membership options for creators and supporters.",
     },
   }

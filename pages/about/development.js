@@ -17,12 +17,12 @@ import DocumentationSection from "@/components/DocumentationSection"
 import TagSEO from "@/components/TagSEO"
 const Development = () => {
   const pageMetaData = {
-    title: "Development | Twisted Artists Guild",
-    description: "Explore TAG development architecture, tooling, and open-source direction.",
+    title: "Development",
+    description: "Explore development architecture, tooling, and open-source direction.",
     keywords: "development, architecture, open source, TAG",
     og: {
-      title: "TAG Development",
-      description: "Explore TAG development architecture, tooling, and open-source direction.",
+      title: "Development",
+      description: "Explore development architecture, tooling, and open-source direction.",
     },
   }
 

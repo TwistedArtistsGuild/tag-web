@@ -15,12 +15,12 @@ import TagSEO from "@/components/TagSEO"
 
 export default function CodeOfConduct({ content }) {
 	const pageMetaData = {
-		title: "Terms of Service | Twisted Artists Guild",
-		description: "Read the Twisted Artists Guild terms of service and platform usage expectations.",
+		title: "Terms of Service",
+		description: "Read the Platform terms of service and platform usage expectations.",
 		keywords: "terms of service, platform rules, usage terms",
 		og: {
-			title: "TAG Terms of Service",
-			description: "Read the Twisted Artists Guild terms of service and platform usage expectations.",
+			title: "Terms of Service",
+			description: "Read the Platform terms of service and platform usage expectations.",
 		},
 	}
 

@@ -14,11 +14,11 @@ import TagSEO from "@/components/TagSEO"
 
 const Shareholders = () => {
   const pageMetaData = {
-    title: "Shareholders | Twisted Artists Guild",
+    title: "Shareholders",
     description: "Access shareholder updates, governance information, and voting links.",
     keywords: "shareholders, governance, voting",
     og: {
-      title: "TAG Shareholders",
+      title: "Shareholders",
       description: "Access shareholder updates, governance information, and voting links.",
     },
   }

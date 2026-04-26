@@ -15,12 +15,12 @@ import TagSEO from "@/components/TagSEO"
 
 export default function TestIndex() {
 	const pageMetaData = {
-		title: "Testing Hub | Twisted Artists Guild",
-		description: "Internal testing links and feature sandboxes for Twisted Artists Guild.",
+		title: "Testing Hub",
+		description: "Internal testing links and feature sandboxes for Platform.",
 		keywords: "testing, sandbox, internal tools",
 		robots: "noindex, nofollow",
 		og: {
-			title: "TAG Testing Hub",
+			title: "Testing Hub",
 			description: "Internal testing links and feature sandboxes.",
 		},
 	}

@@ -17,12 +17,12 @@ import DocumentationSection from "@/components/DocumentationSection"
 import TagSEO from "@/components/TagSEO"
 const Vendor = () => {
   const pageMetaData = {
-    title: "Vendor Information | Twisted Artists Guild",
-    description: "Guidance and partnership information for vendors working with TAG.",
+    title: "Vendor Information",
+    description: "Guidance and partnership information for vendors working with.",
     keywords: "vendors, partnerships, requirements",
     og: {
-      title: "TAG Vendor Information",
-      description: "Guidance and partnership information for vendors working with TAG.",
+      title: "Vendor Information",
+      description: "Guidance and partnership information for vendors working with.",
     },
   }
 

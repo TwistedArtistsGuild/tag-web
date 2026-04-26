@@ -474,14 +474,14 @@ const generateFakeListings = () => {
  */
 const Listings = (props) => {
   const pageMetaData = {
-    title: "Art Listings | Twisted Artists Guild",
+    title: "Art Listings",
     description: "Shop and explore curated paintings, sculpture, digital work, and more from independent creators.",
     keywords: "art listings, paintings, sculpture, digital art, gallery, buy art",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "Explore Art Listings on Twisted Artists Guild",
+      title: "Explore Art Listings on Platform",
       description: "Browse curated artwork across mediums and categories from independent creators.",
     },
   }

@@ -11,7 +11,8 @@
 import { useRouter } from "next/router";
 import profiles from "@/content/us/profiles";
 import Link from "next/link";
-import PhotoGallery from "@/components/cards/card_photoGallery";
+import PhotoGallery from "@/components/cards/card_photoGallery";
+
 import TagSEO from "@/components/TagSEO"
 
 export default function ProfilePage() {
@@ -23,7 +24,7 @@ export default function ProfilePage() {
 	if (!profile) {
 		return (
       <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages About Us Slug | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Us Slug on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages About Us Slug | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Us Slug on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/us/[slug]" />
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages About Us Slug", description: "Explore Github Projects Web Pages About Us Slug on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages About Us Slug", description: "Explore Github Projects Web Pages About Us Slug on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/us/[slug]" />
 				<div className="alert alert-error max-w-sm">
 					<span>Profile not found.</span>
 				</div>
@@ -33,7 +34,7 @@ export default function ProfilePage() {
 
 	return (
       <div className="min-h-screen bg-base-200 py-8 px-4">
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages About Us Slug | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Us Slug on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages About Us Slug | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Us Slug on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/us/[slug]" />
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages About Us Slug", description: "Explore Github Projects Web Pages About Us Slug on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages About Us Slug", description: "Explore Github Projects Web Pages About Us Slug on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/us/[slug]" />
 
 			{/* Gallery — 80% width, centered */}
 			{profile.images.length > 0 && (

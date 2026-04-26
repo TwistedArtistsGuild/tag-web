@@ -16,12 +16,12 @@ import TagSEO from "@/components/TagSEO"
 
 function ContestsIndex() {
   const pageMetaData = {
-    title: "Contests | Twisted Artists Guild",
-    description: "Explore active contests, voting, and contest archives across Twisted Artists Guild.",
+    title: "Contests",
+    description: "Explore active contests, voting, and contest archives across Platform.",
     keywords: "art contests, artist voting, contest archive",
     og: {
-      title: "TAG Contests",
-      description: "Explore active contests and community voting on Twisted Artists Guild.",
+      title: "Contests",
+      description: "Explore active contests and community voting on Platform.",
     },
   }
 

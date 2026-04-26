@@ -24,14 +24,14 @@ import shortDateOptions from "@/utils/shortdateoptions"
 const Events = (props) => {
 	const options = shortDateOptions
 	const pageMetaData = {
-		title: "TAG Regional Events Main Page",
+		title: "Regional Events Main Page",
 		description: "A list of regional events",
 		keywords: "events, ticket, art, performances, classes, teaching",
 		robots: "index, follow",
 		author: "Bobb Shields",
 		viewport: "width=device-width, initial-scale=1.0",
 		og: {
-			title: "TAG Regional Events Main Page",
+			title: "Regional Events Main Page",
 			description: "A list of regional events",
 		},
 	}

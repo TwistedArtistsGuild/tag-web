@@ -48,14 +48,14 @@ const Blog = (props) => {
     }))
   }
   const pageMetaData = {
-    title: "Blog | Twisted Artists Guild",
+    title: "Blog",
     description: "Read artist spotlights, platform updates, and practical guides for building visibility and creative income.",
     keywords: "art blog, artist stories, creator insights, platform updates",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "Twisted Artists Guild Blog",
+      title: "Platform Blog",
       description: "Artist spotlights, platform updates, and practical insights for creative growth.",
     },
   }

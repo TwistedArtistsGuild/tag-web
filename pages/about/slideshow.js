@@ -14,12 +14,12 @@ import TagSEO from "@/components/TagSEO"
 
 export default function SlideShow() {
 	const pageMetaData = {
-		title: "Slideshow | Twisted Artists Guild",
-		description: "Review TAG values and MVP vision through the embedded slideshow.",
+		title: "Slideshow",
+		description: "Review TAG's values and MVP vision through the embedded slideshow.",
 		keywords: "slideshow, values, roadmap",
 		og: {
-			title: "TAG Slideshow",
-			description: "Review TAG values and MVP vision through the embedded slideshow.",
+			title: "Slideshow",
+			description: "Review TAG's values and MVP vision through the embedded slideshow.",
 		},
 	}
 

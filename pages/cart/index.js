@@ -17,13 +17,13 @@ import TagSEO from "@/components/TagSEO"
 
 export default function Portal_Artist() {
 	const pageMetaData = {
-		title: "Cart | Twisted Artists Guild",
-		description: "Review selected items and continue checkout on Twisted Artists Guild.",
+		title: "Cart",
+		description: "Review selected items and continue checkout on Platform.",
 		keywords: "cart, checkout, art purchases",
 		robots: "noindex, nofollow",
 		og: {
-			title: "TAG Cart",
-			description: "Review selected items and continue checkout on Twisted Artists Guild.",
+			title: "Cart",
+			description: "Review selected items and continue checkout on Platform.",
 		},
 	}
 

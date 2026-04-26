@@ -16,11 +16,11 @@ import TagSEO from "@/components/TagSEO"
 // Features Page - Showcasing platform's core functionalities
 const Features = () => {
   const pageMetaData = {
-    title: "Features | Twisted Artists Guild",
+    title: "Features",
     description: "Discover core platform features for artists, vendors, and event hosts.",
     keywords: "features, artists, events, platform tools",
     og: {
-      title: "TAG Features",
+      title: "Features",
       description: "Discover core platform features for artists, vendors, and event hosts.",
     },
   }

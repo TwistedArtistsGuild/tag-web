@@ -17,7 +17,7 @@ export default function Contact() {
   const [hoveredSocial, setHoveredSocial] = useState(null)
 
   const pageMetaData = {
-    title: "Connect with TAG - Twisted Artists Guild",
+    title: "Connect with",
     description:
       "Creativity thrives in collaboration — and Twisted Artists Guild is where artists, thinkers, and dreamers unite. Whether you’re an illustrator, performer, crafter, or curator, you belong here.",
     keywords: "art community, twisted artists, creative collaboration, art networking, contact",
@@ -25,8 +25,8 @@ export default function Contact() {
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "Connect with TAG - Twisted Artists Guild",
-      description: "Creativity thrives in collaboration — and Twisted Artists Guild is where artists, thinkers, and dreamers unite.",
+      title: "Connect with",
+      description: "Creativity thrives in collaboration — and Platform is where artists, thinkers, and dreamers unite.",
     },
   }
 

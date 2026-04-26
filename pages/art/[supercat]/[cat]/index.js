@@ -13,12 +13,12 @@ import TagSEO from "@/components/TagSEO"
 
 const CategoryListings = (props) => {
 	const pageMetaData = {
-		title: "Art by Category | Twisted Artists Guild",
-		description: "Explore art listings by category on Twisted Artists Guild.",
+		title: "Art by Category",
+		description: "Explore art listings by category on Platform.",
 		keywords: "art category, listing browser, TAG art",
 		og: {
-			title: "TAG Category Listings",
-			description: "Explore art listings by category on Twisted Artists Guild.",
+			title: "Category Listings",
+			description: "Explore art listings by category on Platform.",
 		},
 	}
 

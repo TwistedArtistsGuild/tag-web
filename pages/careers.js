@@ -24,14 +24,14 @@ export default function Careers() {
   const { setPageSections } = useAppContext();
 
   const pageMetaData = {
-    title: "TAG Careers Page",
+    title: "Careers Page",
     description: "A list of our available jobs",
     keywords: "tech, art, hiring, employer",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "TAG Careers Page",
+      title: "Careers Page",
       description: "A list of our available jobs",
     },
   };

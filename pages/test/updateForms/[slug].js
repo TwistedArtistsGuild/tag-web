@@ -13,7 +13,8 @@
 import DynaFormDB from '@/components/widgets/DynaFormDB';
 import getApiURL from "@/components/widgets/GetApiURL";
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState } from 'react';
+
 import TagSEO from "@/components/TagSEO"
 
 /**
@@ -54,7 +55,7 @@ export default function UpdateFormsForm1(props) {
 
   return (
       <div>
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages Test Updateforms Slug | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Updateforms Slug on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages Test Updateforms Slug | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages Test Updateforms Slug on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/updateForms/[slug]" />
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Test Updateforms Slug", description: "Explore Github Projects Web Pages Test Updateforms Slug on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Test Updateforms Slug", description: "Explore Github Projects Web Pages Test Updateforms Slug on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/updateForms/[slug]" />
       <div>
         <h2 className="text-lg font-bold mb-4">Available Forms</h2>
         <div className="form-control w-full max-w-xs">

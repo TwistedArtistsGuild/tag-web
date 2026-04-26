@@ -11,14 +11,23 @@
 "use client"
 
 import { useEffect } from "react"
-import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
-import StockProgramBanner from "@/components/StockProgramBanner"
+import StockProgramBanner from "@/components/StockProgramBanner"
+
 import TagSEO from "@/components/TagSEO"
 
 const Buyback = () => {
   const { setPageSections } = useAppContext()
+  const pageMetaData = {
+    title: "Stock Buyback Program",
+    description: "Learn about the Private Stock Repurchase Plan (PSRP) for platform shareholders.",
+    keywords: "stock buyback, private stock repurchase plan, shareholder liquidity",
+    og: {
+      title: "Stock Buyback Program",
+      description: "Learn about the Private Stock Repurchase Plan (PSRP) for platform shareholders.",
+    },
+  }
 
   const sections = [
     { id: "psrp-overview", label: "PSRP Overview" },
@@ -249,11 +258,7 @@ const Buyback = () => {
 
   return (
       <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages About Investing Buyback | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Investing Buyback on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages About Investing Buyback | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Investing Buyback on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/investing/buyback" />
-      <Head>
-        <title>Stock Buyback Program | Twisted Artists Guild</title>
-        <meta name="description" content="Learn about the Private Stock Repurchase Plan (PSRP) for TAG shareholders." />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/investing/buyback" />
       {/* Navigation Pane */}
       <nav className="bg-base-100 shadow-md py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">

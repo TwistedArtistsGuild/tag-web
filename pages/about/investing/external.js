@@ -11,14 +11,23 @@
 "use client"
 
 import { useEffect } from "react"
-import Head from "next/head"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
-import StockProgramBanner from "@/components/StockProgramBanner"
+import StockProgramBanner from "@/components/StockProgramBanner"
+
 import TagSEO from "@/components/TagSEO"
 
 const External = () => {
   const { setPageSections } = useAppContext()
+  const pageMetaData = {
+    title: "External Investors",
+    description: "Information for external stakeholders interested in investing in the platform.",
+    keywords: "external investors, fixed dividend shares, investor relations",
+    og: {
+      title: "External Investors",
+      description: "Information for external stakeholders interested in investing in the platform.",
+    },
+  }
 
   // Define sections for this page (can be just one or more)
   const sections = [{ id: "external-investors", label: "External Investors" }]
@@ -32,14 +41,7 @@ const External = () => {
 
   return (
       <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages About Investing External | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Investing External on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages About Investing External | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Investing External on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/investing/external" />
-      <Head>
-        <title>External Investors | Twisted Artists Guild</title>
-        <meta
-          name="description"
-          content="Information for external stakeholders interested in investing in Twisted Artists Guild."
-        />
-      </Head>
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/investing/external" />
       {/* Navigation Pane (can be a shared component or similar to other pages) */}
       <nav className="bg-base-100 shadow-md py-4">
         <div className="container mx-auto px-4 flex justify-between items-center">

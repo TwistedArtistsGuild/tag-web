@@ -15,12 +15,12 @@ import TagSEO from "@/components/TagSEO"
 
 export default function About() {
 	const pageMetaData = {
-		title: "Active Projects | Twisted Artists Guild",
-		description: "Explore active projects and artist interview initiatives at Twisted Artists Guild.",
+		title: "Active Projects",
+		description: "Explore active projects and artist interview initiatives at Platform.",
 		keywords: "active projects, artist interviews, guild initiatives",
 		og: {
-			title: "TAG Active Projects",
-			description: "Explore active projects and artist interview initiatives at Twisted Artists Guild.",
+			title: "Active Projects",
+			description: "Explore active projects and artist interview initiatives at Platform.",
 		},
 	}
 

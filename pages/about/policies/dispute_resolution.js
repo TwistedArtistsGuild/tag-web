@@ -10,24 +10,27 @@
  Open source · low-profit · human-first*/
 
 
-import Head from "next/head"
-import { getMarkdownContent } from "@/components/widgets/markdown"
+import { getMarkdownContent } from "@/components/widgets/markdown"
+
 import TagSEO from "@/components/TagSEO"
 
 export default function CodeOfConduct({ content }) {
+	const pageMetaData = {
+		title: "Dispute Resolution Policy",
+		description: "How we expect to interact with the world",
+		keywords: "art, guild, rules, boundaries, code of conduct, acceptable behaviors, penalties",
+		robots: "index, follow",
+		author: "Bobb Shields",
+		viewport: "width=device-width, initial-scale=1.0",
+		og: {
+			title: "Dispute Resolution Policy",
+			description: "How we expect to interact with the world",
+		},
+	}
+
 	return (
       <div className="container mx-auto p-4">
-      <TagSEO metadataProp={{ title: "Github Projects Tag Tag Web Pages About Policies Dispute Resolution | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Policies Dispute Resolution on Twisted Artists Guild.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Tag Tag Web Pages About Policies Dispute Resolution | Twisted Artists Guild", description: "Explore Github Projects Tag Tag Web Pages About Policies Dispute Resolution on Twisted Artists Guild." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/policies/dispute_resolution" />
-			<Head>
-				<title>TAG Code of Conduct - Investors</title>
-				<meta name="description" content="How we expect to interact with the world" key="desc" />
-				<meta name="keywords" content="art, guild, rules, boundaries, code of conduct, acceptable behaviors, penalties" />
-				<meta name="robots" content="index, follow" />
-				<meta name="author" content="Bobb Shields" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<meta property="og:title" content="TAG Code of Conduct" />
-				<meta property="og:description" content="How we expect to interact with the world" />
-			</Head>
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="about/policies/dispute_resolution" />
 			<div className="prose">
 				<h2 className="text-2xl font-bold mb-4">
           The code of conduct for investors to stay in good standing: 
