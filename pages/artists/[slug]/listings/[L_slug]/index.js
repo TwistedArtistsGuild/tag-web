@@ -353,7 +353,6 @@ const ListingDetails = ({ listing }) => {
                   currentUser={currentUser}
                   allowMedia={true}
                   readOnly={false}
-                  theme={theme}
                   className="bg-base-100 text-base-content"
                 />
                </div>
