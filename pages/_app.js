@@ -77,11 +77,11 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
     : "Twisted Artists Guild"
   const fallbackSeo = {
     title: fallbackTitle,
-    description: "Twisted Artists Guild is a creator-focused community and marketplace for artists and supporters.",
+    description: "A creator-focused community and marketplace for artists and supporters.",
     keywords: "artists, art community, marketplace",
     og: {
       title: fallbackTitle,
-      description: "Twisted Artists Guild is a creator-focused community and marketplace for artists and supporters.",
+      description: "A creator-focused community and marketplace for artists and supporters.",
     },
   }
 
