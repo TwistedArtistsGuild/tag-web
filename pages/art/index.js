@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 
 
-import { useState, useEffect } from "react"
+
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
 import getApiURL from "@/components/widgets/GetApiURL"
@@ -474,21 +474,21 @@ const generateFakeListings = () => {
  */
 const Listings = (props) => {
   const pageMetaData = {
-    title: "TAG Art Listings Main Page",
-    description: "Explore art through Bloomscrolling",
-    keywords: "art, sculpture, painting, digital, gallery",
+    title: "Art Listings",
+    description: "Shop and explore curated paintings, sculpture, digital work, and more from independent creators.",
+    keywords: "art listings, paintings, sculpture, digital art, gallery, buy art",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "TAG Art Listings Main Page",
-      description: "Explore art through Bloomscrolling",
+      title: "Explore Art Listings on Platform",
+      description: "Browse curated artwork across mediums and categories from independent creators.",
     },
   }
   return (
     <SocialRealtimeProvider>
       <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
-        <TagSEO metadataProp={pageMetaData} canonicalSlug="listings" />
+        <TagSEO metadataProp={pageMetaData} canonicalSlug="art" />
         {/* Hero Section */}
         <section className="text-center py-12">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
@@ -506,8 +506,8 @@ const Listings = (props) => {
         <div className="mb-16">
           <h3 className="text-2xl font-bold mb-6">Featured Art</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {props.listings.map((listing) => (
-              <div key={listing.listingid} className="flex justify-center">
+            {props.listings.map((listing, index) => (
+              <div key={listing.path || listing.listingid || `${listing.title || "listing"}-${index}`} className="flex justify-center">
                 <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-3xl">
                   <ListingCard listing={listing} />
                 </div>
@@ -520,8 +520,8 @@ const Listings = (props) => {
           <h3 className="text-3xl font-bold mb-8 text-center">Coming Soon: Bloomscrolling</h3>
           <p className="mb-12 text-xl text-center max-w-4xl mx-auto">Imagine endlessly viewing listings from our artistic community, with no advertisements!.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {props.fakeListings.map((listing) => (
-              <div key={listing.listingid} className="flex justify-center">
+            {props.fakeListings.map((listing, index) => (
+              <div key={listing.path || listing.listingid || `${listing.title || "fake-listing"}-${index}`} className="flex justify-center">
                 <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl">
                   <ListingCard listing={listing} />
                 </div>

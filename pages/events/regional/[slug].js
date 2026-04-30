@@ -11,7 +11,6 @@
 
 
 import Link from "next/link"
-import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import shortDateOptions from "@/utils/shortdateoptions"
@@ -24,14 +23,14 @@ import shortDateOptions from "@/utils/shortdateoptions"
 const Events = (props) => {
 	const options = shortDateOptions
 	const pageMetaData = {
-		title: "TAG Regional Events Main Page",
+		title: "Regional Events Main Page",
 		description: "A list of regional events",
 		keywords: "events, ticket, art, performances, classes, teaching",
 		robots: "index, follow",
 		author: "Bobb Shields",
 		viewport: "width=device-width, initial-scale=1.0",
 		og: {
-			title: "TAG Regional Events Main Page",
+			title: "Regional Events Main Page",
 			description: "A list of regional events",
 		},
 	}
@@ -46,12 +45,12 @@ const Events = (props) => {
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 				{props.events.map((event) => (
-					<div key={event.eventnum} className="card shadow-lg">
+					<div key={event.eventnum} className="card bg-base-100 text-base-content border border-base-300 shadow-lg">
 						<div className="card-body">
 							<Link href={`/events/${event.path}`}>
 								<a className="card-title text-primary">{event.title}</a>
 							</Link>
-							<p className="text-sm text-gray-500">{event.byline}</p>
+							<p className="text-sm text-base-content/70">{event.byline}</p>
 							<p className="text-sm">
 								{new Date(event.applied).toLocaleDateString("en-US", options)}
 							</p>
@@ -65,7 +64,6 @@ const Events = (props) => {
 
 Events.getInitialProps = async function () {
 	let data = []
-	let status = ""
 
 	const api_url = getApiURL()
 
@@ -75,7 +73,6 @@ Events.getInitialProps = async function () {
 	} 
 	const res = await fetch(api_url + "event")
 		.then((res) => {
-			status = res.status
 			return res.json()
 		})
 		.then((res) => (data = res))

@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 
 import { getServerSession } from "next-auth/next"
-import { authOptions } from "../auth/[...nextauth]"
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { createCheckout } from "@/libs/stripe"
 import getApiURL from "@/components/widgets/GetApiURL"
 

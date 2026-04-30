@@ -11,10 +11,23 @@
 
 
 import Link from "next/link";
+import TagSEO from "@/components/TagSEO"
 
 export default function TestIndex() {
+	const pageMetaData = {
+		title: "Testing Hub",
+		description: "Internal testing links and feature sandboxes for Platform.",
+		keywords: "testing, sandbox, internal tools",
+		robots: "noindex, nofollow",
+		og: {
+			title: "Testing Hub",
+			description: "Internal testing links and feature sandboxes.",
+		},
+	}
+
 	return (
 		<div className="p-4 bg-base-200">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="test" />
 			<h2 className="text-2xl font-bold text-primary">
         Links to Portal Resources
 			</h2>
@@ -41,6 +54,11 @@ export default function TestIndex() {
 			<div className="mt-2">
 				<Link href="/test/testtiptap" className="link link-primary">
 				  /test/tiptap
+				</Link>
+			</div>
+			<div className="mt-2">
+				<Link href="/test/themeSampler" className="link link-primary">
+				  /test/themeSampler
 				</Link>
 			</div>
 		</div>

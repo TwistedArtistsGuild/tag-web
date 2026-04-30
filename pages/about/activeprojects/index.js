@@ -10,29 +10,35 @@
  Open source · low-profit · human-first*/
 
 
-import Head from "next/head";
 import Link from "next/link";
+import TagSEO from "@/components/TagSEO"
 
 export default function About() {
+	const pageMetaData = {
+		title: "Active Projects",
+		description: "Explore active projects and artist interview initiatives at Platform.",
+		keywords: "active projects, artist interviews, guild initiatives",
+		og: {
+			title: "Active Projects",
+			description: "Explore active projects and artist interview initiatives at Platform.",
+		},
+	}
+
 	return (
-		<div className="container mx-auto p-4">
-			<Head>
-				<title>TAG Active Projects Main Page</title>
-				<meta name="description" content="Shows our past and current projects" key="desc" />
-				<meta name="keywords" content="art, guild, non-profit, charitable, projects, beneficiaries" />
-				<meta name="robots" content="index, follow" />
-				<meta name="author" content="Bobb Shields" />
-				<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-				<meta property="og:title" content="TAG Active Projects Main Page" />
-				<meta property="og:description" content="Shows our past and current projects" />
-			</Head>
-			<h2 className="text-2xl font-bold mb-4">
+		<div className="container mx-auto max-w-5xl p-4 md:p-6">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="about/activeprojects" />
+			<h1 className="text-4xl md:text-5xl font-bold text-primary mb-6 text-center">
 				Links to active projects being pursued by the guild.
-			</h2>
-			<div className="space-y-4">
-				<Link href="/about/activeprojects/interviews" className="text-blue-500 hover:underline">
-					Interview series with artists of many types.
-				</Link>
+			</h1>
+			<div className="card bg-base-100 border border-base-300 shadow-md">
+				<div className="card-body">
+					<p className="text-base-content/80">
+						Explore current projects and interviews that spotlight our artist community.
+					</p>
+					<Link href="/about/activeprojects/interviews" className="link link-primary font-medium">
+						Interview series with artists of many types.
+					</Link>
+				</div>
 			</div>
 		</div>
 	);

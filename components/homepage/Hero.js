@@ -11,7 +11,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import TestimonialsAvatars from "../TestimonialsAvatars"
+import TestimonialsAvatars from "@/components/TestimonialsAvatars"
 
 const Hero = () => {
 	return (
@@ -40,7 +40,7 @@ const Hero = () => {
 					src="https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3540&q=80"
 					alt="Artists collaborating and building creative careers"
 					className="w-full"
-					fetchpriority="high"
+					fetchPriority="high"
 					width={500}
 					height={500}
 					style={{ objectFit: 'cover' }}

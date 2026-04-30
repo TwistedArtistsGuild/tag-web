@@ -14,6 +14,8 @@ import DynaFormDB from "@/components/widgets/DynaFormDB"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { useRouter } from "next/router"
 
+import TagSEO from "@/components/TagSEO"
+
 const formName = "ArtistForm1"
 
 /**
@@ -31,7 +33,8 @@ export default function UpdateArtistForm1(props) {
 	// Show error message if there was an error loading data
 	if (props.error) {
 		return (
-			<div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/update" />
 				<h2 className="text-xl font-bold text-red-700">Oops!</h2>
 				<p className="text-red-600">{props.error.message}</p>
 				<button 
@@ -47,7 +50,8 @@ export default function UpdateArtistForm1(props) {
 	// Make sure metadata and artist data are properly loaded before rendering the form
 	if (!props.metadataProp || !props.artistdata) {
 		return (
-			<div className="flex justify-center items-center min-h-[200px]">
+      <div className="flex justify-center items-center min-h-50">
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/update" />
 				<div className="loading loading-spinner loading-lg"></div>
 			</div>
 		);
@@ -62,7 +66,8 @@ export default function UpdateArtistForm1(props) {
 	};
 
 	return (
-		<div className="p-4">
+      <div className="p-4">
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/update" />
 			<h1 className="text-2xl font-bold mb-4">Update Artist</h1>
 			<DynaFormDB 
 				request="update" 

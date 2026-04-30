@@ -11,7 +11,6 @@
 import Link from "next/link"
 import TagSEO from "@/components/TagSEO"
 import ArtistCard from "@/components/cards/card_artist"
-import ArtistCardWithPic from "@/components/cards/card_artist_wPic" // Import the new component
 import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
@@ -22,15 +21,15 @@ import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
  */
 const Artists = (props) => {
 	const pageMetaData = {
-		title: "TAG Artists Links",
-		description: "A list of our artist members",
-		keywords: "art, artist member, sales, portfolio",
+  title: "Artists and Portfolios",
+  description: "Find independent artists, explore portfolios, and connect directly for commissions, collaborations, and support.",
+    keywords: "artists, portfolios, creator profiles, discover artists, art community",
 		robots: "index, follow",
 		author: "Bobb Shields",
 		viewport: "width=device-width, initial-scale=1.0",
 		og: {
-			title: "TAG Artists Links",
-			description: "A list of our artist members",
+    title: "Find Independent Artists on Platform",
+    description: "Explore artist portfolios and connect directly with creators in the community.",
 		},
 	}
 
@@ -55,16 +54,19 @@ const Artists = (props) => {
 					<Link href="/portal/artist/create" className="btn btn-primary">Create a new artist</Link>
 				</div>
 				{/* Main Artist Card Grid */}
-				<section className="w-full flex-1 min-h-[400px] flex flex-col justify-stretch">
+				<section className="w-full flex-1 min-h-100 flex flex-col justify-stretch">
 					{props.artists && props.artists.length > 0 ? (
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-							{props.artists.map((artist) => (
-								<div key={artist.artistid} className="flex items-stretch">
+              {props.artists.map((artist, index) => {
+                const artistKey = `${artist.path || artist.artistid || artist.title || "artist"}-${index}`
+                return (
+                  <div key={artistKey} className="flex items-stretch">
 									<div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full">
 										<ArtistCard artist={artist} className="flex-1 h-full" />
 									</div>
 								</div>
-							))}
+                )
+              })}
 						</div>
 					) : (
 						<div className="alert alert-info w-full flex justify-center">

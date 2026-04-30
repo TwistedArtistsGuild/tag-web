@@ -20,7 +20,7 @@ export const usePrivate = (callbackUrl = config.callbackUrl) => {
     if (status === "unauthenticated") {
       signIn(undefined, { callbackUrl });
     }
-  }, [status]);
+  }, [callbackUrl, status]);
 
   return [session, status];
 };

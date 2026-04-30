@@ -10,12 +10,13 @@
  Open source · low-profit · human-first*/ 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useLayout } from "./LayoutProvider"
 import ArtistCardSmall from "@/components/cards/card_artist_small"
 import ListingCardSmall from "@/components/cards/card_listing_small"
+import Navigation from "@/components/Navigation"
 import { useRouter } from "next/router"
-import { PanelLeftOpen, PanelLeftClose, Search } from 'lucide-react';
+import { PanelLeftOpen, PanelLeftClose } from 'lucide-react';
 
 export default function LeftSidebar(props) {
   // Since MyLayout.js spreads the leftSidebarData, we access props directly
@@ -29,6 +30,15 @@ export default function LeftSidebar(props) {
     { label: "Sculpture", value: "30" },
   ];
   const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+
+  // All hooks declared up front before any function definitions
+  const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
+  const [activeTab, setActiveTab] = useState("browse")
+  const [searchTerm, setSearchTerm] = useState("")
+  const [activeFilter, setActiveFilter] = useState("-1")
+  const [searchHighlight, setSearchHighlight] = useState(false)
+  const searchInputRef = useRef(null)
+  const router = useRouter()
 
  useEffect(() => {
   // Auto-detect content type if not specified
@@ -65,7 +75,7 @@ export default function LeftSidebar(props) {
       }
      }
      resolveContent();
- }, [props.listings, props.artists, props.events]); // Re-run if props change
+ }, [api_url, artists.length, events.length, props.contentType, props.listings]); // Re-run if props change
 
   // Render content based on type
   const renderContent = () => {
@@ -175,12 +185,20 @@ export default function LeftSidebar(props) {
     }
   };
   
-  const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [activeFilter, setActiveFilter] = useState("-1")
-  const router = useRouter()
-
   const topOffset = isHeaderVisible ? "top-20" : "top-0"
+
+  useEffect(() => {
+    const handleSidebarSearchFocus = () => {
+      setActiveTab("browse")
+      setTimeout(() => {
+        searchInputRef.current?.focus()
+        setSearchHighlight(true)
+        setTimeout(() => setSearchHighlight(false), 3000)
+      }, 350) // wait for sidebar open animation
+    }
+    window.addEventListener("sidebarSearchFocus", handleSidebarSearchFocus)
+    return () => window.removeEventListener("sidebarSearchFocus", handleSidebarSearchFocus)
+  }, [])
 
   return (
     <>
@@ -224,13 +242,26 @@ export default function LeftSidebar(props) {
         )}
 
         {/* Sidebar Header */}
-        <div className="sidebar-inner-header flex items-center justify-between p-4 border-b border-base-content/10 bg-base-300">
-          <h2 className="font-semibold text-lg text-base-content">Navigation & Filters</h2>
+        <div className="sidebar-inner-header flex items-center justify-between gap-3 p-4 border-b border-base-content/10 bg-base-300">
+          <div className="tabs tabs-boxed">
+            <button
+              className={`tab ${activeTab === "browse" ? "tab-active" : ""}`}
+              onClick={() => setActiveTab("browse")}
+            >
+              Browse
+            </button>
+            <button
+              className={`tab ${activeTab === "navigation" ? "tab-active" : ""}`}
+              onClick={() => setActiveTab("navigation")}
+            >
+              Navigation
+            </button>
+          </div>
           {/* Mobile close button in header */}
           {isMobile && (
             <button
               onClick={toggleLeftSidebar}
-              className="btn btn-sm btn-circle btn-ghost touch-manipulation"
+              className="btn btn-sm btn-circle btn-ghost touch-manipulation shrink-0"
               aria-label="Close sidebar"
               style={{ touchAction: 'manipulation' }}
             >
@@ -241,53 +272,64 @@ export default function LeftSidebar(props) {
           )}
         </div>
 
-        {/* Search Section */}
-        <div className="p-2 border-b border-base-content/10 bg-base-100">
-          <div className="flex gap-2 items-center">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search..."
-              className="input input-bordered input-xs flex-1"
-              onKeyDown={e => { if (e.key === 'Enter') { router.push(`/search?term=${encodeURIComponent(searchTerm)}`) } }}
-            />
-            <button
-              className="btn btn-primary btn-xs"
-              onClick={() => router.push(`/search?term=${encodeURIComponent(searchTerm)}`)}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Filters Section */}
-        {filters.length > 0 && (
-          <div className="p-4 border-b border-base-content/10">
-            <h3 className="font-medium text-base-content mb-3">Filters</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {filters.map((filter, index) => (
-                <label key={index} className="label cursor-pointer justify-start">
+        <div className="flex-1 overflow-y-auto p-4 pb-24 max-h-[calc(100vh-220px)]">
+          {activeTab === "browse" ? (
+            <div className="space-y-4">
+              {/* Search Section */}
+              <div className="p-2 border border-base-content/10 bg-base-100 rounded-md">
+                <div className="flex gap-2 items-center">
                   <input
-                    type="radio"
-                    name="filter"
-                    className="radio radio-primary radio-xs"
-                    checked={activeFilter === filter.value}
-                    onChange={() => setActiveFilter(filter.value)}
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search..."
+                    className="input input-bordered input-xs flex-1"
+                    onKeyDown={e => { if (e.key === 'Enter') { router.push(`/search?term=${encodeURIComponent(searchTerm)}`) } }}
                   />
-                  
-                  <span className="label-text text-xs ml-2">{filter.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
+                  <button
+                    className={`btn btn-primary btn-xs transition-all duration-200 ${searchHighlight ? "ring-2 ring-offset-1 ring-primary animate-pulse" : ""}`}
+                    onClick={() => router.push(`/search?term=${encodeURIComponent(searchTerm)}`)}
+                    aria-label="Search"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 max-h-[calc(100vh-300px)]">
-          {renderContent()}
+              {/* Filters Section */}
+              {filters.length > 0 && (
+                <div className="p-4 border border-base-content/10 rounded-md">
+                  <h3 className="font-medium text-base-content mb-3">Filters</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {filters.map((filter, index) => (
+                      <label key={index} className="label cursor-pointer justify-start">
+                        <input
+                          type="radio"
+                          name="filter"
+                          className="radio radio-primary radio-xs"
+                          checked={activeFilter === filter.value}
+                          onChange={() => setActiveFilter(filter.value)}
+                        />
+                        <span className="label-text text-xs ml-2">{filter.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4">{renderContent()}</div>
+            </div>
+          ) : (
+            <Navigation
+              embedded
+              title={null}
+              subtitle={null}
+              className="border-0 bg-transparent p-0 shadow-none"
+            />
+          )}
         </div>
       </aside>
 

@@ -15,7 +15,8 @@
 	linkToArtistPage: "/artists/mattTBD",
 	title: "Secretary of the Board, Chief Accounting Officer",
 	roleSummary: "Runs vendors, contracts, logistics, and daily operations.",
-	bio: `matt TBD.`,
+	bio: `<p>Matt's full bio is coming soon. Stay tuned!</p>`,
+	// Bio is tiptap-compatible HTML
 	images: [],
 };
 

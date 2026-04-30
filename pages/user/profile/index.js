@@ -12,12 +12,24 @@
 
 import { useState } from "react"
 import { signOut } from "next-auth/react"
+import Image from "next/image"
 import apiClient from "@/libs/api"
 import { usePrivate } from "@/hooks/usePrivate"
 import TagSEO from "@/components/TagSEO"
 import UploadPictureForm1 from "@/components/widgets/uploadPic"
 
 export default function Dashboard() {
+	const pageMetaData = {
+		title: "User Profile",
+		description: "Manage your profile details, creative bio, and profile media.",
+		keywords: "user profile, artist bio, account profile",
+		robots: "noindex, nofollow",
+		og: {
+			title: "User Profile",
+			description: "Manage your profile details, creative bio, and profile media.",
+		},
+	}
+
 	// Custom hook to make private pages easier to deal with (see /hooks folder)
 	const [session, status] = usePrivate({})
 	const [isLoading, setIsLoading] = useState(false)
@@ -49,6 +61,7 @@ export default function Dashboard() {
 
 	return (
 		<>
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="user/profile" />
 			<main className="min-h-screen p-8 pb-24 bg-base-200">
 				<section className="max-w-xl mx-auto space-y-8">
 					<h1 className="text-3xl md:text-4xl font-extrabold text-primary">Your Profile</h1>
@@ -107,7 +120,9 @@ export default function Dashboard() {
 							onUploadComplete={(url) => setProfilePicture(url)}
 						/>
 						{profilePicture && (
-							<img src={profilePicture} alt="Profile Picture" className="mt-4 rounded-lg" />
+							<div className="relative w-full h-64">
+								<Image src={profilePicture} alt="Profile Picture" fill style={{ objectFit: 'cover' }} className="rounded-lg" />
+							</div>
 						)}
 					</div>
 					<div className="flex space-x-4">

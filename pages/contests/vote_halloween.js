@@ -16,6 +16,8 @@ import { useState } from "react"
 import { ThumbsUpIcon, MessageSquareIcon } from "lucide-react" // Import icons for voting and comments
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 
+import TagSEO from "@/components/TagSEO"
+
 const getRandomStockPhoto = () => getRandomStockPhotoByCategory('general')
 
 export default function HalloweenContest() {
@@ -90,11 +92,12 @@ export default function HalloweenContest() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300 py-8 px-4" data-theme="halloween">
+      <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 py-8 px-4" data-theme="halloween">
+      <TagSEO metadataProp={{ title: "Github Projects Web Pages Contests Vote Halloween", description: "Explore Github Projects Web Pages Contests Vote Halloween on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Contests Vote Halloween", description: "Explore Github Projects Web Pages Contests Vote Halloween on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/contests/vote_halloween" />
       <div className="container mx-auto">
         {/* Hero Section for Halloween Contest */}
         <section className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-purple-700">
+          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-linear-to-r from-orange-500 to-purple-700">
             🎃 Halloween Art Contest 👻
           </h1>
           <p className="text-xl md:text-2xl text-secondary mb-6">
@@ -138,14 +141,14 @@ export default function HalloweenContest() {
                 </figure>
                 <div className="card-body p-6">
                   <h3 className="card-title text-2xl text-primary">{entry.title}</h3>
-                  <p className="text-lg text-gray-700">By: {entry.artist}</p>
+                  <p className="text-lg text-base-content/80">By: {entry.artist}</p>
                   <p className="text-sm text-base-content line-clamp-3">{entry.description}</p>
                   <div className="card-actions justify-between items-center mt-4">
                     <button onClick={() => handleVote(entry.id)} className="btn btn-primary btn-sm">
                       <ThumbsUpIcon className="w-4 h-4 mr-1" />
                       Vote ({entry.votes})
                     </button>
-                    <div className="flex items-center text-gray-600">
+                    <div className="flex items-center text-base-content/70">
                       <MessageSquareIcon className="w-4 h-4 mr-1" />
                       {entry.comments.length} Comments
                     </div>
@@ -163,13 +166,13 @@ export default function HalloweenContest() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500">No comments yet. Be the first to comment!</p>
+                      <p className="text-sm text-base-content/60">No comments yet. Be the first to comment!</p>
                     )}
                     <div className="mt-4 flex gap-2">
                       <input
                         type="text"
                         placeholder="Add a comment..."
-                        className="input input-bordered input-sm flex-grow"
+                        className="input input-bordered input-sm grow"
                         value={newCommentText}
                         onChange={(e) => setNewCommentText(e.target.value)}
                         onKeyDown={(e) => {
@@ -199,3 +202,4 @@ export default function HalloweenContest() {
     </div>
   )
 }
+

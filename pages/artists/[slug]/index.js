@@ -17,8 +17,8 @@ import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import longDateOptions from "@/utils/longdateoptions"
 import { useAppContext } from "@/components/Context"
-import ImageGallery from "react-image-gallery" // Keep this for the main gallery
-import "react-image-gallery/styles/image-gallery.css" // Import gallery styles
+import ImageGallery from "react-image-gallery"
+import "react-image-gallery/styles/image-gallery.css"
 import {
   HeartIcon,
   ThumbsUpIcon,
@@ -35,6 +35,14 @@ import {
   FaXTwitter as TwitterIcon,
   FaPinterest as PinterestIcon,
 } from "react-icons/fa6"
+
+const artistSections = [
+  { id: "profile", label: "Profile" },
+  { id: "artwork", label: "Featured Artwork" },
+  { id: "events", label: "Events & Exhibitions" },
+  { id: "listings", label: "Art Listings" },
+  { id: "comments", label: "Comments & Feedback" },
+]
 
 /**
  * @desc Displays an individual artist's details by the shortname, passed by POST
@@ -58,17 +66,9 @@ const Artist = (props) => {
   const [commentText, setCommentText] = useState("")
 
   // Navigation sections for quick jump
-  const sections = [
-    { id: "profile", label: "Profile" },
-    { id: "artwork", label: "Featured Artwork" },
-    { id: "events", label: "Events & Exhibitions" },
-    { id: "listings", label: "Art Listings" },
-    { id: "comments", label: "Comments & Feedback" },
-  ]
-
   // Set page sections in context when component mounts
   useEffect(() => {
-    setPageSections(sections)
+    setPageSections(artistSections)
 
     // Clean up when component unmounts
     return () => {
@@ -77,15 +77,15 @@ const Artist = (props) => {
   }, [setPageSections])
 
   const pageMetaData = {
-    title: `TAG Artist Member - ${props.artist?.title || "Unknown Artist"}`,
-    description: props.artist?.byline || "Artist details unavailable.",
-    keywords: props.artist?.seoTags || "",
+    title: `${props.artist.title}`,
+    description: props.artist.byline,
+    keywords: props.artist.seoTags,
     robots: "index, follow",
-    author: props.artist?.title || "Unknown",
+    author: props.artist.title,
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: props.artist?.title || "Unknown Artist",
-      description: props.artist?.byline || "Artist details unavailable.",
+      title: props.artist.title,
+      description: props.artist.byline,
     },
   }
 
@@ -238,8 +238,6 @@ const Artist = (props) => {
   }
 
   const listings = props.listings || []
-  const links = props.links || []
-
   // Dummy events data
   const events = [
     {
@@ -289,16 +287,8 @@ const Artist = (props) => {
     }
   }, [props.artist])
 
-  // Scroll to section function
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id)
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" })
-    }
-  }
-
   return (
-    <div className="mx-auto p-4 relative max-w-6xl bg-gray-100 text-base-content">
+    <div className="mx-auto p-4 relative max-w-6xl bg-base-200 text-base-content">
       <TagSEO metadataProp={pageMetaData} canonicalSlug={`artists/${props.slug}`} />
 
       {/* Cover Picture */}
@@ -313,13 +303,13 @@ const Artist = (props) => {
       </div>
 
       {/* Loading Message */}
-      {!props.artist && <p className="text-center text-gray-500 mt-4">Loading artist details... Please wait.</p>}
+      {!props.artist && <p className="text-center text-base-content/60 mt-4">Loading artist details... Please wait.</p>}
 
       {/* Artist Details */}
       {props.artist && (
         <>
           <div id="profile" className="card lg:card-side bg-base-100 shadow-xl mt-8">
-            <figure className="p-4 flex-shrink-0">
+            <figure className="p-4 shrink-0">
               <div className="relative w-64 h-64 rounded-xl overflow-hidden shadow-lg border-2 border-gray-200">
                 {" "}
                 {/* Larger profile pic container */}
@@ -332,7 +322,7 @@ const Artist = (props) => {
                 />
               </div>
             </figure>
-            <div className="card-body p-6 flex-grow">
+            <div className="card-body p-6 grow">
               <div className="flex flex-wrap justify-between items-start gap-4">
                 <div>
                   <h1 className="card-title text-3xl font-bold text-primary mb-1">
@@ -429,20 +419,28 @@ const Artist = (props) => {
                     lazyLoad={true}
                     renderItem={(item) => (
                       <div className="image-gallery-image">
-                        <img
-                          src={item.original || "/placeholder.svg"}
-                          alt={item.description}
-                          style={{ objectFit: "contain", maxHeight: "500px", margin: "0 auto" }}
-                        />
+                        <div className="relative mx-auto h-[500px] w-full max-w-4xl">
+                          <Image
+                            src={item.original || "/placeholder.svg"}
+                            alt={item.description || item.title || "Featured artwork"}
+                            fill
+                            unoptimized
+                            sizes="(max-width: 1024px) 100vw, 896px"
+                            style={{ objectFit: "contain" }}
+                          />
+                        </div>
                         {item.description && <div className="image-gallery-description">{item.description}</div>}
                       </div>
                     )}
                     renderThumbInner={(item) => (
                       <div className="image-gallery-thumbnail-inner">
-                        <img
+                        <Image
                           src={item.thumbnail || "/placeholder.svg"}
-                          alt={item.description}
+                          alt={item.description || item.title || "Artwork thumbnail"}
                           className="image-gallery-thumbnail-image"
+                          width={120}
+                          height={80}
+                          unoptimized
                           style={{ objectFit: "cover", height: "80px" }}
                         />
                         <div className="image-gallery-thumbnail-label">{item.title}</div>
@@ -451,13 +449,13 @@ const Artist = (props) => {
                   />
                 </div>
               ) : (
-                <div className="text-center text-gray-500 p-4">
+                <div className="text-center text-base-content/60 p-4">
                   <p>No featured artwork available for this artist yet.</p>
                   <p className="text-sm mt-1">Check back soon for updates!</p>
                 </div>
               )}
               <div className="mt-4 flex justify-between items-center">
-                <p className="text-lg font-medium">Browse the artist's featured collection</p>
+                <p className="text-lg font-medium">Browse the artist&apos;s featured collection</p>
                 <button className="btn btn-primary btn-sm">View All Works</button>
               </div>
             </div>
@@ -472,7 +470,7 @@ const Artist = (props) => {
                   <div key={event.id} className="card bg-base-100 shadow-md hover:shadow-xl transition-shadow">
                     <div className="card-body p-4">
                       <h3 className="card-title text-primary text-lg">{event.title}</h3>
-                      <div className="flex items-center text-sm mb-1 text-gray-600">
+                      <div className="flex items-center text-sm mb-1 text-base-content/70">
                         <CalendarIcon className="w-4 h-4 mr-1" />
                         {new Date(event.date).toLocaleDateString("en-US", {
                           year: "numeric",
@@ -480,11 +478,11 @@ const Artist = (props) => {
                           day: "numeric",
                         })}
                       </div>
-                      <div className="flex items-center text-sm mb-3 text-gray-600">
+                      <div className="flex items-center text-sm mb-3 text-base-content/70">
                         <MapPinIcon className="w-4 h-4 mr-1" />
                         {event.location}
                       </div>
-                      <p className="text-sm text-gray-700">{event.description}</p>
+                      <p className="text-sm text-base-content/80">{event.description}</p>
                       <div className="card-actions justify-end mt-2">
                         <button className="btn btn-sm btn-outline btn-primary">Details</button>
                       </div>
@@ -493,7 +491,7 @@ const Artist = (props) => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No upcoming events for this artist.</p>
+              <p className="text-base-content/60">No upcoming events for this artist.</p>
             )}
           </div>
 
@@ -524,7 +522,7 @@ const Artist = (props) => {
                           {listing.title || "Untitled"}
                         </h3>
                       </Link>
-                      <p className="text-sm line-clamp-2 text-gray-700">
+                      <p className="text-sm line-clamp-2 text-base-content/80">
                         {listing.description || "No description available."}
                       </p>
                       <div className="flex justify-between items-center mt-2">
@@ -548,7 +546,7 @@ const Artist = (props) => {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">No listings available for this artist.</p>
+              <p className="text-base-content/60">No listings available for this artist.</p>
             )}
           </div>
 
@@ -572,16 +570,16 @@ const Artist = (props) => {
                 </div>
               </div>
               <div className="flex flex-wrap gap-3 mb-4">
-                <span className="text-sm font-medium mr-2 text-gray-700">Quick Filters:</span>
+                <span className="text-sm font-medium mr-2 text-base-content/80">Quick Filters:</span>
                 <button className="btn btn-sm btn-outline">Paintings</button>
                 <button className="btn btn-sm btn-outline">Digital Art</button>
                 <button className="btn btn-sm btn-outline">Sculptures</button>
                 <button className="btn btn-sm btn-outline">Photography</button>
                 <button className="btn btn-sm btn-outline">Recent Works</button>
               </div>
-              <div className="bg-base-200 p-4 rounded-lg text-center text-gray-700">
+              <div className="bg-base-200 p-4 rounded-lg text-center text-base-content/80">
                 <p>Enter search terms above to find works by this artist</p>
-                <p className="text-sm text-gray-500 mt-1">Advanced search options coming soon!</p>
+                <p className="text-sm text-base-content/60 mt-1">Advanced search options coming soon!</p>
               </div>
             </div>
           </div>
@@ -625,21 +623,27 @@ const Artist = (props) => {
                     <div className="flex gap-4">
                       <div className="avatar">
                         <div className="w-12 h-12 rounded-full overflow-hidden">
-                          <img src={comment.avatar || "/placeholder.svg"} alt={`${comment.author}'s avatar`} />
+                          <Image
+                            src={comment.avatar || "/placeholder.svg"}
+                            alt={`${comment.author}'s avatar`}
+                            width={48}
+                            height={48}
+                            unoptimized
+                          />
                         </div>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h3 className="font-medium text-primary">{comment.author}</h3>
-                          <span className="text-sm text-gray-500">{comment.date}</span>
+                          <span className="text-sm text-base-content/60">{comment.date}</span>
                         </div>
-                        <p className="mt-1 text-gray-800">{comment.content}</p>
+                        <p className="mt-1 text-base-content">{comment.content}</p>
                         <div className="mt-2 flex items-center gap-4">
-                          <button className="text-sm flex items-center gap-1 text-gray-500 hover:text-primary">
+                          <button className="text-sm flex items-center gap-1 text-base-content/60 hover:text-primary">
                             <HeartIcon className="w-4 h-4" />
                             {comment.likes} likes
                           </button>
-                          <button className="text-sm flex items-center gap-1 text-gray-500 hover:text-primary">
+                          <button className="text-sm flex items-center gap-1 text-base-content/60 hover:text-primary">
                             <ReplyIcon className="w-4 h-4" />
                             Reply
                           </button>
@@ -654,17 +658,23 @@ const Artist = (props) => {
                           <div key={reply.id} className="flex gap-4">
                             <div className="avatar">
                               <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <img src={reply.avatar || "/placeholder.svg"} alt={`${reply.author}'s avatar`} />
+                                <Image
+                                  src={reply.avatar || "/placeholder.svg"}
+                                  alt={`${reply.author}'s avatar`}
+                                  width={40}
+                                  height={40}
+                                  unoptimized
+                                />
                               </div>
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center justify-between">
                                 <h4 className="font-medium text-primary">{reply.author}</h4>
-                                <span className="text-sm text-gray-500">{reply.date}</span>
+                                <span className="text-sm text-base-content/60">{reply.date}</span>
                               </div>
-                              <p className="mt-1 text-gray-800">{reply.content}</p>
+                              <p className="mt-1 text-base-content">{reply.content}</p>
                               <div className="mt-2 flex items-center gap-4">
-                                <button className="text-sm flex items-center gap-1 text-gray-500 hover:text-primary">
+                                <button className="text-sm flex items-center gap-1 text-base-content/60 hover:text-primary">
                                   <HeartIcon className="w-4 h-4" />
                                   {reply.likes} likes
                                 </button>
