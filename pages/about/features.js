@@ -9,12 +9,22 @@
 
  Open source · low-profit · human-first*/
 import React from 'react';
-import Head from 'next/head';
 import Image from 'next/image';
 import FAQ from '@/components/homepage/FAQ';
+import TagSEO from "@/components/TagSEO"
 
 // Features Page - Showcasing platform's core functionalities
 const Features = () => {
+  const pageMetaData = {
+    title: "Features",
+    description: "Discover core platform features for artists, vendors, and event hosts.",
+    keywords: "features, artists, events, platform tools",
+    og: {
+      title: "Features",
+      description: "Discover core platform features for artists, vendors, and event hosts.",
+    },
+  }
+
   // Features data with sections and details
   const featureSections = [
     {
@@ -92,11 +102,8 @@ const Features = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-base-200 to-base-300">
-      <Head>
-        <title>Features | Our Creative Platform</title>
-        <meta name="description" content="Discover the powerful features of our platform designed for artists, event hosts, and creative entrepreneurs." />
-      </Head>
+    <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="about/features" />
 
       {/* Hero Section */}
       <div className="hero py-16 bg-base-100">
@@ -147,7 +154,7 @@ const Features = () => {
                   <ul className="space-y-3">
                     {section.features.map((feature, i) => (
                       <li key={i} className="flex items-start">
-                        <div className="flex-shrink-0 h-6 w-6 text-primary mt-0.5">
+                        <div className="shrink-0 h-6 w-6 text-primary mt-0.5">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
@@ -173,7 +180,7 @@ const Features = () => {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <button className="btn btn-secondary btn-lg">Sign Up Now</button>
-            <button className="btn btn-outline btn-lg border-white text-white hover:bg-white hover:text-primary">
+            <button className="btn btn-outline btn-lg border-primary-content text-primary-content hover:bg-primary-content hover:text-primary">
               Schedule a Demo
             </button>
           </div>

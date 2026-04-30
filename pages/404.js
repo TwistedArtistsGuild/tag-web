@@ -12,6 +12,8 @@ import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/router"
 
+import TagSEO from "@/components/TagSEO"
+
 export default function Custom404() {
 	const [email, setEmail] = useState("")
 	const [message, setMessage] = useState("")
@@ -45,7 +47,8 @@ export default function Custom404() {
 	}
 
 	return (
-		<section className="relative bg-base-100 text-base-content w-full p-10 flex flex-col items-center gap-6">
+      <section className="relative bg-base-100 text-base-content w-full p-10 flex flex-col items-center gap-6">
+      <TagSEO metadataProp={{ title: "Page Not Found", description: "The requested page could not be found on Platform.", keywords: "artists, art community, marketplace", robots: "noindex, nofollow", og: { title: "Page Not Found", description: "The requested page could not be found on Platform." } }} canonicalSlug="404" />
 			<p className="text-xl md:text-2xl font-medium">
 				This page doesn&apos;t exist or has been moved.
 			</p>

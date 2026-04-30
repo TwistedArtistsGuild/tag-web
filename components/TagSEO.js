@@ -35,6 +35,55 @@ const defaults = {
 	},
 }
 
+const BRAND_SUFFIX = "TAG - Twisted Artists Guild"
+
+const normalizeBaseTitle = (rawTitle, canonicalSlug) => {
+	if (!rawTitle && !canonicalSlug) {
+		return "Homepage"
+	}
+
+	if (!rawTitle && canonicalSlug) {
+		const fromSlug = canonicalSlug
+			.split("/")
+			.filter(Boolean)
+			.map((segment) => {
+				if (segment.startsWith("[") && segment.endsWith("]")) {
+					return "Details"
+				}
+				return segment
+					.replace(/[-_]+/g, " ")
+					.replace(/\b\w/g, (char) => char.toUpperCase())
+			})
+			.join(" - ")
+
+		return fromSlug || "Homepage"
+	}
+
+	let title = String(rawTitle || "").trim()
+
+	// Strip existing site suffix patterns to avoid duplication.
+	title = title
+		.replace(/\s*\|\s*TAG\s*-\s*Twisted Artists Guild$/i, "")
+		.replace(/\s*\|\s*Twisted Artists Guild(?:\s*\(TAG\))?$/i, "")
+		.replace(/\s*\|\s*TAG$/i, "")
+		.trim()
+
+	if (!title && !canonicalSlug) {
+		return "Homepage"
+	}
+
+	if (!title && canonicalSlug) {
+		return normalizeBaseTitle("", canonicalSlug)
+	}
+
+	return title
+}
+
+const formatBrandedTitle = (rawTitle, canonicalSlug) => {
+	const baseTitle = normalizeBaseTitle(rawTitle, canonicalSlug)
+	return `${baseTitle} | ${BRAND_SUFFIX}`
+}
+
 // This components should be added to every pages you want to rank on Google (in /pages directory).
 // It prefills data with default title/description/OG but you can cusotmize it for each page.
 // REQUIRED: The canonicalSlug is required for each page (it's the slug of the page, without the domain name and without the trailing slash)
@@ -46,11 +95,13 @@ const TagSEO = ({
 
 	// Overwrite defaults with metadataProp if it exists
 	const metadata = { ...defaults, ...metadataProp };
+	const normalizedTitle = formatBrandedTitle(metadata.title, canonicalSlug)
+	const normalizedOgTitle = formatBrandedTitle(metadata.og?.title || metadata.title, canonicalSlug)
 
 	return (
 		<Head>
 			{/* TITLE */}
-			<title key="title">{metadata.title}</title>
+			<title key="title">{normalizedTitle}</title>
 
 			{/* METAS */}
 			<meta
@@ -85,7 +136,7 @@ const TagSEO = ({
 
 			{/* OG METAS */}
 			<meta property="og:type" content={metadata.og.type} />
-			<meta property="og:title" content={metadata.og.title} />
+			<meta property="og:title" content={normalizedOgTitle} />
 			<meta
 				property="og:description"
 				key="og:description"

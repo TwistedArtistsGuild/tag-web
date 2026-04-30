@@ -14,20 +14,27 @@ import Image from "next/image" // Import Image component
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import longDateOptions from "@/utils/longdateoptions"
+import { getSeededStockPhoto } from "@/utils/stockPhotos"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { MessageCircleIcon, HeartIcon, ShareIcon } from "lucide-react"
 import { useState } from "react"
 
+const getSeededCount = (seed, max, min = 1, salt = "") => {
+  const base = `${seed || "blog"}-${salt}`
+  const hash = base.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return (hash % max) + min
+}
+
 const Blog = (props) => {
   const options = longDateOptions
-  const [socialData, setSocialData] = useState(() => 
+  const [socialData, setSocialData] = useState(() =>
     props.blogs.reduce((acc, blog) => ({
       ...acc,
       [blog.path]: {
-        loves: Math.floor(Math.random() * 100) + 10,
-        comments: Math.floor(Math.random() * 50) + 5,
-        shares: Math.floor(Math.random() * 25) + 1
-      }
+        loves: blog.loves ?? getSeededCount(blog.path, 100, 10, "loves"),
+        comments: blog.commentCount ?? getSeededCount(blog.path, 50, 5, "comments"),
+        shares: blog.shares ?? getSeededCount(blog.path, 25, 1, "shares"),
+      },
     }), {})
   )
 
@@ -41,21 +48,21 @@ const Blog = (props) => {
     }))
   }
   const pageMetaData = {
-    title: "TAG Blog Main Page",
-    description: "A list of our blog entries",
-    keywords: "blog, art, business, news",
+    title: "Blog",
+    description: "Read artist spotlights, platform updates, and practical guides for building visibility and creative income.",
+    keywords: "art blog, artist stories, creator insights, platform updates",
     robots: "index, follow",
     author: "Bobb Shields",
-    viewport: "width=device-width, initial-scale-1.0",
+    viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "Social Title for Blog Entries",
-      description: "Social list of our blog entries",
+      title: "Platform Blog",
+      description: "Artist spotlights, platform updates, and practical insights for creative growth.",
     },
   }
   return (
     <SocialRealtimeProvider>
       <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
-        <TagSEO metadataProp={pageMetaData} canonicalSlug="blog" />
+        <TagSEO metadataProp={pageMetaData} canonicalSlug="blogs" />
         {/* Hero Section */}
         <section className="text-center py-12">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
@@ -64,9 +71,6 @@ const Blog = (props) => {
           <p className="text-xl md:text-2xl text-secondary mb-6">
             Please see the below topics of interest to yourself.
           </p>
-          <div className="badge badge-info badge-lg">
-            💬 Enhanced with Social Features
-          </div>
         </section>
         <main className="container mx-auto px-4 py-8 flex-1 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -75,13 +79,14 @@ const Blog = (props) => {
               return (
                 <div
                   key={blog.path}
-                  className="card bg-base-200 shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out group"
+                  className="card bg-base-200 text-base-content shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out group"
                 >
                   <figure className="relative h-48 w-full">
                     <Image
-                      src="https://tagstatic.blob.core.windows.net/pexels/pexels-markus-winkler-1430818-3812433-merchandiseclothingrack.jpg"
+                      src={blog.image || getSeededStockPhoto(blog.path)}
                       alt="Blog post cover image"
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       style={{ objectFit: "cover" }}
                       className="rounded-t-box group-hover:scale-105 transition-transform duration-300"
                     />
@@ -94,7 +99,7 @@ const Blog = (props) => {
                     >
                       {blog.title}
                     </Link>
-                    <p className="text-lg text-gray-700 line-clamp-3"  dangerouslySetInnerHTML={{ __html: blog.byline }}></p>
+                    <div className="text-lg text-base-content/80 line-clamp-3" dangerouslySetInnerHTML={{ __html: blog.byline }}></div>
                     
                     {/* Enhanced Social Section */}
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">
@@ -119,13 +124,13 @@ const Blog = (props) => {
                         </button>
                       </div>
                       
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-base-content/70" suppressHydrationWarning>
                         {new Date(blog.created).toLocaleDateString("en-US", options)}
                       </span>
                     </div>
                     
                     <div className="card-actions justify-end mt-4">
-                      <Link href={`/blogs/${blog.path}`} className="btn btn-sm btn-outline btn-primary">
+                      <Link href={`/blogs/${blog.path}`} className="btn btn-sm btn-primary tag-btn-glow">
                         Read More
                       </Link>
                     </div>
@@ -135,7 +140,7 @@ const Blog = (props) => {
             })}
           </div>
           <div className="flex justify-end mt-12">
-            <Link href="/blogs/create" className="btn btn-primary text-lg">
+            <Link href="/blogs/create" className="btn btn-primary text-lg tag-btn-glow">
               Create a blog post
             </Link>
           </div>

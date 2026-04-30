@@ -13,7 +13,7 @@ import config from "@/config";
 
 export default function Document() {
   return (
-    <Html lang="en" className="font-sans" data-theme={config.colors.theme}>
+    <Html lang="en" className="font-sans" data-theme={config.colors.theme} data-scroll-behavior="smooth">
       <Head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

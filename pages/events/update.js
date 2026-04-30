@@ -17,8 +17,6 @@ import getApiURL from "@/components/widgets/GetApiURL"
 //broken but don't care!!!!
 
 const api_url = getApiURL();
-const formName = "EventForm1";
-
 /**
  * Component for updating user details.
  * @param {Object} props

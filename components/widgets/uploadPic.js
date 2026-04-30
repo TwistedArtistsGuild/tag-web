@@ -213,7 +213,7 @@ export default function UploadPictureForm1() {
 				<div className="mt-4">
 					{filesData.map((fileData, index) => (
 						<div key={index} className="mb-4">
-							<div className="card shadow-lg">
+							<div className="card bg-base-100 text-base-content border border-base-300 shadow-lg">
 								<figure>
 									{fileData.preview && (
 										<Image

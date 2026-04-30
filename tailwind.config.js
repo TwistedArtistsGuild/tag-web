@@ -101,6 +101,7 @@ module.exports = {
   daisyui: {
     themes: [
       "tag-theme", // Our custom theme added first (default)
+      "neon",
       "light",
       "dark",
       "cupcake",

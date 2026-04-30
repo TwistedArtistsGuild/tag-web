@@ -15,7 +15,8 @@
 	linkToArtistPage: "/artists/tbd",
 	title: "Advisor to the Board",
 	roleSummary: "Advises the board.",
-	bio: `An old high school buddy that remembers business law concepts from college.`,
+	bio: `<p>An old high school buddy who remembers business law concepts from college — and has turned out to be an invaluable advisor to the Board.</p>`,
+	// Bio is tiptap-compatible HTML
 	images: [],
 };
 

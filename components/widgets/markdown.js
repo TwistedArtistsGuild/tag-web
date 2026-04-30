@@ -18,7 +18,18 @@ import html from "remark-html"
 import sanitizeHtml from "sanitize-html"
 
 export async function getMarkdownContent(filePath) {
-	const fullPath = path.join(process.cwd(), filePath)
+	const normalizedPath = filePath.replace(/\\/g, "/")
+	const relativePath = normalizedPath.startsWith("content/")
+		? normalizedPath.slice("content/".length)
+		: normalizedPath
+
+	const contentRoot = path.join(process.cwd(), "content")
+	const fullPath = path.resolve(contentRoot, relativePath)
+
+	if (!fullPath.startsWith(contentRoot + path.sep) && fullPath !== contentRoot) {
+		throw new Error("Invalid markdown path: must be within content directory")
+	}
+
 	const fileContents = fs.readFileSync(fullPath, "utf8")
 
 	const processedContent = await remark()

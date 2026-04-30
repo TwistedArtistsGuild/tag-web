@@ -15,7 +15,7 @@
 
 /* Tailwind v4: DaisyUI must be registered in CSS (tailwind.config.js plugin list is not sufficient). */
 @plugin "daisyui" {
-  themes: light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, valentine, halloween, garden, aqua, pastel, fantasy, black, luxury, dracula;
+  themes: neon, light, dark, cupcake, bumblebee, emerald, corporate, synthwave, retro, valentine, halloween, garden, aqua, pastel, fantasy, black, luxury, dracula;
 }
 
 html,
@@ -46,12 +46,34 @@ body.site-body {
 /* neon gradient for tag-theme — class toggled by JS in MyLayout.js */
 .site-shell.theme-tag {
   background:
-    radial-gradient(circle at top left,  color-mix(in oklab, var(--tag-secondary) 20%, transparent) 0, transparent 35%),
-    radial-gradient(circle at top right, color-mix(in oklab, var(--tag-primary)   20%, transparent) 0, transparent 30%),
-    radial-gradient(circle at 20% 70%,   color-mix(in oklab, var(--tag-primary)   10%, transparent) 0, transparent 32%),
-    radial-gradient(circle at 80% 40%,   color-mix(in oklab, var(--tag-secondary) 10%, transparent) 0, transparent 28%),
-    linear-gradient(180deg, var(--tag-base-200) 0%, var(--tag-base-100) 60%, var(--tag-base-200) 100%);
+    /* Primary accent layers — Electric Indigo */
+    radial-gradient(ellipse 600px 400px at top left, color-mix(in oklab, var(--tag-primary) 25%, transparent) 0, transparent 40%),
+    /* Secondary accent layers — Chartreuse */
+    radial-gradient(ellipse 500px 350px at top right, color-mix(in oklab, var(--tag-secondary) 22%, transparent) 0, transparent 38%),
+    /* Accent accent — Ghost White hints */
+    radial-gradient(circle 250px at 15% 80%, color-mix(in oklab, var(--tag-accent) 12%, transparent) 0, transparent 45%),
+    /* Deep primary accent in lower right */
+    radial-gradient(ellipse 700px 500px at 85% 70%, color-mix(in oklab, var(--tag-primary) 15%, transparent) 0, transparent 42%),
+    /* Subtle secondary mid-screen */
+    radial-gradient(circle 300px at 40% 50%, color-mix(in oklab, var(--tag-secondary) 8%, transparent) 0, transparent 35%),
+    /* Onyx base with subtle vertical gradient for depth */
+    linear-gradient(180deg, color-mix(in oklab, var(--tag-base-200) 100%, var(--tag-primary) 2%) 0%, var(--tag-base-100) 50%, color-mix(in oklab, var(--tag-base-200) 100%, var(--tag-secondary) 1%) 100%);
   background-attachment: fixed;
+  background-size: 100% 100%;
+  position: relative;
+}
+
+/* neon backdrop treatment for neon theme */
+.site-shell.theme-neon {
+  background:
+    radial-gradient(ellipse 520px 360px at 12% 10%, color-mix(in oklab, var(--tag-primary) 26%, transparent) 0, transparent 45%),
+    radial-gradient(ellipse 480px 330px at 88% 14%, color-mix(in oklab, var(--tag-secondary) 26%, transparent) 0, transparent 45%),
+    radial-gradient(circle 260px at 20% 78%, color-mix(in oklab, var(--tag-accent) 22%, transparent) 0, transparent 52%),
+    radial-gradient(ellipse 720px 480px at 85% 78%, color-mix(in oklab, var(--tag-primary) 18%, transparent) 0, transparent 46%),
+    linear-gradient(180deg, color-mix(in oklab, var(--tag-base-200) 95%, var(--tag-primary) 5%) 0%, var(--tag-base-100) 52%, color-mix(in oklab, var(--tag-base-200) 94%, var(--tag-secondary) 6%) 100%);
+  background-attachment: fixed;
+  background-size: 100% 100%;
+  position: relative;
 }
 
 /* grid texture — only visible for tag-theme */
@@ -71,7 +93,76 @@ body.site-body {
 }
 
 .site-shell.theme-tag::before {
-  opacity: 0.4;
+  opacity: 0.5;
+}
+
+.site-shell.theme-neon::before {
+  opacity: 0.65;
+}
+
+/* Accent prismatic accent bars for tag-theme — adds visual flair */
+.site-shell.theme-tag::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: 
+    /* Top accent bar: Electric Indigo to Chartreuse gradient */
+    linear-gradient(90deg, 
+      color-mix(in oklab, var(--tag-primary) 0%, transparent),
+      color-mix(in oklab, var(--tag-primary) 8%, transparent) 20%,
+      color-mix(in oklab, var(--tag-secondary) 5%, transparent) 50%,
+      color-mix(in oklab, var(--tag-primary) 6%, transparent) 80%,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent)
+    ) 0 0 / 100% 3px no-repeat,
+    /* Subtle left edge accent */
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--tag-secondary) 0%, transparent),
+      color-mix(in oklab, var(--tag-secondary) 4%, transparent) 15%,
+      color-mix(in oklab, var(--tag-secondary) 0%, transparent)
+    ) 0 0 / 2px 100% no-repeat,
+    /* Subtle right edge accent */
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent),
+      color-mix(in oklab, var(--tag-primary) 5%, transparent) 20%,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent)
+    ) 100% 0 / 2px 100% no-repeat;
+  z-index: 0;
+  animation: accent-shimmer 8s ease-in-out infinite;
+}
+
+.site-shell.theme-neon::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent),
+      color-mix(in oklab, var(--tag-primary) 14%, transparent) 18%,
+      color-mix(in oklab, var(--tag-secondary) 14%, transparent) 50%,
+      color-mix(in oklab, var(--tag-accent) 13%, transparent) 78%,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent)
+    ) 0 0 / 100% 4px no-repeat,
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--tag-secondary) 0%, transparent),
+      color-mix(in oklab, var(--tag-secondary) 9%, transparent) 20%,
+      color-mix(in oklab, var(--tag-accent) 6%, transparent) 55%,
+      color-mix(in oklab, var(--tag-secondary) 0%, transparent)
+    ) 0 0 / 3px 100% no-repeat,
+    linear-gradient(180deg,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent),
+      color-mix(in oklab, var(--tag-primary) 9%, transparent) 22%,
+      color-mix(in oklab, var(--tag-accent) 5%, transparent) 58%,
+      color-mix(in oklab, var(--tag-primary) 0%, transparent)
+    ) 100% 0 / 3px 100% no-repeat;
+  z-index: 0;
+  animation: accent-shimmer 6s ease-in-out infinite;
+}
+
+@keyframes accent-shimmer {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
 }
 
 .site-main {
@@ -228,7 +319,7 @@ th {
 
 [data-theme="tag-theme"] .site-title {
   background-image: linear-gradient(to right, var(--tag-primary), var(--tag-secondary));
-  filter: drop-shadow(0 0 5px rgba(57, 255, 20, 0.8)) brightness(1.2);
+  filter: drop-shadow(0 0 5px color-mix(in oklab, var(--tag-primary) 45%, transparent)) brightness(1.06);
 }
 
 /* Theme dropdown styling to ensure visibility across all themes */
@@ -317,12 +408,12 @@ th {
     90deg,
     var(--tag-primary),
     var(--tag-secondary),
-    var(--tag-accent),
+    var(--tag-primary),
     var(--tag-secondary)
   );
   box-shadow:
-    0 0 6px color-mix(in oklab, var(--tag-secondary) 70%, transparent),
-    0 0 14px color-mix(in oklab, var(--tag-primary) 40%, transparent);
+    0 0 6px color-mix(in oklab, var(--tag-secondary) 35%, transparent),
+    0 0 14px color-mix(in oklab, var(--tag-primary) 25%, transparent);
 }
 
 /* Sidebar section header */
@@ -331,8 +422,8 @@ th {
 }
 
 [data-theme="tag-theme"] .sidebar-inner-header {
-  border-bottom: 1px solid color-mix(in oklab, var(--tag-accent) 55%, transparent);
-  box-shadow: 0 1px 6px color-mix(in oklab, var(--tag-accent) 20%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--tag-primary) 55%, transparent);
+  box-shadow: 0 1px 6px color-mix(in oklab, var(--tag-primary) 20%, transparent);
 }
 
 /* Footer top accent — overrides the default muted border */
@@ -352,7 +443,7 @@ footer.themed-footer {
 [data-theme="tag-theme"] .absolute.right-0.mt-2.w-56 {
   background-color: var(--tag-base-200);
   color: var(--tag-base-content);
-  border: 2px solid var(--tag-accent);
+  border: 2px solid color-mix(in oklab, var(--tag-primary) 45%, transparent);
 }
 
 

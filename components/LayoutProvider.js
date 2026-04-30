@@ -17,9 +17,15 @@ const LayoutContext = createContext()
 export function LayoutProvider({ children }) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(false)
-    const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(false)
+  const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [theme, setTheme] = useState("tag-theme")
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") {
+      return "tag-theme"
+    }
+
+    return localStorage.getItem("theme") || "tag-theme"
+  })
 
   useEffect(() => {
     const checkMobile = () => {
@@ -35,19 +41,20 @@ export function LayoutProvider({ children }) {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // Restore saved theme on mount (client-only)
   useEffect(() => {
-    const saved = localStorage.getItem("theme") || "tag-theme"
-    if (saved !== "tag-theme") {
-      setTheme(saved)
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", theme)
     }
-    document.documentElement.setAttribute("data-theme", saved)
-  }, [])
+  }, [theme])
 
   function updateTheme(newTheme) {
     setTheme(newTheme)
-    document.documentElement.setAttribute("data-theme", newTheme)
-    localStorage.setItem("theme", newTheme)
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-theme", newTheme)
+    }
+    if (typeof window !== "undefined") {
+      localStorage.setItem("theme", newTheme)
+    }
   }
 
   const value = {

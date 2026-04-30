@@ -12,6 +12,7 @@
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
+import React, { useMemo } from "react";
 
 const api_url = getApiURL();
 const formName = "ListingForm1";
@@ -23,17 +24,43 @@ const formName = "ListingForm1";
  * @returns {JSX.Element}
  */
 export default function CreateListingForm1(props) {
-    props.metadataProp.FromURL = "/portal/listing/create.js";
-    props.metadataProp.redirectURL = "/portal/listing/";
-    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}`;
-    return <div className="p-4"><DynaFormDB request="add" metadataProp={props.metadataProp} fieldsProp={props.metadataProp.forms_fields} formData={null} /></div>;
+    const enhancedMetadata = useMemo(() => {
+        const base = Array.isArray(props.metadataProp)
+            ? props.metadataProp[0]
+            : props.metadataProp;
+
+        if (!base || Object.keys(base).length === 0) {
+            return null;
+        }
+
+        return {
+            ...base,
+            FromURL: "/portal/listing/create.js",
+            redirectURL: "/portal/listing/",
+            APIURL: `${api_url}${base.apiurlpostfix}`
+        };
+    }, [props.metadataProp]);
+
+    if (!enhancedMetadata) {
+        return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
+    }
+
+    return <div className="p-4"><DynaFormDB request="add" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={null} /></div>;
 }
 
 CreateListingForm1.getInitialProps = async function () {
     let metadata = {};
     try {
-        const res = await fetch(api_url + 'forms_metadata/'+ formName);
-        metadata = await res.json();
+        let res = await fetch(`${api_url}formsmetadata/${formName}`);
+
+        // Backward compatibility with older endpoint naming.
+        if (!res.ok) {
+            res = await fetch(`${api_url}forms_metadata/${formName}`);
+        }
+
+        if (res.ok) {
+            metadata = await res.json();
+        }
     } catch (error) {
         console.error("Error fetching form meta:", error);
     }
