@@ -13,6 +13,7 @@
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
 import { useRouter } from "next/router";
+import React, { useMemo } from "react";
 
 import TagSEO from "@/components/TagSEO"
 
@@ -49,8 +50,26 @@ export default function UpdateListingForm1(props) {
         );
     }
 
+    const metadataWithUrls = useMemo(() => {
+        const base = Array.isArray(props.metadata)
+            ? props.metadata[0]
+            : props.metadata;
+
+        if (!base || !props.id) {
+            return null;
+        }
+
+        return {
+            ...base,
+            // Use the byID route as specified in ListingController.cs
+            APIURL: `${api_url}listing/byID/${props.id}`,
+            redirectURL: `/artists/${slug}/listings/${L_slug}`,
+            FromURL: `/artists/${slug}/listings/${L_slug}/update`
+        };
+    }, [props.metadata, props.id, slug, L_slug]);
+
     // Make sure metadata and listing data are properly loaded before rendering the form
-    if (!props.metadata || !props.listingData) {
+    if (!metadataWithUrls || !props.listingData) {
                 return (
             <div className="flex justify-center items-center min-h-50">
       <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Listings L Slug Update", description: "Explore Github Projects Web Pages Artists Slug Listings L Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Listings L Slug Update", description: "Explore Github Projects Web Pages Artists Slug Listings L Slug Update on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/listings/[L_slug]/update" />
@@ -58,14 +77,6 @@ export default function UpdateListingForm1(props) {
             </div>
         );
     }
-
-    // Setup the correct API URL for byID endpoint and proper redirect URL
-    const metadataWithUrls = {
-        ...props.metadata,
-        // Use the byID route as specified in ListingController.cs
-        APIURL: `${api_url}listing/byID/${props.id}`,
-        redirectURL: `/artists/${slug}/listings/${L_slug}`
-    };
 
     return (
       <div className="p-4">
@@ -87,7 +98,7 @@ export default function UpdateListingForm1(props) {
  * @returns {Object} - Props for component
  */
 UpdateListingForm1.getInitialProps = async function (context) {
-    const { L_slug } = context.query;
+    const { slug, L_slug } = context.query;
     
     // If we don't have a listing slug, return an error
     if (!L_slug) { 
@@ -110,7 +121,12 @@ UpdateListingForm1.getInitialProps = async function (context) {
     try {
         // Fetch form metadata
         console.log(`Fetching form metadata for ${formName}...`);
-        const metadataRes = await fetch(`${api_url}forms_metadata/${formName}`);
+        let metadataRes = await fetch(`${api_url}formsmetadata/${formName}`);
+
+        // Backward compatibility with older endpoint naming.
+        if (!metadataRes.ok) {
+            metadataRes = await fetch(`${api_url}forms_metadata/${formName}`);
+        }
         
         if (!metadataRes.ok) {
             throw new Error(`Failed to fetch form metadata: ${metadataRes.status} ${metadataRes.statusText}`);
@@ -130,9 +146,14 @@ UpdateListingForm1.getInitialProps = async function (context) {
             metadata = metadata[0];
         }
         
-        // First get the listing's ID using the slug
-        console.log(`Fetching listing by slug: ${L_slug}...`);
-        const slugRes = await fetch(`${api_url}listing/${L_slug}`);
+        // First get the listing using artist + listing path, then extract listingID.
+        console.log(`Fetching listing by artist/listing paths: ${slug}/${L_slug}...`);
+        let slugRes = await fetch(`${api_url}listing/artist/${slug}/listing/${L_slug}`);
+
+        // Fallback for legacy endpoint shape.
+        if (!slugRes.ok) {
+            slugRes = await fetch(`${api_url}listing/${L_slug}`);
+        }
         
         if (!slugRes.ok) {
             throw new Error(`Failed to find listing with slug: ${L_slug}`);
