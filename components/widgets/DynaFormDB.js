@@ -508,7 +508,6 @@ export default function DynaForm(props) {
                       <TTPortfolio
                           value={currentValue}
                           onChange={(html) => handleFieldChange(field.name, html)}
-                          showActionButtons={false}
                           onSaveDraft={() => { }}
                           onPublish={() => { }}
                       />

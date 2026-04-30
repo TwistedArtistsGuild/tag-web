@@ -81,11 +81,8 @@ UpdateBlogForm1.getInitialProps = async function (context) {
     try {
         const res1 = await fetch(api_url + `blog/path/${slug}`);
         data = await res1.json();
-
-        const metadataResponse = await fetch(`${api_url}formsmetadata/${formName}`);
-        if (metadataResponse.ok) {
-            metadata = await metadataResponse.json();
-        }
+        const res2 = await fetch(api_url + `forms_metadata/${formName}`);
+        metadata = await res2.json();
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);
         if (typeof window !== 'undefined') {
