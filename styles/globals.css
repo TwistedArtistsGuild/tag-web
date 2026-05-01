@@ -233,14 +233,23 @@ ul {
 }
 
 /* Generic link styling that respects the active theme */
-a {
+a:not(.btn) {
   color: var(--color-primary, var(--p));
   text-decoration: none;
   transition: all 0.3s ease;
 }
 
-a:hover {
+a:not(.btn):hover {
   color: var(--color-secondary, var(--s));
+}
+
+/* Preserve DaisyUI button color tokens when anchors are used as buttons */
+a.btn,
+a.btn:hover,
+a.btn:visited,
+a.btn:active {
+  color: inherit;
+  text-decoration: none;
 }
 
 /* Table styling that respects the active theme */
