@@ -14,6 +14,7 @@ import { useEffect } from "react"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
 import StockProgramBanner from "@/components/StockProgramBanner"
+import DocumentationSection from "@/components/DocumentationSection"
 
 import TagSEO from "@/components/TagSEO"
 
@@ -67,9 +68,7 @@ const External = () => {
 
       <StockProgramBanner />
 
-      <section id="external-investors" className="py-16 bg-base-100">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-extrabold mb-6 text-primary">{"External Investor Access"}</h1>
+      <DocumentationSection id="external-investors" title="External Investor Access" bgColor="bg-base-100" centered>
           <p className="text-xl mb-8 text-base-content">
             {
               "For external stakeholders interested in supporting the Twisted Artists Guild, we offer Fixed Dividend Shares. These shares provide a consistent quarterly dividend and contribute directly to our platform infrastructure, impact initiatives, and long-term scalability."
@@ -91,8 +90,7 @@ const External = () => {
               {"Back to Stock Plan Overview"}
             </Link>*/}
           </div>
-        </div>
-      </section>
+      </DocumentationSection>
     </div>
   )
 }
