@@ -15,7 +15,11 @@ import Image from "next/image"
 import { useState } from "react"
 
 const getSafeArtistImageSrc = (artist) => {
-  const candidate = artist?.profilePic?.url
+  const candidate =
+    artist?.profilePic?.url ||
+    artist?.profilePic?.URL ||
+    artist?.profilePicUrl ||
+    artist?.profilepicurl
   return candidate || "/blank_image.png"
 }
 

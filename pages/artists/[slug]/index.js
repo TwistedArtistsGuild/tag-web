@@ -21,6 +21,7 @@ import "react-image-gallery/styles/image-gallery.css"
 import { CalendarIcon, MapPinIcon, SearchIcon } from "lucide-react"
 import ArtistCard from "@/components/cards/card_artist"
 import ListingCardSmall from "@/components/cards/card_listing_small"
+import ContactCard, { DEFAULT_STORES } from "@/components/cards/card_contactList"
 import SocialComments from "@/components/social/Comments"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 
@@ -166,19 +167,40 @@ const Artist = (props) => {
         {props.artist && (
           <>
           {/* Artist Profile Card */}
-          <div id="profile" className="mt-8">
-            <ArtistCard
-              showHeaderGallery={false}
-              showContentGallery={false}
-              artist={{
-                ...props.artist,
-                profilePic: props.profilePic,
-                images: props.profilePic?.url ? [props.profilePic.url] : [],
-                path: props.slug,
-                since: props.artist?.applied,
-                panelSize: "full",
-              }}
-            />
+          <div id="profile" className="mt-8 grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
+            <div className="xl:col-span-2">
+              <ArtistCard
+                showHeaderGallery={false}
+                showContentGallery={false}
+                artist={{
+                  ...props.artist,
+                  profilePic: props.profilePic,
+                  images: props.profilePic?.url ? [props.profilePic.url] : [],
+                  path: props.slug,
+                  since: props.artist?.applied,
+                  panelSize: "full",
+                }}
+              />
+            </div>
+
+            <div id="social" className="xl:col-span-1">
+              <ContactCard
+                displayName={props.artist?.title || "Artist"}
+                compact={true}
+                stores={DEFAULT_STORES}
+                contactInfo={{
+                  email: "satarah@example.com",
+                  location: "Multnomah County, Oregon",
+                  customUrls: [
+                    {
+                      label: "Portfolio",
+                      url: "https://satarah-portfolio.com",
+                      purpose: "Full collection & commissions",
+                    },
+                  ],
+                }}
+              />
+            </div>
           </div>
 
           {/* Artist Statement Section */}

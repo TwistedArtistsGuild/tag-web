@@ -15,6 +15,7 @@ import { SocialRealtimeProvider } from './SocialRealtimeContext';
 import SocialComments from './Comments';
 import DirectMessages from './DirectMessages';
 import SocialReactions from './Reactions';
+import ContactCard, { DEFAULT_STORES } from '@/components/cards/card_contactList';
 
 // Mock data for demo
 const MOCK_CURRENT_USER = {
@@ -122,6 +123,12 @@ const SocialComponentsDemo = () => {
                         onClick={() => setActiveTab('reactions')}
                     >
                         Reactions Only
+                    </button>
+                    <button 
+                        className={`tab ${activeTab === 'contact' ? 'tab-active' : ''}`}
+                        onClick={() => setActiveTab('contact')}
+                    >
+                        Contact Card
                     </button>
                 </div>
 
@@ -293,13 +300,182 @@ const SocialComponentsDemo = () => {
                             </div>
                         </div>
                     )}
+
+                    {activeTab === 'contact' && (
+                        <div className="space-y-6">
+                            <div className="card bg-base-100 shadow-xl">
+                                <div className="card-body">
+                                    <h2 className="card-title">Contact Card / Link Tree</h2>
+                                    <p className="text-base-content/70 mb-6">
+                                        Display social media links, email, address, and custom URLs for users and artists.
+                                        Works great for profiles and artist pages!
+                                    </p>
+
+                                    <div className="grid lg:grid-cols-2 gap-4 mb-6">
+                                        <div>
+                                            <h3 className="font-semibold text-sm mb-2">Long Format</h3>
+                                            <ContactCard
+                                                displayName="Satarah Designs"
+                                                compact={false}
+                                                stores={DEFAULT_STORES}
+                                                contactInfo={{
+                                                    location: 'Multnomah County, Oregon',
+                                                    email: 'satarah@example.com',
+                                                    customUrls: [
+                                                        { label: 'Portfolio', url: 'https://satarah-portfolio.com', purpose: 'Full collection & commissions' },
+                                                    ]
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-sm mb-2">Short Format (1/4 Panel)</h3>
+                                            <ContactCard
+                                                displayName="Satarah Designs"
+                                                compact={true}
+                                                stores={DEFAULT_STORES}
+                                                contactInfo={{
+                                                    location: 'Multnomah County, Oregon',
+                                                    email: 'satarah@example.com',
+                                                    customUrls: [
+                                                        { label: 'Portfolio', url: 'https://satarah-portfolio.com', purpose: 'Full collection & commissions' },
+                                                    ]
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        {/* Example 1: Artist with full contact info */}
+                                        <ContactCard
+                                            displayName="Satarah Designs"
+                                            stores={DEFAULT_STORES}
+                                            contactInfo={{
+                                                email: 'satarah@example.com',
+                                                location: 'Portland, Multnomah County, Oregon',
+                                                customUrls: [
+                                                { label: 'Portfolio', url: 'https://satarah-portfolio.com', purpose: 'Full collection & commissions' },
+                                                { label: 'Commission Sheet', url: 'https://commission.example.com', purpose: 'Pricing & booking' },
+                                                { label: 'Ko-fi Support', url: 'https://ko-fi.com/satarah', purpose: 'Support my work' }
+                                            ]
+                                        }}
+                                        socials={[
+                                            {
+                                                name: "Instagram",
+                                                url: "https://instagram.com/satarah",
+                                                handle: "@satarah",
+                                                purpose: "Follow my pottery work",
+                                                color: "#c13584",
+                                                icon: (
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                                        <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z" />
+                                                    </svg>
+                                                ),
+                                            },
+                                            {
+                                                name: "TikTok",
+                                                url: "https://tiktok.com/@satarah",
+                                                handle: "@satarah",
+                                                purpose: "Running a pottery studio + tips",
+                                                color: "#6a76ac",
+                                                icon: (
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                                        <path d="M448 209.9a210.1 210.1 0 0 1 -122.8-39.3V349.4A162.6 162.6 0 1 1 185 188.3V278.2a74.6 74.6 0 1 0 52.2 71.2V0l88 0a121.2 121.2 0 0 0 1.9 22.2h0A122.2 122.2 0 0 0 381 102.4a121.4 121.4 0 0 0 67 20.1z" />
+                                                    </svg>
+                                                ),
+                                            }
+                                        ]}
+                                        />
+
+                                        {/* Example 2: Compact artist with minimal info */}
+                                        <ContactCard
+                                            displayName="Luna Art Studio"
+                                            contactInfo={{
+                                                email: 'studio@lunaart.com',
+                                                customUrls: [
+                                                    { label: 'Portfolio', url: 'https://shop.lunaart.com', purpose: 'Buy original pieces' }
+                                                ]
+                                            }}
+                                            socials={[
+                                                {
+                                                    name: "Instagram",
+                                                    url: "https://instagram.com/lunaarts",
+                                                    handle: "@lunaarts",
+                                                    purpose: "Daily art posts & stories",
+                                                    color: "#c13584",
+                                                    icon: (
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                                            <path d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z" />
+                                                        </svg>
+                                                    ),
+                                                }
+                                            ]}
+                                            compact={true}
+                                        />
+
+                                        {/* Example 3: Artist with only socials (defaults) */}
+                                        <ContactCard
+                                            displayName="Morgan Creations"
+                                        />
+
+                                        {/* Example 4: With custom socials override */}
+                                        <ContactCard
+                                            displayName="Alex Studios"
+                                            contactInfo={{
+                                                location: 'New York, New York'
+                                            }}
+                                            socials={[
+                                                {
+                                                    name: "Website",
+                                                    url: "https://alexstudios.com",
+                                                    handle: "alexstudios.com",
+                                                    purpose: "Full portfolio & shop",
+                                                    color: "#6366f1",
+                                                    icon: (
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <circle cx="12" cy="12" r="10" />
+                                                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                                        </svg>
+                                                    ),
+                                                },
+                                                {
+                                                    name: "Email",
+                                                    url: "mailto:contact@alexstudios.com",
+                                                    handle: "contact@alexstudios.com",
+                                                    purpose: "Inquiries & collaborations",
+                                                    color: "#ec4899",
+                                                    icon: (
+                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                                            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                                                        </svg>
+                                                    ),
+                                                }
+                                            ]}
+                                        />
+                                    </div>
+
+                                    <div className="mt-6 p-4 bg-base-200 rounded-lg">
+                                        <h3 className="font-semibold mb-2">Component Props</h3>
+                                        <ul className="text-sm space-y-1">
+                                            <li><code className="bg-base-300 px-2 py-1 rounded">displayName</code> - Optional override for card title</li>
+                                            <li><code className="bg-base-300 px-2 py-1 rounded">contactInfo</code> - Object with email, location, customUrls (each with label, url, optional purpose)</li>
+                                            <li><code className="bg-base-300 px-2 py-1 rounded">socials</code> - Array of social objects (defaults to TAG socials, each with handle, purpose, color, icon)</li>
+                                            <li><code className="bg-base-300 px-2 py-1 rounded">stores</code> - Array of store objects (Etsy and Redbubble with SVG logos)</li>
+                                            <li><code className="bg-base-300 px-2 py-1 rounded">compact</code> - true short format, false long format</li>
+                                            <li><code className="bg-base-300 px-2 py-1 rounded">iconOnly</code> - Icon-only links with hover tooltips</li>
+                                            <li><code className="bg-base-300 px-2 py-1 rounded">user/artist</code> - Pass user or artist object for automatic naming</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* Technical Information */}
-                <div className="card bg-base-100 shadow-xl">
-                    <div className="card-body">
-                        <h2 className="card-title">Backend Integration Requirements</h2>
-                        <div className="grid md:grid-cols-2 gap-6">
+                {/* Contact Card Demo */}
+            <div className="card bg-base-100 shadow-xl">
+                <div className="card-body">
+                    <h2 className="card-title">Backend Integration Requirements</h2>
+                    <div className="grid md:grid-cols-2 gap-6">
                             <div>
                                 <h3 className="font-semibold mb-3">Database Tables Needed</h3>
                                 <ul className="list-disc list-inside space-y-1 text-sm">
