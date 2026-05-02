@@ -8,12 +8,14 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-"use client" // This component now uses client-side state
+"use client"
 
 import Link from "next/link"
-import Image from "next/image"
-import { HeartIcon, ThumbsUpIcon, UsersIcon, MessageCircleIcon, SmileIcon } from "lucide-react" // Import Lucide icons
-import { useState } from "react" // Import useState
+import { useMemo } from "react"
+import PhotoGallery from "@/components/cards/card_photoGallery"
+import ArtistCard from "@/components/cards/card_artist"
+import SocialReactions from "@/components/social/Reactions"
+import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout"
 
 const getSeededCount = (seed, max, min = 1, salt = "") => {
   const base = `${seed || "listing"}-${salt}`
@@ -21,141 +23,171 @@ const getSeededCount = (seed, max, min = 1, salt = "") => {
   return (hash % max) + min
 }
 
-const ListingCard = ({ listing }) => {
+const buildReactionSeed = (count, emoji, prefix) => {
+  const safeCount = Math.max(0, Number(count) || 0)
+  const displayCount = Math.min(safeCount, 24)
+  return Array.from({ length: displayCount }, (_, index) => ({
+    emoji,
+    userId: `${prefix}-${index + 1}`,
+    username: `${prefix}${index + 1}`,
+    timestamp: new Date(2026, 0, 1 + index).toISOString(),
+  }))
+}
+
+const getListingGalleryImages = (listing) => {
+  if (Array.isArray(listing?.images) && listing.images.length > 0) {
+    return listing.images
+  }
+
+  const fallback = listing?.profilePic?.url || "/blank_image.png"
+  return [fallback]
+}
+
+const formatCreatedDate = (value) => {
+  if (!value) return "No date available"
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) {
+    return String(value)
+  }
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  })
+}
+
+const getSmallerArtistPanelSize = (listingPanelSize) => {
+  switch (listingPanelSize) {
+    case "full":
+      return "twoThirds"
+    case "threeQuarters":
+      return "half"
+    case "twoThirds":
+      return "half"
+    case "half":
+      return "third"
+    case "third":
+      return "quarter"
+    default:
+      return "quarter"
+  }
+}
+
+const getArtistProfilePic = (listing) => {
+  const artist = listing?.artist || {}
+  const profilePic = artist?.profilePic || artist?.profilepic || null
+  return {
+    url:
+      profilePic?.url ||
+      artist?.profilePicUrl ||
+      artist?.profile_image ||
+      artist?.image ||
+      listing?.profilePic?.url ||
+      "/blank_image.png",
+    alttext:
+      profilePic?.alttext ||
+      profilePic?.altText ||
+      `${artist?.title || "Artist"} profile picture`,
+  }
+}
+
+const ListingCard = ({ listing, panelSize = "third", showGalleryThumbnails = false, hideGallery = false }) => {
   const listingSeed = listing?.listingid || listing?.path || listing?.title
 
-  // Initialize state for each counter with values from props
-  const [loves, setLoves] = useState(listing.loves || 0)
-  const [likes, setLikes] = useState(listing.likes || 0)
-  const [followers, setFollowers] = useState(listing.followers || 0)
-  const [showQuickReactions, setShowQuickReactions] = useState(false)
-  const [reactionCounts, setReactionCounts] = useState({
-    '❤️': listing.reactions?.heart ?? getSeededCount(listingSeed, 20, 1, "heart"),
-    '👏': listing.reactions?.clap ?? getSeededCount(listingSeed, 15, 1, "clap"),
-    '🔥': listing.reactions?.fire ?? getSeededCount(listingSeed, 10, 1, "fire"),
-    '😍': listing.reactions?.love ?? getSeededCount(listingSeed, 8, 1, "love"),
-  })
+  const isLargePanel = ["twoThirds", "threeQuarters", "full"].includes(panelSize)
+  const galleryImages = useMemo(() => getListingGalleryImages(listing), [listing])
+  const listingPath = `/artists/${listing?.artist?.path}/listings/${listing?.path}`
+  const artistProfilePic = useMemo(() => getArtistProfilePic(listing), [listing])
 
-  // Function to handle quick reactions
-  const handleQuickReaction = (emoji) => {
-    setReactionCounts(prev => ({
-      ...prev,
-      [emoji]: prev[emoji] + 1
-    }))
-    console.log(`Quick reaction ${emoji} added to listing ${listing.listingid}`)
-  }
+  const initialReactions = [
+    ...buildReactionSeed(listing?.loves, "❤️", `listing-love-${listingSeed}`),
+    ...buildReactionSeed(listing?.likes, "👏", `listing-clap-${listingSeed}`),
+    ...buildReactionSeed(listing?.followers, "🔥", `listing-fire-${listingSeed}`),
+    ...buildReactionSeed(listing?.reactions?.love ?? getSeededCount(listingSeed, 8, 1, "love"), "😍", `listing-love2-${listingSeed}`),
+  ]
 
-  // Function to handle social icon clicks
-  const handleSocialClick = async (type) => {
-    // Optimistically update UI
-    if (type === "loves") setLoves((prev) => prev + 1)
-    if (type === "likes") setLikes((prev) => prev + 1)
-    if (type === "followers") setFollowers((prev) => prev + 1)
+  const artistForCard = useMemo(
+    () => ({
+      path: listing?.artist?.path || "",
+      title: listing?.artist?.title || "Unknown artist",
+      description: listing?.artist?.description || listing?.artist?.byline || listing?.artist?.title || "Artist",
+      byline: listing?.artist?.byline || listing?.artist?.title || "Artist",
+      since: listing?.artist?.since,
+      roleSummary: listing?.artist?.roleSummary,
+      artForms: listing?.artist?.artForms,
+      panelSize: getSmallerArtistPanelSize(panelSize),
+      images: Array.isArray(listing?.artist?.images) && listing.artist.images.length > 0
+        ? listing.artist.images
+        : [artistProfilePic.url],
+      profilePic: artistProfilePic,
+    }),
+    [artistProfilePic, listing, panelSize],
+  )
 
-    // Simulate API call (replace with actual API endpoint)
-    try {
-      // In a real app, you'd send a request to your backend here
-      // const res = await fetch(`/api/listing/${listing.listingid}/${type}`, { method: "POST" });
-      // if (!res.ok) {
-      //   throw new Error(`Failed to update ${type}`);
-      // }
-      console.log(`Simulating update for listing ${listing.listingid}: ${type} increased!`)
-    } catch (error) {
-      console.error("Error sending social update:", error)
-      // Revert UI update on error
-      if (type === "loves") setLoves((prev) => prev - 1)
-      if (type === "likes") setLikes((prev) => prev - 1)
-      if (type === "followers") setFollowers((prev) => prev - 1)
-    }
-  }
+  const totalReactionCount = initialReactions.length
 
   return (
-    <div 
-      className="card bg-base-100 text-base-content shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full rounded-box group border border-base-300"
-      onMouseEnter={() => setShowQuickReactions(true)}
-      onMouseLeave={() => setShowQuickReactions(false)}
-    >
-      <figure className="relative h-48 w-full overflow-hidden">
-        <Link href={`/artists/${listing?.artist?.path}/listings/${listing?.path}`} className="relative block h-full w-full">
-          <Image
-            src={listing?.profilePic?.url || "/blank_image.png"}
-            alt={listing?.profilePic?.alttext || `${listing?.title || "Unknown"}'s picture`}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            style={{ objectFit: "cover" }}
-            className="rounded-t-box group-hover:scale-105 transition-transform duration-300"
+    <article className={`${CARD_SHELL_CLASS} h-auto w-full overflow-hidden`}>
+      <div className="card-body gap-4 p-4">
+        {!hideGallery && (
+          <PhotoGallery
+            images={galleryImages}
+            mode="standalone"
+            navigationMode={galleryImages.length > 1 ? "hover" : "manual"}
+            imageEffect="landscape"
+            showThumbnails={showGalleryThumbnails}
           />
-        </Link>
-        
-        {/* Quick Reactions Overlay */}
-        {showQuickReactions && (
-          <div className="absolute top-2 right-2 flex gap-1 bg-base-100/90 backdrop-blur-sm rounded-full p-2 shadow-lg">
-            {Object.entries(reactionCounts).map(([emoji, count]) => (
-              <button
-                key={emoji}
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleQuickReaction(emoji)
-                }}
-                className="hover:scale-125 transition-transform duration-200 text-lg"
-                title={`${count} reactions`}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
         )}
-      </figure>
-      <div className="card-body p-6">
-        <Link
-          href={`/artists/${listing?.artist?.path}/listings/${listing?.path}`}
-          className="card-title text-2xl text-primary hover:underline"
-        >
-          {listing?.title || "Untitled"}
-        </Link>
-        <p className="text-lg text-base-content/90 line-clamp-3">
-          {listing?.description || "No description available"}
-        </p>
-        <p className="text-sm text-base-content/80 mt-2">
-          Listing created:{" "}
-          {listing?.created ? new Date(listing.created).toLocaleDateString("en-US") : "No date available"}
-        </p>
-        <p className="text-sm text-base-content/80">Artist: {listing?.artist?.title || "No artist found"}</p>
-        <p className="text-sm text-base-content/80">
-          Category: {listing?.artCategory?.category || "No category found"}
-        </p>
 
-        {/* Enhanced Social Section */}
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-200">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1 text-error cursor-pointer hover:text-error/80 transition-colors" onClick={() => handleSocialClick("loves")}>
-              <HeartIcon className="w-5 h-5" />
-              <span className="ml-1">{loves}</span>
-            </div>
-            <div className="flex items-center gap-1 text-info cursor-pointer hover:text-info/80 transition-colors" onClick={() => handleSocialClick("likes")}>
-              <ThumbsUpIcon className="w-5 h-5" />
-              <span className="ml-1">{likes}</span>
-            </div>
-            <div className="flex items-center gap-1 text-success cursor-pointer hover:text-success/80 transition-colors" onClick={() => handleSocialClick("followers")}>
-              <UsersIcon className="w-5 h-5" />
-              <span className="ml-1">{followers}</span>
-            </div>
+        <>
+          <div className="space-y-2">
+            <Link href={listingPath} className="block text-xl font-semibold leading-tight text-primary hover:underline">
+              {listing?.title || "Untitled"}
+            </Link>
+            <p className="text-sm text-base-content/80 line-clamp-3">
+              {listing?.description || "No description available"}
+            </p>
           </div>
-          
-          {/* Reaction Preview */}
-          <div className="flex items-center gap-1">
-            <SmileIcon className="w-4 h-4 text-base-content/60" />
-            <span className="text-sm text-base-content/60">
-              {Object.values(reactionCounts).reduce((a, b) => a + b, 0)} reactions
-            </span>
-            <MessageCircleIcon className="w-4 h-4 text-base-content/60 ml-2" />
-            <span className="text-sm text-base-content/60">
-              {listing.commentCount ?? getSeededCount(listingSeed, 15, 1, "comments")} comments
-            </span>
+
+          <div className="flex flex-wrap gap-2">
+            <span className="badge badge-outline badge-sm">Created: {formatCreatedDate(listing?.created)}</span>
+            <span className="badge badge-outline badge-sm">Category: {listing?.artCategory?.category || "No category"}</span>
+            {isLargePanel && listing?.price !== undefined && listing?.price !== null && (
+              <span className="badge badge-primary badge-outline badge-sm">${Number(listing.price).toFixed(2)}</span>
+            )}
           </div>
+
+          <div className="rounded-box border border-base-300 bg-base-100/70 p-1.5 md:max-w-120">
+            <ArtistCard artist={artistForCard} compact />
+          </div>
+        </>
+
+        <div className="space-y-2">
+          <SocialReactions
+            targetId={`listing-${listingSeed}`}
+            targetType="post"
+            initialReactions={initialReactions}
+            readOnly
+            showDetails
+            size="sm"
+          />
+          <p className="text-xs text-base-content/65">
+            {totalReactionCount} reactions • {listing.commentCount ?? getSeededCount(listingSeed, 15, 1, "comments")} comments
+          </p>
+        </div>
+
+        <div className="card-actions mt-1 justify-start gap-2">
+          <Link href={listingPath} className="btn btn-primary btn-sm">
+            View Listing
+          </Link>
+          <Link href={`/artists/${listing?.artist?.path || ""}`} className="btn btn-outline btn-sm">
+            View Artist
+          </Link>
         </div>
       </div>
-    </div>
+    </article>
   )
 }
 

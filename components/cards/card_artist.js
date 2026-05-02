@@ -46,6 +46,31 @@ const getArtistGalleryImages = (artist) => {
 	return [fallback];
 };
 
+const getArtistContentGalleryImages = (artist) => {
+	const metadataCollections = [
+		artist?.pictureMetadata,
+		artist?.imageMetadata,
+		artist?.imagesMetadata,
+		artist?.contentImages,
+		artist?.content,
+	];
+
+	const metadataUrls = metadataCollections
+		.flatMap((collection) => (Array.isArray(collection) ? collection : []))
+		.map((item) => {
+			if (typeof item === "string") return item;
+			return item?.contentUrl || item?.contentURL || item?.url || item?.src || "";
+		})
+		.map((url) => String(url || "").trim())
+		.filter(Boolean);
+
+	if (metadataUrls.length > 0) {
+		return metadataUrls;
+	}
+
+	return getArtistGalleryImages(artist);
+};
+
 const formatSinceMonthYear = (value) => {
 	if (!value) {
 		return "n/a";
@@ -67,10 +92,11 @@ const formatSinceMonthYear = (value) => {
 	return String(value);
 };
 
-const ArtistCard = ({ artist }) => {
+const ArtistCard = ({ artist, compact = false }) => {
 	const [logoSrc, setLogoSrc] = useState(getArtistLogoSrc(artist));
 	const artistDescription = getArtistDescription(artist);
 	const galleryImages = useMemo(() => getArtistGalleryImages(artist), [artist]);
+	const contentGalleryImages = useMemo(() => getArtistContentGalleryImages(artist), [artist]);
 	const artistId = artist?.artistid || artist?.path || artist?.title || "artist";
 	const panelSize = artist?.panelSize || "third";
 	const isLargePanel = ["twoThirds", "threeQuarters", "full"].includes(panelSize);
@@ -98,10 +124,6 @@ const ArtistCard = ({ artist }) => {
 			rows.push({ label: "Role", value: artist.roleSummary });
 		}
 
-		if (artist?.statement) {
-			rows.push({ label: "Statement", value: artist.statement });
-		}
-
 		if (Array.isArray(artist?.artForms) && artist.artForms.length > 0) {
 			rows.push({ label: "Art Forms", value: artist.artForms.join(", ") });
 		}
@@ -120,46 +142,52 @@ const ArtistCard = ({ artist }) => {
 
 	return (
 		<article className={`${CARD_SHELL_CLASS} h-auto self-start w-full overflow-hidden`}>
-			<div className="card-body gap-4 p-4">
-				<PhotoGallery
-					images={galleryImages}
-					mode="standalone"
-					navigationMode={galleryImages.length > 1 ? "hover" : "manual"}
-					imageEffect="landscape"
-					showThumbnails={false}
-				/>
+			<div className={`card-body ${compact ? "gap-2 p-3" : "gap-4 p-4"}`}>
+				{!compact && (
+					<PhotoGallery
+						images={galleryImages}
+						mode="standalone"
+						navigationMode={galleryImages.length > 1 ? "hover" : "manual"}
+						imageEffect="landscape"
+						showThumbnails={false}
+					/>
+				)}
 
-				<div className="flex items-start gap-3">
+				<div className={`flex items-start ${compact ? "gap-2" : "gap-3"}`}>
 					<div className="avatar mt-0.5">
-						<div className="w-11 rounded-full border-2 border-base-300 bg-base-200">
+						<div className={`${compact ? "w-9" : "w-11"} rounded-full border-2 border-base-300 bg-base-200`}>
 							<Image
 								src={logoSrc}
 								alt={artist?.profilePic?.alttext || `${artist?.title || "Artist"} logo`}
-								width={44}
-								height={44}
+								width={compact ? 36 : 44}
+								height={compact ? 36 : 44}
 								onError={() => setLogoSrc("/blank_image.png")}
 								style={{ objectFit: "cover" }}
 							/>
 						</div>
 					</div>
 					<div className="min-w-0">
-						<h3 className="text-lg font-semibold text-primary leading-tight">{artist?.title || "Untitled Artist"}</h3>
-						<p className="mt-1 text-sm text-base-content/70 leading-relaxed">{artistDescription}</p>
+						<h3 className={`${compact ? "text-base" : "text-lg"} font-semibold text-primary leading-tight`}>
+							<Link href={`/artists/${artist?.path || ""}`} className="hover:underline">
+								{artist?.title || "Untitled Artist"}
+							</Link>
+						</h3>
+						<p className={`${compact ? "mt-0.5 text-xs line-clamp-2" : "mt-1 text-sm leading-relaxed"} text-base-content/70`}>{artistDescription}</p>
 					</div>
 				</div>
 
-				<div className="mt-1">
+				<div className={compact ? "" : "mt-1"}>
 					<SocialReactions
 						targetId={`artist-${artistId}`}
 						targetType="post"
 						initialReactions={initialReactions}
 						readOnly
-						showDetails
+						showDetails={!compact}
 						size="sm"
 					/>
 				</div>
 
-				<div className="flex flex-wrap gap-2">
+				<div className={`flex flex-wrap ${compact ? "gap-1.5" : "gap-2"}`}>
 					<span className="badge badge-outline badge-sm">Since: {metadataSummary.since}</span>
 					{(isMediumPanel || isLargePanel) && (
 						<span className="badge badge-outline badge-sm">Categories: {metadataSummary.categoryCount}</span>
@@ -171,7 +199,7 @@ const ArtistCard = ({ artist }) => {
 					)}
 				</div>
 
-				{(isMediumPanel || isLargePanel) && detailRows.length > 0 && (
+				{!compact && (isMediumPanel || isLargePanel) && detailRows.length > 0 && (
 					<div className="rounded-box border border-base-300 bg-base-100/70 p-3">
 						<div className="space-y-2">
 							{detailRows.slice(0, isLargePanel ? detailRows.length : 2).map((row) => (
@@ -184,19 +212,20 @@ const ArtistCard = ({ artist }) => {
 					</div>
 				)}
 
-				<div className="card-actions mt-2 justify-start gap-2">
-					<Link href={`/artists/${artist?.path || ""}`} className="btn btn-primary btn-sm">
-						Artist Profile
-					</Link>
-					<a
-						href={artist?.linkToArtistPage || `/artists/${artist?.path || ""}`}
-						target="_blank"
-						rel="noopener noreferrer"
-						className="btn btn-outline btn-sm"
-					>
-						External Page
-					</a>
-				</div>
+				{!compact && (isMediumPanel || isLargePanel) && (
+					<div className="rounded-box border border-base-300 bg-base-100/70 p-3">
+						<p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary/90">Image Content</p>
+						<PhotoGallery
+							images={contentGalleryImages}
+							mode="standalone"
+							navigationMode={contentGalleryImages.length > 1 ? "hover" : "manual"}
+							imageEffect="landscape"
+							showThumbnails={false}
+						/>
+					</div>
+				)}
+
+
 			</div>
 		</article>
 	);
