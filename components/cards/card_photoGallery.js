@@ -11,6 +11,7 @@
 import ImageGallery from "react-image-gallery";
 import 'react-image-gallery/styles/image-gallery.css';
 import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout";
+import ContentTags, { ContentWarningMediaGate } from "@/components/social/ContentTags";
 import { useMemo, useState } from "react";
 
 const NAV_MODES = {
@@ -72,11 +73,18 @@ const PhotoGallery = ({
 	imageEffect = "landscape",
 	slideInterval = 3500,
 	showThumbnails = true,
+	contentWarnings = [],
+	hasViewerConsent = false,
+	onConsent,
+	showContentWarnings = true,
+	contentWarningTitle = "Content Warnings",
+	contentWarningSize = "sm",
 }) => {
 	const [isHovered, setIsHovered] = useState(false);
 	const [isFullscreen, setIsFullscreen] = useState(false);
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [showAttributionModal, setShowAttributionModal] = useState(false);
+	const [localViewerConsent, setLocalViewerConsent] = useState(Boolean(hasViewerConsent));
 	const imageList = useMemo(() => (Array.isArray(images) ? images : images ? [images] : []), [images]);
 	const galleryItems = useMemo(
 		() =>
@@ -119,6 +127,9 @@ const PhotoGallery = ({
 		currentImageAttribution?.makeup ||
 		currentImageAttribution?.attribution;
 
+	const effectiveConsent = hasViewerConsent || localViewerConsent;
+	const hasWarnings = Array.isArray(contentWarnings) && contentWarnings.length > 0;
+
 	const galleryMarkup = (
 		<div className={`custom-gallery-host relative ${hoverControlsHidden ? "custom-gallery-host--controls-hidden" : ""}`}>
 			<div
@@ -158,6 +169,30 @@ const PhotoGallery = ({
 			</div>
 		</div>
 	);
+
+	const moderatedGalleryMarkup = hasWarnings ? (
+		<div className="space-y-0">
+			{showContentWarnings && (
+				<ContentTags
+					warnings={contentWarnings}
+					title={contentWarningTitle}
+					size={contentWarningSize}
+				/>
+			)}
+			<ContentWarningMediaGate
+				warnings={contentWarnings}
+				hasViewerConsent={effectiveConsent}
+				onConsent={() => {
+					if (typeof onConsent === "function") {
+						onConsent();
+					}
+					setLocalViewerConsent(true);
+				}}
+			>
+				{galleryMarkup}
+			</ContentWarningMediaGate>
+		</div>
+	) : galleryMarkup;
 
 	const attributionModal = showAttributionModal ? (
 		<div className="modal modal-open modal-bottom z-10000 sm:modal-middle">
@@ -219,7 +254,7 @@ const PhotoGallery = ({
 	if (mode === "standalone") {
 		return (
 			<>
-				{galleryMarkup}
+				{moderatedGalleryMarkup}
 				{attributionModal}
 				<style jsx global>{`
 					.custom-gallery-host {
@@ -289,7 +324,7 @@ const PhotoGallery = ({
 	return (
 		<div className={`${CARD_SHELL_CLASS} ${shellClassName}`}>
 			<div className="card-body p-4 md:p-6">
-				{galleryMarkup}
+				{moderatedGalleryMarkup}
 			</div>
 			{attributionModal}
 			<style jsx global>{`

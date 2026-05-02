@@ -14,7 +14,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import PhotoGallery from "@/components/cards/card_photoGallery";
-import SocialReactions from "@/components/social/Reactions";
+import SocialReactions from "@/components/social/Reactions";import ColoredTagCard from "@/components/cards/card_coloredTags";import { extractContentWarnings } from "@/components/social/ContentTags";
 import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout";
 
 const buildReactionSeed = (count, emoji, prefix) => {
@@ -44,6 +44,17 @@ const getArtistGalleryImages = (artist) => {
 
 	const fallback = artist?.profilePic?.url || "/blank_image.png";
 	return [fallback];
+};
+
+// Build the header gallery with a preferred profile cover image and fallback sources.
+const getArtistHeaderGalleryImages = (artist) => {
+	const headerUrl = artist?.coverPic?.url || artist?.headerImage?.url || artist?.bannerImage?.url;
+	if (headerUrl) {
+		return [headerUrl];
+	}
+	// Fallback to first image if available
+	const images = getArtistGalleryImages(artist);
+	return images.length > 0 ? [images[0]] : ["/blank_image.png"];
 };
 
 const getArtistContentGalleryImages = (artist) => {
@@ -100,15 +111,32 @@ const ArtistCard = ({
 }) => {
 	const [logoSrc, setLogoSrc] = useState(getArtistLogoSrc(artist));
 	const artistDescription = getArtistDescription(artist);
+	const headerGalleryImages = useMemo(() => getArtistHeaderGalleryImages(artist), [artist]);
 	const galleryImages = useMemo(() => getArtistGalleryImages(artist), [artist]);
 	const contentGalleryImages = useMemo(() => getArtistContentGalleryImages(artist), [artist]);
+	const contentWarnings = useMemo(() => extractContentWarnings(artist), [artist]);
 	const artistId = artist?.artistid || artist?.path || artist?.title || "artist";
 	const panelSize = artist?.panelSize || "third";
 	const isLargePanel = ["twoThirds", "threeQuarters", "full"].includes(panelSize);
 	const isMediumPanel = panelSize === "half";
 
 	const metadataSummary = useMemo(() => {
-		const categoryCount = Array.isArray(artist?.artistCategoryLinks) ? artist.artistCategoryLinks.length : 0;
+		// Extract actual category names
+		const categories = Array.isArray(artist?.artistCategoryLinks)
+			? artist.artistCategoryLinks
+					.map((link) => {
+						if (typeof link === "string") return link.trim();
+						if (link && typeof link === "object") {
+							return (
+								String(link.category?.name || link.categoryName || link.name || link.label || link.title || "").trim() ||
+								String(link.categoryName || link.name || "").trim()
+							);
+						}
+						return "";
+					})
+					.filter(Boolean)
+			: [];
+
 		const seoTags = Array.isArray(artist?.seoTags)
 			? artist.seoTags.map((tag) => String(tag).trim()).filter(Boolean)
 			: typeof artist?.seoTags === "string" && artist.seoTags.trim().length > 0
@@ -117,7 +145,8 @@ const ArtistCard = ({
 
 		return {
 			since: formatSinceMonthYear(artist?.since),
-			categoryCount,
+			categories,
+			categoryCount: categories.length,
 			seoTags,
 		};
 	}, [artist]);
@@ -150,11 +179,13 @@ const ArtistCard = ({
 			<div className={`card-body ${compact ? "gap-2 p-3" : "gap-4 p-4"}`}>
 				{!compact && showHeaderGallery && (
 					<PhotoGallery
-						images={galleryImages}
+						images={headerGalleryImages}
 						mode="standalone"
-						navigationMode={galleryImages.length > 1 ? "hover" : "manual"}
+						navigationMode={headerGalleryImages.length > 1 ? "hover" : "manual"}
 						imageEffect="landscape"
 						showThumbnails={false}
+						contentWarnings={contentWarnings}
+						contentWarningSize="sm"
 					/>
 				)}
 
@@ -194,13 +225,21 @@ const ArtistCard = ({
 
 				<div className={`flex flex-wrap ${compact ? "gap-1.5" : "gap-2"}`}>
 					<span className="badge badge-outline badge-sm">Since: {metadataSummary.since}</span>
-					{(isMediumPanel || isLargePanel) && (
-						<span className="badge badge-outline badge-sm">Categories: {metadataSummary.categoryCount}</span>
+					{(isMediumPanel || isLargePanel) && metadataSummary.categories.length > 0 && (
+						<>
+							<span className="badge badge-info badge-sm">(Categories)</span>
+							{metadataSummary.categories.slice(0, isLargePanel ? metadataSummary.categories.length : 3).map((cat) => (
+								<span key={cat} className="badge badge-primary badge-sm badge-outline">{cat}</span>
+							))}
+						</>
 					)}
 					{(isMediumPanel || isLargePanel) && metadataSummary.seoTags.length > 0 && (
-						metadataSummary.seoTags.slice(0, isLargePanel ? metadataSummary.seoTags.length : 3).map((tag) => (
-							<span key={tag} className="badge badge-primary badge-sm badge-outline">{tag}</span>
-						))
+						<>
+							<span className="badge badge-warning badge-sm">(SEO)</span>
+							{metadataSummary.seoTags.slice(0, isLargePanel ? metadataSummary.seoTags.length : 3).map((tag) => (
+								<span key={tag} className="badge badge-warning badge-sm badge-outline">{tag}</span>
+							))}
+						</>
 					)}
 				</div>
 
@@ -214,19 +253,6 @@ const ArtistCard = ({
 								</div>
 							))}
 						</div>
-					</div>
-				)}
-
-				{!compact && showContentGallery && (isMediumPanel || isLargePanel) && (
-					<div className="rounded-box border border-base-300 bg-base-100/70 p-3">
-						<p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary/90">Image Content</p>
-						<PhotoGallery
-							images={contentGalleryImages}
-							mode="standalone"
-							navigationMode={contentGalleryImages.length > 1 ? "hover" : "manual"}
-							imageEffect="landscape"
-							showThumbnails={false}
-						/>
 					</div>
 				)}
 
