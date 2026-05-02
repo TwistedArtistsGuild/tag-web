@@ -13,6 +13,7 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
+import AboutSubnav from "@/components/AboutSubnav"
 import StockProgramBanner from "@/components/StockProgramBanner"
 import DocumentationSection from "@/components/DocumentationSection"
 import TagSEO from "@/components/TagSEO"
@@ -167,28 +168,7 @@ const Investing = () => {
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
       <TagSEO metadataProp={pageMetaData} canonicalSlug="about/investing" />
-      {/* Navigation Pane */}
-      <nav className="bg-base-100 shadow-md py-4">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <Link href="/about" className="text-primary font-bold text-lg">
-            About Us
-          </Link>
-          <div className="flex space-x-4">
-            <Link href="/about/pricing" className="text-base-content hover:text-primary">
-              Pricing
-            </Link>
-            <Link href="/about/vendor" className="text-base-content hover:text-primary">
-              Vendor
-            </Link>
-            <Link href="/about/development" className="text-base-content hover:text-primary">
-              Development
-            </Link>
-            {/*<Link href="/about/investing" className="text-base-content hover:text-primary">
-              Investing
-            </Link>*/}
-          </div>
-        </div>
-      </nav>
+      <AboutSubnav />
 
       <StockProgramBanner />
       <TAGStockPlanOverview />

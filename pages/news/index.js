@@ -17,6 +17,42 @@ import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContex
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 
+const featuredArticles = [
+  {
+    id: "beyond-canvas",
+    title: "Beyond the Canvas: Meet Amina Rodriguez, a Multidisciplinary Storyteller",
+    description:
+      "Amina blends textile, digital collage, and immersive installations to explore identity and memory. We unpack her process, her cooperative mindset, and how shared authorship shapes her latest exhibition.",
+    image: "https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg",
+    alt: "Artist painting on a canvas",
+    enableSocial: true,
+  },
+  {
+    id: "member-interviews",
+    title: "What Artists Really Need: Insights from Our Member Interviews",
+    description:
+      "From tools to pricing, our journalists analyzed data from extended interviews with TAG members to uncover what drives artist success-and what platforms must evolve to meet their needs.",
+    image: "https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg",
+    alt: "Artist's paint palette with brushes",
+  },
+  {
+    id: "art-algorithms",
+    title: "Art & Algorithms: How Creatives Are Hacking AI for Good",
+    description:
+      "We explore how TAG artists are turning generative tech into collaborative tools-from training models on personal portfolios to co-authoring with bots. This isn't automation; it's augmentation.",
+    image: "https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg",
+    alt: "Artist painting a large mural",
+  },
+  {
+    id: "studio-cooperative",
+    title: "The Studio is the Cooperative: Why Shared Governance Fuels Better Art",
+    description:
+      "A deep dive into how collective decision-making-from stock buybacks to platform features-is rewriting what creative ownership can look like. Hear from members building this new reality.",
+    image: "https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg",
+    alt: "Artist working on a large mural in a studio",
+  },
+]
+
 export default function News() {
   const pageMetaData = {
     title: "News Service",
@@ -113,140 +149,57 @@ export default function News() {
             📚 Featured Articles
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {/* Article Card 1: Amina Rodriguez - Multidisciplinary Storyteller */}
-            <div className="card bg-base-200 text-base-content shadow-xl overflow-hidden group">
-              <figure className="relative h-48 w-full">
-                <Image
-                  src="https://tagstatic.blob.core.windows.net/pexels/pexels-valeriiamiller-3547625-artistpainting.jpg"
-                  alt="Artist painting on a canvas"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  style={{ objectFit: "cover" }}
-                  className="group-hover:scale-105 transition-transform duration-300"
-                />
-              </figure>
-              <div className="card-body p-6">
-                <h4 className="card-title text-xl text-primary">
-                  Beyond the Canvas: Meet Amina Rodriguez, a Multidisciplinary Storyteller
-                </h4>
-                <p className="text-base-content/80 text-sm">
-                  Amina blends textile, digital collage, and immersive installations to explore identity and memory. We
-                  unpack her process, her cooperative mindset, and how shared authorship shapes her latest exhibition.
-                </p>
-                
-                {/* Enhanced Social Section */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 text-base-content/60">
-                      <EyeIcon className="w-4 h-4" />
-                      <span className="text-xs">{socialData["beyond-canvas"].views}</span>
+            {featuredArticles.map((article) => (
+              <div key={article.id} className={`card bg-base-200 text-base-content shadow-xl overflow-hidden${article.enableSocial ? " group" : ""}`}>
+                <figure className="relative h-48 w-full">
+                  <Image
+                    src={article.image}
+                    alt={article.alt}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{ objectFit: "cover" }}
+                    className={article.enableSocial ? "group-hover:scale-105 transition-transform duration-300" : undefined}
+                  />
+                </figure>
+                <div className="card-body p-6">
+                  <h4 className="card-title text-xl text-primary">{article.title}</h4>
+                  <p className="text-base-content/80 text-sm">{article.description}</p>
+                  {article.enableSocial && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 text-base-content/60">
+                          <EyeIcon className="w-4 h-4" />
+                          <span className="text-xs">{socialData[article.id].views}</span>
+                        </div>
+                        <button
+                          onClick={() => handleSocialAction(article.id, "loves")}
+                          className="flex items-center gap-1 text-error hover:scale-105 transition-transform cursor-pointer"
+                        >
+                          <HeartIcon className="w-4 h-4" />
+                          <span className="text-xs">{socialData[article.id].loves}</span>
+                        </button>
+                        <div className="flex items-center gap-1 text-base-content/60">
+                          <MessageCircleIcon className="w-4 h-4" />
+                          <span className="text-xs">{socialData[article.id].comments}</span>
+                        </div>
+                        <button
+                          onClick={() => handleSocialAction(article.id, "shares")}
+                          className="flex items-center gap-1 text-info hover:scale-105 transition-transform cursor-pointer"
+                        >
+                          <ShareIcon className="w-4 h-4" />
+                          <span className="text-xs">{socialData[article.id].shares}</span>
+                        </button>
+                      </div>
                     </div>
-                    <button 
-                      onClick={() => handleSocialAction("beyond-canvas", 'loves')}
-                      className="flex items-center gap-1 text-error hover:scale-105 transition-transform cursor-pointer"
-                    >
-                      <HeartIcon className="w-4 h-4" />
-                      <span className="text-xs">{socialData["beyond-canvas"].loves}</span>
-                    </button>
-                    <div className="flex items-center gap-1 text-base-content/60">
-                      <MessageCircleIcon className="w-4 h-4" />
-                      <span className="text-xs">{socialData["beyond-canvas"].comments}</span>
-                    </div>
-                    <button 
-                      onClick={() => handleSocialAction("beyond-canvas", 'shares')}
-                      className="flex items-center gap-1 text-info hover:scale-105 transition-transform cursor-pointer"
-                    >
-                      <ShareIcon className="w-4 h-4" />
-                      <span className="text-xs">{socialData["beyond-canvas"].shares}</span>
-                    </button>
+                  )}
+                  <div className="card-actions justify-end mt-4">
+                    <Link href="#" className="btn btn-sm btn-outline btn-primary">
+                      Read More
+                    </Link>
                   </div>
                 </div>
-                
-                <div className="card-actions justify-end mt-4">
-                  <Link href="#" className="btn btn-sm btn-outline btn-primary">
-                    Read More
-                  </Link>
-                </div>
               </div>
-            </div>
-            {/* Article Card 2: What Artists Really Need - Insights from Interviews */}
-            <div className="card bg-base-200 text-base-content shadow-xl overflow-hidden">
-              <figure className="relative h-48 w-full">
-                <Image
-                  src="https://tagstatic.blob.core.windows.net/pexels/pexels-daiangan-102127-paintpallette.jpg"
-                  alt="Artist's paint palette with brushes"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  style={{ objectFit: "cover" }}
-                />
-              </figure>
-              <div className="card-body p-6">
-                <h4 className="card-title text-xl text-primary">
-                  What Artists Really Need: Insights from Our Member Interviews
-                </h4>
-                <p className="text-base-content/80 text-sm">
-                  From tools to pricing, our journalists analyzed data from extended interviews with TAG members to
-                  uncover what drives artist success—and what platforms must evolve to meet their needs.
-                </p>
-                <div className="card-actions justify-end mt-4">
-                  <Link href="#" className="btn btn-sm btn-outline btn-primary">
-                    Read More
-                  </Link>
-                </div>
-              </div>
-            </div>
-            {/* Article Card 3: Art & Algorithms - Hacking AI for Good */}
-            <div className="card bg-base-200 text-base-content shadow-xl overflow-hidden">
-              <figure className="relative h-48 w-full">
-                <Image
-                  src="https://tagstatic.blob.core.windows.net/pexels/pexels-brett-sayles-1340502-artistpaintingmural.jpg"
-                  alt="Artist painting a large mural"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  style={{ objectFit: "cover" }}
-                />
-              </figure>
-              <div className="card-body p-6">
-                <h4 className="card-title text-xl text-primary">
-                  Art & Algorithms: How Creatives Are Hacking AI for Good
-                </h4>
-                <p className="text-base-content/80 text-sm">
-                  We explore how TAG artists are turning generative tech into collaborative tools—from training models
-                  on personal portfolios to co-authoring with bots. This isn’t automation; it’s augmentation.
-                </p>
-                <div className="card-actions justify-end mt-4">
-                  <Link href="#" className="btn btn-sm btn-outline btn-primary">
-                    Read More
-                  </Link>
-                </div>
-              </div>
-            </div>
-            {/* Article Card 4: The Studio is the Cooperative - Shared Governance */}
-            <div className="card bg-base-200 text-base-content shadow-xl overflow-hidden">
-              <figure className="relative h-48 w-full">
-                <Image
-                  src="https://tagstatic.blob.core.windows.net/pexels/pexels-thfotodesign-3253724-artistpaintingmural3.jpg"
-                  alt="Artist working on a large mural in a studio"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  style={{ objectFit: "cover" }}
-                />
-              </figure>
-              <div className="card-body p-6">
-                <h4 className="card-title text-xl text-primary">
-                  The Studio is the Cooperative: Why Shared Governance Fuels Better Art
-                </h4>
-                <p className="text-base-content/80 text-sm">
-                  A deep dive into how collective decision-making—from stock buybacks to platform features—is rewriting
-                  what creative ownership can look like. Hear from members building this new reality.
-                </p>
-                <div className="card-actions justify-end mt-4">
-                  <Link href="#" className="btn btn-sm btn-outline btn-primary">
-                    Read More
-                  </Link>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
         {/* Call to Action / Footer */}
