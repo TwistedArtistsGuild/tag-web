@@ -16,6 +16,78 @@ import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContex
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 
+const performanceCards = [
+  {
+    id: "music-events",
+    title: "Music Events",
+    description: "Experience electrifying performances from bands and DJs that push the boundaries of sound.",
+    image: "https://tagstatic.blob.core.windows.net/pexels/pexels-joshsorenson-995301-drummer.jpg",
+    alt: "Drummer performing on stage",
+    primaryBadge: "Music",
+    secondaryBadge: "Live",
+    enableSocial: true,
+    imageClassName: "w-full group-hover:scale-105 transition-transform duration-300",
+  },
+  {
+    id: "circus-acrobatics",
+    title: "Circus & Acrobatics",
+    description: "Be amazed by gravity-defying performances that blend artistry with physical prowess.",
+    image: "https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg",
+    alt: "Saxophone player performing",
+    primaryBadge: "Circus",
+    secondaryBadge: "Performances",
+    imageClassName: "w-full",
+  },
+  {
+    id: "dance-performance",
+    title: "Theater & Dance",
+    description: "Immerse yourself in storytelling through movement and drama from innovative troupes.",
+    image: "https://tagstatic.blob.core.windows.net/pexels/pexels-marcela-alessandra-789314-1885213-pianist.jpg",
+    alt: "Pianist performing on stage",
+    primaryBadge: "Performing Arts",
+    secondaryBadge: "Tickets",
+    imageClassName: "w-full",
+  },
+]
+
+const academicSupportColumns = [
+  {
+    title: "Museums & Exhibitions",
+    description:
+      "We partner with museums and galleries to bring curated exhibitions that showcase diverse artistic expressions. These collaborations create spaces where art can be experienced, contemplated, and discussed.",
+    items: ["Curated exhibitions", "Artist talks and panels", "Interactive installations"],
+    Icon: BuildingIcon,
+  },
+  {
+    title: "Classes & Workshops",
+    description:
+      "Our educational programs connect aspiring artists with experts in various fields. From beginner workshops to advanced masterclasses, we foster learning environments that encourage growth and experimentation.",
+    items: ["Hands-on workshops", "Expert-led masterclasses", "Ongoing education series"],
+    Icon: GraduationCapIcon,
+  },
+]
+
+const attendeeTestimonials = [
+  {
+    quote:
+      "The dance performance was absolutely mesmerizing. I've never seen such a perfect blend of technique and emotion. Worth every penny!",
+    name: "Maria J.",
+    role: "Dance performance attendee",
+  },
+  {
+    quote:
+      "The sculpture workshop completely changed how I approach my art. The instructor was knowledgeable and provided personalized guidance.",
+    name: "David R.",
+    role: "Workshop participant",
+  },
+  {
+    quote:
+      "The exhibition was incredible - such diverse perspectives and styles. I left feeling inspired and with a deeper appreciation for contemporary art.",
+    name: "Sarah T.",
+    role: "Exhibition visitor",
+  },
+]
+
 /**
  * Events landing page showcasing the vision for TAG events
  * Features both performance art events and academic support offerings
@@ -49,6 +121,22 @@ export default function EventsLanding() {
       }
     }));
   };
+
+  const renderStars = () => (
+    <div className="flex mb-4">
+      {[...Array(5)].map((_, i) => (
+        <svg
+          key={i}
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5 text-yellow-400"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+      ))}
+    </div>
+  )
 
   return (
     <SocialRealtimeProvider>
@@ -114,104 +202,56 @@ export default function EventsLanding() {
             A performance is art on display at a venue for a given time
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {/* Performance Card 1: Music Events */}
-            <div className="card bg-base-200 shadow-xl image-full overflow-hidden group">
-              <figure>
-                <Image
-                  src="https://tagstatic.blob.core.windows.net/pexels/pexels-joshsorenson-995301-drummer.jpg"
-                  alt="Drummer performing on stage"
-                  width={600}
-                  height={400}
-                  className="w-full group-hover:scale-105 transition-transform duration-300"
-                  style={{ objectFit: "cover" }}
-                />
-              </figure>
-              <div className="card-body">
-                <h3 className="card-title text-2xl text-white">Music Events</h3>
-                <p className="text-white">
-                  Experience electrifying performances from bands and DJs that push the boundaries of sound.
-                </p>
-                
-                {/* Enhanced Social Section */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/20">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 text-white/80">
-                      <EyeIcon className="w-4 h-4" />
-                      <span className="text-xs">{socialData["music-events"].views}</span>
+            {performanceCards.map((card) => (
+              <div key={card.id} className={`card bg-base-200 shadow-xl image-full overflow-hidden${card.enableSocial ? " group" : ""}`}>
+                <figure>
+                  <Image
+                    src={card.image}
+                    alt={card.alt}
+                    width={600}
+                    height={400}
+                    className={card.imageClassName}
+                    style={{ objectFit: "cover" }}
+                  />
+                </figure>
+                <div className="card-body">
+                  <h3 className="card-title text-2xl text-white">{card.title}</h3>
+                  <p className="text-white">{card.description}</p>
+                  {card.enableSocial && (
+                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/20">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1 text-white/80">
+                          <EyeIcon className="w-4 h-4" />
+                          <span className="text-xs">{socialData[card.id].views}</span>
+                        </div>
+                        <button
+                          onClick={() => handleSocialAction(card.id, "loves")}
+                          className="flex items-center gap-1 text-red-400 hover:scale-105 transition-transform cursor-pointer"
+                        >
+                          <HeartIcon className="w-4 h-4" />
+                          <span className="text-xs">{socialData[card.id].loves}</span>
+                        </button>
+                        <div className="flex items-center gap-1 text-white/80">
+                          <MessageCircleIcon className="w-4 h-4" />
+                          <span className="text-xs">{socialData[card.id].comments}</span>
+                        </div>
+                        <button
+                          onClick={() => handleSocialAction(card.id, "attending")}
+                          className="flex items-center gap-1 text-green-400 hover:scale-105 transition-transform cursor-pointer"
+                        >
+                          <CalendarIcon className="w-4 h-4" />
+                          <span className="text-xs">{socialData[card.id].attending}</span>
+                        </button>
+                      </div>
                     </div>
-                    <button 
-                      onClick={() => handleSocialAction("music-events", 'loves')}
-                      className="flex items-center gap-1 text-red-400 hover:scale-105 transition-transform cursor-pointer"
-                    >
-                      <HeartIcon className="w-4 h-4" />
-                      <span className="text-xs">{socialData["music-events"].loves}</span>
-                    </button>
-                    <div className="flex items-center gap-1 text-white/80">
-                      <MessageCircleIcon className="w-4 h-4" />
-                      <span className="text-xs">{socialData["music-events"].comments}</span>
-                    </div>
-                    <button 
-                      onClick={() => handleSocialAction("music-events", 'attending')}
-                      className="flex items-center gap-1 text-green-400 hover:scale-105 transition-transform cursor-pointer"
-                    >
-                      <CalendarIcon className="w-4 h-4" />
-                      <span className="text-xs">{socialData["music-events"].attending}</span>
-                    </button>
+                  )}
+                  <div className="card-actions justify-end">
+                    <div className="badge badge-outline text-white border-white">{card.primaryBadge}</div>
+                    <div className="badge badge-primary">{card.secondaryBadge}</div>
                   </div>
                 </div>
-                
-                <div className="card-actions justify-end">
-                  <div className="badge badge-outline text-white border-white">Music</div>
-                  <div className="badge badge-primary">Live</div>
-                </div>
               </div>
-            </div>
-            {/* Performance Card 2: Circus & Acrobatics (using a general performance image) */}
-            <div className="card bg-base-200 shadow-xl image-full overflow-hidden">
-              <figure>
-                <Image
-                  src="https://tagstatic.blob.core.windows.net/pexels/pexels-victorfreitas-733767-sultrysax.jpg"
-                  alt="Saxophone player performing"
-                  width={600}
-                  height={400}
-                  className="w-full"
-                  style={{ objectFit: "cover" }}
-                />
-              </figure>
-              <div className="card-body">
-                <h3 className="card-title text-2xl text-white">Circus & Acrobatics</h3>
-                <p className="text-white">
-                  Be amazed by gravity-defying performances that blend artistry with physical prowess.
-                </p>
-                <div className="card-actions justify-end">
-                  <div className="badge badge-outline text-white border-white">Circus</div>
-                  <div className="badge badge-primary">Performances</div>
-                </div>
-              </div>
-            </div>
-            {/* Performance Card 3: Theater & Dance */}
-            <div className="card bg-base-200 shadow-xl image-full overflow-hidden">
-              <figure>
-                <Image
-                  src="https://tagstatic.blob.core.windows.net/pexels/pexels-marcela-alessandra-789314-1885213-pianist.jpg"
-                  alt="Pianist performing on stage"
-                  width={600}
-                  height={400}
-                  className="w-full"
-                  style={{ objectFit: "cover" }}
-                />
-              </figure>
-              <div className="card-body">
-                <h3 className="card-title text-2xl text-white">Theater & Dance</h3>
-                <p className="text-white">
-                  Immerse yourself in storytelling through movement and drama from innovative troupes.
-                </p>
-                <div className="card-actions justify-end">
-                  <div className="badge badge-outline text-white border-white">Performing Arts</div>
-                  <div className="badge badge-primary">Tickets</div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
           <div className="mt-12 text-center">
             <div className="p-6 bg-base-200 rounded-lg max-w-2xl mx-auto text-base-content/80">
@@ -233,68 +273,25 @@ export default function EventsLanding() {
             Education and exhibitions that inspire and nurture artistic talent
           </p>
           <div className="grid md:grid-cols-2 gap-16 max-w-6xl mx-auto">
-            <div className="flex flex-col items-center md:items-start">
-              <div className="w-24 h-24 rounded-full bg-purple-600 flex items-center justify-center mb-6">
-                <BuildingIcon className="w-12 h-12 text-white" />
+            {academicSupportColumns.map((column) => (
+              <div key={column.title} className="flex flex-col items-center md:items-start">
+                <div className="w-24 h-24 rounded-full bg-purple-600 flex items-center justify-center mb-6">
+                  <column.Icon className="w-12 h-12 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-primary">{column.title}</h3>
+                <p className="text-lg text-base-content/80">{column.description}</p>
+                <ul className="mt-6 space-y-2 text-base-content/80">
+                  {column.items.map((item) => (
+                    <li key={item} className="flex items-center">
+                      <span className="bg-purple-500 rounded-full p-1 mr-2">
+                        <CheckIcon className="h-4 w-4 text-white" />
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-primary">Museums & Exhibitions</h3>
-              <p className="text-lg text-base-content/80">
-                We partner with museums and galleries to bring curated exhibitions that showcase diverse artistic
-                expressions. These collaborations create spaces where art can be experienced, contemplated, and
-                discussed.
-              </p>
-              <ul className="mt-6 space-y-2 text-base-content/80">
-                <li className="flex items-center">
-                  <span className="bg-purple-500 rounded-full p-1 mr-2">
-                    <CheckIcon className="h-4 w-4 text-white" />
-                  </span>
-                  Curated exhibitions
-                </li>
-                <li className="flex items-center">
-                  <span className="bg-purple-500 rounded-full p-1 mr-2">
-                    <CheckIcon className="h-4 w-4 text-white" />
-                  </span>
-                  Artist talks and panels
-                </li>
-                <li className="flex items-center">
-                  <span className="bg-purple-500 rounded-full p-1 mr-2">
-                    <CheckIcon className="h-4 w-4 text-white" />
-                  </span>
-                  Interactive installations
-                </li>
-              </ul>
-            </div>
-            <div className="flex flex-col items-center md:items-start">
-              <div className="w-24 h-24 rounded-full bg-purple-600 flex items-center justify-center mb-6">
-                <GraduationCapIcon className="w-12 h-12 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4 text-primary">Classes & Workshops</h3>
-              <p className="text-lg text-base-content/80">
-                Our educational programs connect aspiring artists with experts in various fields. From beginner
-                workshops to advanced masterclasses, we foster learning environments that encourage growth and
-                experimentation.
-              </p>
-              <ul className="mt-6 space-y-2 text-base-content/80">
-                <li className="flex items-center">
-                  <span className="bg-purple-500 rounded-full p-1 mr-2">
-                    <CheckIcon className="h-4 w-4 text-white" />
-                  </span>
-                  Hands-on workshops
-                </li>
-                <li className="flex items-center">
-                  <span className="bg-purple-500 rounded-full p-1 mr-2">
-                    <CheckIcon className="h-4 w-4 text-white" />
-                  </span>
-                  Expert-led masterclasses
-                </li>
-                <li className="flex items-center">
-                  <span className="bg-purple-500 rounded-full p-1 mr-2">
-                    <CheckIcon className="h-4 w-4 text-white" />
-                  </span>
-                  Ongoing education series
-                </li>
-              </ul>
-            </div>
+            ))}
           </div>
         </section>
         {/* Call to Action */}
@@ -318,81 +315,18 @@ export default function EventsLanding() {
         <section className="py-12 bg-base-100 rounded-box shadow-lg px-6 mb-12">
           <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary text-center">What Attendees Say</h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="card bg-base-200 shadow-xl">
-              <div className="card-body">
-                <div className="flex mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <svg
-                      key={i}
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-yellow-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-base-content/80">
-                  &ldquo;The dance performance was absolutely mesmerizing. I&apos;ve never seen such a perfect blend of technique
-                  and emotion. Worth every penny!&rdquo;
-                </p>
-                <div className="mt-4">
-                  <h3 className="font-bold text-primary">Maria J.</h3>
-                  <p className="text-sm opacity-70 text-base-content/70">Dance performance attendee</p>
+            {attendeeTestimonials.map((testimonial) => (
+              <div key={testimonial.name} className="card bg-base-200 shadow-xl">
+                <div className="card-body">
+                  {renderStars()}
+                  <p className="text-base-content/80">&ldquo;{testimonial.quote}&rdquo;</p>
+                  <div className="mt-4">
+                    <h3 className="font-bold text-primary">{testimonial.name}</h3>
+                    <p className="text-sm opacity-70 text-base-content/70">{testimonial.role}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="card bg-base-200 shadow-xl">
-              <div className="card-body">
-                <div className="flex mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <svg
-                      key={i}
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-yellow-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-base-content/80">
-                  &ldquo;The sculpture workshop completely changed how I approach my art. The instructor was knowledgeable and
-                  provided personalized guidance.&rdquo;
-                </p>
-                <div className="mt-4">
-                  <h3 className="font-bold text-primary">David R.</h3>
-                  <p className="text-sm opacity-70 text-base-content/70">Workshop participant</p>
-                </div>
-              </div>
-            </div>
-            <div className="card bg-base-200 shadow-xl">
-              <div className="card-body">
-                <div className="flex mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <svg
-                      key={i}
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-yellow-400"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-                <p className="text-base-content/80">
-                  &ldquo;The exhibition was incredible - such diverse perspectives and styles. I left feeling inspired and
-                  with a deeper appreciation for contemporary art.&rdquo;
-                </p>
-                <div className="mt-4">
-                  <h3 className="font-bold text-primary">Sarah T.</h3>
-                  <p className="text-sm opacity-70 text-base-content/70">Exhibition visitor</p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
       </main>

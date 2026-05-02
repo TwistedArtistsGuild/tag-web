@@ -13,7 +13,9 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
+import AboutSubnav from "@/components/AboutSubnav"
 import StockProgramBanner from "@/components/StockProgramBanner"
+import DocumentationSection from "@/components/DocumentationSection"
 
 import TagSEO from "@/components/TagSEO"
 
@@ -61,9 +63,7 @@ const Buyback = () => {
   )
 
   const WhyItExists = () => (
-    <section id="why-it-exists" className="py-16 bg-base-200">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-8">{"🧭 Why It Exists"}</h2>
+    <DocumentationSection id="why-it-exists" title="🧭 Why It Exists" bgColor="bg-base-200" centered>
         <p className="text-lg text-center mb-8">
           {
             "As a cooperative, TAG doesn’t intend to IPO or sell out to venture capital. Instead, we’ve built an internal buyback system to:"
@@ -80,14 +80,11 @@ const Buyback = () => {
             "The PSRP is how we turn adjusted profit into mobility—redistributing value through dividends, retained earnings, and stock repurchases."
           }
         </p>
-      </div>
-    </section>
+    </DocumentationSection>
   )
 
   const ProgramHighlights = () => (
-    <section id="program-highlights" className="py-16 bg-base-100">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-8">{"💡 Program Highlights"}</h2>
+    <DocumentationSection id="program-highlights" title="💡 Program Highlights" bgColor="bg-base-100" centered>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="card bg-base-200 shadow-xl p-6">
             <h3 className="text-2xl font-bold mb-4">Funded by Profits</h3>
@@ -122,14 +119,11 @@ const Buyback = () => {
             </p>
           </div>
         </div>
-      </div>
-    </section>
+    </DocumentationSection>
   )
 
   const RepurchaseMechanics = () => (
-    <section id="repurchase-mechanics" className="py-16 bg-base-200">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-8">{"📊 Repurchase Mechanics"}</h2>
+    <DocumentationSection id="repurchase-mechanics" title="📊 Repurchase Mechanics" bgColor="bg-base-200" centered>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="card bg-base-100 shadow-xl p-6">
             <h3 className="text-2xl font-bold mb-4">Application</h3>
@@ -160,14 +154,11 @@ const Buyback = () => {
             </p>
           </div>
         </div>
-      </div>
-    </section>
+    </DocumentationSection>
   )
 
   const EligibilityAndShareClassRules = () => (
-    <section id="eligibility-rules" className="py-16 bg-base-100">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-8">{"📋 Eligibility & Share Class Rules"}</h2>
+    <DocumentationSection id="eligibility-rules" title="📋 Eligibility & Share Class Rules" bgColor="bg-base-100" centered>
         <ul className="list-disc list-inside space-y-3 text-lg max-w-2xl mx-auto mb-8">
           <li>
             <strong>{"Common Stock (Artists):"}</strong>{" "}
@@ -190,14 +181,11 @@ const Buyback = () => {
             }
           </li>
         </ul>
-      </div>
-    </section>
+    </DocumentationSection>
   )
 
   const TimingAndWaitlistLogic = () => (
-    <section id="timing-waitlist" className="py-16 bg-base-200">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-8">{"⏳ Timing & Waitlist Logic"}</h2>
+    <DocumentationSection id="timing-waitlist" title="⏳ Timing & Waitlist Logic" bgColor="bg-base-200" centered>
         <ul className="list-disc list-inside space-y-3 text-lg max-w-2xl mx-auto mb-8">
           <li>{"Requests >15% of eligible shares are rejected."}</li>
           <li>{"Large requests under the cap may still queue on waitlist."}</li>
@@ -209,14 +197,11 @@ const Buyback = () => {
           </li>
           <li>{"Disbursement cycles include a buffer period for financial processing."}</li>
         </ul>
-      </div>
-    </section>
+    </DocumentationSection>
   )
 
   const BoardAndGovernanceDisclosures = () => (
-    <section id="governance-disclosures" className="py-16 bg-base-100">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-8">{"🔐 Board & Governance Disclosures"}</h2>
+    <DocumentationSection id="governance-disclosures" title="🔐 Board & Governance Disclosures" bgColor="bg-base-100" centered>
         <ul className="list-disc list-inside space-y-3 text-lg max-w-2xl mx-auto mb-8">
           <li>
             {
@@ -235,14 +220,11 @@ const Buyback = () => {
             }
           </li>
         </ul>
-      </div>
-    </section>
+    </DocumentationSection>
   )
 
   const LongTermLiquidityRoadmap = () => (
-    <section id="liquidity-roadmap" className="py-16 bg-base-200">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-8">{"📈 Long-Term Liquidity Roadmap"}</h2>
+    <DocumentationSection id="liquidity-roadmap" title="📈 Long-Term Liquidity Roadmap" bgColor="bg-base-200" centered>
         <ul className="list-disc list-inside space-y-3 text-lg max-w-2xl mx-auto mb-8">
           <li>{"Restricted Board shares (issued at Guild founding) unlock slowly:"}</li>
           <ul className="list-circle list-inside ml-6">
@@ -252,35 +234,13 @@ const Buyback = () => {
           </ul>
           <li>{"Buybacks will only include fully vested and eligible stocks per class"}</li>
         </ul>
-      </div>
-    </section>
+    </DocumentationSection>
   )
 
   return (
       <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
       <TagSEO metadataProp={pageMetaData} canonicalSlug="about/investing/buyback" />
-      {/* Navigation Pane */}
-      <nav className="bg-base-100 shadow-md py-4">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <Link href="/about" className="text-primary font-bold text-lg">
-            About Us
-          </Link>
-          <div className="flex space-x-4">
-            <Link href="/about/pricing" className="text-base-content hover:text-primary">
-              Pricing
-            </Link>
-            <Link href="/about/vendor" className="text-base-content hover:text-primary">
-              Vendor
-            </Link>
-            <Link href="/about/development" className="text-base-content hover:text-primary">
-              Development
-            </Link>
-            {/*<Link href="/about/investing" className="text-base-content hover:text-primary">
-              Investing
-            </Link>*/}
-          </div>
-        </div>
-      </nav>
+      <AboutSubnav />
 
       <StockProgramBanner />
       <PSRPOverview />

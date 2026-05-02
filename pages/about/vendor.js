@@ -11,8 +11,8 @@
 "use client"
 
 import { useEffect } from "react"
-import Link from "next/link"
 import { useAppContext } from "@/components/Context"
+import AboutSubnav from "@/components/AboutSubnav"
 import DocumentationSection from "@/components/DocumentationSection"
 import TagSEO from "@/components/TagSEO"
 const Vendor = () => {
@@ -48,28 +48,7 @@ const Vendor = () => {
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300 text-base-content">
       <TagSEO metadataProp={pageMetaData} canonicalSlug="about/vendor" />
-      {/* Navigation Pane */}
-      <nav className="sticky top-0 z-20 border-b border-base-300 bg-base-100/90 py-3 shadow-sm backdrop-blur">
-        <div className="container mx-auto flex flex-wrap items-center justify-between gap-3 px-4">
-          <Link href="/about" className="btn btn-ghost text-primary text-lg font-bold">
-            About Us
-          </Link>
-          <div className="flex flex-wrap gap-2">
-            <Link href="/about/pricing" className="btn btn-ghost btn-sm">
-              Pricing
-            </Link>
-            <Link href="/about/vendor" className="btn btn-secondary btn-sm font-semibold text-secondary-content" aria-current="page">
-              Vendor
-            </Link>
-            <Link href="/about/development" className="btn btn-ghost btn-sm">
-              Development
-            </Link>
-            {/*<Link href="/about/investing" className="text-base-content hover:text-primary">
-              Investing
-            </Link>*/}
-          </div>
-        </div>
-      </nav>
+      <AboutSubnav activeItem="vendor" variant="buttons" />
       <DocumentationSection id="featured-partners" title="Featured Partners & Tech Stack" bgColor="bg-base-200">
         <p className="mb-6">Our chosen vendor partners and core infrastructure providers:</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

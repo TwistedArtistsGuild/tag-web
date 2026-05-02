@@ -11,6 +11,7 @@
 
 import TagSEO from "@/components/TagSEO";
 import ListingCard from "@/components/cards/card_listing";
+import { getPanelClass } from "@/components/cards/sizes/panel-layout";
 import getApiURL from "@/components/widgets/GetApiURL";
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 
@@ -36,9 +37,9 @@ const Listings = (props) => {
     },
   }
 
-	return (
-		<SocialRealtimeProvider>
-			<div className="container mx-auto p-4">
+  return (
+    <SocialRealtimeProvider>
+      <div className="container mx-auto p-4">
         <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
 
 				<div className="mb-6">
@@ -48,23 +49,19 @@ const Listings = (props) => {
 						<div className="badge badge-info">✨ Enhanced with Social Features</div>
 					</div>
 				</div>
-				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-					{props.listings.map((listing) => {
-						return (
-							<ListingCard
-								key={listing.listingid}
-								listing={{
-									...listing,
-									artist: { path: listing.artist?.path },
-									path: listing.path,
-								}}
-							/>
-						);
-					})}
-				</div>
-			</div>
-		</SocialRealtimeProvider>
-	);
+        <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
+          {props.listings.map((listing, index) => (
+            <div
+              key={listing.path || listing.listingid || `${listing.title || "listing"}-${index}`}
+              className={`${getPanelClass(listing.panelSize)} self-start`}
+            >
+              <ListingCard listing={listing} panelSize={listing.panelSize} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </SocialRealtimeProvider>
+  );
 };
 
 Listings.getInitialProps = async (context) => {
@@ -101,8 +98,13 @@ Listings.getInitialProps = async (context) => {
     console.log(`Listing data fetched. Count: ${data.length}`)
   }
 
+  const listings = (Array.isArray(data) ? data : []).map((listing) => ({
+    ...listing,
+    panelSize: "half",
+  }))
+
   return {
-    listings: data,
+    listings,
     status: status,
     supercat,
     cat,
