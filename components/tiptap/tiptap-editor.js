@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { getFontOptions, getTiptapExtensions } from "@/components/widgets/tiptap-presets";
-import { toVimeoEmbedUrl } from "@/components/widgets/tiptap-vimeo";
+import { getFontOptions, getTiptapExtensions } from "@/components/tiptap/tiptap-presets";
+import { toVimeoEmbedUrl } from "@/components/tiptap/tiptap-vimeo";
 
 function normalizeUrl(rawUrl) {
   if (!rawUrl) {

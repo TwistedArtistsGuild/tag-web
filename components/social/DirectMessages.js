@@ -17,7 +17,7 @@ import { IoSend, IoTimeOutline, IoCheckmarkSharp, IoCheckmarkDoneSharp } from "r
 // Import components
 import Image from "next/image";
 import { useRealtimeMessages, useTypingIndicator, useSocialRealtime } from './SocialRealtimeContext';
-import TiptapEditor from "@/components/widgets/tiptap-editor";
+import TiptapEditor from "@/components/tiptap/tiptap-editor";
 
 // Mock demo data for conversations
 const MOCK_CONVERSATIONS = [
