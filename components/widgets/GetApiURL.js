@@ -21,7 +21,11 @@ function ensureTrailingSlash(url) {
 }
 
 export default function getApiURL() {
-	const isLocalOverride = process.env.LOCALOVERRIDE === "true"
+	const localOverrideFlag = process.env.NEXT_PUBLIC_LOCALOVERRIDE ?? process.env.LOCALOVERRIDE
+	const isBrowserLocalhost =
+		typeof window !== "undefined" &&
+		(window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+	const isLocalOverride = localOverrideFlag === "true" || isBrowserLocalhost
 	const isDebug = process.env.DEBUG === "true"
 
 	if (isLocalOverride) {
