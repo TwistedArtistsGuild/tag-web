@@ -15,6 +15,8 @@ import { useMemo } from "react"
 import PhotoGallery from "@/components/cards/card_photoGallery"
 import ArtistCard from "@/components/cards/card_artist"
 import SocialReactions from "@/components/social/Reactions"
+import ColoredTagCard from "@/components/cards/card_coloredTags"
+import { extractContentWarnings } from "@/components/social/ContentTags"
 import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout"
 
 const getSeededCount = (seed, max, min = 1, salt = "") => {
@@ -93,11 +95,40 @@ const getArtistProfilePic = (listing) => {
   }
 }
 
+const getListingWarnings = (listing) => {
+  const source =
+    listing?.contentWarnings ||
+    listing?.contentwarnings ||
+    listing?.warnings ||
+    listing?.warningTags ||
+    listing?.contentTags ||
+    []
+
+  if (!Array.isArray(source)) {
+    return []
+  }
+
+  return source
+    .map((item) => {
+      if (typeof item === "string") {
+        return item.trim()
+      }
+
+      if (item && typeof item === "object") {
+        return String(item.label || item.name || item.tag || item.title || "").trim()
+      }
+
+      return ""
+    })
+    .filter(Boolean)
+}
+
 const ListingCard = ({ listing, panelSize = "third", showGalleryThumbnails = false, hideGallery = false }) => {
   const listingSeed = listing?.listingid || listing?.path || listing?.title
 
   const isLargePanel = ["twoThirds", "threeQuarters", "full"].includes(panelSize)
   const galleryImages = useMemo(() => getListingGalleryImages(listing), [listing])
+  const contentWarnings = useMemo(() => extractContentWarnings(listing), [listing])
   const listingPath = `/artists/${listing?.artist?.path}/listings/${listing?.path}`
   const artistProfilePic = useMemo(() => getArtistProfilePic(listing), [listing])
 
@@ -138,6 +169,8 @@ const ListingCard = ({ listing, panelSize = "third", showGalleryThumbnails = fal
             navigationMode={galleryImages.length > 1 ? "hover" : "manual"}
             imageEffect="landscape"
             showThumbnails={showGalleryThumbnails}
+            contentWarnings={contentWarnings}
+            hasViewerConsent={Boolean(listing?.viewerHasContentConsent)}
           />
         )}
 

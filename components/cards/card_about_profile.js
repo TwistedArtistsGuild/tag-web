@@ -10,6 +10,8 @@
  Open source · low-profit · human-first*/
 import Link from "next/link";
 import PhotoGallery from "@/components/cards/card_photoGallery";
+import ColoredTagCard from "@/components/cards/card_coloredTags";
+import { extractContentWarnings } from "@/components/social/ContentTags";
 import { CARD_SHELL_CLASS, PANEL_SIZE_LABELS, PANEL_SIZES } from "@/components/cards/sizes/panel-layout";
 
 export default function AboutProfileCard({
@@ -40,6 +42,7 @@ export default function AboutProfileCard({
 	};
 
 	const galleryImages = profile.images && profile.images.length > 0 ? profile.images : ["/blank_image.png"];
+	const contentWarnings = extractContentWarnings(profile);
 
 	return (
 		<article
@@ -85,6 +88,8 @@ export default function AboutProfileCard({
 						showThumbnails={false}
 						showVariantBadge={false}
 						shellClassName="border-0 shadow-none"
+						contentWarnings={contentWarnings}
+						contentWarningSize="sm"
 					/>
 				</div>
 				<h4 className="mt-2 text-xl font-bold text-primary">
