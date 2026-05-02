@@ -7,8 +7,13 @@
 
  This software comes with NO WARRANTY; see the license for details.
 
- Open source · low-profit · human-first*/
+ Open source · low-profit · human-first
 
+ 🎯 ORCHESTRATION: Full messaging display & management component.
+    Loads conversations from database, manages state, uses TT_DirectMessages editor card.
+    Uses: @/components/tiptap/TT_DirectMessages for editor UI
+    Exports: DirectMessages (default)
+*/
 
 import { useState, useRef } from "react";
 import DOMPurify from "dompurify";

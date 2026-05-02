@@ -15,26 +15,14 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
-import longDateOptions from "@/utils/longdateoptions"
 import { useAppContext } from "@/components/Context"
 import ImageGallery from "react-image-gallery"
 import "react-image-gallery/styles/image-gallery.css"
-import {
-  HeartIcon,
-  ThumbsUpIcon,
-  UsersIcon,
-  MailIcon,
-  CalendarIcon,
-  MapPinIcon,
-  SearchIcon,
-  ReplyIcon,
-} from "lucide-react" // Import Lucide icons
-import {
-  FaFacebook as FacebookIcon,
-  FaInstagram as InstagramIcon,
-  FaXTwitter as TwitterIcon,
-  FaPinterest as PinterestIcon,
-} from "react-icons/fa6"
+import { CalendarIcon, MapPinIcon, SearchIcon } from "lucide-react"
+import ArtistCard from "@/components/cards/card_artist"
+import ListingCardSmall from "@/components/cards/card_listing_small"
+import SocialComments from "@/components/social/Comments"
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 
 const artistSections = [
   { id: "profile", label: "Profile" },
@@ -50,20 +38,10 @@ const artistSections = [
  * @returns {JSX.Element} - Individual artist page
  */
 const Artist = (props) => {
-  const options = longDateOptions
-  const { setPageSections } = useAppContext() // Get access to context to set sections
+  const { setPageSections } = useAppContext()
 
   // State for search functionality
   const [searchTerm, setSearchTerm] = useState("")
-
-  // State for social counters (if not coming from props or to allow local interaction)
-  const [loves, setLoves] = useState(props.artist?.loves || 0)
-  const [likes, setLikes] = useState(props.artist?.likes || 0)
-  const [followers, setFollowers] = useState(props.artist?.followers || 0)
-
-  // State for comment form
-  const [showCommentForm, setShowCommentForm] = useState(false)
-  const [commentText, setCommentText] = useState("")
 
   // Navigation sections for quick jump
   // Set page sections in context when component mounts
@@ -124,120 +102,10 @@ const Artist = (props) => {
   ]
 
   // Sample comments
-  const sampleComments = [
-    {
-      id: 1,
-      author: "ArtEnthusiast42",
-      avatar: "https://i.pravatar.cc/100?img=1",
-      date: "2023-11-15",
-      content:
-        "Your use of color in the landscape series is absolutely breathtaking! I'd love to see your work in person someday.",
-      likes: 7,
-      replies: [],
-    },
-    {
-      id: 2,
-      author: "GalleryOwner",
-      avatar: "https://i.pravatar.cc/100?img=2",
-      date: "2023-11-10",
-      content:
-        "We featured your work in our downtown exhibition last month and received incredible feedback. Looking forward to collaborating again!",
-      likes: 12,
-      replies: [
-        {
-          id: 21,
-          author: "ArtistInResidence",
-          avatar: "https://i.pravatar.cc/100?img=8",
-          date: "2023-11-11",
-          content: "Thank you for the opportunity! It was an honor to be featured alongside such talented artists.",
-          likes: 3,
-        },
-      ],
-    },
-    {
-      id: 3,
-      author: "ArtStudent22",
-      avatar: "https://i.pravatar.cc/100?img=3",
-      date: "2023-11-05",
-      content:
-        "Your technique is inspiring! I've been studying your brush work and it's helping me develop my own style. Thank you for sharing your journey!",
-      likes: 5,
-      replies: [
-        {
-          id: 31,
-          author: "MasterPainter",
-          avatar: "https://i.pravatar.cc/100?img=9",
-          date: "2023-11-06",
-          content: "As a fellow artist, I agree completely. The texture work is particularly noteworthy!",
-          likes: 2,
-        },
-      ],
-    },
-    {
-      id: 4,
-      author: "LocalCollector",
-      avatar: "https://i.pravatar.cc/100?img=4",
-      date: "2023-10-28",
-      content:
-        "I purchased one of your pieces last year and it's still my favorite item in my collection. The way it captures light is magical.",
-      likes: 9,
-      replies: [],
-    },
-    {
-      id: 5,
-      author: "CreativeMind",
-      avatar: "https://i.pravatar.cc/100?img=5",
-      date: "2023-10-20",
-      content:
-        "The evolution of your style over the years has been fascinating to watch. Each new series brings something fresh while maintaining your unique perspective.",
-      likes: 14,
-      replies: [],
-    },
-  ]
-
-  // Handle social icon clicks (similar to ArtistCard)
-  const handleSocialClick = async (type) => {
-    // Optimistically update UI
-    if (type === "loves") setLoves((prev) => prev + 1)
-    if (type === "likes") setLikes((prev) => prev + 1)
-    if (type === "followers") setFollowers((prev) => prev + 1)
-
-    // Send update to your API route
-    try {
-      const res = await fetch(`/api/artist/${props.artist.artistid}/${type}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!res.ok) {
-        // If API call fails, revert the UI update (optional, but good practice)
-        if (type === "loves") setLoves((prev) => prev - 1)
-        if (type === "likes") setLikes((prev) => prev - 1)
-        if (type === "followers") setFollowers((prev) => prev - 1)
-        console.error(`Failed to update ${type} for artist ${props.artist.artistid}`)
-      }
-    } catch (error) {
-      console.error("Error sending social update:", error)
-      // Revert UI update on network error
-      if (type === "loves") setLoves((prev) => prev - 1)
-      if (type === "likes") setLikes((prev) => prev - 1)
-      if (type === "followers") setFollowers((prev) => prev - 1)
-    }
-  }
-
-  // Handle comment submission
-  const handleCommentSubmit = (e) => {
-    e.preventDefault()
-    if (commentText.trim()) {
-      alert("Comment feature coming soon! Your comment would be: " + commentText)
-      setCommentText("")
-      setShowCommentForm(false)
-    }
-  }
-
-  const listings = props.listings || []
+  const listings = (props.listings || []).map((l) => ({
+    ...l,
+    artist: { ...(l.artist || {}), path: l.artist?.path || props.slug },
+  }))
   // Dummy events data
   const events = [
     {
@@ -264,21 +132,9 @@ const Artist = (props) => {
   ]
 
   // Dummy social links (for external links, not the internal counters)
-  const socialLinks = [
-    { icon: "facebook", url: "#", label: "Facebook" },
-    { icon: "instagram", url: "#", label: "Instagram" },
-    { icon: "twitter", url: "#", label: "Twitter" },
-    { icon: "pinterest", url: "#", label: "Pinterest" },
-  ]
-
   // Handle search input change
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value)
-  }
-
-  // Handle contact button click
-  const handleContactClick = () => {
-    alert("Contact functionality coming soon!")
   }
 
   useEffect(() => {
@@ -288,8 +144,9 @@ const Artist = (props) => {
   }, [props.artist])
 
   return (
-    <div className="mx-auto p-4 relative max-w-6xl bg-base-200 text-base-content">
-      <TagSEO metadataProp={pageMetaData} canonicalSlug={`artists/${props.slug}`} />
+    <SocialRealtimeProvider>
+      <div className="mx-auto p-4 relative max-w-6xl bg-base-200 text-base-content">
+        <TagSEO metadataProp={pageMetaData} canonicalSlug={`artists/${props.slug}`} />
 
       {/* Cover Picture */}
       <div className="relative w-full h-60 md:h-96 overflow-hidden rounded-lg shadow-lg">
@@ -302,95 +159,26 @@ const Artist = (props) => {
         />
       </div>
 
-      {/* Loading Message */}
-      {!props.artist && <p className="text-center text-base-content/60 mt-4">Loading artist details... Please wait.</p>}
+        {/* Loading Message */}
+        {!props.artist && <p className="text-center text-base-content/60 mt-4">Loading artist details... Please wait.</p>}
 
-      {/* Artist Details */}
-      {props.artist && (
-        <>
-          <div id="profile" className="card lg:card-side bg-base-100 shadow-xl mt-8">
-            <figure className="p-4 shrink-0">
-              <div className="relative w-64 h-64 rounded-xl overflow-hidden shadow-lg border-2 border-gray-200">
-                {" "}
-                {/* Larger profile pic container */}
-                <Image
-                  src={props.profilePic?.url || "/blank_image.png"}
-                  alt={`Profile picture of ${props.artist.title}`}
-                  layout="fill"
-                  style={{ objectFit: "cover" }}
-                  className="rounded-xl"
-                />
-              </div>
-            </figure>
-            <div className="card-body p-6 grow">
-              <div className="flex flex-wrap justify-between items-start gap-4">
-                <div>
-                  <h1 className="card-title text-3xl font-bold text-primary mb-1">
-                    {props.artist.title || "Unknown Artist"}
-                  </h1>
-                  <p className="text-xl italic text-secondary mb-2">
-                    {props.artist.byline || "Artist at Twisted Artists Guild"}
-                  </p>
-                  <div className="badge badge-accent mt-2">TAG Member</div>
-                  <div className="mt-4">
-                    <p className="text-lg">
-                      <span className="font-semibold">Artist Since:</span>{" "}
-                      {new Date(props.artist.applied).toLocaleDateString("en-US", options)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 mt-2 lg:mt-0">
-                  <button onClick={handleContactClick} className="btn btn-primary">
-                    <MailIcon className="w-6 h-6 mr-1" />
-                    Contact Me
-                  </button>
-                  <div className="flex gap-2 justify-end">
-                    {socialLinks.map((link, index) => (
-                      <a
-                        key={index}
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn btn-circle btn-sm btn-outline"
-                        aria-label={link.label}
-                      >
-                        {/* Using Lucide React icons directly */}
-                        {link.icon === "facebook" && <FacebookIcon className="w-5 h-5" />}
-                        {link.icon === "instagram" && <InstagramIcon className="w-5 h-5" />}
-                        {link.icon === "twitter" && <TwitterIcon className="w-5 h-5" />}
-                        {link.icon === "pinterest" && <PinterestIcon className="w-5 h-5" />}
-                        {/* Fallback for other icons if any */}
-                        {!["facebook", "instagram", "twitter", "pinterest"].includes(link.icon) &&
-                          link.icon.charAt(0).toUpperCase()}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 mt-4">
-                <div
-                  className="flex items-center gap-1 text-error cursor-pointer"
-                  onClick={() => handleSocialClick("loves")}
-                >
-                  <HeartIcon className="w-5 h-5" />
-                  <span className="ml-1">{loves} Loves</span>
-                </div>
-                <div
-                  className="flex items-center gap-1 text-info cursor-pointer"
-                  onClick={() => handleSocialClick("likes")}
-                >
-                  <ThumbsUpIcon className="w-5 h-5" />
-                  <span className="ml-1">{likes} Likes</span>
-                </div>
-                <div
-                  className="flex items-center gap-1 text-success cursor-pointer"
-                  onClick={() => handleSocialClick("followers")}
-                >
-                  <UsersIcon className="w-5 h-5" />
-                  <span className="ml-1">{followers} Followers</span>
-                </div>
-              </div>
-            </div>
+        {/* Artist Details */}
+        {props.artist && (
+          <>
+          {/* Artist Profile Card */}
+          <div id="profile" className="mt-8">
+            <ArtistCard
+              showHeaderGallery={false}
+              showContentGallery={false}
+              artist={{
+                ...props.artist,
+                profilePic: props.profilePic,
+                images: props.profilePic?.url ? [props.profilePic.url] : [],
+                path: props.slug,
+                since: props.artist?.applied,
+                panelSize: "full",
+              }}
+            />
           </div>
 
           {/* Artist Statement Section */}
@@ -501,48 +289,7 @@ const Artist = (props) => {
             {listings.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {listings.map((listing) => (
-                  <div key={listing.listingID} className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
-                    <figure className="p-4">
-                      <Link
-                        href={`/artists/${props.slug}/listings/${listing.path || listing.listingID}`}
-                        className="block relative w-full h-40 rounded-lg overflow-hidden"
-                      >
-                        <Image
-                          src={listing.profilePic?.url || "/blank_image.png"}
-                          alt={listing.profilePic?.altText || "Listing Image"}
-                          layout="fill"
-                          objectFit="cover"
-                          className="rounded-lg"
-                        />
-                      </Link>
-                    </figure>
-                    <div className="card-body p-4">
-                      <Link href={`/artists/${props.slug}/listings/${listing.path || listing.listingID}`}>
-                        <h3 className="card-title text-lg hover:text-primary transition-colors">
-                          {listing.title || "Untitled"}
-                        </h3>
-                      </Link>
-                      <p className="text-sm line-clamp-2 text-base-content/80">
-                        {listing.description || "No description available."}
-                      </p>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="font-medium text-lg">
-                          {listing.price ? `$${listing.price}` : "Price on request"}
-                        </span>
-                        <span className="badge badge-outline badge-primary">
-                          {listing.artCategory?.category || "Uncategorized"}
-                        </span>
-                      </div>
-                      <div className="card-actions justify-end mt-3">
-                        <Link
-                          href={`/artists/${props.slug}/listings/${listing.path || listing.listingID}`}
-                          className="btn btn-sm btn-primary"
-                        >
-                          View Details
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
+                  <ListingCardSmall key={listing.listingID || listing.listingid || listing.path} listing={listing} />
                 ))}
               </div>
             ) : (
@@ -588,105 +335,11 @@ const Artist = (props) => {
           <div id="comments" className="mt-12 mb-8">
             <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">Comments & Feedback</h2>
             <div className="card bg-base-100 shadow-lg p-6">
-              {/* Comments Section */}
-              <div className="space-y-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-primary">Recent Comments ({sampleComments.length})</h3>
-                  <button onClick={() => setShowCommentForm(!showCommentForm)} className="btn btn-primary btn-sm">
-                    {showCommentForm ? "Cancel" : "Add Comment"}
-                  </button>
-                </div>
-
-                {/* Comment Form */}
-                {showCommentForm && (
-                  <form onSubmit={handleCommentSubmit} className="card bg-base-200 p-4 mb-6">
-                    <div className="form-control mb-3">
-                      <textarea
-                        className="textarea textarea-bordered w-full"
-                        placeholder="Share your thoughts about this artist's work..."
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        rows="3"
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      <button type="submit" className="btn btn-primary">
-                        Submit Comment
-                      </button>
-                    </div>
-                  </form>
-                )}
-
-                {/* Comment List */}
-                {sampleComments.map((comment) => (
-                  <div key={comment.id} className="border-b pb-4 last:border-b-0">
-                    <div className="flex gap-4">
-                      <div className="avatar">
-                        <div className="w-12 h-12 rounded-full overflow-hidden">
-                          <Image
-                            src={comment.avatar || "/placeholder.svg"}
-                            alt={`${comment.author}'s avatar`}
-                            width={48}
-                            height={48}
-                            unoptimized
-                          />
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium text-primary">{comment.author}</h3>
-                          <span className="text-sm text-base-content/60">{comment.date}</span>
-                        </div>
-                        <p className="mt-1 text-base-content">{comment.content}</p>
-                        <div className="mt-2 flex items-center gap-4">
-                          <button className="text-sm flex items-center gap-1 text-base-content/60 hover:text-primary">
-                            <HeartIcon className="w-4 h-4" />
-                            {comment.likes} likes
-                          </button>
-                          <button className="text-sm flex items-center gap-1 text-base-content/60 hover:text-primary">
-                            <ReplyIcon className="w-4 h-4" />
-                            Reply
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Replies */}
-                    {comment.replies && comment.replies.length > 0 && (
-                      <div className="mt-4 space-y-4 pl-8 ml-12 border-l-2 border-gray-200">
-                        {comment.replies.map((reply) => (
-                          <div key={reply.id} className="flex gap-4">
-                            <div className="avatar">
-                              <div className="w-10 h-10 rounded-full overflow-hidden">
-                                <Image
-                                  src={reply.avatar || "/placeholder.svg"}
-                                  alt={`${reply.author}'s avatar`}
-                                  width={40}
-                                  height={40}
-                                  unoptimized
-                                />
-                              </div>
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <h4 className="font-medium text-primary">{reply.author}</h4>
-                                <span className="text-sm text-base-content/60">{reply.date}</span>
-                              </div>
-                              <p className="mt-1 text-base-content">{reply.content}</p>
-                              <div className="mt-2 flex items-center gap-4">
-                                <button className="text-sm flex items-center gap-1 text-base-content/60 hover:text-primary">
-                                  <HeartIcon className="w-4 h-4" />
-                                  {reply.likes} likes
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+              <SocialComments
+                contextId={`artist-${props.artist?.artistid || props.slug}`}
+                initialComments={[]}
+                readOnly={false}
+              />
             </div>
           </div>
 
@@ -696,9 +349,10 @@ const Artist = (props) => {
               Update this artist page
             </Link>
           </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </div>
+    </SocialRealtimeProvider>
   )
 }
 

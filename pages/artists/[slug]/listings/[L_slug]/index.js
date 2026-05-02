@@ -13,7 +13,6 @@ import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContex
 import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
-import PhotoGallery from "@/components/cards/card_photoGallery"
 
 const DEFAULT_LISTING_IMAGES = [
   "https://picsum.photos/id/1015/1000/600",
@@ -203,20 +202,7 @@ const ListingDetails = ({ listing, slug }) => {
         <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
         <div className="mb-8">
           <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
-            <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2">
-              <div>
-                <ListingCard listing={listingForCard} panelSize="half" hideGallery />
-              </div>
-              <div className="rounded-box border border-base-300 bg-base-100/70 p-2">
-                <PhotoGallery
-                  images={listingGalleryImages}
-                  mode="standalone"
-                  navigationMode={listingGalleryImages.length > 1 ? "hover" : "manual"}
-                  imageEffect="landscape"
-                  showThumbnails
-                />
-              </div>
-            </div>
+            <ListingCard listing={listingForCard} panelSize="full" showGalleryThumbnails />
 
           <div className="overflow-x-auto mt-8">
             <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Artwork Details</h2>

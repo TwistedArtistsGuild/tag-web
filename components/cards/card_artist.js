@@ -92,7 +92,12 @@ const formatSinceMonthYear = (value) => {
 	return String(value);
 };
 
-const ArtistCard = ({ artist, compact = false }) => {
+const ArtistCard = ({
+	artist,
+	compact = false,
+	showHeaderGallery = true,
+	showContentGallery = true,
+}) => {
 	const [logoSrc, setLogoSrc] = useState(getArtistLogoSrc(artist));
 	const artistDescription = getArtistDescription(artist);
 	const galleryImages = useMemo(() => getArtistGalleryImages(artist), [artist]);
@@ -143,7 +148,7 @@ const ArtistCard = ({ artist, compact = false }) => {
 	return (
 		<article className={`${CARD_SHELL_CLASS} h-auto self-start w-full overflow-hidden`}>
 			<div className={`card-body ${compact ? "gap-2 p-3" : "gap-4 p-4"}`}>
-				{!compact && (
+				{!compact && showHeaderGallery && (
 					<PhotoGallery
 						images={galleryImages}
 						mode="standalone"
@@ -212,7 +217,7 @@ const ArtistCard = ({ artist, compact = false }) => {
 					</div>
 				)}
 
-				{!compact && (isMediumPanel || isLargePanel) && (
+				{!compact && showContentGallery && (isMediumPanel || isLargePanel) && (
 					<div className="rounded-box border border-base-300 bg-base-100/70 p-3">
 						<p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary/90">Image Content</p>
 						<PhotoGallery

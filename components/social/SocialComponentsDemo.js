@@ -12,8 +12,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { SocialRealtimeProvider } from './SocialRealtimeContext';
-import SocialComments from '../tiptap/TT_Comments';
-import DirectMessages from '../tiptap/TT_DirectMessages';
+import SocialComments from './Comments';
+import DirectMessages from './DirectMessages';
 import SocialReactions from './Reactions';
 
 // Mock data for demo
@@ -126,7 +126,7 @@ const SocialComponentsDemo = () => {
                 </div>
 
                 {/* Content Area */}
-                <div className="min-h-[600px]">
+                <div className="min-h-150">
                     {activeTab === 'comments' && (
                         <div className="space-y-6">
                             <div className="card bg-base-100 shadow-xl">
@@ -139,7 +139,7 @@ const SocialComponentsDemo = () => {
                                     
                                     {/* Beautiful Artwork Post */}
                                     <div className="card bg-base-100 shadow-xl overflow-hidden mb-6">
-                                        <figure className="relative h-80 bg-gradient-to-br from-primary/20 to-secondary/20">
+                                        <figure className="relative h-80 bg-linear-to-br from-primary/20 to-secondary/20">
                                             <Image
                                                 src="https://images.unsplash.com/photo-1541961017774-22349e4a1262?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2058&q=80"
                                                 alt="Abstract colorful painting - demo artwork"
@@ -147,7 +147,7 @@ const SocialComponentsDemo = () => {
                                                 className="object-cover"
                                                 priority
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
                                             <div className="absolute bottom-4 left-4 text-white">
                                                 <h2 className="text-2xl font-bold">Abstract Expression #7</h2>
                                                 <p className="text-sm opacity-90">Mixed media on canvas, 2025</p>
@@ -216,7 +216,7 @@ const SocialComponentsDemo = () => {
                                     Try sending messages and watch for live updates!
                                 </p>
                                 
-                                <div className="h-[500px]">
+                                <div className="h-125">
                                     <DirectMessages
                                         currentUser={MOCK_CURRENT_USER}
                                         demoMode={true}
