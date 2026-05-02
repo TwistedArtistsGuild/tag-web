@@ -15,6 +15,7 @@ import { getPanelClass } from "@/components/cards/sizes/panel-layout";
 import PhotoGallery from "@/components/cards/card_photoGallery";
 import ArtistCard from "@/components/cards/card_artist";
 import ListingCard from "@/components/cards/card_listing";
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 
 export default function NewCardsTestPage() {
 	const artistsForDemo = profiles.slice(0, 3).map((profile, index) => {
@@ -119,8 +120,9 @@ export default function NewCardsTestPage() {
 	};
 
 	return (
-		<div className="container mx-auto max-w-6xl p-4 md:p-6">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="test/newCards" />
+		<SocialRealtimeProvider>
+			<div className="container mx-auto max-w-6xl p-4 md:p-6">
+				<TagSEO metadataProp={pageMetaData} canonicalSlug="test/newCards" />
 
 			<div className="mb-6">
 				<div>
@@ -213,6 +215,7 @@ export default function NewCardsTestPage() {
 					</div>
 				))}
 			</div>
-		</div>
+			</div>
+		</SocialRealtimeProvider>
 	);
 }

@@ -8,162 +8,198 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-"use client" // This component now uses client-side state
+"use client"
 
-import Link from "next/link"
-import Image from "next/image"
-import { HeartIcon, ThumbsUpIcon, UsersIcon, MessageCircleIcon, SmileIcon } from "lucide-react"
-import { useState } from "react"
+import Link from "next/link";
+import Image from "next/image";
+import { useMemo, useState } from "react";
+import PhotoGallery from "@/components/cards/card_photoGallery";
+import SocialReactions from "@/components/social/Reactions";
+import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout";
 
-const getSafeArtistImageSrc = (artist) => {
-  const candidate = artist?.profilePic?.url
-  return candidate || "/blank_image.png"
-}
+const buildReactionSeed = (count, emoji, prefix) => {
+	const safeCount = Math.max(0, Number(count) || 0);
+	const displayCount = Math.min(safeCount, 24);
+	return Array.from({ length: displayCount }, (_, index) => ({
+		emoji,
+		userId: `${prefix}-${index + 1}`,
+		username: `${prefix}${index + 1}`,
+		timestamp: new Date(2026, 0, 1 + index).toISOString(),
+	}));
+};
 
-const getSeededCount = (seed, max, min = 1, salt = "") => {
-  const base = `${seed || "artist"}-${salt}`
-  const hash = base.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
-  return (hash % max) + min
-}
+const getArtistLogoSrc = (artist) => artist?.profilePic?.url || "/blank_image.png";
 
-/**
- * Card component for displaying artist information in landscape orientation
- * @param {Object} props - Component properties
- * @param {Object} props.artist - Artist data object with profilePic object and social counters
- * @returns {JSX.Element} - Artist card component
- */
+const getArtistDescription = (artist) =>
+	artist?.description ||
+	artist?.roleSummary ||
+	artist?.byline ||
+	artist?.biography ||
+	"Creative portfolio and artist highlights.";
+
+const getArtistGalleryImages = (artist) => {
+	if (Array.isArray(artist?.images) && artist.images.length > 0) {
+		return artist.images;
+	}
+
+	const fallback = artist?.profilePic?.url || "/blank_image.png";
+	return [fallback];
+};
+
+const formatSinceMonthYear = (value) => {
+	if (!value) {
+		return "n/a";
+	}
+
+	if (typeof value === "number" || /^\d{4}$/.test(String(value).trim())) {
+		const year = String(value).trim();
+		const parsed = new Date(`${year}-01-01T00:00:00Z`);
+		if (!Number.isNaN(parsed.getTime())) {
+			return new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(parsed);
+		}
+	}
+
+	const parsed = new Date(value);
+	if (!Number.isNaN(parsed.getTime())) {
+		return new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(parsed);
+	}
+
+	return String(value);
+};
+
 const ArtistCard = ({ artist }) => {
-  const artistSeed = artist?.artistid || artist?.path || artist?.title
-  const [imageSrc, setImageSrc] = useState(getSafeArtistImageSrc(artist))
+	const [logoSrc, setLogoSrc] = useState(getArtistLogoSrc(artist));
+	const artistDescription = getArtistDescription(artist);
+	const galleryImages = useMemo(() => getArtistGalleryImages(artist), [artist]);
+	const artistId = artist?.artistid || artist?.path || artist?.title || "artist";
+	const panelSize = artist?.panelSize || "third";
+	const isLargePanel = ["twoThirds", "threeQuarters", "full"].includes(panelSize);
+	const isMediumPanel = panelSize === "half";
 
-  // Initialize state for each counter with values from props
-  const [loves, setLoves] = useState(artist.loves)
-  const [likes, setLikes] = useState(artist.likes)
-  const [followers, setFollowers] = useState(artist.followers)
-  const [showQuickReactions, setShowQuickReactions] = useState(false)
-  const [reactionCounts, setReactionCounts] = useState({
-    '❤️': artist.reactions?.heart ?? getSeededCount(artistSeed, 50, 1, "heart"),
-    '👏': artist.reactions?.clap ?? getSeededCount(artistSeed, 30, 1, "clap"),
-    '🎨': artist.reactions?.art ?? getSeededCount(artistSeed, 25, 1, "art"),
-    '🔥': artist.reactions?.fire ?? getSeededCount(artistSeed, 20, 1, "fire"),
-  })
+	const metadataSummary = useMemo(() => {
+		const categoryCount = Array.isArray(artist?.artistCategoryLinks) ? artist.artistCategoryLinks.length : 0;
+		const seoTags = Array.isArray(artist?.seoTags)
+			? artist.seoTags.map((tag) => String(tag).trim()).filter(Boolean)
+			: typeof artist?.seoTags === "string" && artist.seoTags.trim().length > 0
+				? artist.seoTags.split(",").map((tag) => tag.trim()).filter(Boolean)
+				: [];
 
-  // Function to handle quick reactions
-  const handleQuickReaction = (emoji) => {
-    setReactionCounts(prev => ({
-      ...prev,
-      [emoji]: prev[emoji] + 1
-    }))
-    console.log(`Quick reaction ${emoji} added to artist ${artist.artistid}`)
-  }
+		return {
+			since: formatSinceMonthYear(artist?.since),
+			categoryCount,
+			seoTags,
+		};
+	}, [artist]);
 
-  // Function to handle social icon clicks
-  const handleSocialClick = async (type) => {
-    // Optimistically update UI
-    if (type === "loves") setLoves((prev) => prev + 1)
-    if (type === "likes") setLikes((prev) => prev + 1)
-    if (type === "followers") setFollowers((prev) => prev + 1)
+	const detailRows = useMemo(() => {
+		const rows = [];
 
-    // Send update to your API route
-    try {
-      const res = await fetch(`/api/artist/${artist.artistid}/${type}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+		if (artist?.roleSummary) {
+			rows.push({ label: "Role", value: artist.roleSummary });
+		}
 
-      if (!res.ok) {
-        // If API call fails, revert the UI update (optional, but good practice)
-        if (type === "loves") setLoves((prev) => prev - 1)
-        if (type === "likes") setLikes((prev) => prev - 1)
-        if (type === "followers") setFollowers((prev) => prev - 1)
-        console.error(`Failed to update ${type} for artist ${artist.artistid}`)
-      }
-    } catch (error) {
-      console.error("Error sending social update:", error)
-      // Revert UI update on network error
-      if (type === "loves") setLoves((prev) => prev - 1)
-      if (type === "likes") setLikes((prev) => prev - 1)
-      if (type === "followers") setFollowers((prev) => prev - 1)
-    }
-  }
+		if (artist?.statement) {
+			rows.push({ label: "Statement", value: artist.statement });
+		}
 
-  return (
-    <div 
-      className="card lg:card-side bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full max-w-2xl border border-base-300 rounded-box group"
-      onMouseEnter={() => setShowQuickReactions(true)}
-      onMouseLeave={() => setShowQuickReactions(false)}
-    >
-      {/* Wrap the main content (excluding social icons) with Link */}
-      <Link href={`/artists/${artist.path}`} passHref className="flex grow cursor-pointer relative">
-        <figure className="p-4 shrink-0 relative">
-          <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-base-300">
-            <Image
-              src={imageSrc}
-              alt={artist?.profilePic?.alttext || `${artist?.title}'s profile picture`}
-              fill
-              sizes="96px"
-              onError={() => setImageSrc("/blank_image.png")}
-              style={{ objectFit: "cover" }}
-              className="rounded-full group-hover:scale-105 transition-transform duration-300"
-            />
-          </div>
-          
-          {/* Quick Reactions Overlay */}
-          {showQuickReactions && (
-            <div className="absolute top-0 right-0 flex gap-1 bg-base-100/90 backdrop-blur-sm rounded-full p-1 shadow-lg">
-              {Object.entries(reactionCounts).map(([emoji, count]) => (
-                <button
-                  key={emoji}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    handleQuickReaction(emoji)
-                  }}
-                  className="hover:scale-125 transition-transform duration-200 text-sm"
-                  title={`${count} reactions`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          )}
-        </figure>
-        <div className="card-body p-4 grow justify-center">
-          <h2 className="card-title text-lg font-semibold text-primary">{artist.title}</h2>
-          <p className="text-sm text-base-content/60">{artist.byline}</p>
-          
-          {/* Social Engagement Preview */}
-          <div className="flex items-center gap-2 mt-2">
-            <SmileIcon className="w-4 h-4 text-base-content/60" />
-            <span className="text-xs text-base-content/60">
-              {Object.values(reactionCounts).reduce((a, b) => a + b, 0)} reactions
-            </span>
-            <MessageCircleIcon className="w-4 h-4 text-base-content/60 ml-1" />
-            <span className="text-xs text-base-content/60">
-              {artist.commentCount ?? getSeededCount(artistSeed, 25, 5, "comments")} comments
-            </span>
-          </div>
-        </div>
-      </Link>
+		if (Array.isArray(artist?.artForms) && artist.artForms.length > 0) {
+			rows.push({ label: "Art Forms", value: artist.artForms.join(", ") });
+		}
 
-      {/* Enhanced Social Section */}
-      <div className="flex flex-col items-center justify-center p-4 bg-base-200 rounded-r-box gap-2">
-        <div className="flex flex-col items-center cursor-pointer hover:scale-105 transition-transform" onClick={() => handleSocialClick("loves")}>
-          <HeartIcon className="w-6 h-6 text-error" />
-          <span className="font-bold text-sm text-error">{loves}</span>
-        </div>
-        <div className="flex flex-col items-center cursor-pointer hover:scale-105 transition-transform" onClick={() => handleSocialClick("likes")}>
-          <ThumbsUpIcon className="w-6 h-6 text-info" />
-          <span className="font-bold text-sm text-info">{likes}</span>
-        </div>
-        <div className="flex flex-col items-center cursor-pointer hover:scale-105 transition-transform" onClick={() => handleSocialClick("followers")}>
-          <UsersIcon className="w-6 h-6 text-success" />
-          <span className="font-bold text-sm text-success">{followers}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
+		return rows;
+	}, [artist]);
 
-export default ArtistCard
+	const initialReactions = useMemo(
+		() => [
+			...buildReactionSeed(artist?.loves, "❤️", `love-${artistId}`),
+			...buildReactionSeed(artist?.likes, "👏", `clap-${artistId}`),
+			...buildReactionSeed(artist?.followers, "🔥", `fire-${artistId}`),
+		],
+		[artist?.followers, artist?.likes, artist?.loves, artistId],
+	);
+
+	return (
+		<article className={`${CARD_SHELL_CLASS} h-auto self-start w-full overflow-hidden`}>
+			<div className="card-body gap-4 p-4">
+				<PhotoGallery
+					images={galleryImages}
+					mode="standalone"
+					navigationMode={galleryImages.length > 1 ? "hover" : "manual"}
+					imageEffect="landscape"
+					showThumbnails={false}
+				/>
+
+				<div className="flex items-start gap-3">
+					<div className="avatar mt-0.5">
+						<div className="w-11 rounded-full border-2 border-base-300 bg-base-200">
+							<Image
+								src={logoSrc}
+								alt={artist?.profilePic?.alttext || `${artist?.title || "Artist"} logo`}
+								width={44}
+								height={44}
+								onError={() => setLogoSrc("/blank_image.png")}
+								style={{ objectFit: "cover" }}
+							/>
+						</div>
+					</div>
+					<div className="min-w-0">
+						<h3 className="text-lg font-semibold text-primary leading-tight">{artist?.title || "Untitled Artist"}</h3>
+						<p className="mt-1 text-sm text-base-content/70 leading-relaxed">{artistDescription}</p>
+					</div>
+				</div>
+
+				<div className="mt-1">
+					<SocialReactions
+						targetId={`artist-${artistId}`}
+						targetType="post"
+						initialReactions={initialReactions}
+						readOnly
+						showDetails
+						size="sm"
+					/>
+				</div>
+
+				<div className="flex flex-wrap gap-2">
+					<span className="badge badge-outline badge-sm">Since: {metadataSummary.since}</span>
+					{(isMediumPanel || isLargePanel) && (
+						<span className="badge badge-outline badge-sm">Categories: {metadataSummary.categoryCount}</span>
+					)}
+					{(isMediumPanel || isLargePanel) && metadataSummary.seoTags.length > 0 && (
+						metadataSummary.seoTags.slice(0, isLargePanel ? metadataSummary.seoTags.length : 3).map((tag) => (
+							<span key={tag} className="badge badge-primary badge-sm badge-outline">{tag}</span>
+						))
+					)}
+				</div>
+
+				{(isMediumPanel || isLargePanel) && detailRows.length > 0 && (
+					<div className="rounded-box border border-base-300 bg-base-100/70 p-3">
+						<div className="space-y-2">
+							{detailRows.slice(0, isLargePanel ? detailRows.length : 2).map((row) => (
+								<div key={row.label} className="grid grid-cols-1 gap-1 sm:grid-cols-[7rem_1fr]">
+									<span className="text-xs font-semibold uppercase tracking-wide text-primary/90">{row.label}</span>
+									<p className="text-sm text-base-content/75 line-clamp-3">{row.value}</p>
+								</div>
+							))}
+						</div>
+					</div>
+				)}
+
+				<div className="card-actions mt-2 justify-start gap-2">
+					<Link href={`/artists/${artist?.path || ""}`} className="btn btn-primary btn-sm">
+						Artist Profile
+					</Link>
+					<a
+						href={artist?.linkToArtistPage || `/artists/${artist?.path || ""}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="btn btn-outline btn-sm"
+					>
+						External Page
+					</a>
+				</div>
+			</div>
+		</article>
+	);
+};
+
+export default ArtistCard;
