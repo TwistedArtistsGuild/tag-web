@@ -46,6 +46,17 @@ const getArtistGalleryImages = (artist) => {
 	return [fallback];
 };
 
+// Build the header gallery with a preferred profile cover image and fallback sources.
+const getArtistHeaderGalleryImages = (artist) => {
+	const headerUrl = artist?.coverPic?.url || artist?.headerImage?.url || artist?.bannerImage?.url;
+	if (headerUrl) {
+		return [headerUrl];
+	}
+	// Fallback to first image if available
+	const images = getArtistGalleryImages(artist);
+	return images.length > 0 ? [images[0]] : ["/blank_image.png"];
+};
+
 const getArtistContentGalleryImages = (artist) => {
 	const metadataCollections = [
 		artist?.pictureMetadata,
@@ -100,6 +111,7 @@ const ArtistCard = ({
 }) => {
 	const [logoSrc, setLogoSrc] = useState(getArtistLogoSrc(artist));
 	const artistDescription = getArtistDescription(artist);
+	const headerGalleryImages = useMemo(() => getArtistHeaderGalleryImages(artist), [artist]);
 	const galleryImages = useMemo(() => getArtistGalleryImages(artist), [artist]);
 	const contentGalleryImages = useMemo(() => getArtistContentGalleryImages(artist), [artist]);
 	const contentWarnings = useMemo(() => extractContentWarnings(artist), [artist]);
@@ -167,9 +179,9 @@ const ArtistCard = ({
 			<div className={`card-body ${compact ? "gap-2 p-3" : "gap-4 p-4"}`}>
 				{!compact && showHeaderGallery && (
 					<PhotoGallery
-						images={galleryImages}
+						images={headerGalleryImages}
 						mode="standalone"
-						navigationMode={galleryImages.length > 1 ? "hover" : "manual"}
+						navigationMode={headerGalleryImages.length > 1 ? "hover" : "manual"}
 						imageEffect="landscape"
 						showThumbnails={false}
 						contentWarnings={contentWarnings}
@@ -241,21 +253,6 @@ const ArtistCard = ({
 								</div>
 							))}
 						</div>
-					</div>
-				)}
-
-				{!compact && showContentGallery && (isMediumPanel || isLargePanel) && (
-					<div className="rounded-box border border-base-300 bg-base-100/70 p-3">
-						<p className="mb-2 text-xs font-semibold uppercase tracking-wide text-primary/90">Image Content</p>
-						<PhotoGallery
-							images={contentGalleryImages}
-							mode="standalone"
-							navigationMode={contentGalleryImages.length > 1 ? "hover" : "manual"}
-							imageEffect="landscape"
-							showThumbnails={false}
-							contentWarnings={contentWarnings}
-							contentWarningSize="sm"
-						/>
 					</div>
 				)}
 

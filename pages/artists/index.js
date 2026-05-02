@@ -255,6 +255,7 @@ Artists.getInitialProps = async () => {
           ...(Array.isArray(artist?.images) ? artist.images : []),
           artist?.profilePic,
           artist?.coverPic,
+          ...(Array.isArray(artist?.listings) ? artist.listings.map(l => l?.profilePic).filter(Boolean) : []),
           ...(listingImagesByArtistPath.get(artistPathKey) || []),
         ])
 
