@@ -17,6 +17,7 @@ export default function TTPortfolio({
 	onSaveDraft,
 	onPublish,
 	showActionButtons = true,
+	uploadContext
 }) {
 	return (
 		<div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
@@ -37,6 +38,7 @@ export default function TTPortfolio({
 				emptySubmitMessage="Add some content before saving."
 				onSaveDraft={onSaveDraft}
 				onPublish={onPublish}
+				uploadContext={uploadContext}
 			/>
 		</div>
 	);

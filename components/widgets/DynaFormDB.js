@@ -54,7 +54,7 @@ export default function DynaForm(props) {
         redirectURL: rawMetadata.redirectURL || rawMetadata[0].redirectURL,
       };
     }
-
+      
     return rawMetadata;
   }, [props.metadataProp]);
 
@@ -427,7 +427,14 @@ export default function DynaForm(props) {
           </div>
         </label>
         
-        {(() => {
+        {(() => {           
+        const uploadContext = {
+            userID: session?.user?.id || "anonymous",
+            category: metadata.imageCategory, // Dynamic based on form type: 'blogs', 'events', 'profile'
+            entityID: metadata.entityId || "new",
+            postfix: "" // Default empty, can be set to "-thumbnail" if needed
+            }; 
+                
           switch (field.type) {
             case "textarea":
               return (
@@ -474,17 +481,18 @@ export default function DynaForm(props) {
                         onSubmit={() => { }}
                         onCancel={() => { }}
                         minHeight={field.height || field.Height}
+                        uploadContext={uploadContext}
                     />
                   );
 
               case "tiptap_single":
                   return (
-                      <TTSingleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} />
+                      <TTSingleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} uploadContext={uploadContext} />
                   );
 
               case "tiptap_title":
                   return (
-                      <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} />
+                      <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} uploadContext={uploadContext} />
                   );
 
               case "tiptap_portfolio":
@@ -495,6 +503,7 @@ export default function DynaForm(props) {
                           showActionButtons={false}
                           onSaveDraft={() => { }}
                           onPublish={() => { }}
+                          uploadContext={uploadContext}
                       />
                   );
               
@@ -583,7 +592,7 @@ export default function DynaForm(props) {
         <div className="mt-4 border-t pt-4 text-xs text-gray-500">
           <details>
             <summary className="cursor-pointer">User Data Being Submitted</summary>
-            <pre className="mt-2 bg-base-300 text-base-content p-2 rounded overflow-x-auto">
+            <pre suppressHydrationWarning className="mt-2 bg-base-300 text-base-content p-2 rounded overflow-x-auto">
               {JSON.stringify(session?.user || { anonymous: true, browser: browserInfo || "Loading browser info..." }, null, 2)}
             </pre>
           </details>

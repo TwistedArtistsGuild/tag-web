@@ -1,7 +1,35 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { EditorContent, useEditor } from "@tiptap/react";
+import { Trash2 } from "lucide-react";
+
+// Load BubbleMenu only on the client to avoid undefined during SSR
+const BubbleMenu = dynamic(
+  () => import("@tiptap/react").then((mod) => mod.BubbleMenu),
+  { ssr: false }
+);
+
 import { getFontOptions, getTiptapExtensions } from "@/components/widgets/tiptap-presets";
 import { toVimeoEmbedUrl } from "@/components/widgets/tiptap-vimeo";
+import { uploadImageToAzure, deleteImageFromAzure } from "@/libs/media-controller";
+
+// Add immediately after the imports (top of file)
+try {
+    // Diagnostic: prints imported values so you can see which is undefined in the browser console
+    // eslint-disable-next-line no-console
+    console.log('TiptapEditor imports:', {
+        BubbleMenu,
+        EditorContent,
+        useEditor,
+        getFontOptions,
+        getTiptapExtensions,
+        toVimeoEmbedUrl,
+        uploadImageToAzure,
+        deleteImageFromAzure,
+    });
+} catch (e) {
+    // Some bundlers may throw before runtime; ignore here.
+}
 
 function normalizeUrl(rawUrl) {
   if (!rawUrl) {
@@ -80,7 +108,9 @@ export default function TiptapEditor({
   allowedFonts = [],
   enableSingleLineFontSelection = false,
   headingLevels,
+  uploadContext
 }) {
+  const [isUploading, setIsUploading] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
   const [actionValue, setActionValue] = useState("");
   const [actionLabel, setActionLabel] = useState("");
@@ -101,6 +131,65 @@ export default function TiptapEditor({
         class: "prose max-w-none p-3 focus:outline-none",
         style: `min-height: ${minHeight}px;`,
       },
+        handleDrop: (view, event, slice, moved) => {
+            if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+                const file = event.dataTransfer.files[0];
+
+                if (file.type.startsWith("image/")) {
+                    setIsUploading(true);
+                    uploadImageToAzure(file, uploadContext).then((response) => {
+                        const imageUrl = typeof response === 'string' ? response : response.url;
+                        if (imageUrl) {
+                            console.log("Attempting to insert node with URL:", imageUrl);
+                            const { schema } = view.state;
+                            const node = schema.nodes.image.create({ src: imageUrl });
+                            const transaction = view.state.tr.insert(view.state.selection.from, node);
+
+                            view.dispatch(transaction);
+                            // Force the editor to focus back so the image is "committed"
+                            view.focus();
+                        }
+                    })
+                    .catch(err => console.error("Drop upload failed", err))
+                    .finally(() => setIsUploading(false));
+                    return true; // Handled
+                }
+            }
+            return false;
+        },
+        // Manual Paste Handler
+        handlePaste: (view, event) => {
+            const items = Array.from(event.clipboardData?.items || []);
+            const imageItem = items.find(item => item.type.startsWith("image/"));
+
+            if (imageItem) {
+                setIsUploading(true);
+                const file = imageItem.getAsFile();
+
+                // Use the same context and response handling as handleDrop
+                uploadImageToAzure(file, uploadContext).then((response) => {
+                    // Fix: Extract URL regardless of whether response is a string or {url: "..."}
+                    const imageUrl = typeof response === 'string' ? response : response.url;
+
+                    if (imageUrl) {
+                        const { schema } = view.state;
+                        const node = schema.nodes.image.create({ src: imageUrl });
+
+                        // insert at cursor position
+                        const transaction = view.state.tr.replaceSelectionWith(node);
+                        view.dispatch(transaction);
+
+                        // Force focus to keep the editor active
+                        view.focus();
+                    }
+                })
+                .catch(err => console.error("Paste upload failed", err))
+                .finally(() => setIsUploading(false));
+
+                return true; // Handled
+            }
+            return false;
+        },
       handleKeyDown: (view, event) => {
         if (singleLine && event.key === "Enter" && !event.shiftKey) {
           event.preventDefault();
@@ -119,6 +208,30 @@ export default function TiptapEditor({
       onChange(currentEditor.getHTML());
     },
   });
+
+    const deleteSelectedImage = useCallback(async () => {
+        if (!editor) return;
+        const { selection } = editor.state;
+
+        if (selection.node && selection.node.type.name === 'image') {
+            const imageUrl = selection.node.attrs.src;
+
+            setIsUploading(true);
+            try {
+                console.log("Step 1: Calling Azure API...");
+                // 2. Wait for the API to actually respond
+                await deleteImageFromAzure(imageUrl);
+
+                console.log("Step 2: API Success, removing from UI");
+                // 3. Only remove from editor if API succeeds
+                editor.commands.deleteSelection();
+            } catch (error) {
+                console.error("Failed to delete image:", error);
+            } finally {
+                setIsUploading(false);
+            }
+        }
+    }, [editor]);
 
   useEffect(() => {
     if (!editor) {
@@ -554,7 +667,7 @@ export default function TiptapEditor({
 
   return (
     <div className={`rounded border border-base-300 bg-base-100 ${className}`}>
-      {!readOnly && (
+      {!readOnly && (        
         <div className="flex flex-wrap items-center gap-1 border-b border-base-300 bg-base-200 p-2">
           {canUseFonts && (
             <select
@@ -761,7 +874,30 @@ export default function TiptapEditor({
           </button>
           {actionError && <p className="w-full text-xs text-error">{actionError}</p>}
         </div>
-      )}
+          )}
+        {/* LOADING OVERLAY */}
+        {isUploading && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-lg">
+                <div className="flex flex-col items-center gap-3">
+                    {/* Tailwind Spinner */}
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+                    <span className="text-sm font-medium text-slate-600">Uploading to Azure...</span>
+                </div>
+            </div>
+          )}
+          {editor && (
+              <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} shouldShow={({ editor }) => editor.isActive('image')}>
+                  <div className="flex bg-white shadow-xl border rounded overflow-hidden">
+                      <button
+                          onClick={deleteSelectedImage}
+                          className="px-3 py-1 bg-red-500 text-white text-xs hover:bg-red-600 transition-colors flex items-center gap-1"
+                      >
+                          <Trash2 className="h-4 w-4" />
+                          Delete Image
+                      </button>
+                  </div>
+              </BubbleMenu>
+          )}
       <EditorContent editor={editor} />
       {showSubmitCancel && (
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-base-300 bg-base-100 p-2">
