@@ -23,7 +23,12 @@ Twisted Artists Guild is a digital cooperative for creators. The `tag-web` front
    ```bash
    npm install
    ```
-3. **Start development server**
+3. **Create local environment file**
+  ```bash
+  cp .env.example .env.local
+  ```
+  Fill in your local values in `.env.local`. Do not commit secrets.
+4. **Start development server**
    ```bash
    npm run dev
    ```
@@ -37,7 +42,13 @@ Twisted Artists Guild is a digital cooperative for creators. The `tag-web` front
 
 ### API Reference
 - Backend: [tag-api](https://github.com/TwistedArtistsGuild/tag-api)
-- Env file: see /docs/env.md
+- Env template: `.env.example`
+- Env details: see `/docs/env.md`
+
+### Environment Variable Policy
+- Commit placeholders only in `.env.example`.
+- Keep real values in `.env.local` (gitignored) or your deployment secret store.
+- If a real key was ever committed, rotate it before release.
 
 ---
 

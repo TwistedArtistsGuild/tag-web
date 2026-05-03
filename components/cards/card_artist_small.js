@@ -13,9 +13,14 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
+import ContentTags, { hasExplicitWarning, extractContentWarnings } from "@/components/social/ContentTags"
 
 const getSafeArtistImageSrc = (artist) => {
-  const candidate = artist?.profilePic?.url
+  const candidate =
+    artist?.profilePic?.url ||
+    artist?.profilePic?.URL ||
+    artist?.profilePicUrl ||
+    artist?.profilepicurl
   return candidate || "/blank_image.png"
 }
 
@@ -27,6 +32,8 @@ const getSafeArtistImageSrc = (artist) => {
  */
 const ArtistCardSmall = ({ artist }) => {
   const [imageSrc, setImageSrc] = useState(getSafeArtistImageSrc(artist))
+  const contentWarnings = extractContentWarnings(artist)
+  const hideAvatar = hasExplicitWarning(contentWarnings)
 
   return (
     <div
@@ -35,16 +42,33 @@ const ArtistCardSmall = ({ artist }) => {
       {/* Wrap the main content (excluding social icons) with Link */}
       <Link href={`/artists/${artist.path}`} passHref className="flex grow cursor-pointer relative">
         <figure className="p-1 shrink-0 relative">
-          <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-base-300">
-            <Image
-              src={imageSrc}
-              alt={artist?.profilePic?.alttext || `${artist?.title}'s profile picture`}
-              fill
-              sizes="64px"
-              onError={() => setImageSrc("/blank_image.png")}
-              style={{ objectFit: "cover" }}
-              className="rounded-full group-hover:scale-105 transition-transform duration-300"
-            />
+          {contentWarnings.length > 0 && (
+            <div className="absolute left-1 right-1 top-1 z-10">
+              <ContentTags
+                warnings={contentWarnings.slice(0, 1)}
+                size="sm"
+                showTitle={false}
+                className="rounded-none border-0 bg-base-100/92 px-1 py-0.5"
+              />
+            </div>
+          )}
+
+          <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-base-300 bg-base-200">
+            {hideAvatar ? (
+              <div className="flex h-full w-full items-center justify-center text-[10px] font-semibold uppercase tracking-wide text-error">
+                18+
+              </div>
+            ) : (
+              <Image
+                src={imageSrc}
+                alt={artist?.profilePic?.alttext || `${artist?.title}'s profile picture`}
+                fill
+                sizes="64px"
+                onError={() => setImageSrc("/blank_image.png")}
+                style={{ objectFit: "cover" }}
+                className="rounded-full group-hover:scale-105 transition-transform duration-300"
+              />
+            )}
           </div>
         </figure>
         <div className="card-body p-4 grow justify-center">

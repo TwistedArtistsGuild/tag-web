@@ -12,23 +12,47 @@
 
 import Link from "next/link"
 import Image from "next/image"
+import ContentTags, { hasExplicitWarning, extractContentWarnings } from "@/components/social/ContentTags"
 
 const ListingCardSmall = ({ listing }) => {
+  const contentWarnings = extractContentWarnings(listing)
+  const hideImage = hasExplicitWarning(contentWarnings)
+
   return (
     <div 
       className="card bg-base-100 text-base-content shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full rounded-box group border border-base-300"
     >
       <figure className="relative h-32 w-full overflow-hidden">
-        <Link href={`/artists/${listing?.artist?.path}/listings/${listing?.path}`} className="relative block h-full w-full">
-          <Image
-            src={listing?.profilePic?.url || "/blank_image.png"}
-            alt={listing?.profilePic?.alttext || `${listing?.title || "Unknown"}'s picture`}
-            fill
-            sizes="(max-width: 768px) 100vw, 320px"
-            style={{ objectFit: "cover" }}
-            className="rounded-t-box group-hover:scale-105 transition-transform duration-300"
-          />
-        </Link>
+        {contentWarnings.length > 0 && (
+          <div className="absolute left-0 right-0 top-0 z-10">
+            <ContentTags
+              warnings={contentWarnings.slice(0, 2)}
+              size="sm"
+              showTitle={false}
+              className="rounded-none border-0 bg-base-100/92 px-2 py-1"
+            />
+          </div>
+        )}
+
+        {hideImage ? (
+          <div className="flex h-full w-full items-center justify-center bg-base-200 text-center">
+            <div className="space-y-1 px-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-error">18+ Explicit</p>
+              <p className="text-[10px] text-base-content/70">Preview hidden</p>
+            </div>
+          </div>
+        ) : (
+          <Link href={`/artists/${listing?.artist?.path}/listings/${listing?.path}`} className="relative block h-full w-full">
+            <Image
+              src={listing?.profilePic?.url || "/blank_image.png"}
+              alt={listing?.profilePic?.alttext || `${listing?.title || "Unknown"}'s picture`}
+              fill
+              sizes="(max-width: 768px) 100vw, 320px"
+              style={{ objectFit: "cover" }}
+              className="rounded-t-box group-hover:scale-105 transition-transform duration-300"
+            />
+          </Link>
+        )}
       </figure>
       <div className="card-body p-3">
         <Link

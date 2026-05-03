@@ -12,6 +12,8 @@ import { Html, Head, Main, NextScript } from "next/document";
 import config from "@/config";
 
 export default function Document() {
+  const ghlTrackingId = process.env.NEXT_PUBLIC_GHL_TRACKING_ID;
+
   return (
     <Html lang="en" className="font-sans" data-theme={config.colors.theme} data-scroll-behavior="smooth">
       <Head>
@@ -44,6 +46,12 @@ export default function Document() {
       <body className="site-body">
         <Main />
         <NextScript />
+        {ghlTrackingId ? (
+          <script
+            src="https://link.msgsndr.com/js/external-tracking.js"
+            data-tracking-id={ghlTrackingId}
+          ></script>
+        ) : null}
       </body>
     </Html>
   );

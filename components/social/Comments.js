@@ -7,8 +7,13 @@
 
  This software comes with NO WARRANTY; see the license for details.
 
- Open source · low-profit · human-first*/
+ Open source · low-profit · human-first
 
+ 🎯 ORCHESTRATION: Full comment display & management component.
+    Loads comments from database, manages state, uses TT_Comments editor card.
+    Uses: @/components/tiptap/TT_Comments for editor UI
+    Exports: SocialComments (default), TTCommentsEditorCard (named)
+*/
 
 import { useState, useCallback, memo } from "react";
 import DOMPurify from "dompurify";
@@ -18,7 +23,9 @@ import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5
 import Image from "next/image";
 import { useRealtimeComments, useSocialRealtime } from './SocialRealtimeContext';
 import SocialReactions from './Reactions';
-import TiptapEditor from "@/components/widgets/tiptap-editor";
+import TiptapEditor from "@/components/tiptap/tiptap-editor";
+// Import the canonical editor card from tiptap folder
+export { TTCommentsEditorCard } from "@/components/tiptap/TT_Comments";
 
 function buildCommentsState(initialComments = []) {
     return initialComments.map(comment => ({
@@ -145,7 +152,7 @@ const SocialComments = ({
             replies: []
         };
         
-        setComments(prevComments => [...prevComments, newComment]);
+        setComments(prevComments => [newComment, ...prevComments]);
     }, [currentUser, readOnly]);
 
     /**
@@ -551,16 +558,6 @@ const SocialComments = ({
 
                             {/* Right side: Action buttons */}
                             <div className="flex items-center gap-2">
-                                <button 
-                                    className="btn btn-xs btn-ghost gap-1 text-base-content/70 hover:text-base-content"
-                                    onClick={() => handleLike(comment.id, isReply, parentId)}
-                                    disabled={readOnly || !currentUser}
-                                    aria-label={`Like this ${isReply ? 'reply' : 'comment'}. Currently has ${comment.likes} likes.`}
-                                >
-                                    <IoThumbsUp className="h-3 w-3" />
-                                    <span className="text-xs">{comment.likes || 0}</span>
-                                </button>
-                                
                                 {!isReply && !readOnly && currentUser && (
                                     <button 
                                         className="btn btn-xs btn-ghost gap-1 text-base-content/70 hover:text-base-content"
@@ -664,31 +661,5 @@ const SocialComments = ({
         </div>
     );
 };
-
-export function TTCommentsEditorCard({ value, onChange, onSubmit, onCancel }) {
-    return (
-        <div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
-            <h2 className="text-lg font-semibold">Comment</h2>
-            <p className="text-sm text-base-content/70">
-                Minimal preset with Cancel / Post Comment actions.
-            </p>
-            <TiptapEditor
-                value={value}
-                onChange={onChange}
-                placeholder="Write a comment..."
-                preset="minimal"
-                fontScope="comment"
-                minHeight={100}
-                actionPreset="submit-cancel"
-                submitLabel="Post Comment"
-                cancelLabel="Cancel"
-                emptySubmitMessage="Write something before posting."
-                clearOnSubmit
-                onSubmit={onSubmit}
-                onCancel={onCancel}
-            />
-        </div>
-    );
-}
 
 export default SocialComments;

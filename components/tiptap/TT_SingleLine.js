@@ -9,7 +9,7 @@
 
  Open source · low-profit · human-first*/
 
-import TiptapEditor from "@/components/widgets/tiptap-editor";
+import TiptapEditor from "@/components/tiptap/tiptap-editor";
 
 export default function TTSingleLine({ value, onChange }) {
 	return (

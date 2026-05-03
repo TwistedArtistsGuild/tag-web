@@ -9,27 +9,9 @@ const BubbleMenu = dynamic(
   { ssr: false }
 );
 
-import { getFontOptions, getTiptapExtensions } from "@/components/widgets/tiptap-presets";
-import { toVimeoEmbedUrl } from "@/components/widgets/tiptap-vimeo";
+import { getFontOptions, getTiptapExtensions } from "@/components/tiptap/tiptap-presets";
+import { toVimeoEmbedUrl } from "@/components/tiptap/tiptap-vimeo";
 import { uploadImageToAzure, deleteImageFromAzure } from "@/libs/media-controller";
-
-// Add immediately after the imports (top of file)
-try {
-    // Diagnostic: prints imported values so you can see which is undefined in the browser console
-    // eslint-disable-next-line no-console
-    console.log('TiptapEditor imports:', {
-        BubbleMenu,
-        EditorContent,
-        useEditor,
-        getFontOptions,
-        getTiptapExtensions,
-        toVimeoEmbedUrl,
-        uploadImageToAzure,
-        deleteImageFromAzure,
-    });
-} catch (e) {
-    // Some bundlers may throw before runtime; ignore here.
-}
 
 function normalizeUrl(rawUrl) {
   if (!rawUrl) {
