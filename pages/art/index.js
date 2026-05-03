@@ -16,11 +16,36 @@ import ListingCard from "@/components/cards/card_listing"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
+import { getPanelClass } from "@/components/cards/sizes/panel-layout"
 
 /**
  * Function to generate a random number for social counters
  */
 const getRandomCount = () => Math.floor(Math.random() * 1000) + 1 // Random number between 1 and 1000
+
+// Planned 3x3 batch rhythm without quarter-based spans.
+const EXAMPLE_PANEL_BATCHES = [
+  ["third", "twoThirds"],
+  ["half", "half"],
+  ["twoThirds", "third"],
+  ["third", "twoThirds"],
+  ["half", "half"],
+  ["twoThirds", "third"],
+  ["third", "twoThirds"],
+  ["half", "half"],
+  ["twoThirds", "third"],
+]
+
+const EXAMPLE_PANEL_MIX = EXAMPLE_PANEL_BATCHES.flat()
+
+const EXAMPLE_ARTIST_CARD_MODES = [
+  "fullWidth",
+  "sidePortrait",
+  "stacked",
+  "sidePortrait",
+  "fullWidth",
+  "sidePortrait",
+]
 
 /**
  * Generates fake listings to demonstrate various art categories
@@ -505,28 +530,37 @@ const Listings = (props) => {
         {/* Dynamic listings section */}
         <div className="mb-16">
           <h3 className="text-2xl font-bold mb-6">Featured Art</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
             {props.listings.map((listing, index) => (
-              <div key={listing.path || listing.listingid || `${listing.title || "listing"}-${index}`} className="flex justify-center">
-                <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-3xl">
-                  <ListingCard listing={listing} />
-                </div>
+              <div
+                key={listing.path || listing.listingid || `${listing.title || "listing"}-${index}`}
+                className={`${getPanelClass(listing.panelSize)} self-start`}
+              >
+                <ListingCard listing={listing} panelSize={listing.panelSize} />
               </div>
             ))}
           </div>
         </div>
         {/* Fake listings section */}
-        <div className="mt-24 mb-20">
-          <h3 className="text-3xl font-bold mb-8 text-center">Coming Soon: Bloomscrolling</h3>
-          <p className="mb-12 text-xl text-center max-w-4xl mx-auto">Imagine endlessly viewing listings from our artistic community, with no advertisements!.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {props.fakeListings.map((listing, index) => (
-              <div key={listing.path || listing.listingid || `${listing.title || "fake-listing"}-${index}`} className="flex justify-center">
-                <div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full max-w-2xl">
-                  <ListingCard listing={listing} />
+        <div className="mt-24 mb-20 md:flex md:items-stretch md:gap-6">
+          <div className="hidden md:block w-px bg-base-300/70" aria-hidden="true" />
+          <div className="flex-1">
+            <h3 className="text-3xl font-bold mb-8 text-center">Coming Soon: Bloomscrolling (example artist links may be broken)</h3>
+            <p className="mb-12 text-xl text-center max-w-4xl mx-auto">Imagine endlessly viewing listings from our artistic community, with no advertisements!.</p>
+            <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
+              {props.fakeListings.map((listing, index) => (
+                <div
+                  key={listing.path || listing.listingid || `${listing.title || "fake-listing"}-${index}`}
+                  className={`${getPanelClass(listing.panelSize)} self-start`}
+                >
+                  <ListingCard
+                    listing={listing}
+                    panelSize={listing.panelSize}
+                    artistCardMode={listing.artistCardMode}
+                  />
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </main>
@@ -554,8 +588,19 @@ Listings.getInitialProps = async (context) => {
     console.error("An error has occurred with your fetch request: ", error)
   }
 
-  // Generate fake listings for demonstration
-  const fakeListings = generateFakeListings()
+  const enrichListing = (listing) => ({
+    ...listing,
+    panelSize: "half",
+  })
+
+  // Generate fake listings with an intentional panel-size composition for examples.
+  const fakeListings = generateFakeListings().map((listing, index) => ({
+    ...listing,
+    panelSize: EXAMPLE_PANEL_MIX[index % EXAMPLE_PANEL_MIX.length],
+    artistCardMode: EXAMPLE_ARTIST_CARD_MODES[index % EXAMPLE_ARTIST_CARD_MODES.length],
+  }))
+
+  const listings = (Array.isArray(data) ? data : []).map(enrichListing)
 
   // Generate some fake artists for sidebar
   const featuredArtists = [
@@ -586,7 +631,7 @@ Listings.getInitialProps = async (context) => {
   ]
 
   return {
-    listings: data,
+    listings,
     fakeListings,
     status: status,
     sidebarProps: {

@@ -9,7 +9,7 @@
 
  Open source · low-profit · human-first*/
 
-import { useState, useEffect, useCallback, memo, useRef } from 'react';
+import { useState, useCallback, memo, useRef } from 'react';
 import { useRealtimeReactions, useSocialRealtime } from './SocialRealtimeContext';
 
 function buildReactionMap(initialReactions = [], currentUser) {
@@ -70,24 +70,18 @@ const SocialReactions = ({
 }) => {
     const [reactions, setReactions] = useState(() => buildReactionMap(initialReactions, currentUser));
     const [isLoading, setIsLoading] = useState(false);
-    const [showReactionPicker, setShowReactionPicker] = useState(false);
-    const [animatingReactions, setAnimatingReactions] = useState(new Set());
+    const [expanded, setExpanded] = useState(false);
+    const collapseTimer = useRef(null);
     const { emit, isConnected } = useSocialRealtime();
-    const pickerRef = useRef(null);
 
-    // Close picker when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (pickerRef.current && !pickerRef.current.contains(event.target)) {
-                setShowReactionPicker(false);
-            }
-        };
+    const handleMouseEnter = () => {
+        clearTimeout(collapseTimer.current);
+        if (!readOnly || reactions.size > 0) setExpanded(true);
+    };
 
-        if (showReactionPicker) {
-            document.addEventListener('mousedown', handleClickOutside);
-            return () => document.removeEventListener('mousedown', handleClickOutside);
-        }
-    }, [showReactionPicker]);
+    const handleMouseLeave = () => {
+        collapseTimer.current = setTimeout(() => setExpanded(false), 300);
+    };
 
     // Available reaction options
     const availableReactions = [
@@ -102,9 +96,6 @@ const SocialReactions = ({
         { emoji: '🤩', name: 'star_struck', label: 'Star Struck' },
         { emoji: '🙌', name: 'praise', label: 'Praise' }
     ];
-
-    // Quick reactions (first 4) and remaining reactions
-    const quickReactions = availableReactions.slice(0, 4);
 
     // Handle real-time reaction updates
     const handleRealtimeUpdate = useCallback((update) => {
@@ -140,14 +131,6 @@ const SocialReactions = ({
                     }
                     
                     // Trigger animation
-                    setAnimatingReactions(prev => new Set([...prev, reaction]));
-                    setTimeout(() => {
-                        setAnimatingReactions(prev => {
-                            const newSet = new Set(prev);
-                            newSet.delete(reaction);
-                            return newSet;
-                        });
-                    }, 600);
                 }
             } else if (update.type === 'reaction_removed') {
                 const userIndex = current.users.findIndex(user => user.id === userId);
@@ -202,16 +185,6 @@ const SocialReactions = ({
                         timestamp: new Date().toISOString()
                     });
                     current.hasReacted = true;
-                    
-                    // Trigger animation
-                    setAnimatingReactions(prev => new Set([...prev, emoji]));
-                    setTimeout(() => {
-                        setAnimatingReactions(prev => {
-                            const newSet = new Set(prev);
-                            newSet.delete(emoji);
-                            return newSet;
-                        });
-                    }, 600);
                 }
                 
                 return newReactions;
@@ -259,7 +232,6 @@ const SocialReactions = ({
             });
         } finally {
             setIsLoading(false);
-            setShowReactionPicker(false);
         }
     }, [currentUser, readOnly, isLoading, targetId, targetType, onReactionAdd, emit, isConnected]);
 
@@ -383,124 +355,92 @@ const SocialReactions = ({
 
     const sizeClasses = getSizeClasses();
     const reactionArray = Array.from(reactions.values());
+    const totalCount = reactionArray.reduce((sum, r) => sum + r.count, 0);
+    const hasAnyReaction = reactionArray.some(r => r.hasReacted);
 
-    if (reactionArray.length === 0 && readOnly) {
+    if (readOnly && totalCount === 0) {
         return null;
     }
 
     return (
-        <div className={`flex items-center flex-wrap ${sizeClasses.container}`}>
-            {/* Existing Reactions */}
-            {reactionArray.map((reaction) => (
+        <div
+            className="flex items-center gap-1"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
+            {/* Collapsed: show active emojis + total count */}
+            {!expanded && (
                 <button
-                    key={reaction.emoji}
-                    onClick={() => !readOnly && toggleReaction(reaction.emoji)}
-                    disabled={readOnly || isLoading}
                     className={`
-                        inline-flex items-center justify-center gap-1.5 rounded-full border-2 transition-all duration-200
-                        ${sizeClasses.reaction}
-                        ${reaction.hasReacted 
-                            ? 'bg-primary/10 border-primary text-primary' 
-                            : 'bg-base-100 border-base-300 text-base-content hover:border-primary/50'
+                        inline-flex items-center gap-1 rounded-full border-2 px-3 py-1.5 text-sm
+                        transition-colors duration-150 cursor-default select-none
+                        ${hasAnyReaction
+                            ? 'bg-primary/10 border-primary text-primary'
+                            : 'bg-base-100 border-base-300 text-base-content/60'
                         }
-                        ${!readOnly ? 'hover:scale-105 active:scale-95' : ''}
-                        ${animatingReactions.has(reaction.emoji) ? 'animate-bounce' : ''}
-                        ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
                     `}
-                    title={showDetails ? reaction.users.map(u => u.username).join(', ') : undefined}
+                    tabIndex={-1}
+                    aria-label={`${totalCount} reaction${totalCount !== 1 ? 's' : ''}`}
                 >
-                    <span className={`leading-none ${animatingReactions.has(reaction.emoji) ? 'animate-pulse' : ''}`}>
-                        {reaction.emoji}
+                    <span className="flex items-center gap-0.5 leading-none">
+                        {reactionArray.length > 0
+                            ? reactionArray.map(r => (
+                                <span key={r.emoji} className="text-base">{r.emoji}</span>
+                            ))
+                            : availableReactions.slice(0, 3).map(r => (
+                                <span key={r.name} className="text-base opacity-40">{r.emoji}</span>
+                            ))
+                        }
                     </span>
-                    {showDetails && (
-                        <span className="font-medium leading-none">
-                            {reaction.count}
-                        </span>
-                    )}
+                    <span className="font-medium leading-none ml-1">{totalCount}</span>
                 </button>
-            ))}
+            )}
 
-            {/* Quick Reactions (if enabled and user hasn't used them) */}
-            {showQuickReactions && !readOnly && currentUser && (
+            {/* Expanded: all reaction buttons inline + close */}
+            {expanded && (
                 <>
-                    {quickReactions.map((reactionOption) => {
-                        const existing = reactions.get(reactionOption.emoji);
-                        
-                        // Only show quick reaction if it's not already in the reactions list
-                        if (existing && existing.count > 0) return null;
-                        
+                    {availableReactions.map((reactionOption) => {
+                        const current = reactions.get(reactionOption.emoji);
+                        const hasReacted = current?.hasReacted || false;
+
                         return (
-                            <button
-                                key={`quick-${reactionOption.name}`}
-                                onClick={() => addReaction(reactionOption.emoji)}
-                                disabled={isLoading}
-                                className={`
-                                    inline-flex items-center justify-center rounded-full border border-dashed 
-                                    border-base-300 bg-base-100/50 text-base-content/50 transition-all duration-200
-                                    hover:border-primary/50 hover:text-primary hover:bg-primary/5 hover:scale-110 active:scale-95
-                                    ${sizeClasses.quickReaction}
-                                    ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-                                `}
-                                title={`Add ${reactionOption.label} reaction`}
-                            >
-                                <span className="leading-none">
-                                    {reactionOption.emoji}
+                            <div key={reactionOption.name} className="relative group/reaction">
+                                {/* Label tooltip above the button */}
+                                <span className="
+                                    pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5
+                                    whitespace-nowrap rounded bg-neutral text-neutral-content text-xs px-2 py-0.5
+                                    opacity-0 group-hover/reaction:opacity-100 transition-opacity duration-150 z-50
+                                ">
+                                    {reactionOption.label}
                                 </span>
-                            </button>
+                                <button
+                                    onClick={() => !readOnly && toggleReaction(reactionOption.emoji)}
+                                    disabled={readOnly || isLoading}
+                                    className={`
+                                        inline-flex items-center justify-center rounded-full border-2
+                                        ${sizeClasses.reaction} transition-colors duration-150
+                                        ${hasReacted
+                                            ? 'bg-primary/10 border-primary text-primary'
+                                            : 'bg-base-100 border-base-300 text-base-content hover:border-primary/50 hover:bg-base-200'
+                                        }
+                                        ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                                    `}
+                                >
+                                    <span className="leading-none">{reactionOption.emoji}</span>
+                                </button>
+                            </div>
                         );
                     })}
-                </>
-            )}
 
-            {/* Add Reaction Button */}
-            {!readOnly && currentUser && (
-                <div className="relative" ref={pickerRef}>
+                    {/* Collapse button */}
                     <button
-                        onClick={() => setShowReactionPicker(!showReactionPicker)}
-                        disabled={isLoading}
-                        className={`
-                            inline-flex items-center justify-center gap-1.5 rounded-full border-2 border-dashed 
-                            border-base-300 bg-base-100 text-base-content/60 transition-all duration-200
-                            hover:border-primary/50 hover:text-primary hover:scale-105 active:scale-95
-                            ${sizeClasses.addButton}
-                            ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-                        `}
-                        title="More reactions"
+                        onClick={() => setExpanded(false)}
+                        className="inline-flex items-center justify-center rounded-full border-2 border-base-300 bg-base-100 text-base-content/50 hover:bg-base-200 hover:text-base-content px-2 py-1.5 text-sm transition-colors duration-150"
+                        title="Collapse"
                     >
-                        <span className="text-lg leading-none">+</span>
-                        {showDetails && <span className="text-sm leading-none">More</span>}
+                        <span className="font-medium leading-none">‹</span>
                     </button>
-
-                    {/* Reaction Picker Dropdown */}
-                    {showReactionPicker && (
-                        <div className="absolute bottom-full left-0 mb-2 p-4 bg-base-100 border border-base-300 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 min-w-70">
-                            <div className="grid grid-cols-5 gap-4">
-                                {availableReactions.map((reactionOption) => (
-                                    <button
-                                        key={reactionOption.name}
-                                        onClick={() => addReaction(reactionOption.emoji)}
-                                        className={`
-                                            flex items-center justify-center rounded-lg transition-all duration-200 
-                                            hover:bg-base-200 hover:scale-110 active:scale-95 ${sizeClasses.picker}
-                                        `}
-                                        title={reactionOption.label}
-                                    >
-                                        {reactionOption.emoji}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Connection Status Indicator (for development) */}
-            {process.env.NODE_ENV === 'development' && (
-                <div className={`text-xs px-2 py-1 rounded-full ${
-                    isConnected ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'
-                }`}>
-                    {isConnected ? '🔗' : '⚠️'}
-                </div>
+                </>
             )}
         </div>
     );

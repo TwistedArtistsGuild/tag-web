@@ -8,16 +8,62 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import { useState } from "react"
-import ImageGallery from "react-image-gallery"
-//import "react-image-gallery/styles/css/image-gallery.css"
 import SocialComments from "@/components/social/Comments" // Import SocialComments component
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
-import Image from "next/image"
 import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
+import ListingCard from "@/components/cards/card_listing"
 
-const ListingDetails = ({ listing }) => {
+const DEFAULT_LISTING_IMAGES = [
+  "https://picsum.photos/id/1015/1000/600",
+  "https://picsum.photos/id/1019/1000/600",
+  "https://picsum.photos/id/1018/1000/600",
+]
+
+const getListingGalleryImages = (listing) => {
+  const metadataCollections = [
+    listing?.pictureMetadata,
+    listing?.imageMetadata,
+    listing?.imagesMetadata,
+    listing?.contentImages,
+    listing?.content,
+  ]
+
+  const metadataUrls = metadataCollections
+    .flatMap((collection) => (Array.isArray(collection) ? collection : []))
+    .map((item) => {
+      if (typeof item === "string") return item
+      return item?.contentUrl || item?.contentURL || item?.url || item?.src || ""
+    })
+    .map((url) => String(url || "").trim())
+    .filter(Boolean)
+
+  if (metadataUrls.length > 0) {
+    return metadataUrls
+  }
+
+  const dbImages = Array.isArray(listing?.images)
+    ? listing.images
+      .map((item) => {
+        if (typeof item === "string") return item
+        return item?.contentUrl || item?.contentURL || item?.url || item?.src || ""
+      })
+      .map((url) => String(url || "").trim())
+      .filter(Boolean)
+    : []
+
+  if (dbImages.length > 0) {
+    return dbImages
+  }
+
+  if (listing?.profilePic?.url) {
+    return [listing.profilePic.url, ...DEFAULT_LISTING_IMAGES]
+  }
+
+  return DEFAULT_LISTING_IMAGES
+}
+
+const ListingDetails = ({ listing, slug }) => {
   const canonicalSlug = listing.seoCanonicalSlug
   const pageMetaData = {
     title: listing.seoTitle,
@@ -30,34 +76,20 @@ const ListingDetails = ({ listing }) => {
     },
   }
 
-  // Sample images for the slideshow
-  const sampleImages = [
-    {
-      original: listing?.profilePic?.url || "https://picsum.photos/id/1015/1000/600",
-      thumbnail: listing?.profilePic?.url || "https://picsum.photos/id/1015/250/150",
-      description: listing?.title || "Artwork image",
+  const listingGalleryImages = getListingGalleryImages(listing)
+
+  const listingForCard = {
+    ...listing,
+    panelSize: "half",
+    images: listingGalleryImages,
+    path: listing?.path || "",
+    artist: {
+      ...(listing?.artist || {}),
+      path: listing?.artist?.path || slug || "",
+      title: listing?.artist?.title || listing?.artistTitle || "Artist",
+      profilePic: listing?.artist?.profilePic || {},
     },
-    {
-      original: "https://picsum.photos/id/1019/1000/600",
-      thumbnail: "https://picsum.photos/id/1019/250/150",
-      description: "Additional view",
-    },
-    {
-      original: "https://picsum.photos/id/1018/1000/600",
-      thumbnail: "https://picsum.photos/id/1018/250/150", 
-      description: "Detail view",
-    },
-    {
-      original: "https://picsum.photos/id/1022/1000/600",
-      thumbnail: "https://picsum.photos/id/1022/250/150",
-      description: "Alternate angle",
-    },
-    {
-      original: "https://picsum.photos/id/1025/1000/600",
-      thumbnail: "https://picsum.photos/id/1025/250/150",
-      description: "Close-up detail",
-    },
-  ]
+  }
 
   // Sample comments for the listing
   const sampleComments = [
@@ -139,9 +171,6 @@ const ListingDetails = ({ listing }) => {
     },
   ]
 
-  const [likeCount, setLikeCount] = useState(24)
-  const [liked, setLiked] = useState(false)
-
   // Current user mock data for SocialComments component
   const currentUser = {
     id: "currentUser1",
@@ -149,16 +178,6 @@ const ListingDetails = ({ listing }) => {
     displayName: "Current User",
     avatarUrl: "https://i.pravatar.cc/100?img=7",
     isAdmin: false,
-  }
-
-  // Handle like button click
-  const handleLikeClick = () => {
-    if (liked) {
-      setLikeCount(likeCount - 1)
-    } else {
-      setLikeCount(likeCount + 1)
-    }
-    setLiked(!liked)
   }
 
   // Callback functions for SocialComments component
@@ -178,105 +197,12 @@ const ListingDetails = ({ listing }) => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
-      <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
-      <div className="mb-8">
-        <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="md:w-1/2">
-              <h1 className="text-3xl font-bold mb-4 text-primary">{listing.title || "Untitled"}</h1>
-
-              {/* Action buttons */}
-              <div className="flex items-center gap-4 mb-6">
-                <button
-                  onClick={handleLikeClick}
-                  className={`btn btn-sm ${liked ? "btn-primary" : "btn-outline"}`}
-                  aria-label="Like this artwork"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill={liked ? "currentColor" : "none"}
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                    />
-                  </svg>
-                  <span className="ml-2">{likeCount} Likes</span>
-                </button>
-                <button className="btn btn-sm btn-outline">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                    />
-                  </svg>
-                  <span className="ml-2">Share</span>
-                </button>
-              </div>
-
-              <p className="text-lg mb-6">
-                <strong>Description:</strong> {listing.description || "No description available"}
-              </p>
-            </div>
-            <div className="md:w-1/2">
-              {/* Image Gallery */}
-              <div className="rounded-box overflow-hidden shadow-md" style={{ maxHeight: "600px" }}>
-                <ImageGallery
-                  items={sampleImages}
-                  showPlayButton={true}
-                  showFullscreenButton={true}
-                  showThumbnails={true}
-                  showBullets={true}
-                  showNav={true}
-                  thumbnailPosition="bottom"
-                  useBrowserFullscreen={true}
-                  slideInterval={5000}
-                  lazyLoad={true}
-                  renderItem={(item) => (
-                    <div className="image-gallery-image bg-base-100">
-                      <Image
-                        src={item.original || "/placeholder.svg"}
-                        alt={item.description}
-                        width={1000}
-                        height={600}
-                        style={{ objectFit: "contain", maxHeight: "500px", margin: "0 auto" }}
-                        priority={true}
-                      />
-                      {item.description && <div className="image-gallery-description text-base-content/80 bg-base-200 px-2 py-1 rounded mt-2">{item.description}</div>}
-                    </div>
-                  )}
-                  renderThumbInner={(item) => (
-                    <div className="image-gallery-thumbnail-inner bg-base-200">
-                      <Image
-                        src={item.thumbnail || "/placeholder.svg"}
-                        alt={item.description}
-                        width={250}
-                        height={150}
-                        className="image-gallery-thumbnail-image"
-                        style={{ objectFit: "cover", height: "80px" }}
-                        priority={false}
-                      />
-                      <div className="image-gallery-thumbnail-label text-xs text-base-content/70">{item.title}</div>
-                    </div>
-                  )}
-                />
-              </div>
-            </div>
-          </div>
+    <SocialRealtimeProvider>
+      <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
+        <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
+        <div className="mb-8">
+          <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
+            <ListingCard listing={listingForCard} panelSize="full" showGalleryThumbnails />
 
           <div className="overflow-x-auto mt-8">
             <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Artwork Details</h2>
@@ -341,25 +267,24 @@ const ListingDetails = ({ listing }) => {
           </div>
 
           {/* Comments Section - REPLACED WITH SocialComments COMPONENT */}
-          <SocialRealtimeProvider>
-              <div className="mt-8">
-                <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Comments & Feedback</h2>
-                <SocialComments
-                  initialComments={sampleComments}
-                  onAddComment={handleAddComment}
-                  onUpdateComment={handleUpdateComment}
-                  onLikeComment={handleLikeComment}
-                  contextId={`listing-${listing.listingID}`}
-                  currentUser={currentUser}
-                  allowMedia={true}
-                  readOnly={false}
-                  className="bg-base-100 text-base-content"
-                />
-               </div>
-           </SocialRealtimeProvider>
+          <div className="mt-8">
+            <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Comments & Feedback</h2>
+            <SocialComments
+              initialComments={sampleComments}
+              onAddComment={handleAddComment}
+              onUpdateComment={handleUpdateComment}
+              onLikeComment={handleLikeComment}
+              contextId={`listing-${listing.listingID}`}
+              currentUser={currentUser}
+              allowMedia={true}
+              readOnly={false}
+              className="bg-base-100 text-base-content"
+            />
+          </div>
         </div>
       </div>
     </div>
+    </SocialRealtimeProvider>
   )
 }
 

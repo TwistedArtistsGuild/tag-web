@@ -11,9 +11,10 @@
 "use client"
 
 import { useEffect } from "react"
-import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
+import AboutSubnav from "@/components/AboutSubnav"
 import StockProgramBanner from "@/components/StockProgramBanner"
+import DocumentationSection from "@/components/DocumentationSection"
 
 import TagSEO from "@/components/TagSEO"
 
@@ -42,34 +43,11 @@ const External = () => {
   return (
       <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
       <TagSEO metadataProp={pageMetaData} canonicalSlug="about/investing/external" />
-      {/* Navigation Pane (can be a shared component or similar to other pages) */}
-      <nav className="bg-base-100 shadow-md py-4">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <Link href="/about" className="text-primary font-bold text-lg">
-            About Us
-          </Link>
-          <div className="flex space-x-4">
-            <Link href="/about/pricing" className="text-base-content hover:text-primary">
-              Pricing
-            </Link>
-            <Link href="/about/vendor" className="text-base-content hover:text-primary">
-              Vendor
-            </Link>
-            <Link href="/about/development" className="text-base-content hover:text-primary">
-              Development
-            </Link>
-            {/*<Link href="/about/investing" className="text-base-content hover:text-primary">
-              Investing
-            </Link>*/}
-          </div>
-        </div>
-      </nav>
+      <AboutSubnav />
 
       <StockProgramBanner />
 
-      <section id="external-investors" className="py-16 bg-base-100">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-extrabold mb-6 text-primary">{"External Investor Access"}</h1>
+      <DocumentationSection id="external-investors" title="External Investor Access" bgColor="bg-base-100" centered>
           <p className="text-xl mb-8 text-base-content">
             {
               "For external stakeholders interested in supporting the Twisted Artists Guild, we offer Fixed Dividend Shares. These shares provide a consistent quarterly dividend and contribute directly to our platform infrastructure, impact initiatives, and long-term scalability."
@@ -91,8 +69,7 @@ const External = () => {
               {"Back to Stock Plan Overview"}
             </Link>*/}
           </div>
-        </div>
-      </section>
+      </DocumentationSection>
     </div>
   )
 }

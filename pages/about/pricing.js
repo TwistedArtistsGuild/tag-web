@@ -11,9 +11,10 @@
 "use client"
 
 import { useEffect } from "react"
-import Link from "next/link"
 import { useAppContext } from "@/components/Context" // Import context to update header sections
+import AboutSubnav from "@/components/AboutSubnav"
 import CTA from "@/components/homepage/CTA"
+import DocumentationSection from "@/components/DocumentationSection"
 import TagSEO from "@/components/TagSEO"
 
 const Pricing = () => {
@@ -62,9 +63,7 @@ const Pricing = () => {
   )
 
   const PublicAccess = () => (
-    <section id="public-access" className="py-16 bg-base-200">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-2">{"Public Access"}</h2>
+    <DocumentationSection id="public-access" title="Public Access" bgColor="bg-base-200" centered>
         <p className="text-center text-base-content/60 mb-8">{"No account required"}</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           <div className="card bg-base-100 shadow-xl p-6">
@@ -80,14 +79,11 @@ const Pricing = () => {
             <p>{"The public experience is permanently ad-free. We don't sell attention, data, or placement."}</p>
           </div>
         </div>
-      </div>
-    </section>
+    </DocumentationSection>
   )
 
   const RegisteredUsers = () => (
-    <section id="registered-users" className="py-16 bg-base-100">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-2">{"Registered Users"}</h2>
+    <DocumentationSection id="registered-users" title="Registered Users" bgColor="bg-base-100" centered>
         <p className="text-center text-base-content/60 mb-8">{"Free"}</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
           <div className="card bg-base-200 shadow-xl p-6">
@@ -103,14 +99,12 @@ const Pricing = () => {
             <p>{"No ads, no upsells, no external promotions — ever."}</p>
           </div>
         </div>
-      </div>
-    </section>
+    </DocumentationSection>
   )
 
   const FreeArtistProfile = () => (
-    <section id="free-artist-profile" className="py-16 bg-base-200">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <h2 className="text-4xl font-bold text-center mb-4">{"Free Artist Profiles — For Hobbyists & Early Sellers"}</h2>
+    <DocumentationSection id="free-artist-profile" title="Free Artist Profiles — For Hobbyists & Early Sellers" bgColor="bg-base-200" centered>
+      <div className="mx-auto max-w-4xl">
         <p className="text-lg text-center mb-4">
           {"You don't need to sell anything to belong here. Free artist profiles are available to every artist, forever — no credit card, no trial period, no catch."}
         </p>
@@ -144,13 +138,12 @@ const Pricing = () => {
           <p className="text-sm text-base-content/60">{"If no sales occur, no fee is charged."}</p>
         </div>
       </div>
-    </section>
+    </DocumentationSection>
   )
 
   const ArtistMembership = () => (
-    <section id="artist-membership" className="py-16 bg-base-100">
-      <div className="container mx-auto px-4 max-w-4xl">
-        <h2 className="text-4xl font-bold text-center mb-4">{"Artist Membership — Activate Full Access"}</h2>
+    <DocumentationSection id="artist-membership" title="Artist Membership — Activate Full Access" bgColor="bg-base-100" centered>
+      <div className="mx-auto max-w-4xl">
         <p className="text-lg text-center mb-4">
           {"Artist Membership unlocks full selling capabilities, expanded tools, and long-term Guild benefits."}
         </p>
@@ -186,13 +179,11 @@ const Pricing = () => {
           </p>
         </div>
       </div>
-    </section>
+    </DocumentationSection>
   )
 
   const ExtendedServices = () => (
-    <section id="extended-services" className="py-16 bg-base-200">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-8">{"Extended Services: Cost + Minimal Margin"}</h2>
+    <DocumentationSection id="extended-services" title="Extended Services: Cost + Minimal Margin" bgColor="bg-base-200" centered>
         <p className="text-lg text-center mb-4">
           {
             "As TAG grows, optional extended services are planned using a simple model: vendor cost plus a minimal operating margin, so access remains sustainable and artist-first."
@@ -229,35 +220,13 @@ const Pricing = () => {
         <p className="text-base text-center">
           {"All extended services will publish pricing logic up front so members can evaluate value before opting in."}
         </p>
-      </div>
-    </section>
+    </DocumentationSection>
   )
 
   return (
     <div className="min-h-screen bg-linear-to-b from-base-200 to-base-300">
       <TagSEO metadataProp={pageMetaData} canonicalSlug="about/pricing" />
-      {/* Navigation Pane */}
-      <nav className="bg-base-100 shadow-md py-4">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <Link href="/about" className="text-primary font-bold text-lg">
-            About Us
-          </Link>
-          <div className="flex space-x-4">
-            <Link href="/about/pricing" className="text-base-content hover:text-primary">
-              Pricing
-            </Link>
-            <Link href="/about/vendor" className="text-base-content hover:text-primary">
-              Vendor
-            </Link>
-            <Link href="/about/development" className="text-base-content hover:text-primary">
-              Development
-            </Link>
-           {/*<Link href="/about/investing" className="text-base-content hover:text-primary">
-              Investing
-            </Link>*/}
-          </div>
-        </div>
-      </nav>
+      <AboutSubnav activeItem="pricing" />
 
       <AtAGlance />
       <PublicAccess />

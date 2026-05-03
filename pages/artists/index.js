@@ -9,10 +9,44 @@
 
  Open source · low-profit · human-first*/
 import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import ArtistCard from "@/components/cards/card_artist"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
+import { getPanelClass } from "@/components/cards/sizes/panel-layout"
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
+
+const BATCH_SIZE = 12
+
+const pickArtistDescription = (artist) =>
+  artist?.description || artist?.roleSummary || artist?.byline || ""
+
+const inferPanelSizeFromDescription = (artist) => {
+  const description = pickArtistDescription(artist)
+  const length = description.trim().length
+
+  if (length > 280) return "full"
+  if (length > 210) return "threeQuarters"
+  if (length > 150) return "twoThirds"
+  if (length > 90) return "half"
+  if (length > 45) return "third"
+  return "quarter"
+}
+
+const normalizeArtistKey = (value) => {
+  if (!value) {
+    return ""
+  }
+
+  return value
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/^\/artists\//, "")
+    .replace(/^\/+/, "")
+    .replace(/\/+$/, "")
+}
 
 /**
  * Artists page component that displays list of artist members
@@ -20,6 +54,40 @@ import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
  * @returns {JSX.Element} - Artists page component
  */
 const Artists = (props) => {
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE)
+
+  const loadedArtists = useMemo(
+    () =>
+      (props.artists || []).map((artist) => ({
+        ...artist,
+        panelSize: inferPanelSizeFromDescription(artist),
+      })),
+    [props.artists],
+  )
+
+  const hasMoreLoadedArtists = visibleCount < loadedArtists.length
+
+  const visibleLoadedArtists = useMemo(
+    () => loadedArtists.slice(0, visibleCount),
+    [loadedArtists, visibleCount],
+  )
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (hasMoreLoadedArtists === false) {
+        return
+      }
+
+      const nearBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 300
+      if (nearBottom) {
+        setVisibleCount((prev) => Math.min(prev + BATCH_SIZE, loadedArtists.length))
+      }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [hasMoreLoadedArtists, loadedArtists.length])
+
 	const pageMetaData = {
   title: "Artists and Portfolios",
   description: "Find independent artists, explore portfolios, and connect directly for commissions, collaborations, and support.",
@@ -33,8 +101,9 @@ const Artists = (props) => {
 		},
 	}
 
-	return (
-		<div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+  return (
+    <SocialRealtimeProvider>
+      <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="artists" />
 			{/* Hero Section */}
 			<section className="text-center py-12">
@@ -44,30 +113,33 @@ const Artists = (props) => {
 				<p className="text-xl md:text-2xl text-secondary mb-6">
 					Discover the creative energy of Twisted Artists Guild members. Each portfolio showcases the artist’s unique voice, featured works, and ways to connect or support them.
 				</p>
-				<p className="text-lg text-base-content max-w-3xl mx-auto mb-4">
-					Explore by style, medium, or vibe.
-				</p>
 			</section>
-			<main className="container mx-auto px-4 py-8 flex-1 w-full">
+      <main className="container mx-auto px-4 py-8 flex-1 w-full">
 				{/* Call to Action */}
 				<div className="flex justify-end mb-8">
 					<Link href="/portal/artist/create" className="btn btn-primary">Create a new artist</Link>
 				</div>
-				{/* Main Artist Card Grid */}
+        {/* Main Artist Card Grid */}
 				<section className="w-full flex-1 min-h-100 flex flex-col justify-stretch">
-					{props.artists && props.artists.length > 0 ? (
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {props.artists.map((artist, index) => {
-                const artistKey = `${artist.path || artist.artistid || artist.title || "artist"}-${index}`
-                return (
-                  <div key={artistKey} className="flex items-stretch">
-									<div className="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow duration-300 ease-in-out w-full">
-										<ArtistCard artist={artist} className="flex-1 h-full" />
-									</div>
-								</div>
-                )
-              })}
-						</div>
+          {loadedArtists.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
+                {visibleLoadedArtists.map((artist, index) => {
+                  const artistKey = `${artist.path || artist.artistid || artist.title || "artist"}-${index}`
+                  return (
+                    <div key={artistKey} className={`${getPanelClass(artist.panelSize)} self-start`}>
+                      <ArtistCard artist={artist} />
+                    </div>
+                  )
+                })}
+              </div>
+
+              {hasMoreLoadedArtists && (
+                <div className="flex justify-center py-8">
+                  <div className="badge badge-outline badge-lg">Loading more artist cards...</div>
+                </div>
+              )}
+            </>
 					) : (
 						<div className="alert alert-info w-full flex justify-center">
 							<span>No artists found. Be the first to create an artist profile!</span>
@@ -75,7 +147,8 @@ const Artists = (props) => {
 					)}
 				</section>
 			</main>
-		</div>
+      </div>
+    </SocialRealtimeProvider>
 	)
 }
 
@@ -83,20 +156,60 @@ Artists.getInitialProps = async () => {
   const api_url = getApiURL()
   let data = []
   let status = 200
+  let listings = []
 
   // Function to generate a random number for social counters
   const getRandomCount = () => Math.floor(Math.random() * 1000) + 1 // Random number between 1 and 1000
 
   // Function to generate random placeholder images for slideshow
   const getRandomImages = (count = 3) => {
-    const images = []
-    for (let i = 0; i < count; i++) {
-      images.push({
-        url: `/placeholder.svg?height=200&width=300&text=Art+${Math.floor(Math.random() * 100)}`,
-        alt: `Artist artwork ${i + 1}`,
-      })
+    const pool = [
+      {
+        url: getRandomStockPhotoByCategory("artist"),
+        alt: "Curated artist portrait",
+      },
+      {
+        url: getRandomStockPhotoByCategory("painting"),
+        alt: "Curated painting detail",
+      },
+      {
+        url: getRandomStockPhotoByCategory("general"),
+        alt: "Curated creative image",
+      },
+    ]
+
+    return Array.from({ length: count }, (_, index) => {
+      const item = pool[(index + Math.floor(Math.random() * pool.length)) % pool.length]
+      return item
+    })
+  }
+
+  const toImageUrl = (image) => {
+    if (!image) {
+      return null
     }
-    return images
+
+    if (typeof image === "string") {
+      return image
+    }
+
+    return image.url || image.original || image.thumbnailURL || null
+  }
+
+  const dedupeImageUrls = (items) => {
+    const seen = new Set()
+    const output = []
+
+    items.forEach((item) => {
+      const url = toImageUrl(item)
+      if (!url || seen.has(url)) {
+        return
+      }
+      seen.add(url)
+      output.push(url)
+    })
+
+    return output
   }
 
   // If we are running in debug mode, log the active API URL
@@ -104,6 +217,11 @@ Artists.getInitialProps = async () => {
     console.log("Artist data fetch starting via API: \n " + api_url + "artist/")
   }
   try {
+    const listingsRes = await fetch(api_url + "listing/")
+    if (listingsRes.ok) {
+      listings = await listingsRes.json()
+    }
+
     // Fetch the artist data
     const res = await fetch(api_url + "artist/")
     status = res.status
@@ -112,14 +230,54 @@ Artists.getInitialProps = async () => {
     }
     data = await res.json()
 
-    // Add random social counters and images to each artist after fetching
-    data = data.map((artist, index) => ({
-      ...artist,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-      // Add images to some artists for demonstration
-      images: index % 2 === 0 ? getRandomImages(Math.floor(Math.random() * 3) + 2) : [], // 2-4 images for every other artist
+    const listingImagesByArtistPath = (Array.isArray(listings) ? listings : []).reduce((map, listing) => {
+      const artistPath = normalizeArtistKey(listing?.artist?.path)
+      const listingImageUrl = toImageUrl(listing?.profilePic)
+
+      if (!artistPath || !listingImageUrl) {
+        return map
+      }
+
+      if (!map.has(artistPath)) {
+        map.set(artistPath, [])
+      }
+
+      map.get(artistPath).push(listingImageUrl)
+      return map
+    }, new Map())
+
+    // Populate galleries from DB-first sources, then fallback to stock photos.
+    data = data.map((artist) => ({
+      ...(() => {
+        const artistPathKey = normalizeArtistKey(artist?.path)
+
+        const dbGalleryImages = dedupeImageUrls([
+          ...(Array.isArray(artist?.images) ? artist.images : []),
+          artist?.profilePic,
+          artist?.coverPic,
+          ...(Array.isArray(artist?.listings) ? artist.listings.map(l => l?.profilePic).filter(Boolean) : []),
+          ...(listingImagesByArtistPath.get(artistPathKey) || []),
+        ])
+
+        const galleryImages = dbGalleryImages.length > 0
+          ? dbGalleryImages
+          : getRandomImages(Math.floor(Math.random() * 3) + 2)
+
+        const fallbackProfilePic = artist?.profilePic?.url || toImageUrl(galleryImages[0]) || "/blank_image.png"
+
+        return {
+          ...artist,
+          loves: getRandomCount(),
+          likes: getRandomCount(),
+          followers: getRandomCount(),
+          images: galleryImages,
+          profilePic: {
+            ...(artist?.profilePic || {}),
+            url: fallbackProfilePic,
+            alttext: artist?.profilePic?.alttext || `${artist?.title || "Artist"} profile image`,
+          },
+        }
+      })(),
     }))
   } catch (error) {
     console.error("An error has occurred with your artist fetch request: ", error)

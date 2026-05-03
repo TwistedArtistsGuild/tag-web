@@ -8,25 +8,91 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import Image from "next/image";
 import Link from "next/link";
+import PhotoGallery from "@/components/cards/card_photoGallery";
+import ColoredTagCard from "@/components/cards/card_coloredTags";
+import { extractContentWarnings } from "@/components/social/ContentTags";
+import { CARD_SHELL_CLASS, PANEL_SIZE_LABELS, PANEL_SIZES } from "@/components/cards/sizes/panel-layout";
 
-export default function AboutProfileCard({ profile }) {
-	const primaryImage = profile.images?.[0] || "/blank_image.png";
+export default function AboutProfileCard({
+	profile,
+	panelSize = "third",
+	panelSizeOptions = PANEL_SIZES,
+	isInteractive = false,
+	isExpanded = false,
+	onPanelSizeChange,
+	onToggleExpand,
+}) {
+	const onCardClick = (event) => {
+		if (!isInteractive) {
+			return;
+		}
+
+		if (event.target.closest("a,button")) {
+			return;
+		}
+		onToggleExpand?.(profile.slug);
+	};
+
+	const onCardKeyDown = (event) => {
+		if (event.key === "Enter" || event.key === " ") {
+			event.preventDefault();
+			onToggleExpand?.(profile.slug);
+		}
+	};
+
+	const galleryImages = profile.images && profile.images.length > 0 ? profile.images : ["/blank_image.png"];
+	const contentWarnings = extractContentWarnings(profile);
 
 	return (
-		<article className="card h-full bg-base-100 text-base-content shadow-lg border border-base-300 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl">
+		<article
+			className={`${CARD_SHELL_CLASS} hover:-translate-y-1 ${isInteractive ? "cursor-pointer" : ""}`}
+			onClick={onCardClick}
+			onKeyDown={isInteractive ? onCardKeyDown : undefined}
+			tabIndex={isInteractive ? 0 : undefined}
+		>
 			<div className="card-body items-center text-center p-6">
-				<div className="relative h-40 w-40 overflow-hidden rounded-full border-4 border-base-300 shadow-md">
-					<Image
-						src={primaryImage}
-						alt={`${profile.name}'s profile`}
-						fill
-						sizes="160px"
-						style={{ objectFit: "cover" }}
+				<div className="mb-4 flex w-full items-center justify-end gap-2">
+					{isInteractive && (
+						<div className="flex items-center gap-2" onClick={(event) => event.stopPropagation()}>
+							<div className="join">
+								{panelSizeOptions.map((size) => (
+									<button
+										key={size}
+										type="button"
+										className={`btn btn-xs join-item ${panelSize === size ? "btn-primary" : "btn-outline"}`}
+										onClick={() => onPanelSizeChange?.(profile.slug, size)}
+										title={`Set card size to ${PANEL_SIZE_LABELS[size] || size}`}
+									>
+										{PANEL_SIZE_LABELS[size] || size}
+									</button>
+								))}
+							</div>
+							<button
+								type="button"
+								className="btn btn-xs btn-ghost"
+								onClick={() => onToggleExpand?.(profile.slug)}
+							>
+								{isExpanded ? "Collapse" : "Expand"}
+							</button>
+						</div>
+					)}
+				</div>
+				<div className="w-full -mx-6 mb-4">
+					<PhotoGallery
+						images={galleryImages}
+						mode="embedded"
+						variantName=""
+						navigationMode={galleryImages.length > 1 ? "hover" : "manual"}
+						imageEffect="landscape"
+						showThumbnails={false}
+						showVariantBadge={false}
+						shellClassName="border-0 shadow-none"
+						contentWarnings={contentWarnings}
+						contentWarningSize="sm"
 					/>
 				</div>
-				<h4 className="mt-4 text-xl font-bold text-primary">
+				<h4 className="mt-2 text-xl font-bold text-primary">
 					<Link href={`/about/us/${profile.slug}`} className="hover:underline">
 						{profile.name}
 					</Link>

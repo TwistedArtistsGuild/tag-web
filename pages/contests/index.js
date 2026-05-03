@@ -13,6 +13,7 @@
 
 import Link from "next/link"
 import TagSEO from "@/components/TagSEO"
+import DocumentationSection from "@/components/DocumentationSection"
 
 function ContestsIndex() {
   const pageMetaData = {
@@ -39,8 +40,7 @@ function ContestsIndex() {
       </section>
       <main className="container mx-auto px-4 py-8 flex-1 w-full">
         {/* Contest Framework */}
-        <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
-          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">How Contests Work</h2>
+        <DocumentationSection id="contest-framework" title="How Contests Work" bgColor="bg-base-100" sectionClassName="mb-12 py-0">
           <p className="text-lg text-base-content mb-4">
             Contests run on a monthly, quarterly, and annual cadence. Submissions are showcased publicly, and winners
             are determined by community reactions rather than gatekeeping panels.
@@ -51,13 +51,10 @@ function ContestsIndex() {
             <li>Grassroots enthusiasm drives visibility and outcomes.</li>
             <li>Results remain visible for transparency and long-term recognition.</li>
           </ul>
-        </section>
+        </DocumentationSection>
 
         {/* Community Reaction Model */}
-        <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
-          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary flex items-center gap-2">
-            🗳️ Community-Led Outcomes
-          </h2>
+        <DocumentationSection id="community-outcomes" title="🗳️ Community-Led Outcomes" bgColor="bg-base-100" sectionClassName="mb-12 py-0">
           <p className="text-lg text-base-content mb-4">
             Each public user may apply multiple reactions. This helps authentic enthusiasm and broad community support
             shape rankings, instead of relying on a single up-vote dynamic.
@@ -71,13 +68,10 @@ function ContestsIndex() {
               View Active Contest
             </Link>
           </div>
-        </section>
+        </DocumentationSection>
 
         {/* Contest Archive */}
-        <section className="card bg-base-100 shadow-lg rounded-box p-6 mb-12">
-          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary flex items-center gap-2">
-            🏆 Durable Visibility Through Archives
-          </h2>
+        <DocumentationSection id="contest-archive" title="🏆 Durable Visibility Through Archives" bgColor="bg-base-100" sectionClassName="mb-12 py-0">
           <p className="text-lg text-base-content mb-4">
             Every contest is archived with public-facing, indexable links to participating artist profiles and
             listings. Archives remain accessible long-term to keep work discoverable after the contest window closes.
@@ -89,11 +83,11 @@ function ContestsIndex() {
             Over time, contests become a growing, searchable history of artist success within the cooperative.
           </p>
           <div className="text-center">
-            <Link href="/vote/archive" className="btn btn-primary btn-lg">
+            <Link href="/contests/archive" className="btn btn-primary btn-lg">
               Explore Contest Archive
             </Link>
           </div>
-        </section>
+        </DocumentationSection>
 
       </main>
     </div>
