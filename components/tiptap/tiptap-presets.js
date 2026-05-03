@@ -6,7 +6,7 @@ import Youtube from "@tiptap/extension-youtube";
 import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { FontFamily } from "@tiptap/extension-font-family";
-import Vimeo from "@/components/widgets/tiptap-vimeo";
+import Vimeo from "@/components/tiptap/tiptap-vimeo";
 
 export const FONT_LIBRARY = [
   { key: "system-sans", label: "System Sans", value: "system-ui, sans-serif" },

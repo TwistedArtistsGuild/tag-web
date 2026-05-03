@@ -15,10 +15,10 @@ import { useRouter } from "next/router";
 import DateInput from "./DynaDateInput";
 import { useSession } from "next-auth/react";
 import getApiURL from "@/components/widgets/GetApiURL";
-import TTArticle from "@/components/social/TT_Article";
-import TTSingleLine from "@/components/social/TT_SingleLine";
-import TTTitleLine from "@/components/social/TT_TitleLine";
-import TTPortfolio from "@/components/social/TT_Portfolio";
+import TTArticle from "@/components/tiptap/TT_Article";
+import TTSingleLine from "@/components/tiptap/TT_SingleLine";
+import TTTitleLine from "@/components/tiptap/TT_TitleLine";
+import TTPortfolio from "@/components/tiptap/TT_Portfolio";
 
 /**
  * Dynamic Form component that renders form fields based on metadata

@@ -12,12 +12,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import DOMPurify from "dompurify";
-import TTSingleLine from "@/components/social/TT_SingleLine";
-import TTTitleLine from "@/components/social/TT_TitleLine";
-import TTArticle from "@/components/social/TT_Article";
-import TTPortfolio from "@/components/social/TT_Portfolio";
-import { TTCommentsEditorCard } from "@/components/social/TT_Comments";
-import TTDirectMessages from "@/components/social/TT_DirectMessages";
+import TTSingleLine from "@/components/tiptap/TT_SingleLine";
+import TTTitleLine from "@/components/tiptap/TT_TitleLine";
+import TTArticle from "@/components/tiptap/TT_Article";
+import TTPortfolio from "@/components/tiptap/TT_Portfolio";
+import { TTCommentsEditorCard } from "@/components/tiptap/TT_Comments";
+import TTDirectMessages from "@/components/tiptap/TT_DirectMessages";
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 
 import TagSEO from "@/components/TagSEO"
