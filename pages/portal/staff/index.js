@@ -33,6 +33,13 @@ export default function Portal_Staff() {
 			<h2 className="text-2xl font-bold text-primary">
         Landing page for Staff Portal
 			</h2>
+			<p className="mt-3 text-base-content/80 max-w-2xl">
+				GoHighLevel Staff Workspace provides TAG staff with a unified view of contacts,
+				membership-drive funnel progress, form responses, and CRM messaging channels.
+			</p>
+			<a className="link link-primary text-lg font-semibold mt-2 inline-block" href="/portal/staff/ghl">
+				Open GoHighLevel Staff Page
+			</a>
 		</div>
 	);
 }
