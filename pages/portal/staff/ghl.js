@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
+import CrmSocialChat from "/components/ghl/CrmSocialChat"
 
 export default function GHLTester() {
   const [contacts, setContacts] = useState([])
@@ -10,12 +11,6 @@ export default function GHLTester() {
     opportunities: [],
     total: 0,
   })
-  const [conversations, setConversations] = useState([])
-  const [selectedConversation, setSelectedConversation] = useState(null)
-  const [chatMessage, setChatMessage] = useState("")
-  const [chatType, setChatType] = useState("SMS")
-  const [chatStatus, setChatStatus] = useState("")
-  const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [contactSearch, setContactSearch] = useState("")
@@ -160,18 +155,6 @@ export default function GHLTester() {
     }))
   }, [surveys])
 
-  const resolveChatTypeFromConversation = (conversation) => {
-    const map = {
-      TYPE_FACEBOOK: "FB",
-      TYPE_INSTAGRAM: "IG",
-      TYPE_WHATSAPP: "WhatsApp",
-      TYPE_EMAIL: "Email",
-      TYPE_SMS: "SMS",
-      TYPE_PHONE: "SMS",
-    }
-    return map[conversation?.lastMessageType] || "SMS"
-  }
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -200,21 +183,6 @@ export default function GHLTester() {
           console.warn("Funnel fetch failed:", err.message)
         }
 
-        // Fetch conversations for CRM/social chat
-        try {
-          const convRes = await fetch("/api/test/ghl-conversations")
-          if (!convRes.ok) throw new Error(`Conversations: ${convRes.statusText}`)
-          const convData = await convRes.json()
-          const list = convData.social?.length ? convData.social : convData.data || []
-          setConversations(list)
-          if (list.length > 0) {
-            setSelectedConversation(list[0])
-            setChatType(resolveChatTypeFromConversation(list[0]))
-          }
-        } catch (err) {
-          console.warn("Conversations fetch failed:", err.message)
-        }
-
         // Fetch surveys (optional - endpoint may not be available)
         try {
           const surveysRes = await fetch(
@@ -239,47 +207,6 @@ export default function GHLTester() {
 
     fetchData()
   }, [])
-
-  const handleSelectConversation = (conversation) => {
-    setSelectedConversation(conversation)
-    setChatType(resolveChatTypeFromConversation(conversation))
-    setChatStatus("")
-  }
-
-  const handleSendMessage = async (e) => {
-    e.preventDefault()
-    if (!selectedConversation?.contactId || !chatMessage.trim()) {
-      setChatStatus("Choose a conversation and enter a message.")
-      return
-    }
-
-    try {
-      setSending(true)
-      setChatStatus("")
-
-      const res = await fetch("/api/test/ghl-send-message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contactId: selectedConversation.contactId,
-          type: chatType,
-          message: chatMessage.trim(),
-        }),
-      })
-
-      const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.error || `Send failed: ${res.statusText}`)
-      }
-
-      setChatMessage("")
-      setChatStatus("Message queued/sent through GHL CRM.")
-    } catch (err) {
-      setChatStatus(err.message)
-    } finally {
-      setSending(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -308,6 +235,18 @@ export default function GHLTester() {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">GoHighLevel Integration Tester</h1>
+
+        {/* TODO: remove this section once CrmSocialChat is promoted to its own page/feature */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6 border-2 border-dashed border-yellow-400">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded">PROTOTYPE — scheduled for removal from tester</span>
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-700 mb-1">CRM Social Chat Interface</h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Send outbound messages through CRM channels (FB, IG, WhatsApp, SMS, Email) for the selected contact conversation.
+          </p>
+          <CrmSocialChat />
+        </div>
 
         {/* Contacts Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -463,96 +402,7 @@ export default function GHLTester() {
           )}
         </div>
 
-        {/* CRM + Social Chat Interface */}
-        <div className="bg-white rounded-lg shadow-md p-6 mt-6">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-4">CRM Social Chat Interface</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Send outbound messages through CRM channels (FB, IG, WhatsApp, SMS, Email) for the selected contact conversation.
-          </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-1 border rounded">
-              <div className="p-3 border-b bg-gray-50 font-semibold text-sm">
-                Conversations ({conversations.length})
-              </div>
-              <div className="max-h-[420px] overflow-y-auto">
-                {conversations.length === 0 ? (
-                  <p className="p-3 text-sm text-gray-500">No conversations found.</p>
-                ) : (
-                  conversations.map((conversation) => (
-                    <button
-                      key={conversation.id}
-                      type="button"
-                      onClick={() => handleSelectConversation(conversation)}
-                      className={`w-full text-left p-3 border-b hover:bg-gray-50 ${
-                        selectedConversation?.id === conversation.id ? "bg-indigo-50" : ""
-                      }`}
-                    >
-                      <p className="font-semibold text-sm text-gray-800">{conversation.contactName || "Unknown"}</p>
-                      <p className="text-xs text-gray-500">{conversation.companyName || conversation.phone || "-"}</p>
-                      <p className="text-xs text-indigo-700 mt-1">{conversation.lastMessageType || conversation.type}</p>
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="lg:col-span-2 border rounded p-4">
-              {selectedConversation ? (
-                <form onSubmit={handleSendMessage} className="space-y-3">
-                  <div>
-                    <p className="font-semibold text-gray-800">{selectedConversation.contactName || "Unknown contact"}</p>
-                    <p className="text-sm text-gray-500">
-                      Contact ID: {selectedConversation.contactId} | Channel hint: {selectedConversation.lastMessageType || "n/a"}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <label className="text-sm">
-                      <span className="block mb-1 text-gray-600">Message Type</span>
-                      <select
-                        value={chatType}
-                        onChange={(e) => setChatType(e.target.value)}
-                        className="w-full border rounded px-3 py-2"
-                      >
-                        <option value="SMS">SMS</option>
-                        <option value="FB">Facebook</option>
-                        <option value="IG">Instagram</option>
-                        <option value="WhatsApp">WhatsApp</option>
-                        <option value="Email">Email</option>
-                      </select>
-                    </label>
-                  </div>
-
-                  <label className="text-sm block">
-                    <span className="block mb-1 text-gray-600">Message</span>
-                    <textarea
-                      value={chatMessage}
-                      onChange={(e) => setChatMessage(e.target.value)}
-                      rows={5}
-                      className="w-full border rounded px-3 py-2"
-                      placeholder="Type your message to send through CRM..."
-                    />
-                  </label>
-
-                  <button
-                    type="submit"
-                    disabled={sending}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded disabled:opacity-50"
-                  >
-                    {sending ? "Sending..." : "Send Message"}
-                  </button>
-
-                  {chatStatus ? (
-                    <p className="text-sm text-gray-700 bg-gray-50 border rounded p-2">{chatStatus}</p>
-                  ) : null}
-                </form>
-              ) : (
-                <p className="text-sm text-gray-500">Select a conversation to start messaging.</p>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )
