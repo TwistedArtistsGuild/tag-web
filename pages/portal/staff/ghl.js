@@ -162,14 +162,14 @@ export default function GHLTester() {
         setError(null)
 
         // Fetch contacts
-        const customersRes = await fetch("/api/test/ghl-customers")
+        const customersRes = await fetch("/api/crm/ghl-customers")
         if (!customersRes.ok) throw new Error(`Contacts: ${customersRes.statusText}`)
         const customersData = await customersRes.json()
         setContacts(customersData.data || [])
 
         // Fetch opportunities/funnel insights
         try {
-          const funnelRes = await fetch("/api/test/ghl-funnel")
+          const funnelRes = await fetch("/api/crm/ghl-funnel")
           if (!funnelRes.ok) throw new Error(`Funnel: ${funnelRes.statusText}`)
           const funnelData = await funnelRes.json()
           setFunnel({
@@ -186,7 +186,7 @@ export default function GHLTester() {
         // Fetch surveys (optional - endpoint may not be available)
         try {
           const surveysRes = await fetch(
-            `/api/test/ghl-surveys?formId=${membershipFormId}&startAt=2020-01-01&endAt=2030-01-01`
+            `/api/crm/ghl-surveys?formId=${membershipFormId}&startAt=2020-01-01&endAt=2030-01-01`
           )
           if (surveysRes.ok) {
             const surveysData = await surveysRes.json()
