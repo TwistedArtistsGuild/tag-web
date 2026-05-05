@@ -226,7 +226,11 @@ export function getTiptapExtensions(preset, placeholder) {
   }
 
   if (preset === "medium" || preset === "full") {
-    extensions.push(Image);
+      extensions.push(Image.configure({
+          HTMLAttributes: {
+              class: 'rounded-lg border border-base-300 shadow-sm',
+          },
+      }));
     extensions.push(
       Youtube.configure({
         controls: true,

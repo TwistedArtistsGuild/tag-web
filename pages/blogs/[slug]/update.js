@@ -46,8 +46,9 @@ export default function UpdateBlogForm1(props) {
             FromURL: `/blogs/${props.slug}/update.js`,
             redirectURL: `/blogs/${props.slug}`,
             // Reuse the normalized base URL from getApiURL() to keep env fallback/overrides consistent
-            APIURL: `${api_url}blog/${props.blogdata?.blogID}`
-
+            APIURL: `${api_url}blog/${props.blogdata?.blogID}`,
+            imageCategory: 'blogs',
+            entityId: props.blogdata?.blogID
         };
     }, [props.slug, props.blogdata, props.metadataProp]);
 
