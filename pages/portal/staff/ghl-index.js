@@ -1,4 +1,13 @@
 import { useState, useEffect, useMemo } from "react"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts"
 
 export default function GHLIndexPage() {
   const [contacts, setContacts] = useState([])
@@ -251,27 +260,29 @@ export default function GHLIndexPage() {
           {contacts.length > 0 ? (
             contactTrend.contactsWithDates > 0 ? (
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 md:p-6">
-                <div className="flex h-72 items-end gap-3 md:gap-5">
-                  {contactTrend.months.map((month) => {
-                    const height = contactTrend.maxCount > 0
-                      ? Math.max((month.count / contactTrend.maxCount) * 100, month.count > 0 ? 12 : 0)
-                      : 0
-
-                    return (
-                      <div key={month.key} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
-                        <span className="text-xs font-semibold text-slate-600">{month.count}</span>
-                        <div className="relative flex h-full w-full items-end justify-center rounded-t-lg bg-white/70 px-1">
-                          <div
-                            className="w-full max-w-20 rounded-t-lg bg-gradient-to-t from-cyan-500 to-blue-600 transition-all"
-                            style={{ height: `${height}%` }}
-                            title={`${month.label}: ${month.count} new contacts`}
-                          ></div>
-                        </div>
-                        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{month.label}</span>
-                      </div>
-                    )
-                  })}
-                </div>
+                <ResponsiveContainer width="100%" height={288}>
+                  <BarChart data={contactTrend.months} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fontSize: 12, fill: "#64748b", textAnchor: "middle" }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      tick={{ fontSize: 12, fill: "#64748b" }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "rgba(99,102,241,0.08)" }}
+                      formatter={(value) => [value, "New contacts"]}
+                      labelStyle={{ fontWeight: 600 }}
+                    />
+                    <Bar dataKey="count" fill="#06b6d4" radius={[6, 6, 0, 0]} maxBarSize={64} />
+                  </BarChart>
+                </ResponsiveContainer>
                 <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-500">
                   <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
                     Peak month: {contactTrend.maxCount} contacts
