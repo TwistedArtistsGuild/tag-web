@@ -8,46 +8,21 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-
-
-
-import { useState } from "react"
-import UploadPictureForm1 from "@/components/widgets/uploadPic"
-import { defaultFieldClass } from "@/utils/formSettings";
+import Link from "next/link"
 
 import TagSEO from "@/components/TagSEO"
 
-export default function UploadPicPage(props) {
-	const [context, setContext] = useState("twistedpassions")
-	const [topFolder, setTopFolder] = useState("listing")
-
+export default function UploadPicPage() {
 	return (
-      <div>
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Test Testuploadpic", description: "Explore Github Projects Web Pages Test Testuploadpic on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Test Testuploadpic", description: "Explore Github Projects Web Pages Test Testuploadpic on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testuploadpic" />
-			<h1>Upload Picture</h1>
-			<form className="form-control">
-				<div className="form-control">
-					<label className="label">Context:</label>
-					<input
-						type="text"
-						className={defaultFieldClass}
-						value={context}
-						onChange={(e) => setContext(e.target.value)}
-						placeholder="Context"
-					/>
+		<div className="p-4 bg-base-200 min-h-screen">
+			<TagSEO metadataProp={{ title: "Deprecated Upload Page", description: "This page has moved to picture management.", keywords: "deprecated, picture management", og: { title: "Deprecated Upload Page", description: "This page has moved to picture management." } }} canonicalSlug="test/testuploadpic" />
+			<div className="max-w-2xl card bg-base-100 shadow-md border border-base-300">
+				<div className="card-body">
+					<h1 className="text-2xl font-bold">Deprecated Route</h1>
+					<p>Picture upload moved to the consolidated Picture Management page.</p>
+					<Link href="/test/pictureManagement" className="btn btn-primary w-fit">Go to /test/pictureManagement</Link>
 				</div>
-				<div className="form-control">
-					<label className="label">Top Folder:</label>
-					<input
-						type="text"
-						className={defaultFieldClass}
-						value={topFolder}
-						onChange={(e) => setTopFolder(e.target.value)}
-						placeholder="Top Folder"
-					/>
-				</div>
-			</form>
-			<UploadPictureForm1 context={context} topFolder={topFolder} {...props} />
+			</div>
 		</div>
 	)
 }

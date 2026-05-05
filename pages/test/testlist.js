@@ -9,101 +9,21 @@
 
  Open source · low-profit · human-first*/
 
-import { useEffect, useState } from "react"
-import Image from "next/image"
-import axios from "axios"
-import { defaultFieldClass } from "@/utils/formSettings"
+import Link from "next/link"
 
 import TagSEO from "@/components/TagSEO"
 
 export default function TestList() {
-	const [containers, setContainers] = useState([])
-	const [selectedContainer, setSelectedContainer] = useState("")
-	const [blobs, setBlobs] = useState([])
-	const [loading, setLoading] = useState(false)
-	const [error, setError] = useState(null)
-
-	useEffect(() => {
-		const fetchContainers = async () => {
-			try {
-				const response = await axios.get("/api/listBlobContainers")
-				setContainers(response.data.containers)
-				setSelectedContainer(response.data.containers[0] || "")
-			} catch (err) {
-				setError(err)
-			}
-		}
-
-		fetchContainers()
-	}, [])
-
-	useEffect(() => {
-		if (selectedContainer) {
-			const fetchBlobs = async () => {
-				setLoading(true)
-				try {
-					const response = await axios.get(`/api/listBlob?context=${selectedContainer}`)
-					setBlobs(response.data.blobs)
-				} catch (err) {
-					setError(err)
-				} finally {
-					setLoading(false)
-				}
-			}
-
-			fetchBlobs()
-		}
-	}, [selectedContainer])
-
-	if (error) {
-		return <div>Error: {error.message}</div>
-	}
-
 	return (
-      <div>
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Test Testlist", description: "Explore Github Projects Web Pages Test Testlist on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Test Testlist", description: "Explore Github Projects Web Pages Test Testlist on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testlist" />
-			<h1>Select a Blob Container</h1>
-			<form className="form-control">
-				<label className="label" htmlFor="containerSelect">Container:</label>
-				<select
-					id="containerSelect"
-					className={defaultFieldClass}
-					value={selectedContainer}
-					onChange={(e) => setSelectedContainer(e.target.value)}
-				>
-					{containers.map((container) => (
-						<option key={container} value={container}>
-							{container}
-						</option>
-					))}
-				</select>
-			</form>
-
-			{loading && <div>Loading...</div>}
-
-			{!loading && selectedContainer && (
-				<div>
-					<h1>List of Blobs in Container: {selectedContainer}</h1>
-					<table className="table table-zebra w-full mt-4">
-						<thead>
-							<tr>
-								<th>Name</th>
-								<th>URL</th>
-							</tr>
-						</thead>
-						<tbody>
-							{blobs.map((blob) => (
-								<tr key={blob.name}>
-									<td>{blob.name}</td>
-									<td>
-										<Image src={blob.url} alt={blob.name} width={100} height={100} className="max-w-xs" />
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
+		<div className="p-4 bg-base-200 min-h-screen">
+			<TagSEO metadataProp={{ title: "Deprecated Test List", description: "This page has moved to picture management.", keywords: "deprecated, picture management", og: { title: "Deprecated Test List", description: "This page has moved to picture management." } }} canonicalSlug="test/testlist" />
+			<div className="max-w-2xl card bg-base-100 shadow-md border border-base-300">
+				<div className="card-body">
+					<h1 className="text-2xl font-bold">Deprecated Route</h1>
+					<p>Blob listing moved to the consolidated Picture Management page.</p>
+					<Link href="/test/pictureManagement" className="btn btn-primary w-fit">Go to /test/pictureManagement</Link>
 				</div>
-			)}
+			</div>
 		</div>
 	)
 }
