@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react"
-import CrmSocialChat from "/components/ghl/CrmSocialChat"
 
-export default function GHLTester() {
+export default function GHLIndexPage() {
   const [contacts, setContacts] = useState([])
   const [surveys, setSurveys] = useState([])
   const [funnel, setFunnel] = useState({
@@ -13,75 +12,7 @@ export default function GHLTester() {
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [contactSearch, setContactSearch] = useState("")
-  const [contactSort, setContactSort] = useState({ key: "company", direction: "asc" })
   const membershipFormId = "jqVGvHmn4pv8gb67G3zU"
-
-  const getContactName = (contact) => {
-    if (contact.firstName || contact.lastName) {
-      return `${contact.firstName || ""} ${contact.lastName || ""}`.trim()
-    }
-    return contact.contactName || "-"
-  }
-
-  const filteredAndSortedContacts = useMemo(() => {
-    const search = contactSearch.trim().toLowerCase()
-
-    const filtered = contacts.filter((contact) => {
-      if (!search) return true
-
-      const fields = [
-        contact.companyName || "",
-        getContactName(contact),
-        contact.email || "",
-        contact.type || "",
-      ]
-
-      return fields.some((field) => field.toLowerCase().includes(search))
-    })
-
-    const sorted = [...filtered].sort((a, b) => {
-      const aName = getContactName(a)
-      const bName = getContactName(b)
-
-      const valueMapA = {
-        company: (a.companyName || "").toLowerCase(),
-        name: (aName || "").toLowerCase(),
-        email: (a.email || "").toLowerCase(),
-        status: (a.type || "contact").toLowerCase(),
-      }
-
-      const valueMapB = {
-        company: (b.companyName || "").toLowerCase(),
-        name: (bName || "").toLowerCase(),
-        email: (b.email || "").toLowerCase(),
-        status: (b.type || "contact").toLowerCase(),
-      }
-
-      const aValue = valueMapA[contactSort.key] || ""
-      const bValue = valueMapB[contactSort.key] || ""
-
-      if (aValue < bValue) return contactSort.direction === "asc" ? -1 : 1
-      if (aValue > bValue) return contactSort.direction === "asc" ? 1 : -1
-      return 0
-    })
-
-    return sorted
-  }, [contacts, contactSearch, contactSort])
-
-  const toggleContactSort = (key) => {
-    setContactSort((prev) => {
-      if (prev.key === key) {
-        return { key, direction: prev.direction === "asc" ? "desc" : "asc" }
-      }
-      return { key, direction: "asc" }
-    })
-  }
-
-  const sortIndicator = (key) => {
-    if (contactSort.key !== key) return ""
-    return contactSort.direction === "asc" ? " ↑" : " ↓"
-  }
 
   const findFieldInObject = (value, candidateKeys) => {
     if (value == null) return null
@@ -124,6 +55,57 @@ export default function GHLTester() {
     return visit(value)
   }
 
+  const contactTrend = useMemo(() => {
+    const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "short" })
+    const monthBuckets = []
+    const now = new Date()
+
+    for (let offset = 5; offset >= 0; offset -= 1) {
+      const bucketDate = new Date(now.getFullYear(), now.getMonth() - offset, 1)
+      monthBuckets.push({
+        key: `${bucketDate.getFullYear()}-${String(bucketDate.getMonth() + 1).padStart(2, "0")}`,
+        label: monthFormatter.format(bucketDate),
+        count: 0,
+      })
+    }
+
+    const bucketMap = new Map(monthBuckets.map((bucket) => [bucket.key, bucket]))
+    let contactsWithDates = 0
+
+    contacts.forEach((contact) => {
+      const rawDate =
+        contact.dateAdded ||
+        contact.date_added ||
+        contact.createdAt ||
+        contact.created_at ||
+        contact.created ||
+        contact.dateCreated ||
+        findFieldInObject(contact, ["dateAdded", "date_added", "createdAt", "created_at", "created", "dateCreated"])
+
+      if (!rawDate) return
+
+      const parsedDate = new Date(rawDate)
+      if (Number.isNaN(parsedDate.getTime())) return
+
+      contactsWithDates += 1
+      const bucketKey = `${parsedDate.getFullYear()}-${String(parsedDate.getMonth() + 1).padStart(2, "0")}`
+      const bucket = bucketMap.get(bucketKey)
+      if (bucket) {
+        bucket.count += 1
+      }
+    })
+
+    const maxCount = monthBuckets.reduce((max, bucket) => Math.max(max, bucket.count), 0)
+    const totalInRange = monthBuckets.reduce((sum, bucket) => sum + bucket.count, 0)
+
+    return {
+      months: monthBuckets,
+      maxCount,
+      totalInRange,
+      contactsWithDates,
+    }
+  }, [contacts])
+
   const getSubmissionName = (survey) => {
     const directName =
       survey.fullName ||
@@ -161,13 +143,11 @@ export default function GHLTester() {
         setLoading(true)
         setError(null)
 
-        // Fetch contacts
         const customersRes = await fetch("/api/crm/ghl-customers")
         if (!customersRes.ok) throw new Error(`Contacts: ${customersRes.statusText}`)
         const customersData = await customersRes.json()
         setContacts(customersData.data || [])
 
-        // Fetch opportunities/funnel insights
         try {
           const funnelRes = await fetch("/api/crm/ghl-funnel")
           if (!funnelRes.ok) throw new Error(`Funnel: ${funnelRes.statusText}`)
@@ -183,7 +163,6 @@ export default function GHLTester() {
           console.warn("Funnel fetch failed:", err.message)
         }
 
-        // Fetch surveys (optional - endpoint may not be available)
         try {
           const surveysRes = await fetch(
             `/api/crm/ghl-surveys?formId=${membershipFormId}&startAt=2020-01-01&endAt=2030-01-01`
@@ -234,76 +213,77 @@ export default function GHLTester() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">GoHighLevel Integration Tester</h1>
+        <h1 className="text-4xl font-bold text-gray-800 mb-8">GoHighLevel CRM Index</h1>
 
-        {/* TODO: remove this section once CrmSocialChat is promoted to its own page/feature */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6 border-2 border-dashed border-yellow-400">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="inline-block bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded">PROTOTYPE — scheduled for removal from tester</span>
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6 border border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-1">Company Social Chat Workspace</h2>
+              <p className="text-sm text-gray-600 max-w-2xl">
+                Open the dedicated GoHighLevel chat interface for staff messaging across Facebook, Instagram, WhatsApp, SMS, and email conversations tied to our social channels.
+              </p>
+            </div>
+            <a
+              href="/portal/staff/ghl-chat"
+              className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Open GHL Chat
+            </a>
           </div>
-          <h2 className="text-2xl font-semibold text-gray-700 mb-1">CRM Social Chat Interface</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Send outbound messages through CRM channels (FB, IG, WhatsApp, SMS, Email) for the selected contact conversation.
-          </p>
-          <CrmSocialChat />
         </div>
 
         {/* Contacts Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-2xl font-semibold text-gray-700 mb-4">
-            Contacts ({filteredAndSortedContacts.length})
-          </h2>
-          {contacts.length > 0 ? (
-            <div className="overflow-x-auto">
-              <div className="mb-3">
-                <input
-                  type="text"
-                  value={contactSearch}
-                  onChange={(e) => setContactSearch(e.target.value)}
-                  placeholder="Search contacts by company, name, email, or status"
-                  className="w-full md:w-96 border rounded px-3 py-2 text-sm"
-                />
-              </div>
-              <table className="w-full text-sm text-left text-gray-600">
-                <thead className="bg-gray-50 text-gray-700 font-semibold">
-                  <tr>
-                    <th className="px-4 py-2">
-                      <button type="button" onClick={() => toggleContactSort("company")}>Company{sortIndicator("company")}</button>
-                    </th>
-                    <th className="px-4 py-2">
-                      <button type="button" onClick={() => toggleContactSort("name")}>Name{sortIndicator("name")}</button>
-                    </th>
-                    <th className="px-4 py-2">
-                      <button type="button" onClick={() => toggleContactSort("email")}>Email{sortIndicator("email")}</button>
-                    </th>
-                    <th className="px-4 py-2">
-                      <button type="button" onClick={() => toggleContactSort("status")}>Status{sortIndicator("status")}</button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredAndSortedContacts.slice(0, 10).map((contact, idx) => (
-                    <tr key={idx} className="border-t hover:bg-gray-50">
-                      <td className="px-4 py-2">{contact.companyName || "—"}</td>
-                      <td className="px-4 py-2 font-medium">
-                        {getContactName(contact)}
-                      </td>
-                      <td className="px-4 py-2">{contact.email || "—"}</td>
-                      <td className="px-4 py-2">
-                        <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                          {contact.type || "contact"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {filteredAndSortedContacts.length > 10 && (
-                <p className="text-gray-500 text-sm mt-2">
-                  Showing 10 of {filteredAndSortedContacts.length} contacts
-                </p>
-              )}
+          <div className="flex flex-col gap-2 mb-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-700">New Contacts, Past 6 Months</h2>
+              <p className="text-sm text-gray-500">
+                {contactTrend.totalInRange} new contacts across the last six calendar months
+              </p>
             </div>
+            <div className="text-sm text-gray-500">
+              {contactTrend.contactsWithDates > 0
+                ? `${contactTrend.contactsWithDates} contacts included from creation-date data`
+                : "No contact creation dates available from GoHighLevel"}
+            </div>
+          </div>
+
+          {contacts.length > 0 ? (
+            contactTrend.contactsWithDates > 0 ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 md:p-6">
+                <div className="flex h-72 items-end gap-3 md:gap-5">
+                  {contactTrend.months.map((month) => {
+                    const height = contactTrend.maxCount > 0
+                      ? Math.max((month.count / contactTrend.maxCount) * 100, month.count > 0 ? 12 : 0)
+                      : 0
+
+                    return (
+                      <div key={month.key} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
+                        <span className="text-xs font-semibold text-slate-600">{month.count}</span>
+                        <div className="relative flex h-full w-full items-end justify-center rounded-t-lg bg-white/70 px-1">
+                          <div
+                            className="w-full max-w-20 rounded-t-lg bg-gradient-to-t from-cyan-500 to-blue-600 transition-all"
+                            style={{ height: `${height}%` }}
+                            title={`${month.label}: ${month.count} new contacts`}
+                          ></div>
+                        </div>
+                        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{month.label}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-500">
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
+                    Peak month: {contactTrend.maxCount} contacts
+                  </span>
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1">
+                    Current total contacts: {contacts.length}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500">Contacts loaded, but none include a parseable created date for charting.</p>
+            )
           ) : (
             <p className="text-gray-500">No contacts found</p>
           )}

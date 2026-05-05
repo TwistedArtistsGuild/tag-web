@@ -37,9 +37,28 @@ export default function Portal_Staff() {
 				GoHighLevel Staff Workspace provides TAG staff with a unified view of contacts,
 				membership-drive funnel progress, form responses, and CRM messaging channels.
 			</p>
-			<a className="link link-primary text-lg font-semibold mt-2 inline-block" href="/portal/staff/ghl">
-				Open GoHighLevel Staff Page
-			</a>
+			<div className="mt-6 grid gap-4 md:grid-cols-2 max-w-4xl">
+				<div className="rounded-xl border border-base-300 bg-base-100 p-5 shadow-sm">
+					<p className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">CRM Index</p>
+					<h3 className="mt-2 text-xl font-bold text-base-content">GoHighLevel CRM Dashboard</h3>
+					<p className="mt-2 text-sm text-base-content/70">
+						Review contacts, membership funnel progress, and form-response intake.
+					</p>
+					<a className="link link-primary text-base font-semibold mt-4 inline-block" href="/portal/staff/ghl-index">
+						Open CRM Index
+					</a>
+				</div>
+				<div className="rounded-xl border border-primary/20 bg-base-100 p-5 shadow-sm">
+					<p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Social Messaging</p>
+					<h3 className="mt-2 text-xl font-bold text-base-content">GoHighLevel Chat Interface</h3>
+					<p className="mt-2 text-sm text-base-content/70">
+						Use our company GoHighLevel chat interface to manage conversations connected to our social media and CRM messaging channels.
+					</p>
+					<a className="link link-primary text-base font-semibold mt-4 inline-block" href="/portal/staff/ghl-chat">
+						Open GHL Chat
+					</a>
+				</div>
+			</div>
 		</div>
 	);
 }
