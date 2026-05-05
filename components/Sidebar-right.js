@@ -55,7 +55,7 @@ export default function RightSidebar(props) {
           transition-transform duration-300 ease-in-out
           ${isRightSidebarVisible ? "translate-x-0" : "translate-x-full"}
           ${isMobile ? "w-full" : "w-80"}
-          h-screen overflow-y-auto
+          h-screen
         `}
       >
         {/* Theme-reactive accent strip */}
@@ -64,7 +64,7 @@ export default function RightSidebar(props) {
         {isRightSidebarVisible && (
             <button
                 onClick={toggleRightSidebar}
-                className="absolute top-1/2 right-full transform translate-x-1/2 -translate-y-1/2 
+                className="absolute top-1/2 left-0 transform -translate-y-1/2 
                 bg-base-200 text-base-content p-1 rounded-md border border-base-content/20 shadow-sm z-40"
                 aria-label="Hide right sidebar"
             >
