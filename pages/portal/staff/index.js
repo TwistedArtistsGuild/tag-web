@@ -37,7 +37,7 @@ export default function Portal_Staff() {
 				GoHighLevel Staff Workspace provides TAG staff with a unified view of contacts,
 				membership-drive funnel progress, form responses, and CRM messaging channels.
 			</p>
-			<div className="mt-6 grid gap-4 md:grid-cols-2 max-w-4xl">
+			<div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-6xl">
 				<div className="rounded-xl border border-base-300 bg-base-100 p-5 shadow-sm">
 					<p className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">CRM Index</p>
 					<h3 className="mt-2 text-xl font-bold text-base-content">GoHighLevel CRM Dashboard</h3>
@@ -48,6 +48,16 @@ export default function Portal_Staff() {
 						Open CRM Index
 					</a>
 				</div>
+							<div className="rounded-xl border border-success/20 bg-base-100 p-5 shadow-sm">
+								<p className="text-xs font-semibold uppercase tracking-[0.18em] text-success">Storage</p>
+								<h3 className="mt-2 text-xl font-bold text-base-content">Blob Storage Usage Report</h3>
+								<p className="mt-2 text-sm text-base-content/70">
+									Analyze Azure Blob Storage usage by folder to identify high-usage artists and optimize storage costs.
+								</p>
+								<a className="link link-success text-base font-semibold mt-4 inline-block" href="/portal/staff/blob-usage">
+									View Storage Report
+								</a>
+							</div>
 				<div className="rounded-xl border border-primary/20 bg-base-100 p-5 shadow-sm">
 					<p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Social Messaging</p>
 					<h3 className="mt-2 text-xl font-bold text-base-content">GoHighLevel Chat Interface</h3>
