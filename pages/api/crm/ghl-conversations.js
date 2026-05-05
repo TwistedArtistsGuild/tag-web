@@ -1,7 +1,17 @@
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
+
 /**
  * Fetches conversations for CRM/social chat view
+ * Staff-only: requires authenticated session.
+ * TODO: restrict to marketing-team role once role system is in place.
  */
 export default async function handler(req, res) {
+  const session = await getServerSession(req, res, authOptions)
+  if (!session) {
+    return res.status(401).json({ error: "Unauthorized" })
+  }
+
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method not allowed" })
   }
@@ -61,6 +71,9 @@ export default async function handler(req, res) {
     }
 
     const conversations = data.conversations || []
+
+    // Keep the social subset for legacy callers, but return all conversations
+    // so the CRM inbox shows form submissions, emails, SMS, and social channels.
     const socialConversations = conversations.filter((c) =>
       ["TYPE_FACEBOOK", "TYPE_INSTAGRAM", "TYPE_WHATSAPP", "TYPE_PHONE", "TYPE_SMS", "TYPE_EMAIL"].includes(
         c.lastMessageType
@@ -69,7 +82,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({
       data: conversations,
-      social: socialConversations,
+      social: conversations, // return all; socialConversations kept for reference
       total: data.total || conversations.length,
     })
   } catch (error) {
