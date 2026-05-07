@@ -12,6 +12,7 @@
 //Imports
 import Image from "next/image"
 import Link from "next/link"
+import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
@@ -24,6 +25,7 @@ import ListingCardSmall from "@/components/cards/card_listing_small"
 import ContactCard, { DEFAULT_STORES } from "@/components/cards/card_contactList"
 import SocialComments from "@/components/social/Comments"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
+import { isArtist, isStaff, isAdmin } from "@/utils/authHelpers";
 
 const artistSections = [
   { id: "profile", label: "Profile" },
@@ -39,7 +41,12 @@ const artistSections = [
  * @returns {JSX.Element} - Individual artist page
  */
 const Artist = (props) => {
-  const { setPageSections } = useAppContext()
+  const { data: session } = useSession();
+  const { setPageSections } = useAppContext();
+
+  const isArtistOnly = isArtist(session) && !isStaff(session) && !isAdmin(session);   
+  // Artists can update their own page, staff and admins can update any artist page
+  const canUpdate = (isArtistOnly && props.artist.userId == session?.user?.id) || (isStaff(session) || isAdmin(session));
 
   // State for search functionality
   const [searchTerm, setSearchTerm] = useState("")
@@ -366,11 +373,14 @@ const Artist = (props) => {
           </div>
 
           {/* Update Link */}
+          {canUpdate && (
           <div className="mt-8 text-center">
             <Link href={`/artists/${props.slug}/update`} className="btn btn-primary">
               Update this artist page
             </Link>
-          </div>
+           </div>
+           )}
+
           </>
         )}
       </div>

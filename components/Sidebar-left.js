@@ -232,7 +232,7 @@ export default function LeftSidebar(props) {
         {isLeftSidebarVisible && (
             <button
                 onClick={toggleLeftSidebar}
-                className="absolute top-1/2 -right-1 transform -translate-y-1/2 bg-base-200 text-base-content 
+                className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-base-200 text-base-content 
         hover:bg-base-300 p-1 rounded-md border border-base-content/20 
         shadow-sm z-40"
                 aria-label="Hide left sidebar"
