@@ -9,13 +9,14 @@
 
  Open source · low-profit · human-first*/
 import TagSEO from "@/components/TagSEO"
+import Link from "next/link"
 
 export default function AddressSettings() {
 	const pageMetaData = {
 		title: "Update Address",
 		description: "Update your address information",
 		keywords: "settings, address, user, account",
-		robots: "index, follow",
+		robots: "noindex, nofollow",
 		author: "Bobb Shields",
 		viewport: "width=device-width, initial-scale=1.0",
 		og: {
@@ -25,16 +26,25 @@ export default function AddressSettings() {
 	}
 
 	return (
-		<>
+		<div className="min-h-screen bg-base-200 p-4 md:p-8">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="user/settings/address" />
-			<main className="min-h-screen p-8 pb-24 bg-base-200">
-				<section className="max-w-xl mx-auto space-y-8">
-					<h1 className="text-3xl md:text-4xl font-extrabold text-primary">Update Address</h1>
-					<p className="text-lg leading-relaxed text-base-content">
-						This page is under construction.
-					</p>
-				</section>
-			</main>
-		</>
+			<div className="max-w-5xl mx-auto space-y-6">
+				<div className="card bg-base-100 shadow-lg border border-base-300">
+					<div className="card-body">
+						<div className="flex items-center justify-between gap-3 flex-wrap">
+							<h1 className="text-2xl font-bold text-base-content">Update Address</h1>
+							<Link href="/user/settings" className="btn btn-sm btn-ghost">Back to Settings</Link>
+						</div>
+						<p className="text-sm text-base-content/70">Address management screen.</p>
+					</div>
+				</div>
+
+				<div className="card bg-base-100 shadow border border-base-300">
+					<div className="card-body">
+						<p className="text-base-content/80">This page is under construction.</p>
+					</div>
+				</div>
+			</div>
+		</div>
 	)
 }

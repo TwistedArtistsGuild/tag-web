@@ -17,6 +17,7 @@ import apiClient from "@/libs/api"
 import { usePrivate } from "@/hooks/usePrivate"
 import TagSEO from "@/components/TagSEO"
 import UploadPictureForm1 from "@/components/widgets/uploadPic"
+import Link from "next/link"
 
 export default function Dashboard() {
 	const pageMetaData = {
@@ -56,92 +57,103 @@ export default function Dashboard() {
 
 	// Show a loader when the session is loading. Not needed but recommended if you show user data like email/name
 	if (status === "loading") {
-		return <p>Loading...</p>
+		return (
+			<div className="min-h-screen bg-base-200 p-4 md:p-8">
+				<div className="max-w-5xl mx-auto">
+					<div className="card bg-base-100 shadow border border-base-300">
+						<div className="card-body items-center py-12">
+							<span className="loading loading-ghost loading-lg"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		)
 	}
 
 	return (
-		<>
+		<div className="min-h-screen bg-base-200 p-4 md:p-8">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="user/profile" />
-			<main className="min-h-screen p-8 pb-24 bg-base-200">
-				<section className="max-w-xl mx-auto space-y-8">
-					<h1 className="text-3xl md:text-4xl font-extrabold text-primary">Your Profile</h1>
-					<p className="text-lg leading-relaxed text-base-content">
-						{status === "authenticated"
-							? `Welcome ${session?.user?.name}`
-							: "You are not logged in"}
-					</p>
-					<div className="form-control">
-						<label className="label">
-							<span className="label-text">Email:</span>
-						</label>
-						<p className="text-base-content">{session?.user?.email || "N/A"}</p>
+			<div className="max-w-5xl mx-auto space-y-6">
+				<div className="card bg-base-100 shadow-lg border border-base-300">
+					<div className="card-body">
+						<div className="flex items-center justify-between gap-3 flex-wrap">
+							<h1 className="text-2xl font-bold text-base-content">Your Profile</h1>
+							<Link href="/user" className="btn btn-sm btn-ghost">Back to Dashboard</Link>
+						</div>
+						<p className="text-sm text-base-content/70">
+							{status === "authenticated" ? `Welcome ${session?.user?.name}` : "You are not logged in"}
+						</p>
 					</div>
-					<div className="form-control">
-						<label className="label">
-							<span className="label-text">User ID:</span>
-						</label>
-						<p className="text-base-content">{session?.user?.id || "N/A"}</p>
-					</div>
-					<div className="form-control">
-						<label className="label">
-							<span className="label-text">Role:</span>
-						</label>
-						<p className="text-base-content">{session?.user?.role || "N/A"}</p>
-					</div>
-					<div className="form-control">
-						<label className="label">
-							<span className="label-text">Profile Paragraph:</span>
-						</label>
-						<textarea
-							value={profileParagraph}
-							onChange={(e) => setProfileParagraph(e.target.value)}
-							placeholder="Write something about yourself"
-							className="textarea textarea-bordered w-full"
-						/>
-					</div>
-					<div className="form-control">
-						<label className="label">
-							<span className="label-text">Art Endeavors:</span>
-						</label>
-						<textarea
-							value={artEndeavors}
-							onChange={(e) => setArtEndeavors(e.target.value)}
-							placeholder="Describe your art endeavors"
-							className="textarea textarea-bordered w-full"
-						/>
-					</div>
-					<div className="form-control">
-						<label className="label">
-							<span className="label-text">Profile Picture:</span>
-						</label>
-						<UploadPictureForm1
-							context="user-profile"
-							topFolder="profile-pictures"
-							onUploadComplete={(url) => setProfilePicture(url)}
-						/>
-						{profilePicture && (
-							<div className="relative w-full h-64">
-								<Image src={profilePicture} alt="Profile Picture" fill style={{ objectFit: 'cover' }} className="rounded-lg" />
+				</div>
+
+				<div className="card bg-base-100 shadow border border-base-300">
+					<div className="card-body space-y-4">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+							<div className="rounded-box border border-base-300 p-3">
+								<div className="text-base-content/60">Email</div>
+								<div className="font-medium break-all">{session?.user?.email || "N/A"}</div>
 							</div>
-						)}
+							<div className="rounded-box border border-base-300 p-3">
+								<div className="text-base-content/60">User ID</div>
+								<div className="font-medium">{session?.user?.id || "N/A"}</div>
+							</div>
+							<div className="rounded-box border border-base-300 p-3">
+								<div className="text-base-content/60">Role</div>
+								<div className="font-medium">{session?.user?.role || "N/A"}</div>
+							</div>
+						</div>
+
+						<div className="form-control">
+							<label className="label">
+								<span className="label-text">Profile Paragraph</span>
+							</label>
+							<textarea
+								value={profileParagraph}
+								onChange={(e) => setProfileParagraph(e.target.value)}
+								placeholder="Write something about yourself"
+								className="textarea textarea-bordered w-full"
+							/>
+						</div>
+
+						<div className="form-control">
+							<label className="label">
+								<span className="label-text">Art Endeavors</span>
+							</label>
+							<textarea
+								value={artEndeavors}
+								onChange={(e) => setArtEndeavors(e.target.value)}
+								placeholder="Describe your art endeavors"
+								className="textarea textarea-bordered w-full"
+							/>
+						</div>
+
+						<div className="form-control">
+							<label className="label">
+								<span className="label-text">Profile Picture</span>
+							</label>
+							<UploadPictureForm1
+								context="user-profile"
+								topFolder="profile-pictures"
+								onUploadComplete={(url) => setProfilePicture(url)}
+							/>
+							{profilePicture && (
+								<div className="relative w-full h-64 rounded-box overflow-hidden border border-base-300">
+									<Image src={profilePicture} alt="Profile Picture" fill style={{ objectFit: "cover" }} />
+								</div>
+							)}
+						</div>
+
+						<div className="flex gap-3 flex-wrap">
+							<button className={`btn btn-primary ${isLoading ? "loading" : ""}`} onClick={handleProfileUpdate} disabled={isLoading}>
+								{isLoading ? "Updating..." : "Update Profile"}
+							</button>
+							<button className="btn btn-ghost" onClick={() => signOut({ callbackUrl: "/" })}>
+								Logout
+							</button>
+						</div>
 					</div>
-					<div className="flex space-x-4">
-						<button
-							className={`btn btn-primary ${isLoading ? "loading" : ""}`}
-							onClick={handleProfileUpdate}
-							disabled={isLoading}
-						>
-							{isLoading ? "Updating..." : "Update Profile"}
-						</button>
-						<button
-							className="btn btn-ghost"
-							onClick={() => signOut({ callbackUrl: "/" })}
-						>
-							Logout
-						</button>
-					</div>
-				</section>
-			</main>
-		</>
+				</div>
+			</div>
+		</div>
 	)
 }

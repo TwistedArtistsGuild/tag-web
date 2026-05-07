@@ -21,14 +21,24 @@ export default function Settings() {
 
 	// Show a loader when the session is loading. Not needed but recommended if you show user data like email/name
 	if (status === "loading") {
-		return <p>Loading...</p>
+		return (
+			<div className="min-h-screen bg-base-200 p-4 md:p-8">
+				<div className="max-w-5xl mx-auto">
+					<div className="card bg-base-100 shadow border border-base-300">
+						<div className="card-body items-center py-12">
+							<span className="loading loading-ghost loading-lg"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		)
 	}
 
 	const pageMetaData = {
 		title: "User Settings",
 		description: "Manage your account settings",
 		keywords: "settings, user, account, privacy",
-		robots: "index, follow",
+		robots: "noindex, nofollow",
 		author: "Bobb Shields",
 		viewport: "width=device-width, initial-scale=1.0",
 		og: {
@@ -37,61 +47,59 @@ export default function Settings() {
 		},
 	}
 
-	return (
-		<>
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="settings" />
-			<main className="min-h-screen p-8 pb-24 bg-base-200">
-				<section className="max-w-xl mx-auto space-y-8">
-					<h1 className="text-3xl md:text-4xl font-extrabold text-primary">Your Settings</h1>
+	const settingLinks = [
+		{ href: "/user/settings/address", label: "Update Address", icon: "📍" },
+		{ href: "/user/settings/credit-card", label: "Update Credit Card Info", icon: "💳" },
+		{ href: "/user/settings/password", label: "Change Password", icon: "🔐" },
+		{ href: "/user/settings/notifications", label: "Notification Preferences", icon: "🔔" },
+	]
 
-					<div className="space-y-4">
-						<h2 className="text-2xl font-bold text-secondary">Account Information</h2>
-						<div className="flex flex-col space-y-2">
-							<div className="flex justify-between">
-								<span className="font-medium">Name:</span>
-								<span>{session?.user?.name || "N/A"}</span>
-							</div>
-							<div className="flex justify-between">
-								<span className="font-medium">Username:</span>
-								<span>{session?.user?.username || "N/A"}</span>
-							</div>
+	return (
+		<div className="min-h-screen bg-base-200 p-4 md:p-8">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="user/settings" />
+			<div className="max-w-5xl mx-auto space-y-6">
+				<div className="card bg-base-100 shadow-lg border border-base-300">
+					<div className="card-body">
+						<div className="flex items-center justify-between gap-3 flex-wrap">
+							<h1 className="text-2xl font-bold text-base-content">Your Settings</h1>
+							<Link href="/user" className="btn btn-sm btn-ghost">Back to Dashboard</Link>
 						</div>
 					</div>
+				</div>
 
-					<div className="space-y-4">
-						<h2 className="text-2xl font-bold text-secondary">Settings</h2>
-						<ul className="list-disc list-inside space-y-2">
-							<li>
-								<Link href="/user/settings/address" className="link link-primary">
-									Update Address
+				<div className="card bg-base-100 shadow border border-base-300">
+					<div className="card-body space-y-4">
+						<h2 className="text-lg font-semibold text-base-content">Account Information</h2>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+							<div className="rounded-box border border-base-300 p-3">
+								<div className="text-base-content/60">Name</div>
+								<div className="font-medium">{session?.user?.name || "N/A"}</div>
+							</div>
+							<div className="rounded-box border border-base-300 p-3">
+								<div className="text-base-content/60">Username</div>
+								<div className="font-medium">{session?.user?.username || "N/A"}</div>
+							</div>
+						</div>
+
+						<h2 className="text-lg font-semibold text-base-content">Settings</h2>
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+							{settingLinks.map((item) => (
+								<Link key={item.href} href={item.href} className="card bg-base-200 border border-base-300 hover:border-primary transition-colors">
+									<div className="card-body p-4">
+										<div className="font-medium text-base-content">{item.icon} {item.label}</div>
+									</div>
 								</Link>
-							</li>
-							<li>
-								<Link href="/user/settings/credit-card" className="link link-primary">
-									Update Credit Card Info
-								</Link>
-							</li>
-							<li>
-								<Link href="/user/settings/password" className="link link-primary">
-									Change Password
-								</Link>
-							</li>
-							<li>
-								<Link href="/user/settings/notifications" className="link link-primary">
-									Notification Preferences
-								</Link>
-							</li>
-						</ul>
+							))}
+						</div>
+
+						<div>
+							<button className="btn btn-ghost" onClick={() => signOut({ callbackUrl: "/" })}>
+								Logout
+							</button>
+						</div>
 					</div>
-
-					<button
-						className="btn btn-ghost"
-						onClick={() => signOut({ callbackUrl: "/" })}
-					>
-						Logout
-					</button>
-				</section>
-			</main>
-		</>
+				</div>
+			</div>
+		</div>
 	)
 }
