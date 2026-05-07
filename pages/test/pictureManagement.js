@@ -12,47 +12,6 @@
 import PictureExplorerCard from "@/components/PictureExplorerCard"
 import TagSEO from "@/components/TagSEO"
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export default function PictureManagement() {
 	return (
 		<div className="p-4 bg-base-200 min-h-screen">
@@ -72,7 +31,11 @@ export default function PictureManagement() {
 
 			<div className="max-w-7xl mx-auto space-y-6">
 				<h1 className="text-3xl font-bold text-primary">Picture Management</h1>
-				<PictureExplorerCard useCase="personal-blog" allowContainerSwitch={true} />
+				<PictureExplorerCard
+					useCase="staff-portal"
+					allowContainerSwitch={true}
+					preserveStartPrefixOnContainerSwitch={false}
+				/>
 			</div>
 		</div>
 	)

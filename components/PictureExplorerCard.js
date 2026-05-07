@@ -14,10 +14,12 @@ import Image from "next/image"
 import { defaultFieldClass } from "@/utils/formSettings"
 
 const CONTAINER_CONFIGS = {
+	// This will get depreciated - the intent was to pass in the starting location and ensure the user can't drift into unathorized areas.
 	"personal-blog": { container: "tagpictures", startPrefix: "platformpics/personalblogs/", label: "Personal Blog Media" },
 	"artist-blog": { container: "tagpictures", startPrefix: "platformpics/usercontent/", label: "Artist Business Media" },
 	listing: { container: "tagpictures", startPrefix: "platformpics/listings/", label: "Listing Media" },
 	article: { container: "platformpics", startPrefix: "news/", label: "News Articles" },
+	"staff-portal": { container: "tagpictures", startPrefix: "", label: "Staff Portal Media" },
 }
 
 const AVAILABLE_CONTAINERS = ["tagpictures", "platformpics"]
@@ -26,10 +28,14 @@ function normalizePrefix(value) {
 	return String(value || "").replace(/^\/+/, "")
 }
 
-export default function PictureExplorerCard({ useCase = "personal-blog", title, allowContainerSwitch = false }) {
+export default function PictureExplorerCard({
+	useCase = "personal-blog",
+	title,
+	allowContainerSwitch = false,
+	preserveStartPrefixOnContainerSwitch = true,
+}) {
 	const config = CONTAINER_CONFIGS[useCase] || CONTAINER_CONFIGS["personal-blog"]
 	const [container, setContainer] = useState(config.container)
-	const [startPrefixInput, setStartPrefixInput] = useState(config.startPrefix)
 	const [activeStartPrefix, setActiveStartPrefix] = useState(config.startPrefix)
 	const [prefix, setPrefix] = useState(config.startPrefix)
 	const [directories, setDirectories] = useState([])
@@ -128,15 +134,13 @@ export default function PictureExplorerCard({ useCase = "personal-blog", title, 
 		}
 	}
 
-	const applyStartPrefix = () => {
-		loadDirectory(startPrefixInput, startPrefixInput)
-	}
-
 	const handleContainerChange = (nextContainer) => {
 		setContainer(nextContainer)
-		const nextStartPrefix = ""
-		setStartPrefixInput(nextStartPrefix)
-		loadDirectory(nextStartPrefix, nextStartPrefix, nextContainer)
+		if (preserveStartPrefixOnContainerSwitch) {
+			loadDirectory(activeStartPrefix, activeStartPrefix, nextContainer)
+			return
+		}
+		loadDirectory("", "", nextContainer)
 	}
 
 	const goToRoot = () => {
@@ -158,7 +162,7 @@ export default function PictureExplorerCard({ useCase = "personal-blog", title, 
 		loadDirectory(selected, activeStartPrefix)
 	}
 
-	const handleDelete = async (fileUrl, fileName) => {
+	const handleDelete = async (fileUrl) => {
 		setDeleteLoading(fileUrl)
 		setError("")
 
@@ -287,7 +291,7 @@ export default function PictureExplorerCard({ useCase = "personal-blog", title, 
 
 				{allowContainerSwitch && (
 					<div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-						<div className="form-control md:col-span-3">
+						<div className="form-control md:col-span-4">
 							<label className="label">Container</label>
 							<select
 								className={defaultFieldClass}
@@ -301,20 +305,6 @@ export default function PictureExplorerCard({ useCase = "personal-blog", title, 
 								))}
 							</select>
 						</div>
-						<div className="form-control md:col-span-7">
-							<label className="label">Start Directory (security boundary)</label>
-							<input
-								className={defaultFieldClass}
-								value={startPrefixInput}
-								onChange={(e) => setStartPrefixInput(e.target.value)}
-								placeholder="e.g. platformpics/usercontent/ (cannot browse above this)"
-							/>
-						</div>
-						<div className="md:col-span-2">
-							<button className="btn btn-secondary w-full" type="button" onClick={applyStartPrefix}>
-								Apply
-							</button>
-						</div>
 					</div>
 				)}
 
@@ -322,8 +312,38 @@ export default function PictureExplorerCard({ useCase = "personal-blog", title, 
 					<div className="grid grid-cols-1 md:gap-6 md:grid-cols-[65%_35%]">
 						<div>
 							<div className="text-xs uppercase tracking-wide text-base-content/70 mb-2">Current Path</div>
-							<div className="font-mono text-sm break-all bg-base-100 p-2 rounded mb-2">{prefix || "/"}</div>
-							<div className="text-xs text-base-content/60 mb-2">Boundary: {activeStartPrefix || "/"}</div>
+							<div className="font-mono text-sm break-all bg-base-100 p-2 rounded mb-2 flex flex-wrap items-center gap-1">
+								{currentSegments.length === 0 ? (
+									<button className="btn btn-xs btn-ghost" type="button" onClick={() => goToBreadcrumb(-1)}>
+										/
+									</button>
+								) : (
+									<>
+										<span>/</span>
+										{currentSegments.map((segment, index) => {
+											const isBoundarySegment = index < rootSegments.length
+											const breadcrumbIndex = index - rootSegments.length
+
+											return (
+												<span key={`${segment}-${index}`} className="inline-flex items-center gap-1">
+													{isBoundarySegment ? (
+														<span>{segment}</span>
+													) : (
+														<button
+															type="button"
+															className="btn btn-xs btn-ghost"
+															onClick={() => goToBreadcrumb(breadcrumbIndex)}
+														>
+															{segment}
+														</button>
+													)}
+													<span>/</span>
+												</span>
+											)
+										})}
+									</>
+								)}
+							</div>
 							<div className="flex flex-wrap gap-2">
 								<button className="btn btn-xs btn-ghost" type="button" onClick={goToRoot}>
 									Root
@@ -344,21 +364,6 @@ export default function PictureExplorerCard({ useCase = "personal-blog", title, 
 								>
 									{loading ? "Loading..." : "Refresh"}
 								</button>
-							</div>
-							<div className="mt-2 flex flex-wrap gap-1">
-								<button className="btn btn-xs btn-ghost" type="button" onClick={() => goToBreadcrumb(-1)}>
-									/
-								</button>
-								{relativeSegments.map((segment, index) => (
-									<button
-										key={`${segment}-${index}`}
-										className="btn btn-xs btn-ghost"
-										type="button"
-										onClick={() => goToBreadcrumb(index)}
-									>
-										{segment}/
-									</button>
-								))}
 							</div>
 						</div>
 
@@ -502,7 +507,7 @@ export default function PictureExplorerCard({ useCase = "personal-blog", title, 
 													<button
 														type="button"
 														className="btn btn-xs btn-error btn-outline"
-														onClick={() => handleDelete(file.url, file.name)}
+														onClick={() => handleDelete(file.url)}
 														disabled={deleteLoading === file.url}
 													>
 														{deleteLoading === file.url ? "Deleting..." : "Delete"}
