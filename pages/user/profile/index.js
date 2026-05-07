@@ -31,7 +31,7 @@ export default function Dashboard() {
 	}
 
 	// Custom hook to make private pages easier to deal with (see /hooks folder)
-	const [session, status] = usePrivate({})
+	const [session, status] = usePrivate("/user/profile")
 	const [isLoading, setIsLoading] = useState(false)
 	const [profileParagraph, setProfileParagraph] = useState(session?.user?.profileParagraph || "")
 	const [artEndeavors, setArtEndeavors] = useState(session?.user?.artEndeavors || "")

@@ -17,7 +17,7 @@ import Link from "next/link"
 
 export default function Settings() {
 	// Custom hook to make private pages easier to deal with (see /hooks folder)
-	const [session, status] = usePrivate({})
+	const [session, status] = usePrivate("/user/settings")
 
 	// Show a loader when the session is loading. Not needed but recommended if you show user data like email/name
 	if (status === "loading") {

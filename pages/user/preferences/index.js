@@ -18,7 +18,7 @@ import TagSEO from "@/components/TagSEO"
 
 export default function Preferences() {
 	// Custom hook to make private pages easier to deal with (see /hooks folder)
-	const [session, status] = usePrivate({})
+	const [session, status] = usePrivate("/user/preferences")
 	const [isLoading, setIsLoading] = useState(false)
 	const [theme, setTheme] = useState(session?.user?.preferences?.theme || "light")
 	const [notifications, setNotifications] = useState(session?.user?.preferences?.notifications || true)
