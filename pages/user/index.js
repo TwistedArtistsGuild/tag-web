@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
+import ArtistCardSmall from "@/components/cards/card_artist_small"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 
 const ROLE_META = {
@@ -18,11 +19,7 @@ const MODULES = [
 	{ key: "shipping", title: "Shipping Tracker", icon: "📦" },
 	{ key: "personalizedFeed", title: "Personalized Feed", icon: "🧠" },
 	{ key: "favoriteArtistsFeed", title: "New Listings From Favorited Artists", icon: "💖" },
-	{ key: "privacy", title: "Privacy Settings", icon: "🔒" },
-	{ key: "profile", title: "Profile Updater & Picture Uploader", icon: "👤" },
 	{ key: "giftCard", title: "Gift Card Balance", icon: "🎁" },
-	{ key: "contentWarnings", title: "Content Warning Preferences", icon: "🧩" },
-	{ key: "moderationPortal", title: "Content Moderation Portal", icon: "🧯" },
 ]
 
 const DEFAULT_MODULE_ORDER = MODULES.map((m) => m.key)
@@ -76,8 +73,22 @@ function ModuleCard({ module, index, total, onMoveUp, onMoveDown, onRemove, chil
 	)
 }
 
+function ConceptCard({ href, title, description, icon }) {
+	return (
+		<Link href={href} className="card bg-base-100 border border-base-300 hover:border-primary hover:shadow transition-all">
+			<div className="card-body p-3 gap-0.5 sm:flex-row sm:items-center sm:justify-between">
+				<h4 className="font-medium text-sm text-base-content sm:min-w-56">
+					<span className="mr-2">{icon}</span>
+					{title}
+				</h4>
+				<p className="text-xs text-base-content/65 flex-1">{description}</p>
+			</div>
+		</Link>
+	)
+}
+
 function renderModuleBody(moduleKey, context) {
-	const { sessionUser, isModeratorOrAdmin } = context
+	const { sessionUser } = context
 
 	switch (moduleKey) {
 		case "shipping":
@@ -142,8 +153,8 @@ function renderModuleBody(moduleKey, context) {
 		case "privacy":
 			return (
 				<div className="space-y-2 text-sm">
-					<p className="text-base-content/70">Manage profile visibility, messaging preferences, and notification privacy.</p>
-					<Link href="/user/settings/notifications" className="btn btn-sm btn-outline">Open Privacy Settings</Link>
+					<p className="text-base-content/70">Manage privacy, notification, and account-level preferences from one place.</p>
+					<Link href="/user/settings" className="btn btn-sm btn-outline">Open Settings Hub</Link>
 				</div>
 			)
 
@@ -168,19 +179,10 @@ function renderModuleBody(moduleKey, context) {
 			return (
 				<div className="space-y-2 text-sm">
 					<p className="text-base-content/70">Choose which content warning tags you want to hide or show.</p>
-					<Link href="/user/preferences" className="btn btn-sm btn-accent">Edit Content Warning Preferences</Link>
-				</div>
-			)
-
-		case "moderationPortal":
-			return (
-				<div className="space-y-2 text-sm">
-					<p className="text-base-content/70">See M2: Content Moderation Portal & Content Tag Systems (Issue #79).</p>
-					{isModeratorOrAdmin ? (
-						<Link href="/portal/staff" className="btn btn-sm btn-info">Open Moderation Portal</Link>
-					) : (
-						<div className="badge badge-ghost">Requires moderator or admin</div>
-					)}
+					<div className="flex gap-2 flex-wrap">
+						<Link href="/user/preferences/content" className="btn btn-sm btn-accent">Edit Content Warning Preferences</Link>
+						<Link href="/user/preferences" className="btn btn-sm btn-ghost">Preferences Hub</Link>
+					</div>
 				</div>
 			)
 
@@ -199,7 +201,7 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 	}
 
 	const roles = apiSnapshot?.roles || []
-	const isModeratorOrAdmin = roles.includes("moderator") || roles.includes("admin")
+	const registeredArtists = apiSnapshot?.registeredArtists || []
 
 	const roleLabels = roles.filter((role) => ROLE_META[role]).map((role) => ROLE_META[role].label)
 	const greetingRoles =
@@ -211,6 +213,13 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 
 	const [moduleOrder, setModuleOrder] = useState(DEFAULT_MODULE_ORDER)
 	const [selectedModuleKey, setSelectedModuleKey] = useState(MODULES[0].key)
+
+	const userConceptLinks = [
+		{ href: "/user/profile", title: "Profile", description: "Update your public profile text, image, and creator details.", icon: "👤" },
+		{ href: "/user/preferences", title: "Preferences", description: "Set visual and app behavior preferences like theme and language.", icon: "🎛️" },
+		{ href: "/user/preferences/content", title: "Content Preferences", description: "Choose which warning-tagged content types are hidden by default.", icon: "🧩" },
+		{ href: "/user/settings", title: "Settings", description: "Manage account settings from the hub, including address, card, notifications, and password.", icon: "⚙️" },
+	]
 
 	const visibleModules = useMemo(
 		() => moduleOrder.map((key) => MODULES.find((module) => module.key === key)).filter(Boolean),
@@ -295,6 +304,56 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 
 				<div className="card bg-base-100 border border-base-300 shadow">
 					<div className="card-body p-4 gap-3">
+						<SectionHeading>Registered Artists</SectionHeading>
+						<p className="text-sm text-base-content/70">Artist profiles linked to your user account.</p>
+						{registeredArtists.length === 0 ? (
+							<div className="rounded-box border border-base-300 bg-base-200 p-3 text-sm text-base-content/70 flex items-center justify-between gap-3 flex-wrap">
+								<span>No linked artist profiles yet.</span>
+								<Link href="/user/register_artist" className="btn btn-sm btn-secondary">Register Artist</Link>
+							</div>
+						) : (
+							<div className="space-y-2">
+								{registeredArtists.map((artist) => (
+									<div key={artist.artistID} className="space-y-2">
+										<ArtistCardSmall artist={artist} />
+										<div className="flex justify-end">
+											<Link
+												href={artist.path ? `/portal/artist/${artist.path}` : "/portal/artist"}
+												className="btn btn-xs btn-outline"
+											>
+												Artist Portal
+											</Link>
+										</div>
+									</div>
+								))}
+								<div>
+									<Link href="/user/register_artist" className="btn btn-sm btn-secondary">Register Another Artist</Link>
+								</div>
+							</div>
+						)}
+					</div>
+				</div>
+
+				<div className="card bg-base-100 border border-base-300 shadow">
+					<div className="card-body p-4 gap-3">
+						<SectionHeading>User Areas</SectionHeading>
+						<p className="text-sm text-base-content/70">Quick access list for every user concept page.</p>
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+							{userConceptLinks.map((linkItem) => (
+								<ConceptCard
+									key={linkItem.href}
+									href={linkItem.href}
+									title={linkItem.title}
+									description={linkItem.description}
+									icon={linkItem.icon}
+								/>
+							))}
+						</div>
+					</div>
+				</div>
+
+				<div className="card bg-base-100 border border-base-300 shadow">
+					<div className="card-body p-4 gap-3">
 						<SectionHeading>Homepage Module Layout</SectionHeading>
 						<p className="text-sm text-base-content/70">
 							Add modules and arrange them in the order you want.
@@ -334,7 +393,7 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 							onMoveDown={() => moveModule(index, index + 1)}
 							onRemove={() => removeModule(module.key)}
 						>
-							{renderModuleBody(module.key, { sessionUser, isModeratorOrAdmin })}
+							{renderModuleBody(module.key, { sessionUser })}
 						</ModuleCard>
 					))}
 				</div>
@@ -372,6 +431,7 @@ export async function getServerSideProps(context) {
 		preference: null,
 		privacy: null,
 		settings: null,
+		registeredArtists: [],
 		roles: session.user.roles || [],
 		permissions: session.user.permissions || [],
 	}
@@ -388,17 +448,28 @@ export async function getServerSideProps(context) {
 				return res.json()
 			}
 
-			const [user, preference, privacy, settings] = await Promise.all([
+			const [user, preference, privacy, settings, registeredArtists] = await Promise.all([
 				fetchJsonOrNull(`${apiUrl}user/${userId}`),
 				fetchJsonOrNull(`${apiUrl}userpreference/${userId}`),
 				fetchJsonOrNull(`${apiUrl}userprivacy/${userId}`),
 				fetchJsonOrNull(`${apiUrl}usersettings/${userId}`),
+				fetchJsonOrNull(`${apiUrl}linker_usertoartist/byUserID/${userId}`),
 			])
 
 			apiSnapshot.user = user
 			apiSnapshot.preference = preference
 			apiSnapshot.privacy = privacy
 			apiSnapshot.settings = settings
+			apiSnapshot.registeredArtists = Array.isArray(registeredArtists)
+				? registeredArtists.map((artist) => ({
+					artistID: artist?.artistID ?? artist?.ArtistID ?? null,
+					title: artist?.title ?? artist?.Title ?? null,
+					path: artist?.path ?? artist?.Path ?? null,
+					byline: artist?.byline ?? artist?.Byline ?? null,
+					profilePic: artist?.profilePic ?? artist?.ProfilePic ?? null,
+					linkRole: artist?.linkRole ?? artist?.LinkRole ?? null,
+				}))
+				: []
 		} catch (error) {
 			console.error("Unable to load user API snapshot:", error.message)
 		}

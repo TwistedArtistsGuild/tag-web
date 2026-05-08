@@ -70,6 +70,11 @@ export default function Preferences() {
 						<p className="text-sm text-base-content/70">
 							{status === "authenticated" ? `Welcome ${session?.user?.name}` : "You are not logged in"}
 						</p>
+						<div>
+							<Link href="/user/preferences/content" className="btn btn-sm btn-outline btn-accent">
+								Open Content Preferences
+							</Link>
+						</div>
 					</div>
 				</div>
 
