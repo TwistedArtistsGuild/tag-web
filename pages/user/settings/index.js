@@ -48,10 +48,10 @@ export default function Settings() {
 	}
 
 	const settingLinks = [
-		{ href: "/user/settings/address", label: "Update Address", icon: "📍" },
-		{ href: "/user/settings/credit-card", label: "Update Credit Card Info", icon: "💳" },
-		{ href: "/user/settings/password", label: "Change Password", icon: "🔐" },
-		{ href: "/user/settings/notifications", label: "Notification Preferences", icon: "🔔" },
+		{ href: "/user/settings/notifications", label: "Notification Preferences", icon: "🔔", description: "Control likes, comments, mentions, follows, and DM alerts.", status: "Mock" },
+		{ href: "/user/settings/password", label: "Security Center", icon: "🔐", description: "Password changes, session management, and account protection.", status: "Mock" },
+		{ href: "/user/settings/address", label: "Address & Region", icon: "📍", description: "Manage shipping region, locale, and legal contact details.", status: "Mock" },
+		{ href: "/user/settings/credit-card", label: "Billing & Payment", icon: "💳", description: "Payment method preferences and billing controls.", status: "Mock" },
 	]
 
 	return (
@@ -81,12 +81,22 @@ export default function Settings() {
 							</div>
 						</div>
 
+						<div className="alert alert-info text-sm">
+							<span>
+								This area is structured for social-platform operations: audience controls, security, notifications, identity, and billing.
+							</span>
+						</div>
+
 						<h2 className="text-lg font-semibold text-base-content">Settings</h2>
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 							{settingLinks.map((item) => (
 								<Link key={item.href} href={item.href} className="card bg-base-200 border border-base-300 hover:border-primary transition-colors">
 									<div className="card-body p-4">
-										<div className="font-medium text-base-content">{item.icon} {item.label}</div>
+										<div className="flex items-center justify-between gap-2">
+											<div className="font-medium text-base-content">{item.icon} {item.label}</div>
+											<span className="badge badge-ghost badge-sm">{item.status}</span>
+										</div>
+										<p className="text-sm text-base-content/70">{item.description}</p>
 									</div>
 								</Link>
 							))}

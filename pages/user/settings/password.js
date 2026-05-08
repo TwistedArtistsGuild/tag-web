@@ -10,8 +10,15 @@
  Open source · low-profit · human-first*/
 import TagSEO from "@/components/TagSEO"
 import Link from "next/link"
+import { useState } from "react"
 
 export default function PasswordSettings() {
+	const [currentPassword, setCurrentPassword] = useState("")
+	const [newPassword, setNewPassword] = useState("")
+	const [confirmPassword, setConfirmPassword] = useState("")
+	const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+	const [loginAlerts, setLoginAlerts] = useState(true)
+
 	const pageMetaData = {
 		title: "Change Password",
 		description: "Change your account password",
@@ -40,8 +47,37 @@ export default function PasswordSettings() {
 				</div>
 
 				<div className="card bg-base-100 shadow border border-base-300">
-					<div className="card-body">
-						<p className="text-base-content/80">This page is under construction.</p>
+					<div className="card-body space-y-4">
+						<div className="flex items-center justify-between">
+							<h2 className="text-lg font-semibold text-base-content">Password Update</h2>
+							<span className="badge badge-ghost">Mock for now</span>
+						</div>
+
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+							<input className="input input-bordered" type="password" placeholder="Current password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+							<input className="input input-bordered" type="password" placeholder="New password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+							<input className="input input-bordered" type="password" placeholder="Confirm password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+						</div>
+
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+							<label className="label cursor-pointer justify-between rounded-box border border-base-300 px-3 py-2">
+								<span className="label-text">Enable 2FA</span>
+								<input type="checkbox" className="toggle toggle-primary" checked={twoFactorEnabled} onChange={(e) => setTwoFactorEnabled(e.target.checked)} />
+							</label>
+							<label className="label cursor-pointer justify-between rounded-box border border-base-300 px-3 py-2">
+								<span className="label-text">Send login alerts</span>
+								<input type="checkbox" className="toggle toggle-primary" checked={loginAlerts} onChange={(e) => setLoginAlerts(e.target.checked)} />
+							</label>
+						</div>
+
+						<div className="alert alert-warning text-sm">
+							<span>Security updates are currently in wireframe mode and not yet persisted.</span>
+						</div>
+
+						<div className="flex gap-2 flex-wrap">
+							<button className="btn btn-primary" onClick={() => alert("Security settings saved (mock).")}>Save Security Settings</button>
+							<button className="btn btn-ghost" onClick={() => alert("Signed out of other sessions (mock).")}>Sign Out Other Sessions</button>
+						</div>
 					</div>
 				</div>
 			</div>
