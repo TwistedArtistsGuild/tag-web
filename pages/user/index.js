@@ -309,7 +309,7 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 						{registeredArtists.length === 0 ? (
 							<div className="rounded-box border border-base-300 bg-base-200 p-3 text-sm text-base-content/70 flex items-center justify-between gap-3 flex-wrap">
 								<span>No linked artist profiles yet.</span>
-								<Link href="/join/artist/registration1" className="btn btn-sm btn-secondary">Register Artist</Link>
+								<Link href="/join/artist" className="btn btn-sm btn-secondary">Register Artist</Link>
 							</div>
 						) : (
 							<div className="space-y-2">
@@ -327,7 +327,7 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 									</div>
 								))}
 								<div>
-									<Link href="/join/artist/registration1" className="btn btn-sm btn-secondary">Register Another Artist</Link>
+									<Link href="/join/artist" className="btn btn-sm btn-secondary">Register Another Artist</Link>
 								</div>
 							</div>
 						)}
