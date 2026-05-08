@@ -18,11 +18,11 @@
 	bio: `<h2>A Life in Motion</h2><p>Finding a colorful and unbridled love of movement at an early age, Satya started formal dance classes at age 14. Her love of the unconventional led her to join the AZ Renaissance Festival in 2005 as a belly dancer with the world music and dance troupe <strong>Ghazaal Beledi</strong>.</p><p>Since then, she has continued her belly dance training, specializing in Transnational Fusion, and now teaches classes and workshops throughout the US. Throughout this time, Satya found a love for the fire arts as well as aerial silks — and most of all, lyra.</p><h2>Performer &amp; Teacher</h2><p>She currently performs and teaches as half of the creative movement troupe <strong>Satarah</strong>, as well as a solo artist. Whether from the ground, through the air, or the flames, Satya's light burns brightly on stage — bringing a refreshing authenticity and from-the-heart pieces to audiences everywhere.</p>`,
 	// Bio is tiptap-compatible HTML
 	images: [ 
-		"https://tagpictures.blob.core.windows.net/aboutcontent/satya1.webp",
-		"https://tagpictures.blob.core.windows.net/aboutcontent/satya2.webp",
-		"https://tagpictures.blob.core.windows.net/aboutcontent/satya3.webp",
-		"https://tagpictures.blob.core.windows.net/aboutcontent/satya4.webp",
-		"https://tagpictures.blob.core.windows.net/aboutcontent/satya5.webp",
+		"https://tagpictures.blob.core.windows.net/platformpics/about/satya/satya1.webp",
+		"https://tagpictures.blob.core.windows.net/platformpics/about/satya/satya2.webp",
+		"https://tagpictures.blob.core.windows.net/platformpics/about/satya/satya3.webp",
+		"https://tagpictures.blob.core.windows.net/platformpics/about/satya/satya4.webp",
+		"https://tagpictures.blob.core.windows.net/platformpics/about/satya/satya5.webp",
 	],
 };
 

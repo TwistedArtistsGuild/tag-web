@@ -15,12 +15,16 @@ import config from "@/config";
 // Use this on all private routes (like user dashboard, accounts). It will redirect the user to the login page if not authenticated
 export const usePrivate = (callbackUrl = config.callbackUrl) => {
   const { data: session, status } = useSession();
+  const safeCallbackUrl =
+    typeof callbackUrl === "string" && callbackUrl.trim().length > 0
+      ? callbackUrl
+      : config.callbackUrl;
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      signIn(undefined, { callbackUrl });
+      signIn(undefined, { callbackUrl: safeCallbackUrl });
     }
-  }, [callbackUrl, status]);
+  }, [safeCallbackUrl, status]);
 
   return [session, status];
 };

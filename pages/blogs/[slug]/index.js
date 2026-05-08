@@ -11,16 +11,27 @@
 
 
 import Link from "next/link"
+import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react"
 import longDateOptions from "@/utils/longdateoptions"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { defaultFieldClass } from "@/utils/formSettings"
+import { PERMISSIONS } from "@/utils/permissions";
+import { hasPermission } from "@/utils/authHelpers";
 
 const BlogByslug = props => {
+	const { data: session } = useSession();
+	const [mounted, setMounted] = useState(false)
 	const options =  longDateOptions
 	const blog = props.blog
 	const seoKeywords = `blog, post, article, ${blog.searchterms}`
 	const canonicalSlug = `blogs/${blog.path}`
+
+	useEffect(() => {
+		setMounted(true)
+	}, [])
+	const canUpdate = hasPermission(session, PERMISSIONS.BLOG.UPDATE);
 
 	const pageMetaData = {
 		title: blog.title,
@@ -37,19 +48,38 @@ const BlogByslug = props => {
 	}
 
 	return (
-		<div className="flex flex-col justify-evenly items-center h-screen w-full ">
+		/* suppressHydrationWarning prevents React from logging a hydration mismatch for this subtree.
+		   We also only render the rich `body` HTML after mount to avoid SSR/CSR mismatch. */
+		<div className="flex flex-col justify-evenly items-center h-screen w-full " suppressHydrationWarning>
 			<TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
 			<div className="flex flex-col items-center">
-				<h1 className="font-poiret text-7xl shadow-text" dangerouslySetInnerHTML={{ __html: props.blog.title }}></h1>
-				<div className="font-fredoka pt-2 w-[75%]" dangerouslySetInnerHTML={{ __html: props.blog.byline }}></div>
-				<div className="font-baloo text-xs shadow-dark">{new Date(props.blog.created).toLocaleDateString("en-US", options)}</div>
+				<h1
+					className="font-poiret text-7xl shadow-text"
+					dangerouslySetInnerHTML={{ __html: props.blog.title }}
+				></h1>
+				<div
+					className="font-fredoka pt-2 w-[75%]"
+					dangerouslySetInnerHTML={{ __html: props.blog.byline }}
+				></div>
+				{/* server-stable formatted date */}
+				<div className="font-baloo text-xs shadow-dark">{props.blog.formattedCreated}</div>
 			</div>
 
-			<p
-				className={`font-fredoka w-[75%] text-center`}
-				dangerouslySetInnerHTML={{ __html: props.blog.body }}
-			/>
+			{/* Render full body only on client to avoid hydration mismatch.
+			    If SEO is critical for this content, remove this guard and instead fix the underlying mismatch. */}
+			{mounted ? (
+				<p
+					className={`font-fredoka w-[75%] text-center`}
+					dangerouslySetInnerHTML={{ __html: props.blog.body }}
+				/>
+			) : (
+				/* lightweight server placeholder that matches shape but not content */
+				<p className="font-fredoka w-[75%] text-center">
+					{props.blog.body ? "" : ""} 
+				</p>
+			)}
 
+			{mounted && canUpdate && (
 			<Link
 				href="/blogs/[slug]/update"
 				as={`/blogs/${props.slug}/update`}
@@ -57,6 +87,7 @@ const BlogByslug = props => {
 			>
 				Update this blog
 			</Link>
+			)}
 		</div>
 	)
 }
@@ -66,25 +97,32 @@ BlogByslug.getInitialProps = async function (context) {
 
 	const api_url = getApiURL()
   
-	//Staging API can be added here if needed
-
-	// If we are running in debug mode, log the active API URL
 	if (process.env.DEBUG === "true") {
 		console.log (`Fetching blog: ${slug}, path: ${context.pathname}`)
 	} 
   
-
 	const res = await fetch (api_url + `blog/path/${slug}`)
 	const data = await res.json ()
 
-	// If we are running in debug mode, log the artist data
+	const blogData = Array.isArray(data) ? data[0] : data;
+
+	let formattedCreated = "";
+	try {
+		const createdDate = new Date(blogData.created);
+		formattedCreated = createdDate.toLocaleDateString("en-US", longDateOptions);
+	} catch (e) {
+		formattedCreated = blogData.created || "";
+	}
+
 	if (process.env.DEBUG === "true") {
-		console.log(`blog data fetched. Count: ${data.length}`)
-		//console.log(data); // Print the contents of the data variable
+		console.log(`blog data fetched.`, blogData)
 	} 
 
 	return {
-		blog: data,
+		blog: {
+			...blogData,
+			formattedCreated,
+		},
 		slug: slug,
 	}
 }

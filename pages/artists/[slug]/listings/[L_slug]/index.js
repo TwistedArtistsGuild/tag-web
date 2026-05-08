@@ -13,6 +13,9 @@ import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContex
 import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
+import { useSession } from "next-auth/react";
+import { PERMISSIONS } from "@/utils/permissions";
+import { hasPermission } from "@/utils/authHelpers";
 
 const DEFAULT_LISTING_IMAGES = [
   "https://picsum.photos/id/1015/1000/600",
@@ -64,6 +67,9 @@ const getListingGalleryImages = (listing) => {
 }
 
 const ListingDetails = ({ listing, slug }) => {
+  const { data: session } = useSession();
+  const canAddComment = hasPermission(session, PERMISSIONS.LISTING.COMMENT);
+
   const canonicalSlug = listing.seoCanonicalSlug
   const pageMetaData = {
     title: listing.seoTitle,
@@ -277,7 +283,7 @@ const ListingDetails = ({ listing, slug }) => {
               contextId={`listing-${listing.listingID}`}
               currentUser={currentUser}
               allowMedia={true}
-              readOnly={false}
+              readOnly={!canAddComment}
               className="bg-base-100 text-base-content"
             />
           </div>

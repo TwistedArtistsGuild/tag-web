@@ -36,8 +36,13 @@ export default function Portal_Artist() {
 			</h2>
 
 			<div>
-				<Link href="/portal/logviewer" className="link link-primary">
+				<Link href="/portal/staff/logviewer" className="link link-primary">
           Logviewer
+				</Link>
+			</div>
+			<div className="mt-2">
+				<Link href="/portal/dashboard" className="link link-primary">
+					Portal Dashboard
 				</Link>
 			</div>
 			<div className="mt-2">

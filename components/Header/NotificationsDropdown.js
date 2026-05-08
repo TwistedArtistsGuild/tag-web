@@ -22,11 +22,21 @@ const notificationLinks = [
   "/blogs",
 ]
 
-export default function NotificationsDropdown({ notifications = [], onClose }) {
+export default function NotificationsDropdown({ notifications = [], onClose, activeContextColor = "#3B82F6" }) {
+  const subPanelTintStyle = {
+    borderColor: `${activeContextColor}70`,
+    backgroundColor: `${activeContextColor}1A`,
+    backgroundImage: `linear-gradient(180deg, ${activeContextColor}24 0%, ${activeContextColor}14 100%)`,
+    boxShadow: `inset 0 0 0 1px ${activeContextColor}2E`,
+  }
+
   return (
-    <div className="h-full w-full flex flex-col max-h-[80vh] overflow-hidden shadow-lg">
+    <div className="h-full w-full flex flex-col max-h-[80vh] overflow-hidden shadow-lg border border-base-300 bg-base-100">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-base-200 bg-base-200 text-base-content">
+      <div
+        className="flex items-center justify-between p-4 border-b border-base-200 bg-base-200 text-base-content"
+        style={{ ...subPanelTintStyle, boxShadow: `inset 0 -2px 0 ${activeContextColor}66, inset 0 0 0 1px ${activeContextColor}2E` }}
+      >
         <h3 className="text-xl font-bold">Notifications</h3>
         <button onClick={onClose} className="btn btn-ghost btn-sm btn-circle">
           <X size={20} />
@@ -34,20 +44,21 @@ export default function NotificationsDropdown({ notifications = [], onClose }) {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" style={{ backgroundColor: `${activeContextColor}10` }}>
         {notifications.length === 0 ? (
           <div className="text-sm text-base-content/70 text-center py-4">No new notifications.</div>
         ) : (
-          <div className="divide-y divide-base-200">
+          <div className="divide-y divide-base-200 rounded-box border m-2" style={subPanelTintStyle}>
             {notifications.map((n, i) => (
               <Link
                 key={i}
                 href={notificationLinks[i % notificationLinks.length]}
-                className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-base-200 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-base-200 transition-colors border border-transparent"
+                style={{ borderLeftColor: activeContextColor, borderLeftWidth: "3px", backgroundColor: i % 2 === 0 ? `${activeContextColor}14` : `${activeContextColor}0C` }}
                 onClick={onClose}
               >
                 <div className="avatar">
-                  <div className="w-10 rounded-full">
+                  <div className="w-10 rounded-full" style={{ boxShadow: `0 0 0 2px ${activeContextColor}66` }}>
                     <Image src={n.avatar || "/placeholder.svg?height=40&width=40"} alt="avatar" width={40} height={40} />
                   </div>
                 </div>
