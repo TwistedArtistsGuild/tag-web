@@ -35,7 +35,7 @@ const Log = props => {
 
 	return (
 		<div className="flex flex-col items-center justify-evenly min-h-screen w-full">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/logviewer" />
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/staff/logviewer" />
 			<div className="w-full max-w-4xl p-4">
 				<h1 className="text-4xl font-bold mb-8 text-primary">Log viewer</h1>
 
@@ -56,8 +56,8 @@ const Log = props => {
 									<tr key={`log#${log.lognum}`}>
 										<td>
 											<Link
-												href="/portal/logviewer/[lognum]"
-												as={`/portal/logviewer/${log.lognum}`}
+												href="/portal/staff/logviewer/[lognum]"
+												as={`/portal/staff/logviewer/${log.lognum}`}
 												className="link link-primary font-mono"
 											>
 												{log.lognum}

@@ -33,6 +33,11 @@ export default function Portal_Artist() {
 			<h2 className="text-2xl font-bold text-primary">
 				Landing page for Artist Portal
 			</h2>
+			<div className="mt-4">
+				<a href="/portal/artist/dashboard" className="link link-primary">
+					Open Artist Dashboard
+				</a>
+			</div>
 		</div>
 	);
 }

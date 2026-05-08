@@ -35,8 +35,8 @@ export default function CreateListingForm1(props) {
 
         return {
             ...base,
-            FromURL: "/portal/listing/create.js",
-            redirectURL: "/portal/listing/",
+            FromURL: "/portal/artist/listing/create.js",
+            redirectURL: "/portal/artist/listing/",
             APIURL: `${api_url}${base.apiurlpostfix}`
         };
     }, [props.metadataProp]);

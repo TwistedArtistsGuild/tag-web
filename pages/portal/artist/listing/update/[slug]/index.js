@@ -27,8 +27,8 @@ export default function UpdateListingForm2(props) {
 
         return {
             ...base,
-            FromURL: "/portal/listing/update.js",
-            redirectURL: `/portal/listing/${props.id}`,
+            FromURL: "/portal/artist/listing/update/[slug]/index.js",
+            redirectURL: `/portal/artist/listing/${props.id}`,
             APIURL: `${api_url}listing/byID/${props.id}`
         };
     }, [props.metadataProp, props.id]);
