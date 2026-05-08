@@ -22,6 +22,19 @@ function SectionHeading({ children }) {
 	return <h2 className="text-xs font-semibold text-base-content/50 uppercase tracking-widest">{children}</h2>
 }
 
+const ARTIST_ACCENT_CLASSES = [
+	"bg-primary/15 text-primary border-primary/30",
+	"bg-secondary/15 text-secondary border-secondary/30",
+	"bg-accent/15 text-accent border-accent/30",
+	"bg-info/15 text-info border-info/30",
+	"bg-success/15 text-success border-success/30",
+	"bg-warning/15 text-warning border-warning/30",
+]
+
+function getArtistAccentClass(index) {
+	return ARTIST_ACCENT_CLASSES[index % ARTIST_ACCENT_CLASSES.length]
+}
+
 function ConceptCard({ href, title, description, icon }) {
 	return (
 		<Link href={href} className="card bg-base-100 border border-base-300 hover:border-primary hover:shadow transition-all">
@@ -49,9 +62,8 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 	}
 
 	const artistConceptLinks = [
-		{ href: "/portal/artist/dashboard", title: "Artist Dashboard", description: "Global artist dashboard entry point and current artist tooling overview.", icon: "📊" },
 		{ href: "/portal/artist/listing/create", title: "Create Listing", description: "Open the listing creation workflow for artist inventory and new product entries.", icon: "📝" },
-		{ href: "/join/artist/registration1", title: "Register Artist", description: "Start another artist registration flow if you need a new linked profile.", icon: "🎨" },
+		{ href: "/join/artist", title: "Register Artist", description: "Start another artist registration flow if you need a new linked profile.", icon: "🎨" },
 	]
 
 	return (
@@ -93,7 +105,7 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 						{registeredArtists.length === 0 ? (
 							<div className="rounded-box border border-base-300 bg-base-200 p-3 text-sm text-base-content/70 flex items-center justify-between gap-3 flex-wrap">
 								<span>No linked artist profiles yet.</span>
-								<Link href="/join/artist/registration1" className="btn btn-sm btn-secondary">Register Artist</Link>
+								<Link href="/join/artist" className="btn btn-sm btn-secondary">Register Artist</Link>
 							</div>
 						) : (
 							<div className="space-y-3">
@@ -110,6 +122,37 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 										</div>
 									</div>
 								))}
+							</div>
+						)}
+					</div>
+				</div>
+
+				<div className="card bg-base-100 border border-base-300 shadow">
+					<div className="card-body p-4 gap-4">
+						<SectionHeading>Reserved: Combined Artist Dashboard</SectionHeading>
+						<p className="text-sm text-base-content/70">
+							Reserved section for a unified dashboard that surfaces important metrics across all linked artists while keeping each artist visually separated by their own color channel.
+						</p>
+
+						{registeredArtists.length === 0 ? (
+							<div className="rounded-box border border-base-300 bg-base-200 p-3 text-sm text-base-content/70">
+								No linked artists yet. Combined dashboard widgets will appear here once artist profiles are linked.
+							</div>
+						) : (
+							<div className="space-y-3">
+								<div className="alert alert-info py-2">
+									<span className="text-sm">Planned widgets: sales trend, shipping status, due dates, ad spend efficiency, and cross-artist risk flags.</span>
+								</div>
+
+								<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+									{registeredArtists.map((artist, index) => (
+										<div key={artist.artistID || artist.path || artist.title || index} className={`rounded-box border p-2 ${getArtistAccentClass(index)}`}>
+											<div className="text-xs uppercase tracking-wide opacity-80">Artist Color Channel</div>
+											<div className="font-semibold mt-0.5">{artist.title || "Untitled Artist"}</div>
+											<div className="text-xs opacity-75 mt-1">Reserved for combined metrics overlay.</div>
+										</div>
+									))}
+								</div>
 							</div>
 						)}
 					</div>
