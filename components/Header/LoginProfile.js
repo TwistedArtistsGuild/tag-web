@@ -16,11 +16,12 @@ import { useState } from "react"
 import { useSession, signIn, signOut } from "next-auth/react"
 import Link from "next/link"
 import Image from "next/image"
-import { User, Settings, LogOut } from "lucide-react" // Import Lucide icons
+import { Compass, LayoutDashboard, LogOut, Settings, ShoppingBag, SlidersHorizontal, User } from "lucide-react"
 
 export default function LoginProfile({ className = "", isOpen: controlledIsOpen, onToggle }) {
   const { data: session } = useSession()
   const [internalIsOpen, setInternalIsOpen] = useState(false)
+  const [activeMode, setActiveMode] = useState("browse")
   const isControlled = typeof controlledIsOpen === "boolean" && typeof onToggle === "function"
   const isOpen = isControlled ? controlledIsOpen : internalIsOpen
 
@@ -62,14 +63,50 @@ export default function LoginProfile({ className = "", isOpen: controlledIsOpen,
         <>
           {/* Click-outside backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setOpenValue(false)} />
-          <ul className="absolute right-0 top-full mt-2 z-50 w-52 rounded-box bg-base-100 p-2 shadow-lg border border-base-content/10 menu menu-sm">
+          <ul className="absolute right-0 top-full mt-2 z-50 w-64 rounded-box bg-base-100 p-2 shadow-lg border border-base-content/10 menu menu-sm">
             <li className="menu-title">
-              <span>{session.user?.name || "User"}</span>
+              <div className="flex flex-col gap-3 px-1 py-1">
+                <span className="text-sm font-semibold text-base-content">{session.user?.name || "User"}</span>
+                <div className="rounded-box border border-base-300 bg-base-200/60 p-1">
+                  <div className="grid grid-cols-2 gap-1">
+                    <button
+                      type="button"
+                      className={`btn btn-xs ${activeMode === "browse" ? "btn-primary" : "btn-ghost"}`}
+                      onClick={() => setActiveMode("browse")}
+                      aria-pressed={activeMode === "browse"}
+                    >
+                      <Compass className="h-3.5 w-3.5" />
+                      Browse
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-xs ${activeMode === "buy" ? "btn-primary" : "btn-ghost"}`}
+                      onClick={() => setActiveMode("buy")}
+                      aria-pressed={activeMode === "buy"}
+                    >
+                      <ShoppingBag className="h-3.5 w-3.5" />
+                      Buy
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li>
+              <Link href="/user" onClick={() => setOpenValue(false)}>
+                <LayoutDashboard className="w-4 h-4" />
+                My Dashboard
+              </Link>
             </li>
             <li>
               <Link href="/user/profile" onClick={() => setOpenValue(false)}>
                 <User className="w-4 h-4" />
                 Profile
+              </Link>
+            </li>
+            <li>
+              <Link href="/user/preferences" onClick={() => setOpenValue(false)}>
+                <SlidersHorizontal className="w-4 h-4" />
+                Preferences
               </Link>
             </li>
             <li>
