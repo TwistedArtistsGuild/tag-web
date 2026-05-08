@@ -10,6 +10,9 @@
  Open source · low-profit · human-first*/
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
 
 const api_url = getApiURL();
@@ -40,10 +43,45 @@ export default function UpdateListingForm2(props) {
     return <div className="p-4"><DynaFormDB request="update" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={props.listingdata} /></div>;
 }
 
-UpdateListingForm2.getInitialProps = async function (context) {
-    const listingId = context.query?.slug || context.query?.id;
+export async function getServerSideProps(context) {
+    const listingId = context.params?.slug || context.query?.slug || context.query?.id;
+
+    const session = await getServerSession(context.req, context.res, authOptions);
+
+    if (!session?.user) {
+        return {
+            redirect: {
+                destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(`/portal/artist/listing/update/${listingId || ""}`)}`,
+                permanent: false,
+            },
+        };
+    }
+
+    const userId = session.user.id || null;
+    let hasLinkedArtist = false;
+
+    if (userId && !isArtist(session) && !isStaff(session) && !isAdmin(session)) {
+        try {
+            const linkedResponse = await fetch(`${api_url}linker_usertoartist/byUserID/${userId}`);
+            if (linkedResponse.ok) {
+                const linkedArtists = await linkedResponse.json();
+                hasLinkedArtist = Array.isArray(linkedArtists) && linkedArtists.length > 0;
+            }
+        } catch (error) {
+            console.error("Unable to verify linked artists for listing update:", error.message);
+        }
+    }
+
+    if (!isArtist(session) && !isStaff(session) && !isAdmin(session) && !hasLinkedArtist) {
+        return {
+            notFound: true,
+        };
+    }
+
     if (!listingId) {
-        return { error: { message: "Listing ID is missing from route/query" } };
+        return {
+            notFound: true,
+        };
     }
     let data = {};
     let metadata = {};
@@ -69,8 +107,10 @@ UpdateListingForm2.getInitialProps = async function (context) {
         console.error("Error fetching form meta or field data:", error);
     }
     return {
-        listingdata: data,
-        listingId: listingId,
-        metadataProp: metadata
+        props: {
+            listingdata: data,
+            listingId: listingId,
+            metadataProp: metadata
+        }
     };
-};
+}

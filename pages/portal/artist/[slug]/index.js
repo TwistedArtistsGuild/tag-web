@@ -10,10 +10,13 @@
  Open source · low-profit · human-first*/
 
 import Link from "next/link"
+import { getServerSession } from "next-auth/next"
 import { useState } from "react"
 
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import { isAdmin } from "@/utils/authHelpers"
 
 const UPCOMING_DATES = [
   {
@@ -313,6 +316,50 @@ export default function ArtistSlugPortalPage({ slug, artistProfile, listings }) 
 
 export async function getServerSideProps(context) {
   const { slug } = context.params
+  const session = await getServerSession(context.req, context.res, authOptions)
+
+  if (!session?.user) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(`/portal/artist/${slug}`)}`,
+        permanent: false,
+      },
+    }
+  }
+
+  const userId = session.user.id || null
+  const adminRole = isAdmin(session)
+
+  if (!adminRole) {
+    if (!userId) {
+      return { notFound: true }
+    }
+
+    try {
+      const apiUrl = getApiURL()
+      const linkedArtistResponse = await fetch(`${apiUrl}linker_usertoartist/byUserID/${userId}`)
+
+      if (!linkedArtistResponse.ok) {
+        return { notFound: true }
+      }
+
+      const linkedArtists = await linkedArtistResponse.json()
+      const normalizedSlug = String(slug).trim().toLowerCase()
+      const canAccessSlug = Array.isArray(linkedArtists) && linkedArtists.some((artist) => {
+        const artistPath = String(artist?.path ?? artist?.Path ?? "").trim().toLowerCase()
+        const artistId = String(artist?.artistID ?? artist?.ArtistID ?? "").trim().toLowerCase()
+        return artistPath === normalizedSlug || artistId === normalizedSlug
+      })
+
+      if (!canAccessSlug) {
+        return { notFound: true }
+      }
+    } catch (error) {
+      console.error(`Unable to verify artist ownership for ${slug}:`, error.message)
+      return { notFound: true }
+    }
+  }
+
   const apiUrl = getApiURL()
 
   try {

@@ -13,8 +13,11 @@
 //change to displaying an individual log (from Blogs)
 import shortDateOptions from "@/utils/shortdateoptions"
 import getApiURL from "@/components/widgets/GetApiURL"
+import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import { isAdmin, isStaff } from "@/utils/authHelpers"
 
 const Logviewer = props => {
 	const options = shortDateOptions
@@ -67,8 +70,25 @@ const Logviewer = props => {
 	)
 }
 
-Logviewer.getInitialProps = async function (context) {
-	const {id} = context.query
+export async function getServerSideProps(context) {
+	const { id } = context.params
+
+	const session = await getServerSession(context.req, context.res, authOptions)
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(`/portal/staff/logviewer/${id}`)}`,
+				permanent: false,
+			},
+		}
+	}
+
+	if (!isStaff(session) && !isAdmin(session)) {
+		return {
+			notFound: true,
+		}
+	}
 
 	const api_url = getApiURL()
  
@@ -80,8 +100,14 @@ Logviewer.getInitialProps = async function (context) {
 	const res = await fetch (api_url + `log/${id}`)
 	const data = await res.json ()
 
+	if (!res.ok || !data) {
+		return { notFound: true }
+	}
+
 	return {
-		log: data,
+		props: {
+			log: data,
+		},
 	}
 }
 

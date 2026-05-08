@@ -12,6 +12,9 @@
 
 
 import TagSEO from "@/components/TagSEO";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdmin, isStaff } from "@/utils/authHelpers";
 
 export default function Portal_Staff() {
 	const pageMetaData = {
@@ -76,4 +79,25 @@ export default function Portal_Staff() {
 			</div>
 		</div>
 	);
+}
+
+export async function getServerSideProps(context) {
+	const session = await getServerSession(context.req, context.res, authOptions)
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/staff")}`,
+				permanent: false,
+			},
+		}
+	}
+
+	if (!isStaff(session) && !isAdmin(session)) {
+		return {
+			notFound: true,
+		}
+	}
+
+	return { props: {} }
 }

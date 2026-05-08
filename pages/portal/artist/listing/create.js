@@ -12,6 +12,9 @@
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
 
 const api_url = getApiURL();
@@ -48,7 +51,39 @@ export default function CreateListingForm1(props) {
     return <div className="p-4"><DynaFormDB request="add" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={null} /></div>;
 }
 
-CreateListingForm1.getInitialProps = async function () {
+export async function getServerSideProps(context) {
+    const session = await getServerSession(context.req, context.res, authOptions);
+
+    if (!session?.user) {
+        return {
+            redirect: {
+                destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/artist/listing/create")}`,
+                permanent: false,
+            },
+        };
+    }
+
+    const userId = session.user.id || null;
+    let hasLinkedArtist = false;
+
+    if (userId && !isArtist(session) && !isStaff(session) && !isAdmin(session)) {
+        try {
+            const linkedResponse = await fetch(`${api_url}linker_usertoartist/byUserID/${userId}`);
+            if (linkedResponse.ok) {
+                const linkedArtists = await linkedResponse.json();
+                hasLinkedArtist = Array.isArray(linkedArtists) && linkedArtists.length > 0;
+            }
+        } catch (error) {
+            console.error("Unable to verify linked artists for listing create:", error.message);
+        }
+    }
+
+    if (!isArtist(session) && !isStaff(session) && !isAdmin(session) && !hasLinkedArtist) {
+        return {
+            notFound: true,
+        };
+    }
+
     let metadata = {};
     try {
         let res = await fetch(`${api_url}formsmetadata/${formName}`);
@@ -65,7 +100,9 @@ CreateListingForm1.getInitialProps = async function () {
         console.error("Error fetching form meta:", error);
     }
     return {
-        metadataProp: metadata
+        props: {
+            metadataProp: metadata,
+        }
     };
-};
+}
 

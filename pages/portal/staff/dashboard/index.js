@@ -10,8 +10,11 @@
  Open source · low-profit · human-first*/
 
 import Link from "next/link"
+import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import { isAdmin, isStaff } from "@/utils/authHelpers"
 
 export default function StaffDashboardIndex() {
 	const pageMetaData = {
@@ -54,4 +57,25 @@ export default function StaffDashboardIndex() {
 			</div>
 		</div>
 	)
+}
+
+export async function getServerSideProps(context) {
+	const session = await getServerSession(context.req, context.res, authOptions)
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/staff/dashboard")}`,
+				permanent: false,
+			},
+		}
+	}
+
+	if (!isStaff(session) && !isAdmin(session)) {
+		return {
+			notFound: true,
+		}
+	}
+
+	return { props: {} }
 }

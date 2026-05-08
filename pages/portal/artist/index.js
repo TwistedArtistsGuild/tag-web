@@ -16,6 +16,7 @@ import ArtistCardSmall from "@/components/cards/card_artist_small"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers"
 
 function SectionHeading({ children }) {
 	return <h2 className="text-xs font-semibold text-base-content/50 uppercase tracking-widest">{children}</h2>
@@ -153,6 +154,13 @@ export async function getServerSideProps(context) {
 			}
 		} catch (error) {
 			console.error("Unable to load linked artists for artist portal:", error.message)
+		}
+	}
+
+	const privilegedUser = isArtist(session) || isStaff(session) || isAdmin(session)
+	if (!privilegedUser && registeredArtists.length === 0) {
+		return {
+			notFound: true,
 		}
 	}
 
