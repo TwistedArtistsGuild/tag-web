@@ -21,17 +21,17 @@ export default function UpdateListingForm2(props) {
             ? props.metadataProp[0]
             : props.metadataProp;
 
-        if (!base || Object.keys(base).length === 0 || !props.id) {
+        if (!base || Object.keys(base).length === 0 || !props.listingId) {
             return null;
         }
 
         return {
             ...base,
-            FromURL: "/portal/artist/listing/update/[slug]/index.js",
-            redirectURL: `/portal/artist/listing/${props.id}`,
-            APIURL: `${api_url}listing/byID/${props.id}`
+            FromURL: "/portal/artist/listing/update/[slug]",
+            redirectURL: `/portal/artist/listing/${props.listingId}`,
+            APIURL: `${api_url}listing/byID/${props.listingId}`
         };
-    }, [props.metadataProp, props.id]);
+    }, [props.metadataProp, props.listingId]);
 
     if (!enhancedMetadata || !props.listingdata) {
         return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
@@ -41,18 +41,18 @@ export default function UpdateListingForm2(props) {
 }
 
 UpdateListingForm2.getInitialProps = async function (context) {
-    const { id } = context.query;
-    if (!id) {
-        return { error: { message: "Listing ID is missing from context query" } };
+    const listingId = context.query?.slug || context.query?.id;
+    if (!listingId) {
+        return { error: { message: "Listing ID is missing from route/query" } };
     }
     let data = {};
     let metadata = {};
     try {
-        const res1 = await fetch(`${api_url}listing/byID/${id}`);
+        const res1 = await fetch(`${api_url}listing/byID/${listingId}`);
         if (res1.ok) {
             data = await res1.json();
         } else {
-            console.error(`Failed to fetch listing ${id}: ${res1.status} ${res1.statusText}`);
+            console.error(`Failed to fetch listing ${listingId}: ${res1.status} ${res1.statusText}`);
         }
 
         let res2 = await fetch(`${api_url}formsmetadata/${formName}`);
@@ -70,7 +70,7 @@ UpdateListingForm2.getInitialProps = async function (context) {
     }
     return {
         listingdata: data,
-        id: id,
+        listingId: listingId,
         metadataProp: metadata
     };
 };
