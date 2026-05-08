@@ -10,9 +10,12 @@
  Open source · low-profit · human-first*/
 
 import Link from "next/link"
+import { useState } from "react"
 import { getServerSession } from "next-auth/next"
 
-import ArtistCardSmall from "@/components/cards/card_artist_small"
+import ArtistCard from "@/components/cards/card_artist"
+import SocialComments from "@/components/social/Comments"
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
@@ -49,6 +52,89 @@ function ConceptCard({ href, title, description, icon }) {
 	)
 }
 
+function MyArtistsCard({ registeredArtists, sessionUser }) {
+	const [artistCardSize, setArtistCardSize] = useState("large")
+	const commentsUser = sessionUser
+		? {
+			id: sessionUser.id,
+			username: sessionUser.email || sessionUser.name || "user",
+			displayName: sessionUser.name || sessionUser.email || "User",
+			avatarUrl: sessionUser.image || "/images/default-avatar.png",
+			isAdmin: Array.isArray(sessionUser.roles) && sessionUser.roles.includes("admin"),
+		}
+		: null
+
+	return (
+		<div className="card bg-base-100 border border-base-300 shadow">
+			<div className="card-body p-4 gap-3">
+				<SectionHeading>Linked Artist Workspaces</SectionHeading>
+				<div className="flex items-center justify-between gap-3 flex-wrap">
+					<p className="text-sm text-base-content/70">Each linked artist gets its own portal page, public preview, and edit-mode workspace.</p>
+					<label className="form-control w-full sm:w-auto">
+						<div className="label py-0">
+							<span className="label-text text-xs text-base-content/60">Card Size</span>
+						</div>
+						<select
+							className="select select-bordered select-xs"
+							value={artistCardSize}
+							onChange={(event) => setArtistCardSize(event.target.value)}
+						>
+							<option value="small">Small</option>
+							<option value="medium">Medium</option>
+							<option value="large">Large</option>
+						</select>
+					</label>
+				</div>
+
+				{registeredArtists.length === 0 ? (
+					<div className="rounded-box border border-base-300 bg-base-200 p-3 text-sm text-base-content/70 flex items-center justify-between gap-3 flex-wrap">
+						<span>No linked artist profiles yet.</span>
+						<Link href="/join/artist" className="btn btn-sm btn-secondary">Register Artist</Link>
+					</div>
+				) : (
+					<SocialRealtimeProvider>
+						<div className={artistCardSize === "medium" ? "grid grid-cols-1 xl:grid-cols-2 gap-3" : "space-y-3"}>
+							{registeredArtists.map((artist) => (
+								<div key={artist.artistID} className="space-y-2">
+									<ArtistCard
+										artist={{
+											...artist,
+											panelSize:
+												artistCardSize === "large"
+													? "full"
+													: artistCardSize === "medium"
+														? "half"
+														: "third",
+										}}
+										compact={artistCardSize === "small"}
+										showHeaderGallery={artistCardSize === "large"}
+										showContentGallery={artistCardSize === "large"}
+									/>
+									<div className="flex gap-2 flex-wrap justify-end">
+										<Link href={artist.path ? `/artists/${artist.path}` : "/artists"} className="btn btn-xs btn-ghost">
+											Public Profile
+										</Link>
+										<Link href={artist.path ? `/portal/artist/${artist.path}` : "/portal/artist"} className="btn btn-xs btn-outline">
+											Artist Portal
+										</Link>
+									</div>
+									<div className="rounded-box border border-base-300 bg-base-100/70 p-3">
+										<SocialComments
+											contextId={`artist-card-${artist.artistID || artist.path || artist.title}`}
+											currentUser={commentsUser}
+											allowMedia={false}
+										/>
+									</div>
+								</div>
+							))}
+						</div>
+					</SocialRealtimeProvider>
+				)}
+			</div>
+		</div>
+	)
+}
+
 export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 	const pageMetaData = {
 		title: "Artist Portal",
@@ -62,7 +148,6 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 	}
 
 	const artistConceptLinks = [
-		{ href: "/portal/artist/listing/create", title: "Create Listing", description: "Open the listing creation workflow for artist inventory and new product entries.", icon: "📝" },
 		{ href: "/join/artist", title: "Register Artist", description: "Start another artist registration flow if you need a new linked profile.", icon: "🎨" },
 	]
 
@@ -75,7 +160,7 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 					<div className="card-body gap-3">
 						<h1 className="text-3xl font-bold text-primary">Artist Portal</h1>
 						<p className="text-base-content/70">
-							Welcome back{sessionUser?.name ? `, ${sessionUser.name}` : ""}. Use this hub to jump into your linked artist workspaces, preview public pages, and enter artist-specific portal tools.
+							Welcome back{sessionUser?.name ? `, ${sessionUser.name}` : ""}. Use this hub to jump into your linked artist workspaces, preview public pages, and enter artist-specific portal tools where listings are created for each artist.
 						</p>
 					</div>
 				</div>
@@ -83,7 +168,7 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 				<div className="card bg-base-100 border border-base-300 shadow">
 					<div className="card-body p-4 gap-3">
 						<SectionHeading>Artist Areas</SectionHeading>
-						<p className="text-sm text-base-content/70">Quick access list for the main artist portal routes.</p>
+						<p className="text-sm text-base-content/70">Quick access list for the main artist portal routes. Create listings from inside each linked artist portal.</p>
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
 							{artistConceptLinks.map((linkItem) => (
 								<ConceptCard
@@ -98,34 +183,7 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 					</div>
 				</div>
 
-				<div className="card bg-base-100 border border-base-300 shadow">
-					<div className="card-body p-4 gap-3">
-						<SectionHeading>Linked Artist Workspaces</SectionHeading>
-						<p className="text-sm text-base-content/70">Each linked artist gets its own portal page, public preview, and edit-mode workspace.</p>
-						{registeredArtists.length === 0 ? (
-							<div className="rounded-box border border-base-300 bg-base-200 p-3 text-sm text-base-content/70 flex items-center justify-between gap-3 flex-wrap">
-								<span>No linked artist profiles yet.</span>
-								<Link href="/join/artist" className="btn btn-sm btn-secondary">Register Artist</Link>
-							</div>
-						) : (
-							<div className="space-y-3">
-								{registeredArtists.map((artist) => (
-									<div key={artist.artistID} className="space-y-2">
-										<ArtistCardSmall artist={artist} />
-										<div className="flex gap-2 flex-wrap justify-end">
-											<Link href={artist.path ? `/artists/${artist.path}` : "/artists"} className="btn btn-xs btn-ghost">
-												Public Profile
-											</Link>
-											<Link href={artist.path ? `/portal/artist/${artist.path}` : "/portal/artist"} className="btn btn-xs btn-outline">
-												Artist Portal
-											</Link>
-										</div>
-									</div>
-								))}
-							</div>
-						)}
-					</div>
-				</div>
+				<MyArtistsCard registeredArtists={registeredArtists} sessionUser={sessionUser} />
 
 				<div className="card bg-base-100 border border-base-300 shadow">
 					<div className="card-body p-4 gap-4">
