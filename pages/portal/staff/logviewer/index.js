@@ -13,9 +13,12 @@
 
 ///////////////// Imports
 import Link from "next/link"
+import { getServerSession } from "next-auth/next"
 import shortDateOptions from "@/utils/shortdateoptions"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import { isAdmin, isStaff } from "@/utils/authHelpers"
 
 const Log = props => {
 	const options = shortDateOptions
@@ -35,7 +38,7 @@ const Log = props => {
 
 	return (
 		<div className="flex flex-col items-center justify-evenly min-h-screen w-full">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/logviewer" />
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/staff/logviewer" />
 			<div className="w-full max-w-4xl p-4">
 				<h1 className="text-4xl font-bold mb-8 text-primary">Log viewer</h1>
 
@@ -56,8 +59,8 @@ const Log = props => {
 									<tr key={`log#${log.lognum}`}>
 										<td>
 											<Link
-												href="/portal/logviewer/[lognum]"
-												as={`/portal/logviewer/${log.lognum}`}
+												href="/portal/staff/logviewer/[lognum]"
+												as={`/portal/staff/logviewer/${log.lognum}`}
 												className="link link-primary font-mono"
 											>
 												{log.lognum}
@@ -81,7 +84,23 @@ const Log = props => {
 	)
 }
 
-Log.getInitialProps = async function () {
+export async function getServerSideProps(context) {
+	const session = await getServerSession(context.req, context.res, authOptions)
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/staff/logviewer")}`,
+				permanent: false,
+			},
+		}
+	}
+
+	if (!isStaff(session) && !isAdmin(session)) {
+		return {
+			notFound: true,
+		}
+	}
 
 	const api_url = getApiURL()
     
@@ -91,7 +110,9 @@ Log.getInitialProps = async function () {
 	const data = await res.json()
     
 	return {
-		logs: data,
+		props: {
+			logs: data,
+		},
 	}
 }
 

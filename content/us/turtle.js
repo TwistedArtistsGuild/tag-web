@@ -18,8 +18,8 @@
 	bio: `<h2>Creative &amp; Marketing Professional</h2><p>Texas-based artist <strong>Turtle / TOR2GA</strong> is a multidisciplinary creative and marketing professional, specializing in graphic design, DJing, fire performance, and event promotion. With experience as an internal marketing expert at <strong>Meta</strong>, he has developed a strong foundation in brand strategy, audience engagement, and high-level campaign execution.</p><h2>Festival Scene Veteran</h2><p>Bridging corporate insight with real-world experience, he has worked across every level of the festival scene — including production, promotion, performance, vending, and security — bringing a unique, ground-up perspective to live events.</p><p>He has contributed to major festivals such as <strong>Lost Lands</strong>, <strong>Electric Forest</strong>, <strong>Dancefestopia</strong>, and many others, building his expertise through years of hands-on collaboration with artists and large-scale productions.</p>`,
 	// Bio is tiptap-compatible HTML
 	images: [
-		"https://tagpictures.blob.core.windows.net/aboutcontent/received_982679195701635.jpeg",
-		"https://tagpictures.blob.core.windows.net/aboutcontent/received_607031337680429.jpeg",
+		"https://tagpictures.blob.core.windows.net/platformpics/about/turtle/received_982679195701635.jpeg",
+		"https://tagpictures.blob.core.windows.net/platformpics/about/turtle/received_607031337680429.jpeg",
 	],
 };
 

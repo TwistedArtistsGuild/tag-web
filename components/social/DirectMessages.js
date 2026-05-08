@@ -15,7 +15,7 @@
     Exports: DirectMessages (default)
 */
 
-import { useState, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import DOMPurify from "dompurify";
 import { IoSend, IoTimeOutline, IoCheckmarkSharp, IoCheckmarkDoneSharp } from "react-icons/io5";
 
@@ -305,6 +305,9 @@ const MOCK_CURRENT_USER = {
  * @param {string} props.theme - Optional theme variant ('light' or 'dark', default is 'light')
  * @param {number} props.maxHeight - Optional max height for the messages container
  * @param {boolean} props.demoMode - Whether to use demo data (default: false)
+ * @param {Object} props.demoUserOverride - Optional identity override used for demo mode sender context
+ * @param {React.ReactNode} props.composerContextControl - Optional compact context switch control shown in composer
+ * @param {string} props.panelColor - Optional context color used for subpanel shading
  */
 const DirectMessages = ({
     messages = [],
@@ -315,7 +318,10 @@ const DirectMessages = ({
     allowMedia = true,
     readOnly = false,
     maxHeight = compact ? 300 : 600,
-    demoMode = false
+    demoMode = false,
+    demoUserOverride = null,
+    composerContextControl = null,
+    panelColor = null
 }) => {
     // State management for messages and composition
     const [messageList, setMessageList] = useState(() => messages || []);
@@ -334,7 +340,19 @@ const DirectMessages = ({
     const [demoMessages, setDemoMessages] = useState(MOCK_MESSAGES);
     const [activeConversation, setActiveConversation] = useState(null);
     const [showConversationList, setShowConversationList] = useState(true);
-    const demoUser = MOCK_CURRENT_USER;
+    const demoUser = useMemo(() => {
+        if (!demoUserOverride) {
+            return MOCK_CURRENT_USER;
+        }
+
+        return {
+            ...MOCK_CURRENT_USER,
+            ...demoUserOverride,
+            displayName: demoUserOverride.displayName || demoUserOverride.label || MOCK_CURRENT_USER.displayName,
+            username: demoUserOverride.username || MOCK_CURRENT_USER.username,
+            avatarUrl: demoUserOverride.avatarUrl || MOCK_CURRENT_USER.avatarUrl,
+        };
+    }, [demoUserOverride]);
     
     // Ref for auto-scrolling to latest messages
     const messagesEndRef = useRef(null);
@@ -342,6 +360,16 @@ const DirectMessages = ({
     // Real-time functionality
     const { emit, isConnected } = useSocialRealtime();
     const [typingUsers, setTypingUsers] = useState([]);
+    const activeContextColor = panelColor || (demoMode ? demoUser?.color : currentUser?.color) || "#3B82F6";
+    const subPanelStyle = useMemo(() => ({
+        borderColor: `${activeContextColor}70`,
+        backgroundColor: `${activeContextColor}1A`,
+        backgroundImage: `linear-gradient(180deg, ${activeContextColor}24 0%, ${activeContextColor}14 100%)`,
+        boxShadow: `inset 0 0 0 1px ${activeContextColor}2E`,
+    }), [activeContextColor]);
+    const messageAreaStyle = useMemo(() => ({
+        backgroundColor: `${activeContextColor}12`,
+    }), [activeContextColor]);
     
     // Handle real-time message updates
     const handleRealtimeMessage = (update) => {
@@ -618,13 +646,13 @@ const DirectMessages = ({
                 data-theme={clientTheme}
             >
                 {/* Conversation list header */}
-                <div className="conversation-header sticky top-0 z-10 p-3 bg-base-200 border-b border-base-300 flex items-center">
+                <div className="conversation-header sticky top-0 z-10 p-3 bg-base-200 border-b border-base-300 flex items-center" style={subPanelStyle}>
                     <h3 className="font-bold text-lg flex-1">Messages</h3>
                     <span className="badge badge-sm">Demo Mode</span>
                 </div>
                 
                 {/* Search box */}
-                <div className="p-2 border-b border-base-300">
+                <div className="p-2 border-b border-base-300" style={subPanelStyle}>
                     <div className="relative">
                         <input
                             type="text"
@@ -638,7 +666,7 @@ const DirectMessages = ({
                 </div>
                 
                 {/* Conversation list */}
-                <div className="grow overflow-y-auto">
+                <div className="grow overflow-y-auto rounded-box" style={messageAreaStyle}>
                     {demoConversations.map((conv) => (
                         <div 
                             key={conv.id}
@@ -701,7 +729,7 @@ const DirectMessages = ({
                 </div>
                 
                 {/* User info footer */}
-                <div className="border-t border-base-300 p-3">
+                <div className="border-t border-base-300 p-3" style={subPanelStyle}>
                     <div className="flex items-center">
                         <div className="avatar mr-3">
                             <div className="w-8 h-8 rounded-full">
@@ -735,7 +763,7 @@ const DirectMessages = ({
                 data-theme={clientTheme}
             >
                 {/* Conversation header */}
-                <div className="conversation-header sticky top-0 z-10 p-3 bg-base-200 border-b border-base-300 flex items-center">
+                <div className="conversation-header sticky top-0 z-10 p-3 bg-base-200 border-b border-base-300 flex items-center" style={subPanelStyle}>
                     <button 
                         onClick={handleBackToList}
                         className="btn btn-ghost btn-sm btn-circle mr-2"
@@ -818,7 +846,7 @@ const DirectMessages = ({
                 {/* Messages area */}
                 <div 
                     className="grow overflow-y-auto p-3 space-y-4" 
-                    style={{ maxHeight: `${maxHeight}px` }}
+                    style={{ maxHeight: `${maxHeight}px`, ...messageAreaStyle }}
                 >
                     {groupedMessages.length === 0 && (
                         <div className="text-center py-8 text-base-content/70">
@@ -874,7 +902,7 @@ const DirectMessages = ({
                                                 <div 
                                                     className={`py-2 px-3 rounded-lg shadow-sm max-w-full
                                                         ${isCurrentUser 
-                                                            ? 'bg-primary text-primary-content' 
+                                                                ? 'text-primary-content border border-transparent' 
                                                             : 'bg-base-200 text-base-content'
                                                         }
                                                         ${msgIndex === 0 
@@ -886,6 +914,7 @@ const DirectMessages = ({
                                                             : ''
                                                         }
                                                     `}
+                                                    style={isCurrentUser ? { backgroundColor: activeContextColor, borderColor: `${activeContextColor}AA` } : undefined}
                                                 >
                                                     <div 
                                                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.content) }}
@@ -968,7 +997,7 @@ const DirectMessages = ({
                 </div>
                 
                 {/* Message composer */}
-                <div className="message-composer bg-base-200 p-3 border-t border-base-300">
+                <div className="message-composer bg-base-200 p-3 border-t border-base-300" style={subPanelStyle}>
                     <div className="flex flex-col">
                         <TiptapEditor
                             value={newMessageContent}
@@ -979,14 +1008,18 @@ const DirectMessages = ({
                             preset={allowMedia ? "medium" : "minimal"}
                             onKeyDown={handleKeyDown}
                         />
-                        <div className="flex justify-between items-center mt-2">
-                            <div className="text-xs text-base-content/70">
-                                Press Shift+Enter to send
+                        <div className="flex items-center justify-between gap-2 mt-2">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                {composerContextControl ? <div className="shrink-0">{composerContextControl}</div> : null}
+                                <div className="text-xs text-base-content/70 truncate">
+                                    Press Shift+Enter to send
+                                </div>
                             </div>
                             <button 
-                                className="btn btn-primary btn-sm"
+                                className="btn btn-primary btn-sm shrink-0"
                                 onClick={handleSendMessage}
                                 disabled={!newMessageContent.replace(/<[^>]*>/g, '').trim()}
+                                style={{ backgroundColor: activeContextColor, borderColor: activeContextColor }}
                             >
                                 <IoSend className="h-5 w-5" />
                                 Send
@@ -1008,7 +1041,7 @@ const DirectMessages = ({
         >
             {/* Conversation header - only show in full mode */}
             {!compact && conversation && (
-                <div className="conversation-header sticky top-0 z-10 p-3 bg-base-200 border-b border-base-300 flex items-center">
+                <div className="conversation-header sticky top-0 z-10 p-3 bg-base-200 border-b border-base-300 flex items-center" style={subPanelStyle}>
                     {/* Group conversation */}
                     {conversation.isGroup ? (
                         <>
@@ -1074,7 +1107,7 @@ const DirectMessages = ({
             {/* Messages area */}
             <div 
                 className="grow overflow-y-auto p-3 space-y-4" 
-                style={{ maxHeight: `${maxHeight}px` }}
+                style={{ maxHeight: `${maxHeight}px`, ...messageAreaStyle }}
             >
                 {groupedMessages.length === 0 && (
                     <div className="text-center py-8 text-base-content/70">
@@ -1130,7 +1163,7 @@ const DirectMessages = ({
                                             <div 
                                                 className={`py-2 px-3 rounded-lg shadow-sm max-w-full
                                                     ${isCurrentUser 
-                                                        ? 'bg-primary text-primary-content' 
+                                                        ? 'text-primary-content border border-transparent' 
                                                         : 'bg-base-200 text-base-content'
                                                     }
                                                     ${msgIndex === 0 
@@ -1142,6 +1175,7 @@ const DirectMessages = ({
                                                         : ''
                                                     }
                                                 `}
+                                                style={isCurrentUser ? { backgroundColor: activeContextColor, borderColor: `${activeContextColor}AA` } : undefined}
                                             >
                                                 <div 
                                                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.content) }}
@@ -1203,7 +1237,7 @@ const DirectMessages = ({
             
             {/* Message composer - only if not read-only and user is logged in */}
             {!readOnly && (currentUser || demoMode) && (
-                <div className="message-composer bg-base-200 p-3 border-t border-base-300">
+                <div className="message-composer bg-base-200 p-3 border-t border-base-300" style={subPanelStyle}>
                     <div className="flex flex-col">
                         <TiptapEditor
                             value={newMessageContent}
@@ -1214,14 +1248,18 @@ const DirectMessages = ({
                             preset={allowMedia ? "medium" : "minimal"}
                             onKeyDown={handleKeyDown}
                         />
-                        <div className="flex justify-between items-center mt-2">
-                            <div className="text-xs text-base-content/70">
-                                Press Shift+Enter to send
+                        <div className="flex items-center justify-between gap-2 mt-2">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                {composerContextControl ? <div className="shrink-0">{composerContextControl}</div> : null}
+                                <div className="text-xs text-base-content/70 truncate">
+                                    Press Shift+Enter to send
+                                </div>
                             </div>
                             <button 
-                                className="btn btn-primary btn-sm"
+                                className="btn btn-primary btn-sm shrink-0"
                                 onClick={handleSendMessage}
                                 disabled={!newMessageContent.replace(/<[^>]*>/g, '').trim()}
+                                style={{ backgroundColor: activeContextColor, borderColor: activeContextColor }}
                             >
                                 <IoSend className="h-5 w-5" />
                                 Send

@@ -1,4 +1,7 @@
 import { useState, useEffect, useMemo } from "react"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import { isAdmin, isStaff } from "@/utils/authHelpers"
 
 export default function GHLTester() {
   const [contacts, setContacts] = useState([])
@@ -556,4 +559,25 @@ export default function GHLTester() {
       </div>
     </div>
   )
+}
+
+export async function getServerSideProps(context) {
+  const session = await getServerSession(context.req, context.res, authOptions)
+
+  if (!session?.user) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/staff/ghl")}`,
+        permanent: false,
+      },
+    }
+  }
+
+  if (!isStaff(session) && !isAdmin(session)) {
+    return {
+      notFound: true,
+    }
+  }
+
+  return { props: {} }
 }
