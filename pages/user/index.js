@@ -5,7 +5,8 @@ import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
-import ArtistCardSmall from "@/components/cards/card_artist_small"
+import ArtistCard from "@/components/cards/card_artist"
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 
 const ROLE_META = {
@@ -213,6 +214,7 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 
 	const [moduleOrder, setModuleOrder] = useState(DEFAULT_MODULE_ORDER)
 	const [selectedModuleKey, setSelectedModuleKey] = useState(MODULES[0].key)
+	const [artistCardSize, setArtistCardSize] = useState("large")
 
 	const userConceptLinks = [
 		{ href: "/user/profile", title: "Profile", description: "Update your public profile text, image, and creator details.", icon: "👤" },
@@ -305,31 +307,62 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 				<div className="card bg-base-100 border border-base-300 shadow">
 					<div className="card-body p-4 gap-3">
 						<SectionHeading>Registered Artists</SectionHeading>
-						<p className="text-sm text-base-content/70">Artist profiles linked to your user account.</p>
+						<div className="flex items-center justify-between gap-3 flex-wrap">
+							<p className="text-sm text-base-content/70">Artist profiles linked to your user account.</p>
+							<label className="form-control w-full sm:w-auto">
+								<div className="label py-0">
+									<span className="label-text text-xs text-base-content/60">Card Size</span>
+								</div>
+								<select
+									className="select select-bordered select-xs"
+									value={artistCardSize}
+									onChange={(event) => setArtistCardSize(event.target.value)}
+								>
+									<option value="small">Small</option>
+									<option value="medium">Medium</option>
+									<option value="large">Large</option>
+								</select>
+							</label>
+						</div>
 						{registeredArtists.length === 0 ? (
 							<div className="rounded-box border border-base-300 bg-base-200 p-3 text-sm text-base-content/70 flex items-center justify-between gap-3 flex-wrap">
 								<span>No linked artist profiles yet.</span>
-								<Link href="/join/artist" className="btn btn-sm btn-secondary">Register Artist</Link>
+								<Link href="/join/artist" className="btn btn-sm btn-primary">Register Artist</Link>
 							</div>
 						) : (
-							<div className="space-y-2">
-								{registeredArtists.map((artist) => (
-									<div key={artist.artistID} className="space-y-2">
-										<ArtistCardSmall artist={artist} />
-										<div className="flex justify-end">
-											<Link
-												href={artist.path ? `/portal/artist/${artist.path}` : "/portal/artist"}
-												className="btn btn-xs btn-outline"
-											>
-												Artist Portal
-											</Link>
+							<SocialRealtimeProvider>
+								<div className={artistCardSize === "medium" ? "grid grid-cols-1 xl:grid-cols-2 gap-3" : "space-y-3"}>
+									{registeredArtists.map((artist) => (
+										<div key={artist.artistID} className="space-y-2">
+											<ArtistCard
+												artist={{
+													...artist,
+													panelSize:
+														artistCardSize === "large"
+															? "full"
+															: artistCardSize === "medium"
+																? "half"
+																: "third",
+												}}
+												compact={artistCardSize === "small"}
+												showHeaderGallery={artistCardSize === "large"}
+												showContentGallery={artistCardSize === "large"}
+											/>
+											<div className="flex justify-end">
+												<Link
+													href={artist.path ? `/portal/artist/${artist.path}` : "/portal/artist"}
+													className="btn btn-sm btn-primary"
+												>
+													Open Artist Portal
+												</Link>
+											</div>
 										</div>
+									))}
+									<div className={artistCardSize === "medium" ? "pt-1 xl:col-span-2" : "pt-1"}>
+										<Link href="/join/artist" className="btn btn-sm btn-outline btn-primary">Register Another Artist</Link>
 									</div>
-								))}
-								<div>
-									<Link href="/join/artist" className="btn btn-sm btn-secondary">Register Another Artist</Link>
 								</div>
-							</div>
+							</SocialRealtimeProvider>
 						)}
 					</div>
 				</div>
@@ -460,7 +493,7 @@ export async function getServerSideProps(context) {
 			apiSnapshot.preference = preference
 			apiSnapshot.privacy = privacy
 			apiSnapshot.settings = settings
-			apiSnapshot.registeredArtists = Array.isArray(registeredArtists)
+			const linkedArtists = Array.isArray(registeredArtists)
 				? registeredArtists.map((artist) => ({
 					artistID: artist?.artistID ?? artist?.ArtistID ?? null,
 					title: artist?.title ?? artist?.Title ?? null,
@@ -470,6 +503,38 @@ export async function getServerSideProps(context) {
 					linkRole: artist?.linkRole ?? artist?.LinkRole ?? null,
 				}))
 				: []
+
+			const artistProfiles = await Promise.all(
+				linkedArtists.map(async (artist) => {
+					if (!artist.path) {
+						return artist
+					}
+
+					const profileData = await fetchJsonOrNull(`${apiUrl}artist/${artist.path}/profile`)
+					if (!profileData?.artist) {
+						return artist
+					}
+
+					const profileArtist = profileData.artist
+					return {
+						...artist,
+						artistID: artist.artistID ?? profileArtist?.artistID ?? profileArtist?.ArtistID ?? null,
+						title: artist.title ?? profileArtist?.title ?? profileArtist?.Title ?? null,
+						path: artist.path ?? profileArtist?.path ?? profileArtist?.Path ?? null,
+						byline: artist.byline ?? profileArtist?.byline ?? profileArtist?.Byline ?? null,
+						statement: profileArtist?.statement ?? profileArtist?.Statement ?? null,
+						biography: profileArtist?.biography ?? profileArtist?.Biography ?? null,
+						seoTags: profileArtist?.seoTags ?? profileArtist?.SEOTags ?? null,
+						since: profileArtist?.since ?? profileArtist?.Since ?? null,
+						profilePic: profileData?.profilePic ?? artist.profilePic ?? null,
+						coverPic: profileData?.coverPic ?? null,
+						listings: Array.isArray(profileData?.listings) ? profileData.listings : [],
+						panelSize: "full",
+					}
+				}),
+			)
+
+			apiSnapshot.registeredArtists = artistProfiles
 		} catch (error) {
 			console.error("Unable to load user API snapshot:", error.message)
 		}
