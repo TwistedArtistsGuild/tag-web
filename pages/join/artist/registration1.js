@@ -36,7 +36,7 @@ export default function CreateArtistForm1(props) {
 
         return {
             ...base,
-            FromURL: "/portal/artist/create.js",
+            FromURL: "/join/artist/registration1.js",
             redirectURL: "/portal/artist/",
             APIURL: `${api_url}${base.apiurlpostfix}`
         };
@@ -69,4 +69,5 @@ CreateArtistForm1.getInitialProps = async function () {
         metadataProp: metadata
     };
 };
+
 
