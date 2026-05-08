@@ -12,6 +12,46 @@ Twisted Artists Guild is a digital cooperative for creators. The `tag-web` front
 
 ---
 
+## 🗂 Media Storage Hierarchy
+
+Media is now organized by entity ID instead of changeable slugs so URLs stay stable as names evolve. The blob layout is intentionally simple and predictable:
+
+```text
+platformpics/
+├── about/
+│   └── us/
+├── blog/
+│   └── {blogId}/
+│       ├── cover/
+│       ├── content/
+│       └── assets/
+├── usercontent/
+│   └── {userId}/
+│       ├── cover/
+│       ├── profile/
+│       └── postcontent/
+│           └── {postId}/
+│               ├── images/
+│               └── attachments/
+└── artistcontent/
+  └── {artistId}/
+    ├── cover/
+    ├── profile/
+    ├── listing/
+    │   └── {listingId}/
+    │       ├── cover/
+    │       ├── gallery/
+    │       └── assets/
+    └── postcontent/
+      └── {postId}/
+        ├── images/
+        └── attachments/
+```
+
+Artist media should be stored under the numeric `artistId` directory, not the artist slug, so directory names remain stable even if the public artist path changes.
+
+---
+
 ## 🚀 Getting Started
 
 1. **Clone this repo**
