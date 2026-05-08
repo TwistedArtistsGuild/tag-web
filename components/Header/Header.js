@@ -59,6 +59,11 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isThemeOpen, setIsThemeOpen] = useState(false)
+  const [contextSnapshot, setContextSnapshot] = useState({
+    activeContext: null,
+    availableContexts: [],
+  })
+  const [activeContextId, setActiveContextId] = useState(null)
 
   const notificationsIconRef = useRef(null)
   const messagesIconRef = useRef(null)
@@ -132,6 +137,17 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  useEffect(() => {
+    const contexts = contextSnapshot?.availableContexts || []
+    if (contexts.length === 0) {
+      return
+    }
+
+    if (!activeContextId || !contexts.some((context) => context.id === activeContextId)) {
+      setActiveContextId(contextSnapshot?.activeContext?.id || contexts[0].id)
+    }
+  }, [activeContextId, contextSnapshot])
+
   const headerClass = getHeaderClassName()
 
   // Height of the header for popup offset
@@ -150,6 +166,39 @@ export default function Header() {
     borderRadius: 0,
     display: isNotificationsDropdownOpen || isMessageAppletOpen ? "block" : "none"
   }
+
+  const resolvedActiveContext = (contextSnapshot?.availableContexts || []).find((context) => context.id === activeContextId)
+    || contextSnapshot?.activeContext
+    || contextSnapshot?.availableContexts?.[0]
+    || null
+
+  const activeContextColor = resolvedActiveContext?.color || "#3B82F6"
+  const notificationButtonStyle = notificationCount > 0
+    ? {
+        boxShadow: `0 0 0 2px ${activeContextColor}66, 0 0 14px ${activeContextColor}88`,
+        animation: "pulse 1.8s ease-in-out infinite",
+      }
+    : undefined
+  const messagesButtonStyle = unreadMessages > 0
+    ? {
+        boxShadow: `0 0 0 2px ${activeContextColor}66, 0 0 14px ${activeContextColor}88`,
+        animation: "pulse 1.8s ease-in-out infinite",
+      }
+    : undefined
+
+  const messagesCurrentUser = resolvedActiveContext
+    ? {
+        id: resolvedActiveContext.id,
+        username: (resolvedActiveContext.subtitle || resolvedActiveContext.label || "user")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "_")
+          .replace(/^_+|_+$/g, "") || "user",
+        displayName: resolvedActiveContext.label,
+        avatarUrl: resolvedActiveContext.avatarUrl || session?.user?.image || "/images/default-avatar.png",
+        color: resolvedActiveContext.color || "#3B82F6",
+        isAdmin: String(resolvedActiveContext.type || "").toLowerCase() === "admin",
+      }
+    : null
 
   return (
     <>
@@ -269,11 +318,12 @@ export default function Header() {
                   ref={messagesIconRef}
                   onClick={toggleMessageApplet}
                   className={`btn btn-ghost btn-sm btn-circle relative${isMessageAppletOpen ? " bg-primary text-primary-content ring-2 ring-primary/60 border border-primary/35" : " text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24"}`}
+                  style={messagesButtonStyle}
                   aria-label="Messages"
                 >
                   <MessageSquare size={18} />
                   {unreadMessages > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-error text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center" style={{ backgroundColor: activeContextColor }}>
                       {unreadMessages}
                     </span>
                   )}
@@ -282,11 +332,12 @@ export default function Header() {
                   ref={notificationsIconRef}
                   onClick={toggleNotificationsDropdown}
                   className={`btn btn-ghost btn-sm btn-circle relative${isNotificationsDropdownOpen ? " bg-primary text-primary-content ring-2 ring-primary/60 border border-primary/35" : " text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24"}`}
+                  style={notificationButtonStyle}
                   aria-label="Notifications"
                 >
                   <Bell size={18} />
                   {notificationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-error text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center" style={{ backgroundColor: activeContextColor }}>
                       {notificationCount}
                     </span>
                   )}
@@ -295,7 +346,16 @@ export default function Header() {
             )}
 
             {/* Login Profile */}
-            <LoginProfile className="text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24" isOpen={isLoginOpen} onToggle={toggleLogin} />
+            <LoginProfile
+              className="text-base-content enhanced-text-visibility bg-base-100/18 border border-base-content/10 hover:bg-base-100/24"
+              isOpen={isLoginOpen}
+              onToggle={toggleLogin}
+              activeContextId={activeContextId}
+              onActiveContextChange={setActiveContextId}
+              onContextSnapshotChange={(snapshot) => {
+                setContextSnapshot(snapshot)
+              }}
+            />
 
             {/* Mobile Right Sidebar Toggle Button */}
             {isMobile && (
@@ -326,6 +386,12 @@ export default function Header() {
           <MessagesApplet
             isOpen={isMessageAppletOpen}
             onClose={toggleMessageApplet}
+            currentUser={messagesCurrentUser}
+            contextProfiles={contextSnapshot?.availableContexts || []}
+            activeContextId={activeContextId || resolvedActiveContext?.id || null}
+            onContextChange={(nextContextId) => {
+              setActiveContextId(nextContextId)
+            }}
             conversations={[
               {
                 id: 1,
@@ -363,6 +429,7 @@ export default function Header() {
       {isNotificationsDropdownOpen && !isMessageAppletOpen && !isLoginOpen && !isThemeOpen && (
         <div style={popupStyle}>
           <NotificationsDropdown
+            activeContextColor={activeContextColor}
             notifications={[
               {
                 title: "New Follower",
