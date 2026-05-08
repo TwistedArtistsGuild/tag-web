@@ -10,7 +10,10 @@
  Open source · low-profit · human-first*/
 
 import { useEffect, useState, useMemo } from "react"
+import { getServerSession } from "next-auth/next"
 import TagSEO from "@/components/TagSEO"
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import { isAdmin, isStaff } from "@/utils/authHelpers"
 
 export default function BlobUsageReport() {
 	const [usage, setUsage] = useState(null)
@@ -211,4 +214,25 @@ export default function BlobUsageReport() {
 			</div>
 		</div>
 	)
+}
+
+export async function getServerSideProps(context) {
+	const session = await getServerSession(context.req, context.res, authOptions)
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/staff/blob-usage")}`,
+				permanent: false,
+			},
+		}
+	}
+
+	if (!isStaff(session) && !isAdmin(session)) {
+		return {
+			notFound: true,
+		}
+	}
+
+	return { props: {} }
 }

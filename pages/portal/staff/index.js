@@ -12,6 +12,9 @@
 
 
 import TagSEO from "@/components/TagSEO";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdmin, isStaff } from "@/utils/authHelpers";
 
 export default function Portal_Staff() {
 	const pageMetaData = {
@@ -33,6 +36,11 @@ export default function Portal_Staff() {
 			<h2 className="text-2xl font-bold text-primary">
         Landing page for Staff Portal
 			</h2>
+			<div className="mt-4">
+				<a className="link link-primary font-semibold" href="/portal/staff/dashboard">
+					Open Staff Dashboard
+				</a>
+			</div>
 			<p className="mt-3 text-base-content/80 max-w-2xl">
 				GoHighLevel Staff Workspace provides TAG staff with a unified view of contacts,
 				membership-drive funnel progress, form responses, and CRM messaging channels.
@@ -71,4 +79,25 @@ export default function Portal_Staff() {
 			</div>
 		</div>
 	);
+}
+
+export async function getServerSideProps(context) {
+	const session = await getServerSession(context.req, context.res, authOptions)
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/staff")}`,
+				permanent: false,
+			},
+		}
+	}
+
+	if (!isStaff(session) && !isAdmin(session)) {
+		return {
+			notFound: true,
+		}
+	}
+
+	return { props: {} }
 }
