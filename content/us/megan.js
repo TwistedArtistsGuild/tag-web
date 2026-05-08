@@ -17,7 +17,7 @@
 	roleSummary: "Assisting by reviewing the business plan, charter, and other founding documents.",
 	bio: `Megan is experienced at legal contract administration and technical writing and has joined our team as a vendor to review the business documents and .`,
 	images: [
-		"https://tagpictures.blob.core.windows.net/aboutcontent/megan1.jpg",
+		"https://tagpictures.blob.core.windows.net/platformpics/about/megan/megan1.jpg",
 	],
 };
 

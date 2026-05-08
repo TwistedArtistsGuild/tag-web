@@ -68,7 +68,7 @@ export default function NewCardsTestPage() {
 				category: "Wearable Art",
 			},
 			profilePic: {
-				url: "https://tagpictures.blob.core.windows.net/aboutcontent/352758208_10167521936530573_1350574665168998075_n.jpg",
+				url: "https://tagpictures.blob.core.windows.net/platformpics/about/bobb/352758208_10167521936530573_1350574665168998075_n.jpg",
 				alttext: "Tie-dye textile detail",
 			},
 		},
@@ -92,7 +92,7 @@ export default function NewCardsTestPage() {
 				category: "Performance Photography",
 			},
 			profilePic: {
-				url: "https://tagpictures.blob.core.windows.net/aboutcontent/367448489_10167756207805573_115514317805409958_n.jpg",
+				url: "https://tagpictures.blob.core.windows.net/platformpics/about/bobb/367448489_10167756207805573_115514317805409958_n.jpg",
 				alttext: "Fire performance in motion",
 			},
 		},
@@ -116,7 +116,7 @@ export default function NewCardsTestPage() {
 				category: "Studio Practice",
 			},
 			profilePic: {
-				url: "https://tagpictures.blob.core.windows.net/aboutcontent/283066084_10166159563465573_5133481584611622279_n.jpg",
+				url: "https://tagpictures.blob.core.windows.net/platformpics/about/satya/283066084_10166159563465573_5133481584611622279_n.jpg",
 				alttext: "Studio workspace overview",
 			},
 		},

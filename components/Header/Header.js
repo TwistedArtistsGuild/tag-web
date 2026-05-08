@@ -11,7 +11,7 @@
 
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import Image from "next/image"
@@ -67,6 +67,36 @@ export default function Header() {
 
   const notificationsIconRef = useRef(null)
   const messagesIconRef = useRef(null)
+
+  const serializeContextSnapshot = (snapshot) => {
+    const contexts = snapshot?.availableContexts || []
+    const activeContext = snapshot?.activeContext || null
+
+    return JSON.stringify({
+      activeId: activeContext?.id || null,
+      contexts: contexts.map((context) => ({
+        id: context.id,
+        color: context.color,
+        label: context.label,
+        avatarUrl: context.avatarUrl,
+        subtitle: context.subtitle,
+        type: context.type,
+      })),
+    })
+  }
+
+  const handleContextSnapshotChange = useCallback((nextSnapshot) => {
+    setContextSnapshot((currentSnapshot) => {
+      const currentSignature = serializeContextSnapshot(currentSnapshot)
+      const nextSignature = serializeContextSnapshot(nextSnapshot)
+
+      if (currentSignature === nextSignature) {
+        return currentSnapshot
+      }
+
+      return nextSnapshot
+    })
+  }, [])
 
   function handleActive(link) {
     setActive(link)
@@ -352,9 +382,7 @@ export default function Header() {
               onToggle={toggleLogin}
               activeContextId={activeContextId}
               onActiveContextChange={setActiveContextId}
-              onContextSnapshotChange={(snapshot) => {
-                setContextSnapshot(snapshot)
-              }}
+              onContextSnapshotChange={handleContextSnapshotChange}
             />
 
             {/* Mobile Right Sidebar Toggle Button */}
