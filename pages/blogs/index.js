@@ -18,6 +18,7 @@ import { getSeededStockPhoto } from "@/utils/stockPhotos"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { MessageCircleIcon, HeartIcon, ShareIcon } from "lucide-react"
 import { useState } from "react"
+import { useSession } from "next-auth/react";
 
 const getSeededCount = (seed, max, min = 1, salt = "") => {
   const base = `${seed || "blog"}-${salt}`
@@ -26,6 +27,7 @@ const getSeededCount = (seed, max, min = 1, salt = "") => {
 }
 
 const Blog = (props) => {
+  const { data: session } = useSession();
   const options = longDateOptions
   const [socialData, setSocialData] = useState(() =>
     props.blogs.reduce((acc, blog) => ({
@@ -58,7 +60,7 @@ const Blog = (props) => {
       title: "Platform Blog",
       description: "Artist spotlights, platform updates, and practical insights for creative growth.",
     },
-  }
+    }
   return (
     <SocialRealtimeProvider>
       <div className="min-h-screen flex flex-col bg-base-100 text-base-content">

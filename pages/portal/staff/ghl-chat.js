@@ -1,4 +1,7 @@
 import CrmSocialChat from "@/components/ghl/CrmSocialChat"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import { isAdmin, isStaff } from "@/utils/authHelpers"
 
 export default function GHLChatPage() {
   return (
@@ -32,4 +35,25 @@ export default function GHLChatPage() {
       </div>
     </div>
   )
+}
+
+export async function getServerSideProps(context) {
+  const session = await getServerSession(context.req, context.res, authOptions)
+
+  if (!session?.user) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/staff/ghl-chat")}`,
+        permanent: false,
+      },
+    }
+  }
+
+  if (!isStaff(session) && !isAdmin(session)) {
+    return {
+      notFound: true,
+    }
+  }
+
+  return { props: {} }
 }

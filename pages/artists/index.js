@@ -115,10 +115,10 @@ const Artists = (props) => {
 				</p>
 			</section>
       <main className="container mx-auto px-4 py-8 flex-1 w-full">
-				{/* Call to Action */}
-				<div className="flex justify-end mb-8">
-					<Link href="/portal/artist/create" className="btn btn-primary">Create a new artist</Link>
-				</div>
+				{/* Call to Action - Commented as create artist is not allowed */}
+				{/*<div className="flex justify-end mb-8">*/}
+				{/*	<Link href="/portal/artist/create" className="btn btn-primary">Create a new artist</Link>*/}
+				{/*</div>*/}
         {/* Main Artist Card Grid */}
 				<section className="w-full flex-1 min-h-100 flex flex-col justify-stretch">
           {loadedArtists.length > 0 ? (

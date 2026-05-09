@@ -10,12 +10,13 @@
  Open source · low-profit · human-first*/
 
 
+
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
 import React, { useMemo } from "react";
 
 const api_url = getApiURL();
-const formName = "ListingForm1";
+const formName = "ArtistForm1";
 
 /**
  * Component for updating user details.
@@ -23,7 +24,7 @@ const formName = "ListingForm1";
  * @param {Object} props.data
  * @returns {JSX.Element}
  */
-export default function CreateListingForm1(props) {
+export default function CreateArtistForm1(props) {
     const enhancedMetadata = useMemo(() => {
         const base = Array.isArray(props.metadataProp)
             ? props.metadataProp[0]
@@ -35,8 +36,8 @@ export default function CreateListingForm1(props) {
 
         return {
             ...base,
-            FromURL: "/portal/listing/create.js",
-            redirectURL: "/portal/listing/",
+            FromURL: "/join/artist/registration1.js",
+            redirectURL: "/portal/artist/",
             APIURL: `${api_url}${base.apiurlpostfix}`
         };
     }, [props.metadataProp]);
@@ -45,10 +46,10 @@ export default function CreateListingForm1(props) {
         return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
     }
 
-    return <div className="p-4"><DynaFormDB request="add" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={null} /></div>;
+    return <div className="p-4"><DynaFormDB request="add" metadataProp={enhancedMetadata} formData={null} /></div>;
 }
 
-CreateListingForm1.getInitialProps = async function () {
+CreateArtistForm1.getInitialProps = async function () {
     let metadata = {};
     try {
         let res = await fetch(`${api_url}formsmetadata/${formName}`);
@@ -68,4 +69,5 @@ CreateListingForm1.getInitialProps = async function () {
         metadataProp: metadata
     };
 };
+
 

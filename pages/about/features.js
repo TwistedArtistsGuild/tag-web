@@ -31,7 +31,7 @@ const Features = () => {
       id: 'artist-showcase',
       title: 'Artist Showcase & Community',
       description: 'Independent artists can showcase their work, manage portfolios, and connect with art lovers in an ad-free environment.',
-      image: 'https://tagpictures.blob.core.windows.net/twistedpassions/art-gallery.jpg',
+        image: 'https://tagpictures.blob.core.windows.net/platformpics/twistedpassions/art-gallery.jpg',
       features: [
         'Portfolio management with customizable galleries',
         'Direct messaging system between artists and collectors',
@@ -43,7 +43,7 @@ const Features = () => {
       id: 'event-management',
       title: 'Event Hosting & Promotion',
       description: 'Event hosts benefit from streamlined ticketing and promotion tools designed specifically for creative events.',
-      image: 'https://tagpictures.blob.core.windows.net/twistedpassions/event-promotion.jpg',
+      image: 'https://tagpictures.blob.core.windows.net/platformpics/twistedpassions/event-promotion.jpg',
       features: [
         'Integrated ticketing system with QR code functionality',
         'Automated event promotion across social channels',
@@ -55,7 +55,7 @@ const Features = () => {
       id: 'business-tools',
       title: 'Creative Business Tools',
       description: 'Comprehensive suite of business tools tailored for creative entrepreneurs and independent artists.',
-      image: 'https://tagpictures.blob.core.windows.net/twistedpassions/business-tools.jpg',
+      image: 'https://tagpictures.blob.core.windows.net/platformpics/twistedpassions/business-tools.jpg',
       features: [
         'Secure payment processing with multiple currency support',
         'Expense tracking and financial reporting',
@@ -67,7 +67,7 @@ const Features = () => {
       id: 'fintech-integration',
       title: 'Fintech Solutions',
       description: 'Seamless financial technology integration that respects your business while ensuring security and compliance.',
-      image: 'https://tagpictures.blob.core.windows.net/twistedpassions/fintech-secure.jpg',
+      image: 'https://tagpictures.blob.core.windows.net/platformpics/twistedpassions/fintech-secure.jpg',
       features: [
         'End-to-end encrypted transactions',
         'Automated sales tax calculation and reporting',
@@ -79,7 +79,7 @@ const Features = () => {
       id: 'social-media',
       title: 'Social Media for Art',
       description: 'A dedicated platform for art lovers to like, comment, and share art without intrusive advertisements.',
-      image: 'https://tagpictures.blob.core.windows.net/twistedpassions/social-media.jpg',
+      image: 'https://tagpictures.blob.core.windows.net/platformpics/twistedpassions/social-media.jpg',
       features: [
         'Ad-free browsing experience',
         'Direct and group messaging systems',
@@ -91,7 +91,7 @@ const Features = () => {
       id: 'anti-scalping',
       title: 'Anti-Scalping Event Features',
       description: 'Ensuring fair ticketing practices for art events.',
-      image: 'https://tagpictures.blob.core.windows.net/twistedpassions/anti-scalping.jpg',
+      image: 'https://tagpictures.blob.core.windows.net/platformpics/twistedpassions/anti-scalping.jpg',
       features: [
         'Full refunds up to a configurable time window',
         'FIFO waitlist queue for ticket redistribution',
