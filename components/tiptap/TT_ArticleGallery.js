@@ -113,6 +113,7 @@ export default function TTArticleGallery({
 	actionPreset = "none",
 	minHeight = 240,
 	uploadContext,
+	showAlignmentControls = true,
 }) {
 	const initialConfig = deriveInitialConfig(uploadContext);
 
@@ -330,6 +331,7 @@ export default function TTArticleGallery({
 				actionPreset={actionPreset}
 				minHeight={minHeight}
 				uploadContext={uploadContext}
+				showAlignmentControls={showAlignmentControls}
 				mediaToolbarSlot={picturesButton}
 				onPickImageFromLibrary={openSingleSelector}
 				onGalleryPreviewClick={handleGalleryPreviewClick}

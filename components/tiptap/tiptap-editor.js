@@ -1,7 +1,15 @@
 import React, { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { Trash2 } from "lucide-react";
+import {
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  ArrowUpRight,
+  Image as ImageIcon,
+  Trash2,
+  Video,
+} from "lucide-react";
 
 // Load BubbleMenu only on the client to avoid undefined during SSR
 const BubbleMenu = dynamic(
@@ -89,6 +97,8 @@ export default function TiptapEditor({
   fontScope,
   allowedFonts = [],
   enableSingleLineFontSelection = false,
+  showAlignmentControls = true,
+  allowStrikethrough = true,
   headingLevels,
   uploadContext,
   toolbarSlot,
@@ -713,6 +723,7 @@ export default function TiptapEditor({
   const canUseMedia = preset === "medium" || preset === "full";
   const canUseLists = !singleLine;
   const canUseFonts = (!singleLine || enableSingleLineFontSelection) && fontOptions.length > 0;
+  const canUseAlignment = showAlignmentControls;
   const resolvedHeadingLevels = normalizeHeadingLevels(
     headingLevels,
     canUseRichBlocks ? [2] : []
@@ -730,22 +741,29 @@ export default function TiptapEditor({
     <div className={`rounded border border-base-300 bg-base-100 ${className}`}>
       {!readOnly && (        
         <div className="flex flex-wrap items-center gap-1 border-b border-base-300 bg-base-200 p-2">
+
+          {/* Font selector - always leftmost */}
           {canUseFonts && (
-            <select
-              className="select select-bordered select-xs h-8 min-h-8 w-40"
-              aria-label="Select font"
-              title="Select font family"
-              value={activeFontValue}
-              onChange={(event) => applyFontFamily(event.target.value)}
-            >
-              <option value="__default__">Font: Default</option>
-              {fontOptions.map((font) => (
-                <option key={font.key} value={font.value} style={{ fontFamily: font.value }}>
-                  {font.label}
-                </option>
-              ))}
-            </select>
+            <>
+              <select
+                className="select select-bordered select-xs h-8 min-h-8 w-40"
+                aria-label="Select font"
+                title="Select font family"
+                value={activeFontValue}
+                onChange={(event) => applyFontFamily(event.target.value)}
+              >
+                <option value="__default__">Font: Default</option>
+                {fontOptions.map((font) => (
+                  <option key={font.key} value={font.value} style={{ fontFamily: font.value }}>
+                    {font.label}
+                  </option>
+                ))}
+              </select>
+              <div className="mx-1 h-6 w-px bg-base-300" />
+            </>
           )}
+
+          {/* Text formatting - B I U S */}
           <ToolbarButton
             label="B"
             active={editor.isActive("bold")}
@@ -767,62 +785,132 @@ export default function TiptapEditor({
           >
             <span className="underline decoration-2">U</span>
           </ToolbarButton>
-          <ToolbarButton
-            label="S"
-            active={editor.isActive("strike")}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-          >
-            <span className="line-through">S</span>
-          </ToolbarButton>
-          {canUseLists && (
+          {allowStrikethrough && (
+            <ToolbarButton
+              label="S"
+              active={editor.isActive("strike")}
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+            >
+              <span className="line-through">S</span>
+            </ToolbarButton>
+          )}
+
+          {/* Misc items - Lists, Headings, Quote, HR, Link */}
+          {(canUseLists || canUseHeadingButtons || canUseRichBlocks) && (
             <>
+              <div className="mx-1 h-6 w-px bg-base-300" />
+
+              {canUseLists && (
+                <>
+                  <ToolbarButton
+                    label="OL"
+                    active={editor.isActive("orderedList")}
+                    onClick={toggleOrderedList}
+                  >
+                    <span className="text-xs font-semibold">1.</span>
+                  </ToolbarButton>
+                  <ToolbarButton
+                    label="UL"
+                    active={editor.isActive("bulletList")}
+                    onClick={toggleBulletList}
+                  >
+                    <span className="text-xs font-semibold">•</span>
+                  </ToolbarButton>
+                </>
+              )}
+
+              {canUseHeadingButtons && (
+                <>
+                  {resolvedHeadingLevels.map((level) => (
+                    <ToolbarButton
+                      key={level}
+                      label={`H${level}`}
+                      active={editor.isActive("heading", { level })}
+                      onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
+                    >
+                      <span className="text-xs font-bold">{`H${level}`}</span>
+                    </ToolbarButton>
+                  ))}
+                </>
+              )}
+
+              {canUseRichBlocks && (
+                <>
+                  <ToolbarButton
+                    label="Quote"
+                    active={editor.isActive("blockquote")}
+                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                  >
+                    <span className="text-sm">❝</span>
+                  </ToolbarButton>
+                  <ToolbarButton
+                    label="HR"
+                    onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                  >
+                    <span className="w-4 border-t-2 border-current" />
+                  </ToolbarButton>
+                </>
+              )}
+            </>
+          )}
+
+          {/* Alignment controls - L C R on all presets when enabled */}
+          {canUseAlignment && (
+            <>
+              <div className="mx-1 h-6 w-px bg-base-300" />
               <ToolbarButton
-                label="OL"
-                active={editor.isActive("orderedList")}
-                onClick={toggleOrderedList}
+                label="Align Left"
+                active={editor.isActive({ textAlign: "left" })}
+                onClick={() => editor.chain().focus().setTextAlign("left").run()}
               >
-                <span className="text-xs font-semibold">1.</span>
+                <AlignLeft className="h-3.5 w-3.5" />
               </ToolbarButton>
               <ToolbarButton
-                label="UL"
-                active={editor.isActive("bulletList")}
-                onClick={toggleBulletList}
+                label="Align Center"
+                active={editor.isActive({ textAlign: "center" })}
+                onClick={() => editor.chain().focus().setTextAlign("center").run()}
               >
-                <span className="text-xs font-semibold">•</span>
+                <AlignCenter className="h-3.5 w-3.5" />
+              </ToolbarButton>
+              <ToolbarButton
+                label="Align Right"
+                active={editor.isActive({ textAlign: "right" })}
+                onClick={() => editor.chain().focus().setTextAlign("right").run()}
+              >
+                <AlignRight className="h-3.5 w-3.5" />
               </ToolbarButton>
             </>
           )}
-          {canUseHeadingButtons && (
+
+          {/* Media cluster - Image, Gallery, Vimeo, YouTube */}
+          {canUseMedia && (
             <>
-              {resolvedHeadingLevels.map((level) => (
-                <ToolbarButton
-                  key={level}
-                  label={`H${level}`}
-                  active={editor.isActive("heading", { level })}
-                  onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
-                >
-                  <span className="text-xs font-bold">{`H${level}`}</span>
-                </ToolbarButton>
-              ))}
-            </>
-          )}
-          {canUseRichBlocks && (
-            <>
-              <ToolbarButton
-                label="Quote"
-                active={editor.isActive("blockquote")}
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-              >
-                <span className="text-sm">❝</span>
+              <div className="mx-1 h-6 w-px bg-base-300" />
+              <ToolbarButton label="Image" onClick={() => openAction("image")}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold">
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  <span>Image</span>
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </span>
               </ToolbarButton>
-              <ToolbarButton
-                label="HR"
-                onClick={() => editor.chain().focus().setHorizontalRule().run()}
-              >
-                <span className="w-4 border-t-2 border-current" />
+              {mediaToolbarSlot}
+              <ToolbarButton label="Vimeo" onClick={() => openAction("vimeo")}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold">
+                  <Video className="h-3.5 w-3.5" />
+                  <span>Vimeo</span>
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </span>
+              </ToolbarButton>
+              <div className="mx-1 h-6 w-px bg-base-300" />
+              <ToolbarButton label="YouTube (Deprecated)" onClick={() => openAction("youtube")}>
+                <span className="text-xs font-semibold">YouTube (Deprecated)</span>
               </ToolbarButton>
             </>
           )}
+
+          {/* Link and Clear - always at the end */}
+          <div className="mx-1 h-6 w-px bg-base-300" />
+
           <ToolbarButton
             label="Link"
             active={editor.isActive("link")}
@@ -830,36 +918,28 @@ export default function TiptapEditor({
           >
             <span className="text-xs font-semibold">Link</span>
           </ToolbarButton>
-          {canUseMedia && (
+
+          {toolbarSlot && (
             <>
-              <ToolbarButton label="Singular Image" onClick={() => openAction("image")}>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold">
-                  <span>Singular Image</span>
-                  <span aria-hidden="true">↗</span>
-                </span>
-              </ToolbarButton>
-              {mediaToolbarSlot}
-              <ToolbarButton label="YouTube" onClick={() => openAction("youtube")}>
-                <span className="text-xs font-semibold">YouTube</span>
-              </ToolbarButton>
-              <ToolbarButton label="Vimeo" onClick={() => openAction("vimeo")}>
-                <span className="text-xs font-semibold">Vimeo</span>
-              </ToolbarButton>
+              <div className="mx-1 h-6 w-px bg-base-300" />
+              {toolbarSlot}
             </>
           )}
+
+          <div className="mx-1 h-6 w-px bg-base-300" />
+
           <ToolbarButton
             label="Clear"
             onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
           >
             <span className="text-xs font-semibold">Clear</span>
           </ToolbarButton>
-          {toolbarSlot}
         </div>
       )}
       {!readOnly && activeAction && (
         <div className="flex flex-wrap items-center gap-2 border-b border-base-300 bg-base-100 px-3 py-2">
           <span className="text-xs font-semibold uppercase text-base-content/70">
-            {activeAction === "link" ? "Link URL" : activeAction === "image" ? "Singular Image URL" : `${activeAction} URL`}
+            {activeAction === "link" ? "Link URL" : activeAction === "image" ? "Image URL" : `${activeAction} URL`}
           </span>
           <input
             type="url"

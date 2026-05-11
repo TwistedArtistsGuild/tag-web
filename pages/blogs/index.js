@@ -19,6 +19,42 @@ import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContex
 import { MessageCircleIcon, HeartIcon, ShareIcon } from "lucide-react"
 import { useState } from "react"
 import { useSession } from "next-auth/react";
+import sanitizeHtml from "sanitize-html";
+
+const UNIFORM_CARD_ALLOWED_TAGS = [
+  "p",
+  "br",
+  "strong",
+  "b",
+  "em",
+  "i",
+  "u",
+  "s",
+  "ul",
+  "ol",
+  "li",
+  "a",
+  "span",
+];
+
+function applyCardThemeOverride(html) {
+  return sanitizeHtml(String(html || ""), {
+    allowedTags: UNIFORM_CARD_ALLOWED_TAGS,
+    allowedAttributes: {
+      a: ["href", "target", "rel"],
+      span: [],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+  });
+}
+
+function toUniformPlainText(html) {
+  return String(html || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
 const getSeededCount = (seed, max, min = 1, salt = "") => {
   const base = `${seed || "blog"}-${salt}`
@@ -78,6 +114,8 @@ const Blog = (props) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {props.blogs.map((blog) => {
               const blogSocial = socialData[blog.path] || { loves: 0, comments: 0, shares: 0 }
+              const uniformCardTitle = toUniformPlainText(blog.title)
+              const uniformCardByline = applyCardThemeOverride(blog.byline)
               return (
                 <div
                   key={blog.path}
@@ -99,9 +137,9 @@ const Blog = (props) => {
                       as={`/blogs/${blog.path}`}
                       className="card-title text-2xl text-primary hover:underline"
                     >
-                      {blog.title}
+                      {uniformCardTitle || "Untitled"}
                     </Link>
-                    <div className="text-lg text-base-content/80 line-clamp-3" dangerouslySetInnerHTML={{ __html: blog.byline }}></div>
+                    <div className="text-lg text-base-content/80 line-clamp-3" dangerouslySetInnerHTML={{ __html: uniformCardByline }}></div>
                     
                     {/* Enhanced Social Section */}
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">

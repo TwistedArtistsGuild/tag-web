@@ -17,7 +17,8 @@ export default function TTPortfolio({
 	onSaveDraft,
 	onPublish,
 	showActionButtons = true,
-	uploadContext
+	uploadContext,
+	showAlignmentControls = true,
 }) {
 	return (
 		<div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
@@ -39,6 +40,7 @@ export default function TTPortfolio({
 				onSaveDraft={onSaveDraft}
 				onPublish={onPublish}
 				uploadContext={uploadContext}
+				showAlignmentControls={showAlignmentControls}
 			/>
 		</div>
 	);
