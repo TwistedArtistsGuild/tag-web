@@ -176,6 +176,28 @@ const BlogByslug = props => {
 		/* suppressHydrationWarning prevents React from logging a hydration mismatch for this subtree.
 		   We also only render the rich `body` HTML after mount to avoid SSR/CSR mismatch. */
 		<div className="flex flex-col items-center min-h-screen w-full py-8 gap-8" suppressHydrationWarning>
+			<style jsx global>{`
+				.blog-rich-content img[style*="text-align: left"],
+				.blog-rich-content iframe[style*="text-align: left"] {
+					display: block;
+					margin-left: 0;
+					margin-right: auto;
+				}
+
+				.blog-rich-content img[style*="text-align: center"],
+				.blog-rich-content iframe[style*="text-align: center"] {
+					display: block;
+					margin-left: auto;
+					margin-right: auto;
+				}
+
+				.blog-rich-content img[style*="text-align: right"],
+				.blog-rich-content iframe[style*="text-align: right"] {
+					display: block;
+					margin-left: auto;
+					margin-right: 0;
+				}
+			`}</style>
 			<TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
 			<div className="flex flex-col items-center">
 				<h1
@@ -193,7 +215,7 @@ const BlogByslug = props => {
 			{/* Render full body only on client to avoid hydration mismatch.
 			    If SEO is critical for this content, remove this guard and instead fix the underlying mismatch. */}
 			{mounted ? (
-				<div className="font-fredoka w-[75%] text-center space-y-6">
+				<div className="blog-rich-content font-fredoka w-[75%] text-center space-y-6">
 					{bodySegments.map((segment, index) => {
 						if (segment.type === "gallery") {
 							if (!segment.images.length) {

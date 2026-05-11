@@ -217,7 +217,7 @@ function baseExtensions(placeholder) {
       placeholder,
     }),
     TextAlign.configure({
-      types: ["heading", "paragraph"],
+      types: ["heading", "paragraph", "image", "youtube", "vimeo"],
       defaultAlignment: "left",
     }),
   ];

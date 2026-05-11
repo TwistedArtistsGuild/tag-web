@@ -42,9 +42,18 @@ function applyCardThemeOverride(html) {
     allowedTags: UNIFORM_CARD_ALLOWED_TAGS,
     allowedAttributes: {
       a: ["href", "target", "rel"],
-      span: [],
+      p: ["style"],
+      span: ["style"],
     },
     allowedSchemes: ["http", "https", "mailto"],
+    allowedStyles: {
+      p: {
+        "text-align": [/^left$/, /^center$/, /^right$/],
+      },
+      span: {
+        "text-align": [/^left$/, /^center$/, /^right$/],
+      },
+    },
   });
 }
 
