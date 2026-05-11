@@ -11,7 +11,19 @@
 
 import TiptapEditor from "@/components/tiptap/tiptap-editor";
 
-export default function TTArticle({ value, onChange, onSubmit, onCancel, actionPreset = "none", minHeight = 240, uploadContext, toolbarSlot }) {
+export default function TTArticle({
+	value,
+	onChange,
+	onSubmit,
+	onCancel,
+	actionPreset = "none",
+	minHeight = 240,
+	uploadContext,
+	toolbarSlot,
+	mediaToolbarSlot,
+	onPickImageFromLibrary,
+	onGalleryPreviewClick,
+}) {
 	return (
 		<div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
 			{/*<h2 className="text-lg font-semibold">Article / Blog</h2>*/}
@@ -35,6 +47,9 @@ export default function TTArticle({ value, onChange, onSubmit, onCancel, actionP
 				onCancel={onCancel}
 				uploadContext={uploadContext}
 				toolbarSlot={toolbarSlot}
+				mediaToolbarSlot={mediaToolbarSlot}
+				onPickImageFromLibrary={onPickImageFromLibrary}
+				onGalleryPreviewClick={onGalleryPreviewClick}
 			/>
 		</div>
 	);

@@ -91,9 +91,13 @@ export default function TiptapEditor({
   enableSingleLineFontSelection = false,
   headingLevels,
   uploadContext,
-  toolbarSlot
+  toolbarSlot,
+  mediaToolbarSlot,
+  onPickImageFromLibrary,
+  onGalleryPreviewClick
 }) {
   const [isUploading, setIsUploading] = useState(false);
+  const [isSelectingImage, setIsSelectingImage] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
   const [actionValue, setActionValue] = useState("");
   const [actionLabel, setActionLabel] = useState("");
@@ -172,6 +176,33 @@ export default function TiptapEditor({
                 return true; // Handled
             }
             return false;
+        },
+        handleClick: (view, pos, event) => {
+          if (typeof onGalleryPreviewClick !== "function") {
+            return false;
+          }
+
+          const target = event?.target;
+          const link = target?.closest?.('a[href^="#tag-gallery-"]');
+          const href = link?.getAttribute?.("href") || "";
+          const hrefMatch = href.match(/^#tag-gallery-([A-Za-z0-9_-]+)$/i);
+
+          if (hrefMatch?.[1]) {
+            event.preventDefault();
+            onGalleryPreviewClick(hrefMatch[1]);
+            return true;
+          }
+
+          const paragraph = target?.closest?.("p");
+          const text = (paragraph?.textContent || target?.textContent || "").trim();
+          const match = text.match(/Gallery Preview \[([A-Za-z0-9_-]+)\]/i);
+
+          if (!match?.[1]) {
+            return false;
+          }
+
+          onGalleryPreviewClick(match[1]);
+          return true;
         },
       handleKeyDown: (view, event) => {
         if (singleLine && event.key === "Enter" && !event.shiftKey) {
@@ -270,6 +301,62 @@ export default function TiptapEditor({
       return "";
     }
   }, []);
+
+  const insertImageFromUrl = useCallback((rawUrl) => {
+    if (!editor) {
+      return { ok: false, message: "Editor is not ready yet." };
+    }
+
+    const normalizedUrl = normalizeAndValidateUrl(rawUrl);
+    if (!normalizedUrl) {
+      return { ok: false, message: "That URL looks invalid." };
+    }
+
+    const hasSetImage = typeof editor.commands.setImage === "function";
+    const didInsert = runInsertWithFallback(() =>
+      hasSetImage
+        ? editor.chain().focus().setImage({ src: normalizedUrl }).run()
+        : editor
+            .chain()
+            .focus()
+            .insertContent(`<img src="${normalizedUrl}" alt="Embedded image" />`)
+            .run()
+    );
+
+    if (!didInsert) {
+      return { ok: false, message: "Could not insert image in this editor context." };
+    }
+
+    return { ok: true };
+  }, [editor, normalizeAndValidateUrl, runInsertWithFallback]);
+
+  const handlePickImageFromLibrary = useCallback(async () => {
+    if (typeof onPickImageFromLibrary !== "function" || isSelectingImage) {
+      return;
+    }
+
+    setActionError("");
+    setIsSelectingImage(true);
+    try {
+      const pickedUrl = await onPickImageFromLibrary();
+      if (!pickedUrl) {
+        return;
+      }
+
+      setActionValue(pickedUrl);
+      const result = insertImageFromUrl(pickedUrl);
+      if (!result.ok) {
+        setActionError(result.message);
+        return;
+      }
+
+      resetActionUi();
+    } catch (error) {
+      setActionError(error?.message || "Could not open image selector.");
+    } finally {
+      setIsSelectingImage(false);
+    }
+  }, [insertImageFromUrl, isSelectingImage, onPickImageFromLibrary, resetActionUi]);
 
   const openAction = useCallback(
     (type) => {
@@ -431,19 +518,9 @@ export default function TiptapEditor({
     }
 
     if (activeAction === "image") {
-      const hasSetImage = typeof editor.commands.setImage === "function";
-      const didInsert = runInsertWithFallback(() =>
-        hasSetImage
-          ? editor.chain().focus().setImage({ src: normalizedUrl }).run()
-          : editor
-              .chain()
-              .focus()
-              .insertContent(`<img src="${normalizedUrl}" alt="Embedded image" />`)
-              .run()
-      );
-
-      if (!didInsert) {
-        setActionError("Could not insert image in this editor context.");
+      const result = insertImageFromUrl(normalizedUrl);
+      if (!result.ok) {
+        setActionError(result.message);
         return;
       }
 
@@ -503,6 +580,7 @@ export default function TiptapEditor({
     normalizeAndValidateUrl,
     resetActionUi,
     runInsertWithFallback,
+    insertImageFromUrl,
   ]);
 
   const handleSubmitAction = useCallback(() => {
@@ -754,9 +832,13 @@ export default function TiptapEditor({
           </ToolbarButton>
           {canUseMedia && (
             <>
-              <ToolbarButton label="Image" onClick={() => openAction("image")}>
-                <span className="text-xs font-semibold">Image</span>
+              <ToolbarButton label="Singular Image" onClick={() => openAction("image")}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold">
+                  <span>Singular Image</span>
+                  <span aria-hidden="true">↗</span>
+                </span>
               </ToolbarButton>
+              {mediaToolbarSlot}
               <ToolbarButton label="YouTube" onClick={() => openAction("youtube")}>
                 <span className="text-xs font-semibold">YouTube</span>
               </ToolbarButton>
@@ -777,7 +859,7 @@ export default function TiptapEditor({
       {!readOnly && activeAction && (
         <div className="flex flex-wrap items-center gap-2 border-b border-base-300 bg-base-100 px-3 py-2">
           <span className="text-xs font-semibold uppercase text-base-content/70">
-            {activeAction === "link" ? "Link URL" : `${activeAction} URL`}
+            {activeAction === "link" ? "Link URL" : activeAction === "image" ? "Singular Image URL" : `${activeAction} URL`}
           </span>
           <input
             type="url"
@@ -849,6 +931,16 @@ export default function TiptapEditor({
           )}
           {activeAction === "link" && titleLookupStatus === "error" && !actionError && (
             <span className="text-xs text-warning">Could not fetch page title.</span>
+          )}
+          {activeAction === "image" && typeof onPickImageFromLibrary === "function" && (
+            <button
+              type="button"
+              className="btn btn-sm btn-outline"
+              onClick={handlePickImageFromLibrary}
+              disabled={isSelectingImage}
+            >
+              {isSelectingImage ? "Opening..." : "Pick from library ↗"}
+            </button>
           )}
           <button type="button" className="btn btn-sm btn-primary" onClick={submitAction}>
             Insert

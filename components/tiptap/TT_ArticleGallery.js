@@ -9,7 +9,7 @@
 
  Open source · low-profit · human-first*/
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import TTArticle from "@/components/tiptap/TT_Article";
 
@@ -57,6 +57,54 @@ function deriveInitialConfig(uploadContext = {}) {
 	};
 }
 
+function decodeGalleryPayload(encoded) {
+	if (!encoded) return null;
+
+	try {
+		const decoded = decodeURIComponent(encoded);
+		const parsed = JSON.parse(decoded);
+		if (Array.isArray(parsed)) {
+			return {
+				id: "",
+				images: parsed.filter(Boolean),
+				size: "large",
+				placement: "center",
+			};
+		}
+
+		return {
+			id: String(parsed?.id || ""),
+			images: Array.isArray(parsed?.images) ? parsed.images.filter(Boolean) : [],
+			size: String(parsed?.size || "large"),
+			placement: String(parsed?.placement || "center"),
+		};
+	} catch {
+		return null;
+	}
+}
+
+function escapeRegex(value) {
+	return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function findGalleryEntryById(content, galleryId) {
+	if (!galleryId) return null;
+
+	const regex = /\[\[TAG_GALLERY:([^\]]+)\]\]/g;
+	let match = regex.exec(String(content || ""));
+
+	while (match) {
+		const encoded = match[1];
+		const payload = decodeGalleryPayload(encoded);
+		if (payload?.id === galleryId) {
+			return { encoded, payload };
+		}
+		match = regex.exec(String(content || ""));
+	}
+
+	return null;
+}
+
 export default function TTArticleGallery({
 	value,
 	onChange,
@@ -69,6 +117,7 @@ export default function TTArticleGallery({
 	const initialConfig = deriveInitialConfig(uploadContext);
 
 	const [modalOpen, setModalOpen] = useState(false);
+	const [selectorMode, setSelectorMode] = useState("gallery"); // gallery | single
 	const [container] = useState(initialConfig.container);
 	const [startPrefix] = useState(initialConfig.startPrefix);
 	const [prefix, setPrefix] = useState(initialConfig.prefix);
@@ -77,8 +126,12 @@ export default function TTArticleGallery({
 	const [loading, setLoading] = useState(false);
 	const [listError, setListError] = useState("");
 	const [selected, setSelected] = useState([]); // [{ url, name }] in insertion order
+	const [gallerySize, setGallerySize] = useState("large");
+	const [galleryPlacement, setGalleryPlacement] = useState("center");
+	const [editingGallery, setEditingGallery] = useState(null); // { id, encoded }
 	const [dragIndex, setDragIndex] = useState(null);
 	const editorRef = useRef(null);
+	const singlePickResolverRef = useRef(null);
 
 	const loadDirectory = useCallback(
 		async (nextPrefix) => {
@@ -101,13 +154,36 @@ export default function TTArticleGallery({
 		[container, startPrefix]
 	);
 
-	// Load directory when modal first opens
-	useEffect(() => {
-		if (modalOpen) {
-			loadDirectory(prefix);
+	const openGallerySelector = useCallback(() => {
+		setSelectorMode("gallery");
+		setModalOpen(true);
+		loadDirectory(prefix);
+	}, [loadDirectory, prefix]);
+
+	const resolveSinglePick = useCallback((url) => {
+		if (singlePickResolverRef.current) {
+			singlePickResolverRef.current(url || null);
+			singlePickResolverRef.current = null;
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [modalOpen]);
+	}, []);
+
+	const openSingleSelector = useCallback(() => {
+		setSelectorMode("single");
+		setModalOpen(true);
+		loadDirectory(prefix);
+
+		return new Promise((resolve) => {
+			singlePickResolverRef.current = resolve;
+		});
+	}, [loadDirectory, prefix]);
+
+	const closeSelector = useCallback(() => {
+		setModalOpen(false);
+		setEditingGallery(null);
+		if (selectorMode === "single") {
+			resolveSinglePick(null);
+		}
+	}, [resolveSinglePick, selectorMode]);
 
 	const goUp = () => {
 		const segments = prefix.replace(/\/$/, "").split("/").filter(Boolean);
@@ -116,6 +192,12 @@ export default function TTArticleGallery({
 	};
 
 	const toggleSelect = (file) => {
+		if (selectorMode === "single") {
+			setModalOpen(false);
+			resolveSinglePick(file?.url || null);
+			return;
+		}
+
 		setSelected((prev) => {
 			const exists = prev.find((s) => s.url === file.url);
 			if (exists) return prev.filter((s) => s.url !== file.url);
@@ -143,22 +225,63 @@ export default function TTArticleGallery({
 	const insertImages = useCallback(() => {
 		if (!selected.length) return;
 
-		// Build newline-separated <img> HTML ready for Tiptap
-		const imgHtml = selected
-			.map((img) => `<img src="${img.url}" alt="" />`)
-			.join("<br />");
+		// Tiptap strips unknown HTML nodes/attrs that are not in schema, so persist as plain text token.
+		const galleryId = editingGallery?.id || `g${Date.now().toString(36)}`;
+		const payload = {
+			id: galleryId,
+			images: selected.map((img) => img.url),
+			size: gallerySize,
+			placement: galleryPlacement,
+		};
+		const encodedPayload = encodeURIComponent(JSON.stringify(payload));
+		const previewLabel = `${selected.length} image${selected.length !== 1 ? "s" : ""}`;
+		const chipHref = `#tag-gallery-${galleryId}`;
+		const previewText = `<a href="${chipHref}" title="Edit this gallery">🖼 Edit Gallery [${galleryId}]</a> <span>(${previewLabel} | ${gallerySize} | ${galleryPlacement})</span>`;
+		const newToken = `[[TAG_GALLERY:${encodedPayload}]]`;
+		const galleryHtml = `<p>${previewText}</p><p>${newToken}</p><p></p>`;
 
-		// If an article editor ref is available, insert; otherwise append to value
-		if (editorRef.current?.insertHtml) {
-			editorRef.current.insertHtml(imgHtml);
+		if (editingGallery?.encoded) {
+			const oldToken = `[[TAG_GALLERY:${editingGallery.encoded}]]`;
+			const previewRegex = new RegExp(
+				`<p[^>]*>(?:(?!<\\/p>).)*#tag-gallery-${escapeRegex(galleryId)}(?:(?!<\\/p>).)*<\\/p>`,
+				"i"
+			);
+			let updated = String(value || "");
+			updated = updated.replace(oldToken, newToken);
+			updated = updated.replace(previewRegex, `<p>${previewText}</p>`);
+			onChange(updated);
 		} else {
-			const current = value || "";
-			onChange(current + imgHtml);
+			// If an article editor ref is available, insert; otherwise append to value
+			if (editorRef.current?.insertHtml) {
+				editorRef.current.insertHtml(galleryHtml);
+			} else {
+				const current = value || "";
+				onChange(current + galleryHtml);
+			}
 		}
 
 		setSelected([]);
+		setEditingGallery(null);
 		setModalOpen(false);
-	}, [selected, value, onChange]);
+	}, [selected, gallerySize, galleryPlacement, editingGallery, value, onChange]);
+
+	const handleGalleryPreviewClick = useCallback((galleryId) => {
+		const entry = findGalleryEntryById(value, galleryId);
+		if (!entry?.payload?.images?.length) {
+			return;
+		}
+
+		setSelectorMode("gallery");
+		setEditingGallery({ id: galleryId, encoded: entry.encoded });
+		setSelected(entry.payload.images.map((url) => ({
+			url,
+			name: String(url).split("/").pop() || "image",
+		})));
+		setGallerySize(entry.payload.size || "large");
+		setGalleryPlacement(entry.payload.placement || "center");
+		setModalOpen(true);
+		loadDirectory(prefix);
+	}, [loadDirectory, prefix, value]);
 
 	const previewItems = selected.map((s) => ({ original: s.url, thumbnail: s.url }));
 
@@ -166,15 +289,38 @@ export default function TTArticleGallery({
 		<button
 			type="button"
 			className="btn btn-xs h-8 min-h-8 px-2 normal-case btn-ghost border border-base-300 gap-1"
-			onClick={() => setModalOpen(true)}
+			onClick={openGallerySelector}
 		>
-			<span>🖼</span>
-			<span className="text-xs font-semibold">Pictures</span>
+			<span className="inline-flex items-center gap-1 text-xs font-semibold">
+				<span>Gallery</span>
+				<span aria-hidden="true">↗</span>
+			</span>
 		</button>
 	);
 
 	return (
 		<div className="space-y-2">
+			<style jsx global>{`
+				.ProseMirror a[href^="#tag-gallery-"] {
+					display: inline-flex;
+					align-items: center;
+					gap: 0.35rem;
+					padding: 0.2rem 0.6rem;
+					border-radius: 9999px;
+					border: 1px solid color-mix(in oklab, var(--color-primary, hsl(var(--p))) 45%, transparent);
+					background: color-mix(in oklab, var(--color-primary, hsl(var(--p))) 12%, transparent);
+					font-size: 0.78rem;
+					font-weight: 600;
+					line-height: 1.2;
+					text-decoration: none;
+					cursor: pointer;
+				}
+
+				.ProseMirror a[href^="#tag-gallery-"]:hover {
+					background: color-mix(in oklab, var(--color-primary, hsl(var(--p))) 18%, transparent);
+				}
+			`}</style>
+
 			{/* Article editor with Pictures button injected into toolbar */}
 			<TTArticle
 				value={value}
@@ -184,23 +330,27 @@ export default function TTArticleGallery({
 				actionPreset={actionPreset}
 				minHeight={minHeight}
 				uploadContext={uploadContext}
-				toolbarSlot={picturesButton}
+				mediaToolbarSlot={picturesButton}
+				onPickImageFromLibrary={openSingleSelector}
+				onGalleryPreviewClick={handleGalleryPreviewClick}
 			/>
 
 			{/* Picture selector modal */}
 			{modalOpen && (
 				<div
 					className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-					onClick={(e) => { if (e.target === e.currentTarget) setModalOpen(false); }}
+					onClick={(e) => { if (e.target === e.currentTarget) closeSelector(); }}
 				>
 					<div className="bg-base-100 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
 						{/* Modal header */}
 						<div className="flex items-center justify-between px-5 py-3 border-b border-base-300">
-							<h2 className="text-lg font-semibold">Select Pictures to Insert</h2>
+							<h2 className="text-lg font-semibold">
+								{selectorMode === "single" ? "Select a Single Image" : "Select Pictures to Insert as Gallery"}
+							</h2>
 							<button
 								type="button"
 								className="btn btn-sm btn-ghost btn-square"
-								onClick={() => setModalOpen(false)}
+								onClick={closeSelector}
 								aria-label="Close"
 							>
 								✕
@@ -291,6 +441,7 @@ export default function TTArticleGallery({
 							</div>
 
 							{/* Right panel – selected / preview */}
+							{selectorMode === "gallery" ? (
 							<div className="w-full md:w-64 flex flex-col p-4 gap-3 overflow-y-auto">
 								<p className="text-sm font-semibold">
 									Selected ({selected.length}) — drag to reorder
@@ -338,6 +489,36 @@ export default function TTArticleGallery({
 								{/* Preview using existing PhotoGallery component */}
 								{selected.length > 0 && (
 									<div className="mt-2">
+										<div className="mb-3 space-y-2">
+											<p className="text-xs text-base-content/60">Gallery Layout</p>
+											<div className="grid grid-cols-2 gap-2">
+												<label className="form-control">
+													<span className="label-text text-xs mb-1">Size</span>
+													<select
+														className="select select-bordered select-xs w-full"
+														value={gallerySize}
+														onChange={(e) => setGallerySize(e.target.value)}
+													>
+														<option value="small">Small</option>
+														<option value="medium">Medium</option>
+														<option value="large">Large</option>
+														<option value="full">Full Width</option>
+													</select>
+												</label>
+												<label className="form-control">
+													<span className="label-text text-xs mb-1">Placement</span>
+													<select
+														className="select select-bordered select-xs w-full"
+														value={galleryPlacement}
+														onChange={(e) => setGalleryPlacement(e.target.value)}
+													>
+														<option value="left">Left</option>
+														<option value="center">Center</option>
+														<option value="right">Right</option>
+													</select>
+												</label>
+											</div>
+										</div>
 										<p className="text-xs text-base-content/60 mb-1">Preview</p>
 										<PhotoGallery
 											images={previewItems}
@@ -349,6 +530,13 @@ export default function TTArticleGallery({
 									</div>
 								)}
 							</div>
+							) : (
+							<div className="w-full md:w-64 p-4">
+								<p className="text-sm text-base-content/70">
+									Click any image on the left to insert it immediately.
+								</p>
+							</div>
+							)}
 						</div>
 
 						{/* Modal footer */}
@@ -356,18 +544,20 @@ export default function TTArticleGallery({
 							<button
 								type="button"
 								className="btn btn-ghost btn-sm"
-								onClick={() => { setSelected([]); setModalOpen(false); }}
+								onClick={() => { setSelected([]); closeSelector(); }}
 							>
 								Cancel
 							</button>
-							<button
-								type="button"
-								className="btn btn-primary btn-sm"
-								disabled={selected.length === 0}
-								onClick={insertImages}
-							>
-								Insert {selected.length > 0 ? `${selected.length} ` : ""}Image{selected.length !== 1 ? "s" : ""}
-							</button>
+							{selectorMode === "gallery" && (
+								<button
+									type="button"
+									className="btn btn-primary btn-sm"
+									disabled={selected.length === 0}
+									onClick={insertImages}
+								>
+									Insert {selected.length > 0 ? `${selected.length} ` : ""}Image{selected.length !== 1 ? "s" : ""}
+								</button>
+							)}
 						</div>
 					</div>
 				</div>
