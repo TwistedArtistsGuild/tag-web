@@ -90,7 +90,8 @@ export default function TiptapEditor({
   allowedFonts = [],
   enableSingleLineFontSelection = false,
   headingLevels,
-  uploadContext
+  uploadContext,
+  toolbarSlot
 }) {
   const [isUploading, setIsUploading] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
@@ -770,6 +771,7 @@ export default function TiptapEditor({
           >
             <span className="text-xs font-semibold">Clear</span>
           </ToolbarButton>
+          {toolbarSlot}
         </div>
       )}
       {!readOnly && activeAction && (

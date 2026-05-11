@@ -34,11 +34,18 @@ export default function CreateBlogForm1(props) {
             return null;
         }
 
+        const imageStartPrefix = "platformpics/blog/";
+
         return {
             ...base,
             FromURL: "/blogs/create.js",
             redirectURL: "/blogs/",
-            APIURL: `${api_url}${base.apiurlpostfix}`
+            APIURL: `${api_url}${base.apiurlpostfix}`,
+            imageCategory: "blogs",
+            entityId: "new",
+            imageContainer: "tagpictures",
+            imageStartPrefix,
+            imageTargetPrefix: imageStartPrefix
         };
     }, [props.metadataProp]);
 

@@ -41,6 +41,10 @@ export default function UpdateBlogForm1(props) {
         if (!base || Object.keys(base).length === 0) return null;
 
         // Merge dynamic URL properties
+        const blogId = String(props.blogdata?.blogID || "").trim();
+        const imageStartPrefix = "platformpics/blog/";
+        const imageTargetPrefix = blogId ? `${imageStartPrefix}${blogId}/` : imageStartPrefix;
+
         return {
             ...base,
             FromURL: `/blogs/${props.slug}/update.js`,
@@ -48,7 +52,10 @@ export default function UpdateBlogForm1(props) {
             // Reuse the normalized base URL from getApiURL() to keep env fallback/overrides consistent
             APIURL: `${api_url}blog/${props.blogdata?.blogID}`,
             imageCategory: 'blogs',
-            entityId: props.blogdata?.blogID
+            entityId: props.blogdata?.blogID,
+            imageContainer: "tagpictures",
+            imageStartPrefix,
+            imageTargetPrefix
         };
     }, [props.slug, props.blogdata, props.metadataProp]);
 

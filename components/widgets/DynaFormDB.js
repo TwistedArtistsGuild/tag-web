@@ -16,6 +16,7 @@ import DateInput from "./DynaDateInput";
 import { useSession } from "next-auth/react";
 import getApiURL from "@/components/widgets/GetApiURL";
 import TTArticle from "@/components/tiptap/TT_Article";
+import TTArticleGallery from "@/components/tiptap/TT_ArticleGallery";
 import TTSingleLine from "@/components/tiptap/TT_SingleLine";
 import TTTitleLine from "@/components/tiptap/TT_TitleLine";
 import TTPortfolio from "@/components/tiptap/TT_Portfolio";
@@ -432,7 +433,10 @@ export default function DynaForm(props) {
             userID: session?.user?.id || "anonymous",
             category: metadata.imageCategory, // Dynamic based on form type: 'blogs', 'events', 'profile'
             entityID: metadata.entityId || "new",
-            postfix: "" // Default empty, can be set to "-thumbnail" if needed
+          container: metadata.imageContainer,
+          startPrefix: metadata.imageStartPrefix,
+          targetPrefix: metadata.imageTargetPrefix,
+          postfix: "" // Default empty, can be set to "-thumbnail" if needed
             }; 
                 
           switch (field.type) {
@@ -476,6 +480,18 @@ export default function DynaForm(props) {
               case "tiptap_article":
                   return (
                     <TTArticle
+                        value={currentValue}
+                        onChange={(html) => handleFieldChange(field.name, html)}
+                        onSubmit={() => { }}
+                        onCancel={() => { }}
+                        minHeight={field.height || field.Height}
+                        uploadContext={uploadContext}
+                    />
+                  );
+
+              case "tiptap_article_gallery":
+                  return (
+                    <TTArticleGallery
                         value={currentValue}
                         onChange={(html) => handleFieldChange(field.name, html)}
                         onSubmit={() => { }}
