@@ -121,9 +121,6 @@ export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) 
 
 			<div className="rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm">
 				<h1 className="text-2xl font-bold text-base-content">Manage Live Blog Posts</h1>
-				<p className="mt-2 text-sm text-base-content/75">
-					Temporary open access is enabled while role detection is being finalized.
-				</p>
 				<p className="mt-2 text-xs uppercase tracking-wide text-base-content/60">
 					Private-review page is intentionally deferred to a later step.
 				</p>
