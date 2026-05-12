@@ -15,6 +15,7 @@ import { useAppContext } from "@/components/Context"
 import AboutSubnav from "@/components/AboutSubnav"
 import DocumentationSection from "@/components/DocumentationSection"
 import TagSEO from "@/components/TagSEO"
+import { sanitizeCardHtml } from "@/components/security/sanitize"
 const Vendor = () => {
   const pageMetaData = {
     title: "Vendor Information",
@@ -126,7 +127,7 @@ const Vendor = () => {
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-content text-sm font-bold shadow">{s.step}</span>
               <div>
                 <p className="font-semibold">{s.label}</p>
-                <p className="text-sm text-base-content/75" dangerouslySetInnerHTML={{ __html: s.desc }} />
+                <p className="text-sm text-base-content/75" dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(s.desc) }} />
               </div>
             </li>
           ))}

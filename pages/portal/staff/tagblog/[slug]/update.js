@@ -13,11 +13,17 @@
 import React, { useMemo } from "react";
 import DynaFormDB from "@/components/widgets/DynaFormDB"
 import getApiURL from "@/components/widgets/GetApiURL"
-
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdmin, isStaff } from "@/utils/authHelpers";
 import TagSEO from "@/components/TagSEO"
 
 const api_url = getApiURL();
 const formName = "BlogForm1";
+
+function isAuthorRole(session) {
+    return !!session?.user?.roles?.includes("author");
+}
 
 /**
  * Component for updating user details.
@@ -41,14 +47,21 @@ export default function UpdateBlogForm1(props) {
         if (!base || Object.keys(base).length === 0) return null;
 
         // Merge dynamic URL properties
+        const blogId = String(props.blogdata?.blogID || "").trim();
+        const imageStartPrefix = "platformpics/blog/";
+        const imageTargetPrefix = blogId ? `${imageStartPrefix}${blogId}/` : imageStartPrefix;
+
         return {
             ...base,
-            FromURL: `/blogs/${props.slug}/update.js`,
+            FromURL: `/portal/staff/tagblog/${props.slug}/update.js`,
             redirectURL: `/blogs/${props.slug}`,
             // Reuse the normalized base URL from getApiURL() to keep env fallback/overrides consistent
             APIURL: `${api_url}blog/${props.blogdata?.blogID}`,
             imageCategory: 'blogs',
-            entityId: props.blogdata?.blogID
+            entityId: props.blogdata?.blogID,
+            imageContainer: "tagpictures",
+            imageStartPrefix,
+            imageTargetPrefix
         };
     }, [props.slug, props.blogdata, props.metadataProp]);
 
@@ -59,7 +72,7 @@ export default function UpdateBlogForm1(props) {
 
     return (
       <div className="p-4">
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Blogs Slug Update", description: "Explore Github Projects Web Pages Blogs Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Blogs Slug Update", description: "Explore Github Projects Web Pages Blogs Slug Update on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/blogs/[slug]/update" />
+            <TagSEO metadataProp={{ title: "Github Projects Web Pages Blogs Slug Update", description: "Explore Github Projects Web Pages Blogs Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Blogs Slug Update", description: "Explore Github Projects Web Pages Blogs Slug Update on Platform." } }} canonicalSlug="/portal/staff/tagblog/[slug]/update" />
             <DynaFormDB
                 request="update"
                 metadataProp={enhancedMetadata}
@@ -75,10 +88,27 @@ export default function UpdateBlogForm1(props) {
  * @param {Object} context
  * @returns {Object}
  */
-UpdateBlogForm1.getInitialProps = async function (context) {
+export async function getServerSideProps(context) {
+    const session = await getServerSession(context.req, context.res, authOptions);
+
+    if (!session?.user) {
+        return {
+            redirect: {
+                destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl)}`,
+                permanent: false,
+            },
+        };
+    }
+
+    if (!isStaff(session) && !isAdmin(session) && !isAuthorRole(session)) {
+        return {
+            notFound: true,
+        };
+    }
+
     const { slug } = context.query;
     if (!slug) {
-        return { error: { message: "Blog's slug is missing from context query" } };
+        return { notFound: true };
     }
     let data = {};
     let metadata = null;
@@ -99,8 +129,10 @@ UpdateBlogForm1.getInitialProps = async function (context) {
     }
 
     return {
-        blogdata: data,
-        slug: slug,
-        metadataProp: metadata || {}
+        props: {
+            blogdata: data,
+            slug: slug,
+            metadataProp: metadata || {}
+        }
     };
-};
+}

@@ -26,6 +26,7 @@ import ContactCard, { DEFAULT_STORES } from "@/components/cards/card_contactList
 import SocialComments from "@/components/social/Comments"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { isArtist, isStaff, isAdmin } from "@/utils/authHelpers";
+import { sanitizeDefaultHtml } from "@/components/security/sanitize";
 
 const artistSections = [
   { id: "profile", label: "Profile" },
@@ -213,7 +214,7 @@ const Artist = (props) => {
           {/* Artist Statement Section */}
           <div id="statement" className="mt-12 prose max-w-none bg-base-100 p-6 shadow-lg">
             <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">Artist Statement</h2>
-            <div dangerouslySetInnerHTML={{ __html: props.artist.statement || "No statement available." }} />
+            <div dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(props.artist.statement || "No statement available.") }} />
           </div>
 
           {/* Featured Artwork Gallery */}
@@ -495,3 +496,4 @@ Artist.getInitialProps = async (context) => {
 }
 
 export default Artist
+

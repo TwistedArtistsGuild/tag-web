@@ -13,6 +13,9 @@
 
 import Link from "next/link";
 import TagSEO from "@/components/TagSEO";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 
 export default function Portal_Artist() {
 	const pageMetaData = {
@@ -62,4 +65,25 @@ export default function Portal_Artist() {
 			</div>
 		</div>
 	);
+}
+
+export async function getServerSideProps(context) {
+	const session = await getServerSession(context.req, context.res, authOptions);
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal")}`,
+				permanent: false,
+			},
+		};
+	}
+
+	if (!isArtist(session) && !isStaff(session) && !isAdmin(session)) {
+		return {
+			notFound: true,
+		};
+	}
+
+	return { props: {} };
 }

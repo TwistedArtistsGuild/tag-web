@@ -7,6 +7,7 @@ import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { FontFamily } from "@tiptap/extension-font-family";
 import Vimeo from "@/components/tiptap/tiptap-vimeo";
+import TextAlign from "@tiptap/extension-text-align";
 
 export const FONT_LIBRARY = [
   { key: "system-sans", label: "System Sans", value: "system-ui, sans-serif" },
@@ -201,7 +202,7 @@ function baseExtensions(placeholder) {
   return [
     StarterKit.configure({
       heading: {
-        levels: [1, 2, 3],
+        levels: [1, 2, 3, 4, 5],
       },
     }),
     TextStyle,
@@ -214,6 +215,10 @@ function baseExtensions(placeholder) {
     }),
     Placeholder.configure({
       placeholder,
+    }),
+    TextAlign.configure({
+      types: ["heading", "paragraph", "image", "youtube", "vimeo"],
+      defaultAlignment: "left",
     }),
   ];
 }

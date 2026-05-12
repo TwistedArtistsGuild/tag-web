@@ -1,13 +1,15 @@
-import React, { useCallback, useEffect, useState } from "react";
-import dynamic from "next/dynamic";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { Trash2 } from "lucide-react";
-
-// Load BubbleMenu only on the client to avoid undefined during SSR
-const BubbleMenu = dynamic(
-  () => import("@tiptap/react").then((mod) => mod.BubbleMenu),
-  { ssr: false }
-);
+import { NodeSelection } from "@tiptap/pm/state";
+import {
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  ArrowUpRight,
+  Image as ImageIcon,
+  Trash2,
+  Video,
+} from "lucide-react";
 
 import { getFontOptions, getTiptapExtensions } from "@/components/tiptap/tiptap-presets";
 import { toVimeoEmbedUrl } from "@/components/tiptap/tiptap-vimeo";
@@ -37,7 +39,7 @@ function normalizeHeadingLevels(inputLevels, fallbackLevels) {
 
   const normalized = inputLevels
     .map((level) => Number(level))
-    .filter((level) => Number.isInteger(level) && level >= 1 && level <= 3);
+    .filter((level) => Number.isInteger(level) && level >= 1 && level <= 5);
 
   if (normalized.length === 0) {
     return fallbackLevels;
@@ -50,7 +52,7 @@ function ToolbarButton({ onClick, active, disabled, label, children }) {
   return (
     <button
       type="button"
-      className={`btn btn-xs h-8 min-h-8 px-2 normal-case ${
+      className={`btn btn-xs h-8 min-h-8 px-2 ${
         active ? "btn-primary" : "btn-ghost border border-base-300"
       }`}
       onClick={onClick}
@@ -63,6 +65,39 @@ function ToolbarButton({ onClick, active, disabled, label, children }) {
       </span>
     </button>
   );
+}
+
+function calculateMediaOverlay(editor, editorSurface, mediaSelection) {
+  if (!editor || !editorSurface || !mediaSelection || typeof mediaSelection.pos !== "number") {
+    return null;
+  }
+
+  const nodeDom = editor.view.nodeDOM(mediaSelection.pos);
+  if (!nodeDom || nodeDom.nodeType !== 1) {
+    return null;
+  }
+
+  const mediaElement =
+    nodeDom.matches?.("img, iframe") ? nodeDom : nodeDom.querySelector?.("img, iframe");
+
+  if (!mediaElement) {
+    return null;
+  }
+
+  const surfaceRect = editorSurface.getBoundingClientRect();
+  const mediaRect = mediaElement.getBoundingClientRect();
+
+  if (!mediaRect.width || !mediaRect.height) {
+    return null;
+  }
+
+  const inset = 6;
+  return {
+    left: Math.max(0, mediaRect.left - surfaceRect.left + inset),
+    top: Math.max(0, mediaRect.top - surfaceRect.top + inset),
+    width: Math.max(200, mediaRect.width - inset * 2),
+    height: Math.max(90, mediaRect.height - inset * 2),
+  };
 }
 
 export default function TiptapEditor({
@@ -89,10 +124,18 @@ export default function TiptapEditor({
   fontScope,
   allowedFonts = [],
   enableSingleLineFontSelection = false,
+  showAlignmentControls = true,
+  allowStrikethrough = true,
   headingLevels,
-  uploadContext
+  uploadContext,
+  toolbarSlot,
+  mediaToolbarSlot,
+  onPickImageFromLibrary,
+  onGalleryPreviewClick,
+  resizable = false
 }) {
   const [isUploading, setIsUploading] = useState(false);
+  const [isSelectingImage, setIsSelectingImage] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
   const [actionValue, setActionValue] = useState("");
   const [actionLabel, setActionLabel] = useState("");
@@ -101,7 +144,17 @@ export default function TiptapEditor({
   const [suggestedLabel, setSuggestedLabel] = useState("");
   const [actionError, setActionError] = useState("");
   const [submitError, setSubmitError] = useState("");
+  const [mediaSelection, setMediaSelection] = useState(null);
+  const [mediaOverlay, setMediaOverlay] = useState(null);
+  const editorSurfaceRef = useRef(null);
   const fontOptions = getFontOptions({ preset, fontScope, allowedFonts });
+  const editorClassName = ["prose", "max-w-none", "p-3", "focus:outline-none", className]
+    .filter(Boolean)
+    .join(" ");
+
+  const isMediaNodeName = useCallback((nodeName) => {
+    return nodeName === "image" || nodeName === "youtube" || nodeName === "vimeo";
+  }, []);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -110,7 +163,7 @@ export default function TiptapEditor({
     editable: !readOnly,
     editorProps: {
       attributes: {
-        class: "prose max-w-none p-3 focus:outline-none",
+        class: editorClassName,
         style: `min-height: ${minHeight}px;`,
       },
         handleDrop: (view, event, slice, moved) => {
@@ -172,6 +225,67 @@ export default function TiptapEditor({
             }
             return false;
         },
+        handleClick: (view, pos, event) => {
+          const target = event?.target;
+
+          const clickedMedia = target?.closest?.(
+            "img, iframe[src*='youtube.com'], iframe[src*='player.vimeo.com']"
+          );
+
+          if (clickedMedia) {
+            let mediaPos = null;
+            try {
+              mediaPos = view.posAtDOM(clickedMedia, 0);
+            } catch {
+              mediaPos = null;
+            }
+
+            if (typeof mediaPos === "number") {
+              const mediaNode = view.state.doc.nodeAt(mediaPos);
+              if (mediaNode && isMediaNodeName(mediaNode.type.name)) {
+                const transaction = view.state.tr.setSelection(
+                  NodeSelection.create(view.state.doc, mediaPos)
+                );
+                view.dispatch(transaction);
+                setMediaSelection({
+                  pos: mediaPos,
+                  type: mediaNode.type.name,
+                  width: Number(mediaNode.attrs?.width) || 640,
+                  height: Number(mediaNode.attrs?.height) || 360,
+                });
+              }
+            }
+
+            return false;
+          }
+
+          if (typeof onGalleryPreviewClick !== "function") {
+            setMediaSelection(null);
+            return false;
+          }
+
+          const link = target?.closest?.('a[href^="#tag-gallery-"]');
+          const href = link?.getAttribute?.("href") || "";
+          const hrefMatch = href.match(/^#tag-gallery-([A-Za-z0-9_-]+)$/i);
+
+          if (hrefMatch?.[1]) {
+            event.preventDefault();
+            onGalleryPreviewClick(hrefMatch[1]);
+            return true;
+          }
+
+          const paragraph = target?.closest?.("p");
+          const text = (paragraph?.textContent || target?.textContent || "").trim();
+          const match = text.match(/Gallery Preview \[([A-Za-z0-9_-]+)\]/i);
+
+          if (!match?.[1]) {
+            setMediaSelection(null);
+            return false;
+          }
+
+          onGalleryPreviewClick(match[1]);
+          return true;
+        },
       handleKeyDown: (view, event) => {
         if (singleLine && event.key === "Enter" && !event.shiftKey) {
           event.preventDefault();
@@ -193,10 +307,12 @@ export default function TiptapEditor({
 
     const deleteSelectedImage = useCallback(async () => {
         if (!editor) return;
-        const { selection } = editor.state;
+        const targetPos = typeof mediaSelection?.pos === "number" ? mediaSelection.pos : null;
+        const nodeFromTrackedPos = targetPos !== null ? editor.state.doc.nodeAt(targetPos) : null;
+        const trackedNode = nodeFromTrackedPos || editor.state.selection.node;
 
-        if (selection.node && selection.node.type.name === 'image') {
-            const imageUrl = selection.node.attrs.src;
+        if (trackedNode && trackedNode.type.name === 'image') {
+            const imageUrl = trackedNode.attrs.src;
 
             setIsUploading(true);
             try {
@@ -206,14 +322,114 @@ export default function TiptapEditor({
 
                 console.log("Step 2: API Success, removing from UI");
                 // 3. Only remove from editor if API succeeds
-                editor.commands.deleteSelection();
+                if (targetPos !== null) {
+                  editor.chain().focus().setNodeSelection(targetPos).deleteSelection().run();
+                } else {
+                  editor.commands.deleteSelection();
+                }
+                setMediaSelection(null);
             } catch (error) {
                 console.error("Failed to delete image:", error);
             } finally {
                 setIsUploading(false);
             }
+            return;
         }
-    }, [editor]);
+
+        if (trackedNode && isMediaNodeName(trackedNode.type.name)) {
+          if (targetPos !== null) {
+            editor.chain().focus().setNodeSelection(targetPos).deleteSelection().run();
+          } else {
+            editor.commands.deleteSelection();
+          }
+          setMediaSelection(null);
+        }
+    }, [editor, isMediaNodeName, mediaSelection]);
+
+  const applyMediaResizeStep = useCallback(
+    (direction) => {
+      if (!editor || !mediaSelection || typeof mediaSelection.pos !== "number") {
+        return;
+      }
+
+      const node = editor.state.doc.nodeAt(mediaSelection.pos);
+      if (!node || !isMediaNodeName(node.type.name)) {
+        return;
+      }
+
+      const currentWidth = Number(node.attrs?.width) || mediaSelection.width || 640;
+      const currentHeight = Number(node.attrs?.height) || mediaSelection.height || 360;
+      const ratio = currentWidth / currentHeight || 16 / 9;
+      const step = 80;
+      const nextWidth = Math.max(160, currentWidth + direction * step);
+      const nextHeight = Math.max(90, Math.round(nextWidth / ratio));
+
+      editor.commands.setNodeSelection(mediaSelection.pos);
+      const didUpdate = editor
+        .chain()
+        .focus()
+        .updateAttributes(node.type.name, {
+          width: nextWidth,
+          height: nextHeight,
+        })
+        .run();
+
+      if (!didUpdate) {
+        return;
+      }
+
+      setMediaSelection((prev) =>
+        prev
+          ? {
+              ...prev,
+              width: nextWidth,
+              height: nextHeight,
+            }
+          : prev
+      );
+      requestAnimationFrame(() => {
+        setMediaOverlay(calculateMediaOverlay(editor, editorSurfaceRef.current, {
+          ...mediaSelection,
+          width: nextWidth,
+          height: nextHeight,
+        }));
+      });
+    },
+    [editor, isMediaNodeName, mediaSelection]
+  );
+
+  const applyMediaAlignment = useCallback(
+    (align) => {
+      if (!editor || !mediaSelection || typeof mediaSelection.pos !== "number") {
+        return;
+      }
+
+      const node = editor.state.doc.nodeAt(mediaSelection.pos);
+      if (!node || !isMediaNodeName(node.type.name)) {
+        return;
+      }
+
+      editor.commands.setNodeSelection(mediaSelection.pos);
+      const didUpdate = editor
+        .chain()
+        .focus()
+        .updateAttributes(node.type.name, { textAlign: align })
+        .run();
+
+      if (!didUpdate) {
+        return;
+      }
+
+      setMediaSelection((prev) => (prev ? { ...prev, align } : prev));
+      requestAnimationFrame(() => {
+        setMediaOverlay(calculateMediaOverlay(editor, editorSurfaceRef.current, {
+          ...mediaSelection,
+          align,
+        }));
+      });
+    },
+    [editor, isMediaNodeName, mediaSelection]
+  );
 
   useEffect(() => {
     if (!editor) {
@@ -225,6 +441,61 @@ export default function TiptapEditor({
       editor.commands.setContent(next, false);
     }
   }, [editor, value]);
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    const updateMediaSelectionFromEditor = () => {
+      const { selection, doc } = editor.state;
+      const node = selection.node || doc.nodeAt(selection.from);
+      if (!node || !isMediaNodeName(node.type.name)) {
+        setMediaSelection(null);
+        return;
+      }
+
+      setMediaSelection({
+        pos: selection.from,
+        type: node.type.name,
+        width: Number(node.attrs?.width) || 640,
+        height: Number(node.attrs?.height) || 360,
+        align: node.attrs?.textAlign || "left",
+      });
+    };
+
+    editor.on("selectionUpdate", updateMediaSelectionFromEditor);
+
+    return () => {
+      editor.off("selectionUpdate", updateMediaSelectionFromEditor);
+    };
+  }, [editor, isMediaNodeName]);
+
+  useEffect(() => {
+    if (!editor || !mediaSelection) {
+      return;
+    }
+
+    let frameId = requestAnimationFrame(() => {
+      setMediaOverlay(calculateMediaOverlay(editor, editorSurfaceRef.current, mediaSelection));
+    });
+
+    const handleViewportChange = () => {
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        setMediaOverlay(calculateMediaOverlay(editor, editorSurfaceRef.current, mediaSelection));
+      });
+    };
+
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
+    };
+  }, [editor, mediaSelection]);
 
   const resetActionUi = useCallback(() => {
     setActiveAction(null);
@@ -269,6 +540,62 @@ export default function TiptapEditor({
       return "";
     }
   }, []);
+
+  const insertImageFromUrl = useCallback((rawUrl) => {
+    if (!editor) {
+      return { ok: false, message: "Editor is not ready yet." };
+    }
+
+    const normalizedUrl = normalizeAndValidateUrl(rawUrl);
+    if (!normalizedUrl) {
+      return { ok: false, message: "That URL looks invalid." };
+    }
+
+    const hasSetImage = typeof editor.commands.setImage === "function";
+    const didInsert = runInsertWithFallback(() =>
+      hasSetImage
+        ? editor.chain().focus().setImage({ src: normalizedUrl }).run()
+        : editor
+            .chain()
+            .focus()
+            .insertContent(`<img src="${normalizedUrl}" alt="Embedded image" />`)
+            .run()
+    );
+
+    if (!didInsert) {
+      return { ok: false, message: "Could not insert image in this editor context." };
+    }
+
+    return { ok: true };
+  }, [editor, normalizeAndValidateUrl, runInsertWithFallback]);
+
+  const handlePickImageFromLibrary = useCallback(async () => {
+    if (typeof onPickImageFromLibrary !== "function" || isSelectingImage) {
+      return;
+    }
+
+    setActionError("");
+    setIsSelectingImage(true);
+    try {
+      const pickedUrl = await onPickImageFromLibrary();
+      if (!pickedUrl) {
+        return;
+      }
+
+      setActionValue(pickedUrl);
+      const result = insertImageFromUrl(pickedUrl);
+      if (!result.ok) {
+        setActionError(result.message);
+        return;
+      }
+
+      resetActionUi();
+    } catch (error) {
+      setActionError(error?.message || "Could not open image selector.");
+    } finally {
+      setIsSelectingImage(false);
+    }
+  }, [insertImageFromUrl, isSelectingImage, onPickImageFromLibrary, resetActionUi]);
 
   const openAction = useCallback(
     (type) => {
@@ -430,33 +757,9 @@ export default function TiptapEditor({
     }
 
     if (activeAction === "image") {
-      const hasSetImage = typeof editor.commands.setImage === "function";
-      const didInsert = runInsertWithFallback(() =>
-        hasSetImage
-          ? editor.chain().focus().setImage({ src: normalizedUrl }).run()
-          : editor
-              .chain()
-              .focus()
-              .insertContent(`<img src="${normalizedUrl}" alt="Embedded image" />`)
-              .run()
-      );
-
-      if (!didInsert) {
-        setActionError("Could not insert image in this editor context.");
-        return;
-      }
-
-      resetActionUi();
-      return;
-    }
-
-    if (activeAction === "youtube") {
-      const didInsert =
-        typeof editor.commands.setYoutubeVideo === "function" &&
-        runInsertWithFallback(() => editor.commands.setYoutubeVideo({ src: normalizedUrl }));
-
-      if (!didInsert) {
-        setActionError("Could not insert YouTube video. Try a full watch URL.");
+      const result = insertImageFromUrl(normalizedUrl);
+      if (!result.ok) {
+        setActionError(result.message);
         return;
       }
 
@@ -502,6 +805,7 @@ export default function TiptapEditor({
     normalizeAndValidateUrl,
     resetActionUi,
     runInsertWithFallback,
+    insertImageFromUrl,
   ]);
 
   const handleSubmitAction = useCallback(() => {
@@ -634,6 +938,7 @@ export default function TiptapEditor({
   const canUseMedia = preset === "medium" || preset === "full";
   const canUseLists = !singleLine;
   const canUseFonts = (!singleLine || enableSingleLineFontSelection) && fontOptions.length > 0;
+  const canUseAlignment = showAlignmentControls;
   const resolvedHeadingLevels = normalizeHeadingLevels(
     headingLevels,
     canUseRichBlocks ? [2] : []
@@ -648,25 +953,39 @@ export default function TiptapEditor({
       : "__default__";
 
   return (
-    <div className={`rounded border border-base-300 bg-base-100 ${className}`}>
+    <div
+      className={`rounded border border-base-300 bg-base-100 ${className}`}
+      style={{
+        minHeight: `${minHeight}px`,
+        resize: resizable ? "vertical" : undefined,
+        overflow: resizable ? "auto" : undefined,
+      }}
+    >
       {!readOnly && (        
         <div className="flex flex-wrap items-center gap-1 border-b border-base-300 bg-base-200 p-2">
+
+          {/* Font selector - always leftmost */}
           {canUseFonts && (
-            <select
-              className="select select-bordered select-xs h-8 min-h-8 w-40"
-              aria-label="Select font"
-              title="Select font family"
-              value={activeFontValue}
-              onChange={(event) => applyFontFamily(event.target.value)}
-            >
-              <option value="__default__">Font: Default</option>
-              {fontOptions.map((font) => (
-                <option key={font.key} value={font.value} style={{ fontFamily: font.value }}>
-                  {font.label}
-                </option>
-              ))}
-            </select>
+            <>
+              <select
+                className="select select-bordered select-xs h-8 min-h-8 w-40"
+                aria-label="Select font"
+                title="Select font family"
+                value={activeFontValue}
+                onChange={(event) => applyFontFamily(event.target.value)}
+              >
+                <option value="__default__">Font: Default</option>
+                {fontOptions.map((font) => (
+                  <option key={font.key} value={font.value} style={{ fontFamily: font.value }}>
+                    {font.label}
+                  </option>
+                ))}
+              </select>
+              <div className="mx-1 h-6 w-px bg-base-300" />
+            </>
           )}
+
+          {/* Text formatting - B I U S */}
           <ToolbarButton
             label="B"
             active={editor.isActive("bold")}
@@ -688,62 +1007,121 @@ export default function TiptapEditor({
           >
             <span className="underline decoration-2">U</span>
           </ToolbarButton>
-          <ToolbarButton
-            label="S"
-            active={editor.isActive("strike")}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-          >
-            <span className="line-through">S</span>
-          </ToolbarButton>
-          {canUseLists && (
+          {allowStrikethrough && (
+            <ToolbarButton
+              label="S"
+              active={editor.isActive("strike")}
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+            >
+              <span className="line-through">S</span>
+            </ToolbarButton>
+          )}
+
+          {/* Misc items - Lists, Headings, HR, Link */}
+          {(canUseLists || canUseHeadingButtons || canUseRichBlocks) && (
             <>
+              <div className="mx-1 h-6 w-px bg-base-300" />
+
+              {canUseLists && (
+                <>
+                  <ToolbarButton
+                    label="OL"
+                    active={editor.isActive("orderedList")}
+                    onClick={toggleOrderedList}
+                  >
+                    <span className="text-xs font-semibold">1.</span>
+                  </ToolbarButton>
+                  <ToolbarButton
+                    label="UL"
+                    active={editor.isActive("bulletList")}
+                    onClick={toggleBulletList}
+                  >
+                    <span className="text-xs font-semibold">•</span>
+                  </ToolbarButton>
+                </>
+              )}
+
+              {canUseHeadingButtons && (
+                <>
+                  {resolvedHeadingLevels.map((level) => (
+                    <ToolbarButton
+                      key={level}
+                      label={`H${level}`}
+                      active={editor.isActive("heading", { level })}
+                      onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
+                    >
+                      <span className="text-xs font-bold">{`H${level}`}</span>
+                    </ToolbarButton>
+                  ))}
+                </>
+              )}
+
+              {canUseRichBlocks && (
+                <>
+                  <ToolbarButton
+                    label="HR"
+                    onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                  >
+                    <span className="w-4 border-t-2 border-current" />
+                  </ToolbarButton>
+                </>
+              )}
+            </>
+          )}
+
+          {/* Alignment controls - L C R on all presets when enabled */}
+          {canUseAlignment && (
+            <>
+              <div className="mx-1 h-6 w-px bg-base-300" />
               <ToolbarButton
-                label="OL"
-                active={editor.isActive("orderedList")}
-                onClick={toggleOrderedList}
+                label="Align Left"
+                active={editor.isActive({ textAlign: "left" })}
+                onClick={() => editor.chain().focus().setTextAlign("left").run()}
               >
-                <span className="text-xs font-semibold">1.</span>
+                <AlignLeft className="h-3.5 w-3.5" />
               </ToolbarButton>
               <ToolbarButton
-                label="UL"
-                active={editor.isActive("bulletList")}
-                onClick={toggleBulletList}
+                label="Align Center"
+                active={editor.isActive({ textAlign: "center" })}
+                onClick={() => editor.chain().focus().setTextAlign("center").run()}
               >
-                <span className="text-xs font-semibold">•</span>
+                <AlignCenter className="h-3.5 w-3.5" />
+              </ToolbarButton>
+              <ToolbarButton
+                label="Align Right"
+                active={editor.isActive({ textAlign: "right" })}
+                onClick={() => editor.chain().focus().setTextAlign("right").run()}
+              >
+                <AlignRight className="h-3.5 w-3.5" />
               </ToolbarButton>
             </>
           )}
-          {canUseHeadingButtons && (
+
+          {/* Media cluster - Image, Gallery, Vimeo */}
+          {canUseMedia && (
             <>
-              {resolvedHeadingLevels.map((level) => (
-                <ToolbarButton
-                  key={level}
-                  label={`H${level}`}
-                  active={editor.isActive("heading", { level })}
-                  onClick={() => editor.chain().focus().toggleHeading({ level }).run()}
-                >
-                  <span className="text-xs font-bold">{`H${level}`}</span>
-                </ToolbarButton>
-              ))}
-            </>
-          )}
-          {canUseRichBlocks && (
-            <>
-              <ToolbarButton
-                label="Quote"
-                active={editor.isActive("blockquote")}
-                onClick={() => editor.chain().focus().toggleBlockquote().run()}
-              >
-                <span className="text-sm">❝</span>
+              <div className="mx-1 h-6 w-px bg-base-300" />
+              <ToolbarButton label="Image" onClick={() => openAction("image")}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold">
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  <span>Image</span>
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </span>
               </ToolbarButton>
-              <ToolbarButton
-                label="HR"
-                onClick={() => editor.chain().focus().setHorizontalRule().run()}
-              >
-                <span className="w-4 border-t-2 border-current" />
+              {mediaToolbarSlot}
+              <ToolbarButton label="Vimeo" onClick={() => openAction("vimeo")}>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold">
+                  <Video className="h-3.5 w-3.5" />
+                  <span>Vimeo</span>
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </span>
               </ToolbarButton>
             </>
           )}
+
+          {/* Link and Clear - always at the end */}
+          <div className="mx-1 h-6 w-px bg-base-300" />
+
           <ToolbarButton
             label="Link"
             active={editor.isActive("link")}
@@ -751,19 +1129,16 @@ export default function TiptapEditor({
           >
             <span className="text-xs font-semibold">Link</span>
           </ToolbarButton>
-          {canUseMedia && (
+
+          {toolbarSlot && (
             <>
-              <ToolbarButton label="Image" onClick={() => openAction("image")}>
-                <span className="text-xs font-semibold">Image</span>
-              </ToolbarButton>
-              <ToolbarButton label="YouTube" onClick={() => openAction("youtube")}>
-                <span className="text-xs font-semibold">YouTube</span>
-              </ToolbarButton>
-              <ToolbarButton label="Vimeo" onClick={() => openAction("vimeo")}>
-                <span className="text-xs font-semibold">Vimeo</span>
-              </ToolbarButton>
+              <div className="mx-1 h-6 w-px bg-base-300" />
+              {toolbarSlot}
             </>
           )}
+
+          <div className="mx-1 h-6 w-px bg-base-300" />
+
           <ToolbarButton
             label="Clear"
             onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
@@ -775,11 +1150,11 @@ export default function TiptapEditor({
       {!readOnly && activeAction && (
         <div className="flex flex-wrap items-center gap-2 border-b border-base-300 bg-base-100 px-3 py-2">
           <span className="text-xs font-semibold uppercase text-base-content/70">
-            {activeAction === "link" ? "Link URL" : `${activeAction} URL`}
+            {activeAction === "link" ? "Link URL" : activeAction === "image" ? "Image URL" : `${activeAction} URL`}
           </span>
           <input
             type="url"
-            className="input input-bordered input-sm w-full max-w-md"
+            className="input input-bordered input-sm w-full max-w-md focus:outline-none"
             placeholder="https://..."
             value={actionValue}
             onChange={(event) => {
@@ -808,7 +1183,7 @@ export default function TiptapEditor({
           {activeAction === "link" && (
             <input
               type="text"
-              className="input input-bordered input-sm w-full max-w-sm"
+              className="input input-bordered input-sm w-full max-w-sm focus:outline-none"
               placeholder="Link text (optional)"
               value={actionLabel}
               onChange={(event) => {
@@ -848,6 +1223,16 @@ export default function TiptapEditor({
           {activeAction === "link" && titleLookupStatus === "error" && !actionError && (
             <span className="text-xs text-warning">Could not fetch page title.</span>
           )}
+          {activeAction === "image" && typeof onPickImageFromLibrary === "function" && (
+            <button
+              type="button"
+              className="btn btn-sm btn-outline"
+              onClick={handlePickImageFromLibrary}
+              disabled={isSelectingImage}
+            >
+              {isSelectingImage ? "Opening..." : "Pick from library ↗"}
+            </button>
+          )}
           <button type="button" className="btn btn-sm btn-primary" onClick={submitAction}>
             Insert
           </button>
@@ -867,20 +1252,101 @@ export default function TiptapEditor({
                 </div>
             </div>
           )}
-          {editor && (
-              <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} shouldShow={({ editor }) => editor.isActive('image')}>
-                  <div className="flex bg-white shadow-xl border rounded overflow-hidden">
-                      <button
-                          onClick={deleteSelectedImage}
-                          className="px-3 py-1 bg-red-500 text-white text-xs hover:bg-red-600 transition-colors flex items-center gap-1"
-                      >
-                          <Trash2 className="h-4 w-4" />
-                          Delete Image
-                      </button>
-                  </div>
-              </BubbleMenu>
-          )}
-      <EditorContent editor={editor} />
+      <style jsx global>{`
+        .ProseMirror img[style*="text-align: left"],
+        .ProseMirror iframe[style*="text-align: left"] {
+          display: block;
+          margin-left: 0;
+          margin-right: auto;
+        }
+
+        .ProseMirror img[style*="text-align: center"],
+        .ProseMirror iframe[style*="text-align: center"] {
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .ProseMirror img[style*="text-align: right"],
+        .ProseMirror iframe[style*="text-align: right"] {
+          display: block;
+          margin-left: auto;
+          margin-right: 0;
+        }
+      `}</style>
+      <div ref={editorSurfaceRef} className="relative">
+        <EditorContent editor={editor} />
+        {editor && mediaSelection && mediaOverlay && (
+          <div
+            className="pointer-events-none absolute z-20"
+            style={{
+              left: `${mediaOverlay.left}px`,
+              top: `${mediaOverlay.top}px`,
+              width: `${mediaOverlay.width}px`,
+              height: `${mediaOverlay.height}px`,
+            }}
+          >
+            <div className="flex h-full w-full flex-col justify-between rounded border border-primary/50 bg-base-300/20 p-1">
+              <div className="pointer-events-auto inline-flex w-fit items-center gap-1 rounded bg-base-100/95 px-1 py-1 shadow">
+                <button
+                  type="button"
+                  className="btn btn-xs"
+                  onClick={() => applyMediaResizeStep(-1)}
+                  title="Shrink"
+                >
+                  -
+                </button>
+                <span className="min-w-20 text-center text-[11px] text-base-content/70">
+                  {Math.round(mediaSelection.width)} x {Math.round(mediaSelection.height)}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-xs"
+                  onClick={() => applyMediaResizeStep(1)}
+                  title="Grow"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={deleteSelectedImage}
+                  className="btn btn-xs btn-error text-white"
+                  title="Delete media"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              <div className="pointer-events-auto mx-auto inline-flex items-center gap-1 rounded bg-base-100/95 px-1 py-1 shadow">
+                <button
+                  type="button"
+                  className={`btn btn-xs ${mediaSelection.align === "left" ? "btn-primary" : "btn-ghost"}`}
+                  onClick={() => applyMediaAlignment("left")}
+                  title="Align Left"
+                >
+                  <AlignLeft className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-xs ${mediaSelection.align === "center" ? "btn-primary" : "btn-ghost"}`}
+                  onClick={() => applyMediaAlignment("center")}
+                  title="Align Center"
+                >
+                  <AlignCenter className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-xs ${mediaSelection.align === "right" ? "btn-primary" : "btn-ghost"}`}
+                  onClick={() => applyMediaAlignment("right")}
+                  title="Align Right"
+                >
+                  <AlignRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
       {showSubmitCancel && (
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-base-300 bg-base-100 p-2">
           <button type="button" className="btn btn-sm btn-outline" onClick={handleCancelAction}>

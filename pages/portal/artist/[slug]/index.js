@@ -17,6 +17,7 @@ import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin } from "@/utils/authHelpers"
+import { sanitizeDefaultHtml } from "@/components/security/sanitize"
 
 const UPCOMING_DATES = [
   {
@@ -106,7 +107,7 @@ function PreviewMode({ artistProfile, slug, listingCount }) {
 
           <div className="prose max-w-none text-base-content">
             <h3>Statement Preview</h3>
-            <div dangerouslySetInnerHTML={{ __html: artistProfile?.statement || "<p>No statement available yet.</p>" }} />
+            <div dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(artistProfile?.statement || "<p>No statement available yet.</p>") }} />
           </div>
         </div>
       </div>
@@ -390,3 +391,4 @@ export async function getServerSideProps(context) {
     }
   }
 }
+

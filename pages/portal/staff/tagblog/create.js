@@ -14,9 +14,16 @@
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
 import React, { useMemo } from "react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdmin, isStaff } from "@/utils/authHelpers";
 
 const api_url = getApiURL();
 const formName = "BlogForm1";
+
+function isAuthorRole(session) {
+    return !!session?.user?.roles?.includes("author");
+}
 
 /**
  * Component for updating user details.
@@ -34,11 +41,21 @@ export default function CreateBlogForm1(props) {
             return null;
         }
 
+        const imageStartPrefix = "platformpics/blog/";
+        const apiPostfix = base.apiurlpostfix || base.APIURLpostfix || base.apiurLpostfix || "blog";
+        const normalizedPostfix = String(apiPostfix).replace(/^\/+/, "");
+        const resolvedApiUrl = base.APIURL || `${api_url}${normalizedPostfix}`;
+
         return {
             ...base,
-            FromURL: "/blogs/create.js",
+            FromURL: "/portal/staff/tagblog/create.js",
             redirectURL: "/blogs/",
-            APIURL: `${api_url}${base.apiurlpostfix}`
+            APIURL: resolvedApiUrl,
+            imageCategory: "blogs",
+            entityId: "new",
+            imageContainer: "tagpictures",
+            imageStartPrefix,
+            imageTargetPrefix: imageStartPrefix
         };
     }, [props.metadataProp]);
 
@@ -49,7 +66,24 @@ export default function CreateBlogForm1(props) {
     return <div className="p-4"><DynaFormDB request="add" metadataProp={enhancedMetadata} formData={null} /></div>;
 }
 
-CreateBlogForm1.getInitialProps = async function () {
+export async function getServerSideProps(context) {
+    const session = await getServerSession(context.req, context.res, authOptions);
+
+    if (!session?.user) {
+        return {
+            redirect: {
+                destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/staff/tagblog/create")}`,
+                permanent: false,
+            },
+        };
+    }
+
+    if (!isStaff(session) && !isAdmin(session) && !isAuthorRole(session)) {
+        return {
+            notFound: true,
+        };
+    }
+
     let metadata = {};
     try {
         let res = await fetch(`${api_url}formsmetadata/${formName}`);
@@ -66,7 +100,9 @@ CreateBlogForm1.getInitialProps = async function () {
         console.error("Error fetching form meta:", error);
     }
     return {
-        metadataProp: metadata
+        props: {
+            metadataProp: metadata,
+        },
     };
-};
+}
 
