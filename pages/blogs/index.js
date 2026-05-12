@@ -130,14 +130,14 @@ const Blog = (props) => {
   }, [session]);
 
   const pageMetaData = {
-    title: "Blog",
+    title: "TAG Blog",
     description: "Read artist spotlights, platform updates, and practical guides for building visibility and creative income.",
     keywords: "art blog, artist stories, creator insights, platform updates",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "Platform Blog",
+      title: "TAG Blog | Platform Blog",
       description: "Artist spotlights, platform updates, and practical insights for creative growth.",
     },
     }
@@ -146,12 +146,15 @@ const Blog = (props) => {
       <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
         <TagSEO metadataProp={pageMetaData} canonicalSlug="blogs" />
         {/* Hero Section */}
-        <section className="text-center py-12">
+        <section className="text-center py-12 bg-linear-to-br from-base-200 to-base-100">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
-            TAG Blog Entries
+            TAG Blog
           </h1>
-          <p className="text-xl md:text-2xl text-secondary mb-6">
-            Please see the below topics of interest to yourself.
+          <p className="text-xl md:text-2xl text-base-content/80 mb-6 max-w-3xl mx-auto px-4">
+            Platform updates, transparency on our direction, and practical guidance for thriving as an artist here.
+          </p>
+          <p className="text-lg text-base-content/60 max-w-2xl mx-auto px-4">
+            From product launches and safety updates to long-term vision—this is how we stay open about what we're building and why.
           </p>
         </section>
         <main className="container mx-auto px-4 py-8 flex-1 w-full">
