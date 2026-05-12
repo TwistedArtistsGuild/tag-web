@@ -20,43 +20,7 @@ import SocialReactions from "@/components/social/Reactions"
 import { MessageCircleIcon } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useSession } from "next-auth/react";
-import sanitizeHtml from "sanitize-html";
-
-const UNIFORM_CARD_ALLOWED_TAGS = [
-  "p",
-  "br",
-  "strong",
-  "b",
-  "em",
-  "i",
-  "u",
-  "s",
-  "ul",
-  "ol",
-  "li",
-  "a",
-  "span",
-];
-
-function applyCardThemeOverride(html) {
-  return sanitizeHtml(String(html || ""), {
-    allowedTags: UNIFORM_CARD_ALLOWED_TAGS,
-    allowedAttributes: {
-      a: ["href", "target", "rel"],
-      p: ["style"],
-      span: ["style"],
-    },
-    allowedSchemes: ["http", "https", "mailto"],
-    allowedStyles: {
-      p: {
-        "text-align": [/^left$/, /^center$/, /^right$/],
-      },
-      span: {
-        "text-align": [/^left$/, /^center$/, /^right$/],
-      },
-    },
-  });
-}
+import { sanitizeCardHtml } from "@/components/security/sanitize";
 
 function toUniformPlainText(html) {
   return String(html || "")
@@ -164,7 +128,7 @@ const Blog = (props) => {
               const topComments = buildTopMockComments(blog.path)
               const initialReactions = buildMockReactions(blog.path)
               const uniformCardTitle = toUniformPlainText(blog.title)
-              const uniformCardByline = applyCardThemeOverride(blog.byline)
+              const uniformCardByline = sanitizeCardHtml(blog.byline)
               return (
                 <div
                   key={blog.path}
@@ -198,7 +162,7 @@ const Blog = (props) => {
                       {uniformCardTitle || "Untitled"}
                     </Link>
                     </div>
-                    <div className="text-lg text-base-content/80 line-clamp-3" dangerouslySetInnerHTML={{ __html: uniformCardByline }}></div>
+                    <div className="text-lg text-base-content/80 line-clamp-3" dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(uniformCardByline) }}></div>
 
                     <div className="mt-3 flex items-center gap-3 rounded-box border border-base-300 bg-base-100 p-3">
                       <div className="avatar">

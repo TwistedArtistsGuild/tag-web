@@ -24,7 +24,7 @@ import ArtistCard from "@/components/cards/card_artist"
 import { defaultFieldClass } from "@/utils/formSettings"
 import { PERMISSIONS } from "@/utils/permissions";
 import { hasPermission } from "@/utils/authHelpers";
-import sanitizeHtml from "sanitize-html";
+import { sanitizeDefaultHtml, sanitizeCardHtml } from "@/components/security/sanitize";
 
 const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false });
 
@@ -41,31 +41,6 @@ const GALLERY_PLACEMENT_MAP = {
 	right: "ml-auto",
 };
 
-const BLOG_BODY_ALLOWED_TAGS = [
-	"p",
-	"br",
-	"strong",
-	"b",
-	"em",
-	"i",
-	"u",
-	"s",
-	"ul",
-	"ol",
-	"li",
-	"a",
-	"span",
-	"div",
-	"img",
-	"iframe",
-	"blockquote",
-	"hr",
-	"h1",
-	"h2",
-	"h3",
-	"h4",
-	"h5",
-];
 
 function decodeHtmlEntities(value) {
 	if (!value) {
@@ -82,65 +57,6 @@ function decodeHtmlEntities(value) {
 		.replaceAll(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)));
 }
 
-function sanitizeBlogHtml(html) {
-	return sanitizeHtml(String(html || ""), {
-		allowedTags: BLOG_BODY_ALLOWED_TAGS,
-		allowedAttributes: {
-			a: ["href", "target", "rel"],
-			p: ["style"],
-			span: ["style"],
-			div: ["style"],
-			img: ["src", "alt", "title", "width", "height", "style", "class"],
-			iframe: ["src", "width", "height", "frameborder", "allow", "allowfullscreen", "style"],
-			h1: ["id", "style"],
-			h2: ["id", "style"],
-			h3: ["id", "style"],
-			h4: ["id", "style"],
-			h5: ["id", "style"],
-			blockquote: ["style"],
-		},
-		allowedSchemes: ["http", "https", "mailto"],
-		allowedSchemesByTag: {
-			img: ["http", "https"],
-			iframe: ["http", "https"],
-		},
-		allowedStyles: {
-			p: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-			span: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-			div: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-			h1: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-			h2: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-			h3: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-			h4: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-			h5: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-			blockquote: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-			img: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-			iframe: {
-				"text-align": [/^left$/, /^center$/, /^right$/],
-			},
-		},
-	});
-}
 
 function extractAttributeValue(blockHtml, attrName) {
 	const attrRegex = new RegExp(`${attrName}="([^\"]+)"`, "i");
@@ -434,13 +350,12 @@ const BlogByslug = props => {
 			`}</style>
 			<TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
 			<div className="flex flex-col items-center">
-				<h1
-					className="font-poiret text-7xl shadow-text"
-					dangerouslySetInnerHTML={{ __html: props.blog.title }}
-				></h1>
+				<h1 className="font-poiret text-7xl shadow-text">
+					{stripHtmlTags(props.blog.title) || "Untitled"}
+				</h1>
 				<div
 					className="font-fredoka pt-2 w-[75%]"
-					dangerouslySetInnerHTML={{ __html: props.blog.byline }}
+					dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(props.blog.byline) }}
 				></div>
 				{/* server-stable formatted date */}
 				<div className="font-baloo text-xs shadow-dark">{props.blog.formattedCreated}</div>
@@ -508,7 +423,7 @@ const BlogByslug = props => {
 						return (
 							<div
 								key={`html-${index}`}
-								dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(addSectionAnchors(segment.html)) }}
+								dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(addSectionAnchors(segment.html)) }}
 							/>
 						);
 					})}
@@ -580,3 +495,4 @@ BlogByslug.getInitialProps = async function (context) {
 }
 
 export default BlogByslug
+

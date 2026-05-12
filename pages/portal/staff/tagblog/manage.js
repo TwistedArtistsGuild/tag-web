@@ -13,37 +13,15 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
-import sanitizeHtml from "sanitize-html";
 import TagSEO from "@/components/TagSEO";
 import getApiURL from "@/components/widgets/GetApiURL";
+import { sanitizeCardHtml } from "@/components/security/sanitize";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { hasPermission, isAdmin } from "@/utils/authHelpers";
 import { PERMISSIONS } from "@/utils/permissions";
 
 const api_url = getApiURL();
 const TEMP_ALLOW_DELETE_WITHOUT_ROLE = false;
-
-const PREVIEW_ALLOWED_TAGS = ["p", "br", "strong", "b", "em", "i", "u", "s", "ul", "ol", "li", "a", "span"];
-
-function sanitizePreviewHtml(html) {
-  return sanitizeHtml(String(html || ""), {
-    allowedTags: PREVIEW_ALLOWED_TAGS,
-    allowedAttributes: {
-      a: ["href", "target", "rel"],
-      p: ["style"],
-      span: ["style"],
-    },
-    allowedSchemes: ["http", "https", "mailto"],
-    allowedStyles: {
-      p: {
-        "text-align": [/^left$/, /^center$/, /^right$/],
-      },
-      span: {
-        "text-align": [/^left$/, /^center$/, /^right$/],
-      },
-    },
-  });
-}
 
 export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) {
 	const { data: session } = useSession();
@@ -143,11 +121,11 @@ export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) 
 							<p className="text-xs uppercase tracking-[0.18em] text-secondary">Live Blog</p>
 							<h2
 								className="mt-2 text-xl font-bold text-base-content line-clamp-2"
-								dangerouslySetInnerHTML={{ __html: sanitizePreviewHtml(blog.title || "Untitled") }}
+								dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(blog.title || "Untitled") }}
 							></h2>
 							<div
 								className="mt-2 text-sm text-base-content/70 line-clamp-3"
-								dangerouslySetInnerHTML={{ __html: sanitizePreviewHtml(blog.byline || "No byline") }}
+								dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(blog.byline || "No byline") }}
 							></div>
 							<p className="mt-3 text-xs text-base-content/60">
 								Path: <span className="font-semibold">/{blog.path}</span>

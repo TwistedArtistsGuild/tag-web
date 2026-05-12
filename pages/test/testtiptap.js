@@ -11,7 +11,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import DOMPurify from "dompurify";
 import TTSingleLine from "@/components/tiptap/TT_SingleLine";
 import TTTitleLine from "@/components/tiptap/TT_TitleLine";
 import TTArticle from "@/components/tiptap/TT_Article";
@@ -19,13 +18,13 @@ import TTPortfolio from "@/components/tiptap/TT_Portfolio";
 import { TTCommentsEditorCard } from "@/components/tiptap/TT_Comments";
 import TTDirectMessages from "@/components/tiptap/TT_DirectMessages";
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
+import { sanitizeDefaultHtml } from "@/components/security/sanitize";
 
 import TagSEO from "@/components/TagSEO"
 
 function sanitize(html) {
   if (!html) return "";
-  if (typeof window === "undefined") return html;
-  return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+  return sanitizeDefaultHtml(html);
 }
 
 function PreviewCard({ title, html }) {
@@ -148,3 +147,4 @@ export default function TiptapTestPage() {
     </>
   );
 }
+

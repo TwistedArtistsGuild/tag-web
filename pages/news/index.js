@@ -18,7 +18,7 @@ import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { getSeededStockPhoto } from "@/utils/stockPhotos"
-import sanitizeHtml from "sanitize-html";
+import { sanitizeCardHtml } from "@/components/security/sanitize";
 
 const featuredArticles = [
   {
@@ -56,41 +56,6 @@ const featuredArticles = [
   },
 ]
 
-const UNIFORM_CARD_ALLOWED_TAGS = [
-  "p",
-  "br",
-  "strong",
-  "b",
-  "em",
-  "i",
-  "u",
-  "s",
-  "ul",
-  "ol",
-  "li",
-  "a",
-  "span",
-];
-
-function applyCardThemeOverride(html) {
-  return sanitizeHtml(String(html || ""), {
-    allowedTags: UNIFORM_CARD_ALLOWED_TAGS,
-    allowedAttributes: {
-      a: ["href", "target", "rel"],
-      p: ["style"],
-      span: ["style"],
-    },
-    allowedSchemes: ["http", "https", "mailto"],
-    allowedStyles: {
-      p: {
-        "text-align": [/^left$/, /^center$/, /^right$/],
-      },
-      span: {
-        "text-align": [/^left$/, /^center$/, /^right$/],
-      },
-    },
-  });
-}
 
 function toUniformPlainText(html) {
   return String(html || "")
@@ -181,7 +146,7 @@ export default function News(props) {
               ...(props.blogs || []).map((blog) => ({
                 id: `blog-${blog.path}`,
                 title: toUniformPlainText(blog.title),
-                description: applyCardThemeOverride(blog.byline),
+                description: sanitizeCardHtml(blog.byline),
                 image: blog.image || getSeededStockPhoto(blog.path),
                 alt: "Article cover image",
                 isBlog: true,
@@ -202,7 +167,7 @@ export default function News(props) {
                 </figure>
                 <div className="card-body p-6">
                   <h4 className="card-title text-xl text-primary">{item.title}</h4>
-                  <p className="text-base-content/80 text-sm" dangerouslySetInnerHTML={{ __html: item.description }}></p>
+                  <p className="text-base-content/80 text-sm" dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(item.description) }}></p>
                   {item.enableSocial && (
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">
                       <div className="flex items-center gap-3">

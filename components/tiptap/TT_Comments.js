@@ -11,8 +11,8 @@
 
 
 import { useState, useCallback, memo } from "react";
-import DOMPurify from "dompurify";
 import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5";
+import { sanitizeDefaultHtml } from "@/components/security/sanitize";
 
 // Import components
 import Image from "next/image";
@@ -186,7 +186,7 @@ const SocialComments = ({
         if (!textOnly) return;
         
         // Sanitize content to prevent XSS attacks
-        const sanitizedContent = DOMPurify.sanitize(content);
+        const sanitizedContent = sanitizeDefaultHtml(content);
         
         setComments(prevComments => prevComments.map(comment => {
             // Update top-level comment
@@ -514,7 +514,7 @@ const SocialComments = ({
                         
                         {/* Comment content with proper sanitization and styling */}
                         <div 
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comment.body) }} 
+                            dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(comment.body) }} 
                             className="py-2 prose max-w-none prose-img:rounded-lg prose-video:rounded-lg"
                         />
                         
@@ -684,3 +684,4 @@ export function TTCommentsEditorCard({ value, onChange, onSubmit, onCancel }) {
 }
 
 export default SocialComments;
+

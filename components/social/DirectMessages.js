@@ -16,8 +16,8 @@
 */
 
 import { useMemo, useRef, useState } from "react";
-import DOMPurify from "dompurify";
 import { IoSend, IoTimeOutline, IoCheckmarkSharp, IoCheckmarkDoneSharp } from "react-icons/io5";
+import { sanitizeDefaultHtml } from "@/components/security/sanitize";
 
 // Import components
 import Image from "next/image";
@@ -460,7 +460,7 @@ const DirectMessages = ({
         if (!textOnly || readOnly) return;
         
         // Sanitize content to prevent XSS attacks
-        const sanitizedContent = DOMPurify.sanitize(newMessageContent);
+        const sanitizedContent = sanitizeDefaultHtml(newMessageContent);
         
         // User to use for the message
         const userToUse = demoMode ? demoUser : currentUser;
@@ -917,7 +917,7 @@ const DirectMessages = ({
                                                     style={isCurrentUser ? { backgroundColor: activeContextColor, borderColor: `${activeContextColor}AA` } : undefined}
                                                 >
                                                     <div 
-                                                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.content) }}
+                                                        dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(message.content) }}
                                                         className="prose prose-sm max-w-none wrap-break-word"
                                                     />
                                                 </div>
@@ -1178,7 +1178,7 @@ const DirectMessages = ({
                                                 style={isCurrentUser ? { backgroundColor: activeContextColor, borderColor: `${activeContextColor}AA` } : undefined}
                                             >
                                                 <div 
-                                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.content) }}
+                                                    dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(message.content) }}
                                                     className="prose prose-sm max-w-none wrap-break-word"
                                                 />
                                             </div>
@@ -1273,3 +1273,4 @@ const DirectMessages = ({
 };
 
 export default DirectMessages;
+
