@@ -39,7 +39,7 @@ function normalizeHeadingLevels(inputLevels, fallbackLevels) {
 
   const normalized = inputLevels
     .map((level) => Number(level))
-    .filter((level) => Number.isInteger(level) && level >= 1 && level <= 3);
+    .filter((level) => Number.isInteger(level) && level >= 1 && level <= 5);
 
   if (normalized.length === 0) {
     return fallbackLevels;
@@ -52,7 +52,7 @@ function ToolbarButton({ onClick, active, disabled, label, children }) {
   return (
     <button
       type="button"
-      className={`btn btn-xs h-8 min-h-8 px-2 normal-case ${
+      className={`btn btn-xs h-8 min-h-8 px-2 ${
         active ? "btn-primary" : "btn-ghost border border-base-300"
       }`}
       onClick={onClick}
@@ -131,7 +131,8 @@ export default function TiptapEditor({
   toolbarSlot,
   mediaToolbarSlot,
   onPickImageFromLibrary,
-  onGalleryPreviewClick
+  onGalleryPreviewClick,
+  resizable = false
 }) {
   const [isUploading, setIsUploading] = useState(false);
   const [isSelectingImage, setIsSelectingImage] = useState(false);
@@ -147,6 +148,9 @@ export default function TiptapEditor({
   const [mediaOverlay, setMediaOverlay] = useState(null);
   const editorSurfaceRef = useRef(null);
   const fontOptions = getFontOptions({ preset, fontScope, allowedFonts });
+  const editorClassName = ["prose", "max-w-none", "p-3", "focus:outline-none", className]
+    .filter(Boolean)
+    .join(" ");
 
   const isMediaNodeName = useCallback((nodeName) => {
     return nodeName === "image" || nodeName === "youtube" || nodeName === "vimeo";
@@ -159,7 +163,7 @@ export default function TiptapEditor({
     editable: !readOnly,
     editorProps: {
       attributes: {
-        class: "prose max-w-none p-3 focus:outline-none",
+        class: editorClassName,
         style: `min-height: ${minHeight}px;`,
       },
         handleDrop: (view, event, slice, moved) => {
@@ -763,20 +767,6 @@ export default function TiptapEditor({
       return;
     }
 
-    if (activeAction === "youtube") {
-      const didInsert =
-        typeof editor.commands.setYoutubeVideo === "function" &&
-        runInsertWithFallback(() => editor.commands.setYoutubeVideo({ src: normalizedUrl }));
-
-      if (!didInsert) {
-        setActionError("Could not insert YouTube video. Try a full watch URL.");
-        return;
-      }
-
-      resetActionUi();
-      return;
-    }
-
     if (activeAction === "vimeo") {
       const embed = toVimeoEmbedUrl(normalizedUrl);
       if (!embed) {
@@ -963,7 +953,14 @@ export default function TiptapEditor({
       : "__default__";
 
   return (
-    <div className={`rounded border border-base-300 bg-base-100 ${className}`}>
+    <div
+      className={`rounded border border-base-300 bg-base-100 ${className}`}
+      style={{
+        minHeight: `${minHeight}px`,
+        resize: resizable ? "vertical" : undefined,
+        overflow: resizable ? "auto" : undefined,
+      }}
+    >
       {!readOnly && (        
         <div className="flex flex-wrap items-center gap-1 border-b border-base-300 bg-base-200 p-2">
 
@@ -1020,7 +1017,7 @@ export default function TiptapEditor({
             </ToolbarButton>
           )}
 
-          {/* Misc items - Lists, Headings, Quote, HR, Link */}
+          {/* Misc items - Lists, Headings, HR, Link */}
           {(canUseLists || canUseHeadingButtons || canUseRichBlocks) && (
             <>
               <div className="mx-1 h-6 w-px bg-base-300" />
@@ -1062,13 +1059,6 @@ export default function TiptapEditor({
               {canUseRichBlocks && (
                 <>
                   <ToolbarButton
-                    label="Quote"
-                    active={editor.isActive("blockquote")}
-                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                  >
-                    <span className="text-sm">❝</span>
-                  </ToolbarButton>
-                  <ToolbarButton
                     label="HR"
                     onClick={() => editor.chain().focus().setHorizontalRule().run()}
                   >
@@ -1107,7 +1097,7 @@ export default function TiptapEditor({
             </>
           )}
 
-          {/* Media cluster - Image, Gallery, Vimeo, YouTube */}
+          {/* Media cluster - Image, Gallery, Vimeo */}
           {canUseMedia && (
             <>
               <div className="mx-1 h-6 w-px bg-base-300" />
@@ -1125,10 +1115,6 @@ export default function TiptapEditor({
                   <span>Vimeo</span>
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </span>
-              </ToolbarButton>
-              <div className="mx-1 h-6 w-px bg-base-300" />
-              <ToolbarButton label="YouTube (Deprecated)" onClick={() => openAction("youtube")}>
-                <span className="text-xs font-semibold">YouTube (Deprecated)</span>
               </ToolbarButton>
             </>
           )}
@@ -1168,7 +1154,7 @@ export default function TiptapEditor({
           </span>
           <input
             type="url"
-            className="input input-bordered input-sm w-full max-w-md"
+            className="input input-bordered input-sm w-full max-w-md focus:outline-none"
             placeholder="https://..."
             value={actionValue}
             onChange={(event) => {
@@ -1197,7 +1183,7 @@ export default function TiptapEditor({
           {activeAction === "link" && (
             <input
               type="text"
-              className="input input-bordered input-sm w-full max-w-sm"
+              className="input input-bordered input-sm w-full max-w-sm focus:outline-none"
               placeholder="Link text (optional)"
               value={actionLabel}
               onChange={(event) => {

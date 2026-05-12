@@ -13,11 +13,17 @@
 import React, { useMemo } from "react";
 import DynaFormDB from "@/components/widgets/DynaFormDB"
 import getApiURL from "@/components/widgets/GetApiURL"
-
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdmin, isStaff } from "@/utils/authHelpers";
 import TagSEO from "@/components/TagSEO"
 
 const api_url = getApiURL();
 const formName = "BlogForm1";
+
+function isAuthorRole(session) {
+    return !!session?.user?.roles?.includes("author");
+}
 
 /**
  * Component for updating user details.
@@ -83,6 +89,23 @@ export default function UpdateBlogForm1(props) {
  * @returns {Object}
  */
 export async function getServerSideProps(context) {
+    const session = await getServerSession(context.req, context.res, authOptions);
+
+    if (!session?.user) {
+        return {
+            redirect: {
+                destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl)}`,
+                permanent: false,
+            },
+        };
+    }
+
+    if (!isStaff(session) && !isAdmin(session) && !isAuthorRole(session)) {
+        return {
+            notFound: true,
+        };
+    }
+
     const { slug } = context.query;
     if (!slug) {
         return { notFound: true };

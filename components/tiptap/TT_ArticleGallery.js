@@ -356,7 +356,7 @@ export default function TTArticleGallery({
 	return (
 		<div className="space-y-2">
 			<div className="rounded-md border border-base-300 bg-base-200/70 px-3 py-2 text-xs text-base-content/70">
-				You can add pictures by copying and pasting or by drag and drop in the gallery window. You can also choose files from your computer below.
+				You can add pictures by copying and pasting or dragging and dropping directly onto the editor text area. Traditional uploaders are available through the toolbar.
 			</div>
 
 			<style jsx global>{`

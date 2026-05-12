@@ -336,7 +336,8 @@ export default function DynaForm(props) {
       const responseData = await response.json().catch(() => ({}));
       
       if (!response.ok) {
-        throw new Error(responseData?.message || responseData?.error || `Server responded with ${response.status}`);
+        const errorMsg = responseData?.message || responseData?.error || responseData?.errors || JSON.stringify(responseData) || `Server responded with ${response.status}`;
+        throw new Error(errorMsg);
       }
       
       // Debug successful submission in console

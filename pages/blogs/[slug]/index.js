@@ -24,6 +24,7 @@ import ArtistCard from "@/components/cards/card_artist"
 import { defaultFieldClass } from "@/utils/formSettings"
 import { PERMISSIONS } from "@/utils/permissions";
 import { hasPermission } from "@/utils/authHelpers";
+import sanitizeHtml from "sanitize-html";
 
 const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false });
 
@@ -39,6 +40,107 @@ const GALLERY_PLACEMENT_MAP = {
 	center: "mx-auto",
 	right: "ml-auto",
 };
+
+const BLOG_BODY_ALLOWED_TAGS = [
+	"p",
+	"br",
+	"strong",
+	"b",
+	"em",
+	"i",
+	"u",
+	"s",
+	"ul",
+	"ol",
+	"li",
+	"a",
+	"span",
+	"div",
+	"img",
+	"iframe",
+	"blockquote",
+	"hr",
+	"h1",
+	"h2",
+	"h3",
+	"h4",
+	"h5",
+];
+
+function decodeHtmlEntities(value) {
+	if (!value) {
+		return "";
+	}
+
+	return String(value)
+		.replaceAll("&amp;", "&")
+		.replaceAll("&lt;", "<")
+		.replaceAll("&gt;", ">")
+		.replaceAll("&quot;", '"')
+		.replaceAll("&#39;", "'")
+		.replaceAll(/&#(\d+);/g, (_, num) => String.fromCharCode(Number(num)))
+		.replaceAll(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(Number.parseInt(hex, 16)));
+}
+
+function sanitizeBlogHtml(html) {
+	return sanitizeHtml(String(html || ""), {
+		allowedTags: BLOG_BODY_ALLOWED_TAGS,
+		allowedAttributes: {
+			a: ["href", "target", "rel"],
+			p: ["style"],
+			span: ["style"],
+			div: ["style"],
+			img: ["src", "alt", "title", "width", "height", "style", "class"],
+			iframe: ["src", "width", "height", "frameborder", "allow", "allowfullscreen", "style"],
+			h1: ["id", "style"],
+			h2: ["id", "style"],
+			h3: ["id", "style"],
+			h4: ["id", "style"],
+			h5: ["id", "style"],
+			blockquote: ["style"],
+		},
+		allowedSchemes: ["http", "https", "mailto"],
+		allowedSchemesByTag: {
+			img: ["http", "https"],
+			iframe: ["http", "https"],
+		},
+		allowedStyles: {
+			p: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+			span: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+			div: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+			h1: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+			h2: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+			h3: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+			h4: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+			h5: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+			blockquote: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+			img: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+			iframe: {
+				"text-align": [/^left$/, /^center$/, /^right$/],
+			},
+		},
+	});
+}
 
 function extractAttributeValue(blockHtml, attrName) {
 	const attrRegex = new RegExp(`${attrName}="([^\"]+)"`, "i");
@@ -115,7 +217,7 @@ function parseGalleryToken(encodedPayload) {
 }
 
 function splitBodySegments(html) {
-	const content = String(html || "")
+	const content = decodeHtmlEntities(String(html || ""))
 		.replace(/<p[^>]*>(?:(?!<\/p>).)*<a[^>]+href="#tag-gallery-[^"]+"[^>]*>(?:(?!<\/a>).)*<\/a>(?:(?!<\/p>).)*<\/p>/gi, "")
 		.replace(/<p[^>]*>(?:(?!<\/p>).)*🖼\s*Gallery Preview:(?:(?!<\/p>).)*<\/p>/gi, "")
 		.replace(/<p>\s*(\[\[TAG_GALLERY:[^\]]+\]\])\s*<\/p>/gi, "$1");
@@ -157,16 +259,49 @@ function formatCompactNumber(value, fallback = 0) {
 	return String(Math.max(0, Math.floor(safeValue)));
 }
 
+function stripHtmlTags(value) {
+	return String(value || "")
+		.replace(/<[^>]*>/g, " ")
+		.replace(/&nbsp;/gi, " ")
+		.replace(/\s+/g, " ")
+		.trim();
+}
+
+function slugifySectionTitle(value) {
+	return stripHtmlTags(value)
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-+|-+$/g, "")
+		.slice(0, 72);
+}
+
+function addSectionAnchors(html) {
+	const seen = new Map();
+
+	return String(html || "").replace(/<h3(\s[^>]*)?>([\s\S]*?)<\/h3>/gi, (match, attributes = "", innerHtml = "") => {
+		if (/\sid=\s*"[^"]+"/i.test(match)) {
+			return match;
+		}
+
+		const baseSlug = slugifySectionTitle(innerHtml) || "section";
+		const nextCount = (seen.get(baseSlug) || 0) + 1;
+		seen.set(baseSlug, nextCount);
+		const uniqueSlug = nextCount === 1 ? baseSlug : `${baseSlug}-${nextCount}`;
+
+		return `<h3${attributes} id="section-${uniqueSlug}">${innerHtml}</h3>`;
+	});
+}
+
 const BlogByslug = props => {
 	const { data: session } = useSession();
 	const [mounted, setMounted] = useState(false)
-	const options =  longDateOptions
 	const blog = props.blog
 	const seoKeywords = `blog, post, article, ${blog.searchterms}`
 	const canonicalSlug = `blogs/${blog.path}`
 
 	useEffect(() => {
-		setMounted(true)
+		const frameId = window.requestAnimationFrame(() => setMounted(true))
+		return () => window.cancelAnimationFrame(frameId)
 	}, [])
 	const canUpdate = hasPermission(session, PERMISSIONS.BLOG.UPDATE);
 	const bodySegments = splitBodySegments(blog.body);
@@ -213,6 +348,55 @@ const BlogByslug = props => {
 		<SocialRealtimeProvider>
 		<div className="flex flex-col items-center min-h-screen w-full py-8 gap-8" suppressHydrationWarning>
 			<style jsx global>{`
+				.blog-rich-content h3,
+				.blog-rich-content h4,
+				.blog-rich-content h5 {
+					margin: 0.85em 0 0.45em;
+					line-height: 1.2;
+				}
+
+				.blog-rich-content h3 {
+					font-size: 1.7rem;
+					font-weight: 700;
+					letter-spacing: -0.015em;
+				}
+
+				.blog-rich-content h4 {
+					font-size: 1.35rem;
+					font-weight: 700;
+					letter-spacing: 0.01em;
+					text-transform: uppercase;
+				}
+
+				.blog-rich-content h5 {
+					font-size: 1.1rem;
+					font-weight: 600;
+					letter-spacing: 0.04em;
+					text-transform: uppercase;
+				}
+
+				.blog-rich-content ul,
+				.blog-rich-content ol {
+					margin: 0.85em 0;
+					padding-left: 1.75rem;
+				}
+
+				.blog-rich-content ul {
+					list-style: disc;
+				}
+
+				.blog-rich-content ol {
+					list-style: decimal;
+				}
+
+				.blog-rich-content li {
+					margin: 0.3em 0;
+				}
+
+				.blog-rich-content li > p {
+					margin: 0;
+				}
+
 				.blog-rich-content img[style*="text-align: left"],
 				.blog-rich-content iframe[style*="text-align: left"] {
 					display: block;
@@ -297,7 +481,7 @@ const BlogByslug = props => {
 			{/* Render full body only on client to avoid hydration mismatch.
 			    If SEO is critical for this content, remove this guard and instead fix the underlying mismatch. */}
 			{mounted ? (
-				<div className="blog-rich-content font-fredoka w-[75%] text-center space-y-6">
+				<div className="blog-rich-content font-fredoka w-[75%] rounded-box border border-base-300 bg-base-100 p-6 md:p-8 space-y-6 shadow-sm">
 					{bodySegments.map((segment, index) => {
 						if (segment.type === "gallery") {
 							if (!segment.images.length) {
@@ -324,14 +508,14 @@ const BlogByslug = props => {
 						return (
 							<div
 								key={`html-${index}`}
-								dangerouslySetInnerHTML={{ __html: segment.html }}
+								dangerouslySetInnerHTML={{ __html: sanitizeBlogHtml(addSectionAnchors(segment.html)) }}
 							/>
 						);
 					})}
 				</div>
 			) : (
 				/* lightweight server placeholder that matches shape but not content */
-				<div className="font-fredoka w-[75%] text-center">
+				<div className="font-fredoka w-[75%] rounded-box border border-base-300 bg-base-100 p-6 md:p-8 shadow-sm">
 					{props.blog.body ? "" : ""} 
 				</div>
 			)}
@@ -378,7 +562,7 @@ BlogByslug.getInitialProps = async function (context) {
 	try {
 		const createdDate = new Date(blogData.created);
 		formattedCreated = createdDate.toLocaleDateString("en-US", longDateOptions);
-	} catch (e) {
+	} catch {
 		formattedCreated = blogData.created || "";
 	}
 

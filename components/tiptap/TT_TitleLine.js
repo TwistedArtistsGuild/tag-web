@@ -38,6 +38,10 @@ function resolveFontScope(headingLevel, fontScope) {
     return "title";
   }
 
+  if (headingLevel === 2) {
+    return "title";
+  }
+
   return "medium";
 }
 
@@ -102,40 +106,55 @@ export default function TTTitleLine({
         : "Write your subheading...";
 
   const headingFontSizes = {
-    1: "clamp(3rem, 8vw, 4.5rem)",
-    2: "clamp(1.2rem, 2.4vw, 1.85rem)",
-    3: "clamp(1rem, 1.8vw, 1.35rem)",
+    1: "clamp(3.25rem, 8.5vw, 4.9rem)",
+    2: "clamp(1.55rem, 3vw, 2.2rem)",
+    3: "clamp(1.05rem, 1.9vw, 1.4rem)",
   };
 
   const headingLineHeights = {
     1: "1.05",
-    2: "1.3",
-    3: "1.35",
+    2: "1.14",
+    3: "1.3",
   };
 
   const headingWeights = {
-    1: 700,
-    2: 500,
-    3: 500,
+    1: 800,
+    2: 600,
+    3: 600,
+  };
+
+  const headingLetterSpacing = {
+    1: "-0.03em",
+    2: "-0.01em",
+    3: "0.02em",
   };
 
   const levelClassName = `titleline-editor-preview level-${normalizedLevel}`;
 
   return (
-    <div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
+    <div className="rounded-box border border-base-300 bg-base-100 p-4 space-y-3 shadow-sm">
       <style jsx global>{`
         .titleline-editor-preview .ProseMirror {
           min-height: 0 !important;
           padding: 0.35rem 0.5rem !important;
+          white-space: nowrap !important;
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          display: block;
+          width: max-content;
+          min-width: 100%;
         }
 
         .titleline-editor-preview .ProseMirror h1,
         .titleline-editor-preview .ProseMirror h2,
         .titleline-editor-preview .ProseMirror h3,
         .titleline-editor-preview .ProseMirror p {
+          display: inline-block;
+          white-space: nowrap;
           font-size: ${headingFontSizes[normalizedLevel]};
           line-height: ${headingLineHeights[normalizedLevel]};
           font-weight: ${headingWeights[normalizedLevel]};
+          letter-spacing: ${headingLetterSpacing[normalizedLevel]};
           margin: 0;
         }
       `}</style>
