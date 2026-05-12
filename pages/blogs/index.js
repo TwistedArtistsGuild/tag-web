@@ -16,8 +16,9 @@ import getApiURL from "@/components/widgets/GetApiURL"
 import longDateOptions from "@/utils/longdateoptions"
 import { getSeededStockPhoto } from "@/utils/stockPhotos"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
-import { MessageCircleIcon, HeartIcon, ShareIcon } from "lucide-react"
-import { useState } from "react"
+import SocialReactions from "@/components/social/Reactions"
+import { MessageCircleIcon } from "lucide-react"
+import { useMemo, useState } from "react"
 import { useSession } from "next-auth/react";
 import sanitizeHtml from "sanitize-html";
 
@@ -71,29 +72,63 @@ const getSeededCount = (seed, max, min = 1, salt = "") => {
   return (hash % max) + min
 }
 
+const MOCK_REACTION_OPTIONS = ["❤️", "👏", "🔥", "🎨", "✨", "💯", "🤩", "🙌"];
+const MOCK_COMMENT_SNIPPETS = [
+  "Absolutely love this one. The composition is so intentional.",
+  "The color story on this post is super strong.",
+  "This is the kind of process write-up I needed today.",
+  "Great update. I would love a behind-the-scenes follow-up.",
+  "The visual direction feels polished and cohesive.",
+  "Bookmarking this for reference later. Really helpful post.",
+];
+const MOCK_COMMENT_AUTHORS = ["EmmaWaters", "DavidChen", "SophiaRodriguez", "ArtCollector"];
+const MOCK_ARTIST_NAME = "Artist Goes Here";
+
+function buildMockReactions(blogPath) {
+  const total = getSeededCount(blogPath, 5, 2, "reaction-total");
+  return Array.from({ length: total }).map((_, index) => {
+    const emoji = MOCK_REACTION_OPTIONS[(getSeededCount(blogPath, 99, 1, `emoji-${index}`) - 1) % MOCK_REACTION_OPTIONS.length];
+    const userIndex = getSeededCount(blogPath, 40, 1, `user-${index}`);
+    return {
+      emoji,
+      userId: `mock-user-${userIndex}`,
+      username: `Artist${userIndex}`,
+      timestamp: new Date(Date.now() - (index + 1) * 60000).toISOString(),
+    };
+  });
+}
+
+function buildTopMockComments(blogPath, count = 3) {
+  return Array.from({ length: count }).map((_, index) => {
+    const snippetIndex = (getSeededCount(blogPath, 500, 1, `snippet-${index}`) - 1) % MOCK_COMMENT_SNIPPETS.length;
+    const authorIndex = (getSeededCount(blogPath, 500, 1, `author-${index}`) - 1) % MOCK_COMMENT_AUTHORS.length;
+    return {
+      id: `${blogPath}-comment-${index}`,
+      author: MOCK_COMMENT_AUTHORS[authorIndex],
+      body: MOCK_COMMENT_SNIPPETS[snippetIndex],
+      likes: getSeededCount(blogPath, 40, 2, `comment-likes-${index}`),
+    };
+  });
+}
+
 const Blog = (props) => {
   const { data: session } = useSession();
   const options = longDateOptions
-  const [socialData, setSocialData] = useState(() =>
-    props.blogs.reduce((acc, blog) => ({
-      ...acc,
-      [blog.path]: {
-        loves: blog.loves ?? getSeededCount(blog.path, 100, 10, "loves"),
-        comments: blog.commentCount ?? getSeededCount(blog.path, 50, 5, "comments"),
-        shares: blog.shares ?? getSeededCount(blog.path, 25, 1, "shares"),
-      },
-    }), {})
-  )
+  const [openCommentsFor, setOpenCommentsFor] = useState(null)
+  const currentSocialUser = useMemo(() => {
+    if (!session?.user) {
+      return null;
+    }
 
-  const handleSocialAction = (blogPath, action) => {
-    setSocialData(prev => ({
-      ...prev,
-      [blogPath]: {
-        ...prev[blogPath],
-        [action]: prev[blogPath][action] + 1
-      }
-    }))
-  }
+    return {
+      id: session.user.id || session.user.email || session.user.name || "current-user",
+      username: session.user.name || session.user.email || "Artist",
+      displayName: session.user.name || "Artist",
+      avatarUrl: session.user.image || "",
+      isAdmin: false,
+    };
+  }, [session]);
+
   const pageMetaData = {
     title: "Blog",
     description: "Read artist spotlights, platform updates, and practical guides for building visibility and creative income.",
@@ -122,7 +157,9 @@ const Blog = (props) => {
         <main className="container mx-auto px-4 py-8 flex-1 w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {props.blogs.map((blog) => {
-              const blogSocial = socialData[blog.path] || { loves: 0, comments: 0, shares: 0 }
+              const commentCount = blog.commentCount ?? getSeededCount(blog.path, 50, 5, "comments")
+              const topComments = buildTopMockComments(blog.path)
+              const initialReactions = buildMockReactions(blog.path)
               const uniformCardTitle = toUniformPlainText(blog.title)
               const uniformCardByline = applyCardThemeOverride(blog.byline)
               return (
@@ -141,57 +178,100 @@ const Blog = (props) => {
                     />
                   </figure>
                   <div className="card-body p-6">
-                    <Link
-                      href="/blogs/[slug]"
-                      as={`/blogs/${blog.path}`}
-                      className="card-title text-2xl text-primary hover:underline"
-                    >
-                      {uniformCardTitle || "Untitled"}
-                    </Link>
-                    <div className="text-lg text-base-content/80 line-clamp-3" dangerouslySetInnerHTML={{ __html: uniformCardByline }}></div>
-                    
-                    {/* Enhanced Social Section */}
-                    <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">
-                      <div className="flex items-center gap-4">
-                        <button 
-                          onClick={() => handleSocialAction(blog.path, 'loves')}
-                          className="flex items-center gap-1 text-error hover:scale-105 transition-transform cursor-pointer"
-                        >
-                          <HeartIcon className="w-4 h-4" />
-                          <span className="text-sm">{blogSocial.loves}</span>
-                        </button>
-                        <div className="flex items-center gap-1 text-base-content/60">
-                          <MessageCircleIcon className="w-4 h-4" />
-                          <span className="text-sm">{blogSocial.comments}</span>
-                        </div>
-                        <button 
-                          onClick={() => handleSocialAction(blog.path, 'shares')}
-                          className="flex items-center gap-1 text-info hover:scale-105 transition-transform cursor-pointer"
-                        >
-                          <ShareIcon className="w-4 h-4" />
-                          <span className="text-sm">{blogSocial.shares}</span>
-                        </button>
-                      </div>
-                      
-                      <span className="text-sm text-base-content/70" suppressHydrationWarning>
+                    <div className="flex justify-end">
+                      <span
+                        className="text-xs text-base-content/60"
+                        suppressHydrationWarning
+                      >
                         {new Date(blog.created).toLocaleDateString("en-US", options)}
                       </span>
                     </div>
+                    <div>
+                    <Link
+                      href="/blogs/[slug]"
+                      as={`/blogs/${blog.path}`}
+                      className="card-title w-full text-2xl text-primary hover:underline"
+                    >
+                      {uniformCardTitle || "Untitled"}
+                    </Link>
+                    </div>
+                    <div className="text-lg text-base-content/80 line-clamp-3" dangerouslySetInnerHTML={{ __html: uniformCardByline }}></div>
+
+                    <div className="mt-3 flex items-center gap-3 rounded-box border border-base-300 bg-base-100 p-3">
+                      <div className="avatar">
+                        <div className="relative h-12 w-12 rounded-full overflow-hidden border border-base-300">
+                          <Image
+                            src={blog.image || getSeededStockPhoto(`${blog.path}-artist`) }
+                            alt={`${MOCK_ARTIST_NAME} avatar`}
+                            fill
+                            sizes="48px"
+                            style={{ objectFit: "cover" }}
+                          />
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-base-content">{MOCK_ARTIST_NAME}</p>
+                        <p className="text-xs uppercase tracking-wide text-base-content/60">Gallery</p>
+                      </div>
+                    </div>
                     
-                    <div className="card-actions justify-end mt-4">
-                      <Link href={`/blogs/${blog.path}`} className="btn btn-sm btn-primary tag-btn-glow">
-                        Read More
-                      </Link>
+                    {/* Social Section (Mock-ready for live wiring) */}
+                    <div className="relative mt-4 border-t border-base-300 pt-4 space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <SocialReactions
+                          targetId={`blog-${blog.path}`}
+                          targetType="post"
+                          initialReactions={initialReactions}
+                          currentUser={currentSocialUser}
+                          size="sm"
+                          onReactionAdd={async (payload) => {
+                            if (process.env.DEBUG === "true") {
+                              console.log("[Mock reaction add]", payload);
+                            }
+                          }}
+                          onReactionRemove={async (payload) => {
+                            if (process.env.DEBUG === "true") {
+                              console.log("[Mock reaction remove]", payload);
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      <button
+                        type="button"
+                        onClick={() => setOpenCommentsFor((prev) => (prev === blog.path ? null : blog.path))}
+                        className="btn btn-sm btn-outline w-full justify-center gap-2"
+                        title="Show top comments"
+                      >
+                        <MessageCircleIcon className="w-4 h-4" />
+                        <span>{commentCount} comments</span>
+                      </button>
+
+                      {openCommentsFor === blog.path && (
+                        <div className="rounded-box border border-base-300 bg-base-100 p-3 shadow-md">
+                          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">
+                            Top Comments (Mock)
+                          </div>
+                          <ul className="space-y-2">
+                            {topComments.map((comment) => (
+                              <li key={comment.id} className="rounded-md bg-base-200/70 p-2">
+                                <div className="mb-1 flex items-center justify-between gap-2 text-xs">
+                                  <span className="font-semibold text-base-content/80">{comment.author}</span>
+                                  <span className="text-base-content/50">{comment.likes} likes</span>
+                                </div>
+                                <p className="text-sm text-base-content/75">{comment.body}</p>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
               )
             })}
-          </div>
-          <div className="flex justify-end mt-12">
-            <Link href="/blogs/create" className="btn btn-primary text-lg tag-btn-glow">
-              Create a blog post
-            </Link>
           </div>
         </main>
       </div>

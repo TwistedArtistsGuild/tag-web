@@ -256,8 +256,8 @@ const BlogByslug = props => {
 
 			{mounted && canUpdate && (
 			<Link
-				href="/blogs/[slug]/update"
-				as={`/blogs/${props.slug}/update`}
+				href="/portal/staff/tagblog/[slug]/update"
+				as={`/portal/staff/tagblog/${props.slug}/update`}
 				className={`${defaultFieldClass} font-fredoka text-xl text-[#e9ecef] transition hover:tracking-wider hover:text-transparent hover:bg-linear-to-r from-[#f1c0e8] to-[#8EECF5] hover:font-bold`}
 			>
 				Update this blog

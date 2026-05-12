@@ -12,6 +12,8 @@
 
 
 import TagSEO from "@/components/TagSEO";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export default function Portal_Vendor() {
 	const pageMetaData = {
@@ -35,4 +37,19 @@ export default function Portal_Vendor() {
 			</h2>
 		</div>
 	);
+}
+
+export async function getServerSideProps(context) {
+	const session = await getServerSession(context.req, context.res, authOptions);
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/vendor")}`,
+				permanent: false,
+			},
+		};
+	}
+
+	return { props: {} };
 }
