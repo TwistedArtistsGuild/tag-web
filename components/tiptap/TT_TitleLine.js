@@ -20,7 +20,30 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
-function forceTitleHeading(html) {
+function normalizeHeadingLevel(level) {
+  const numericLevel = Number(level);
+  if (!Number.isInteger(numericLevel) || numericLevel < 1 || numericLevel > 3) {
+    return 2;
+  }
+
+  return numericLevel;
+}
+
+function resolveFontScope(headingLevel, fontScope) {
+  if (fontScope) {
+    return fontScope;
+  }
+
+  if (headingLevel === 1) {
+    return "title";
+  }
+
+  return "medium";
+}
+
+function forceHeadingTag(html, headingLevel = 2) {
+  const normalizedLevel = normalizeHeadingLevel(headingLevel);
+  const targetTag = `h${normalizedLevel}`;
   const raw = String(html || "").trim();
   if (!raw) {
     return "";
@@ -49,16 +72,54 @@ function forceTitleHeading(html) {
   const alignStyle = textAlign ? ` style="text-align: ${textAlign}"` : "";
 
   if (!inlineContent) {
-    return `<h2${alignStyle}>${escapeHtml(plainText)}</h2>`;
+    return `<${targetTag}${alignStyle}>${escapeHtml(plainText)}</${targetTag}>`;
   }
 
-  return `<h2${alignStyle}>${inlineContent}</h2>`;
+  return `<${targetTag}${alignStyle}>${inlineContent}</${targetTag}>`;
 }
 
-export default function TTTitleLine({ value, onChange, allowedFonts = [], showAlignmentControls = true }) {
+export default function TTTitleLine({
+  value,
+  onChange,
+  allowedFonts = [],
+  showAlignmentControls = true,
+  headingLevel = 2,
+  placeholder,
+  fontScope,
+}) {
+  const normalizedLevel = normalizeHeadingLevel(headingLevel);
+  const resolvedFontScope = resolveFontScope(normalizedLevel, fontScope);
+
   const handleTitleChange = (nextHtml) => {
-    onChange(forceTitleHeading(nextHtml));
+    onChange(forceHeadingTag(nextHtml, normalizedLevel));
   };
+
+  const placeholderByLevel =
+    normalizedLevel === 1
+      ? "Write your primary heading..."
+      : normalizedLevel === 2
+        ? "Write your title..."
+        : "Write your subheading...";
+
+  const headingFontSizes = {
+    1: "clamp(3rem, 8vw, 4.5rem)",
+    2: "clamp(1.2rem, 2.4vw, 1.85rem)",
+    3: "clamp(1rem, 1.8vw, 1.35rem)",
+  };
+
+  const headingLineHeights = {
+    1: "1.05",
+    2: "1.3",
+    3: "1.35",
+  };
+
+  const headingWeights = {
+    1: 700,
+    2: 500,
+    3: 500,
+  };
+
+  const levelClassName = `titleline-editor-preview level-${normalizedLevel}`;
 
   return (
     <div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
@@ -72,9 +133,9 @@ export default function TTTitleLine({ value, onChange, allowedFonts = [], showAl
         .titleline-editor-preview .ProseMirror h2,
         .titleline-editor-preview .ProseMirror h3,
         .titleline-editor-preview .ProseMirror p {
-          font-size: clamp(2.1rem, 5vw, 4.5rem);
-          line-height: 1.05;
-          font-weight: 700;
+          font-size: ${headingFontSizes[normalizedLevel]};
+          line-height: ${headingLineHeights[normalizedLevel]};
+          font-weight: ${headingWeights[normalizedLevel]};
           margin: 0;
         }
       `}</style>
@@ -82,15 +143,15 @@ export default function TTTitleLine({ value, onChange, allowedFonts = [], showAl
       <TiptapEditor
         value={value}
         onChange={handleTitleChange}
-        placeholder="Write your title..."
+        placeholder={placeholder || placeholderByLevel}
         preset="minimal"
-        className="titleline-editor-preview"
+        className={levelClassName}
         singleLine
         minHeight={1}
-        fontScope="title"
+        fontScope={resolvedFontScope}
         allowedFonts={allowedFonts}
         enableSingleLineFontSelection
-        showAlignmentControls={true}
+        showAlignmentControls={showAlignmentControls}
         allowStrikethrough={false}
         headingLevels={[]}
       />

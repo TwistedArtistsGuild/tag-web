@@ -115,6 +115,7 @@ export default function TTArticleGallery({
 	uploadContext,
 	showAlignmentControls = true,
 }) {
+	const MAX_UPLOAD_FILES = 30;
 	const initialConfig = deriveInitialConfig(uploadContext);
 
 	const [modalOpen, setModalOpen] = useState(false);
@@ -131,6 +132,9 @@ export default function TTArticleGallery({
 	const [galleryPlacement, setGalleryPlacement] = useState("center");
 	const [editingGallery, setEditingGallery] = useState(null); // { id, encoded }
 	const [dragIndex, setDragIndex] = useState(null);
+	const [uploadingFiles, setUploadingFiles] = useState(false);
+	const [uploadNote, setUploadNote] = useState("");
+	const uploadInputRef = useRef(null);
 	const editorRef = useRef(null);
 	const singlePickResolverRef = useRef(null);
 
@@ -161,12 +165,61 @@ export default function TTArticleGallery({
 		loadDirectory(prefix);
 	}, [loadDirectory, prefix]);
 
+	const openUploadPicker = useCallback(() => {
+		uploadInputRef.current?.click();
+	}, []);
+
 	const resolveSinglePick = useCallback((url) => {
 		if (singlePickResolverRef.current) {
 			singlePickResolverRef.current(url || null);
 			singlePickResolverRef.current = null;
 		}
 	}, []);
+
+	const uploadSelectedImages = useCallback(
+		async (fileList) => {
+			const selectedFiles = Array.from(fileList || []).filter(isImageFile);
+			if (!selectedFiles.length) {
+				setUploadNote("Choose one or more image files to upload.");
+				return;
+			}
+
+			const filesToUpload = selectedFiles.slice(0, MAX_UPLOAD_FILES);
+			if (selectedFiles.length > MAX_UPLOAD_FILES) {
+				setUploadNote(`You can upload up to ${MAX_UPLOAD_FILES} images at a time. Only the first ${MAX_UPLOAD_FILES} were used.`);
+			}
+
+			setUploadingFiles(true);
+			setListError("");
+			try {
+				for (const imageFile of filesToUpload) {
+					const formData = new FormData();
+					formData.append("file", imageFile);
+					formData.append("container", container);
+					formData.append("startPrefix", startPrefix);
+					formData.append("targetPrefix", prefix);
+
+					const response = await fetch("/api/image/upload", {
+						method: "POST",
+						body: formData,
+					});
+					const data = await response.json();
+
+					if (!response.ok) {
+						throw new Error(data.error || `Upload failed for ${imageFile.name}`);
+					}
+				}
+
+				await loadDirectory(prefix);
+				setUploadNote(`Uploaded ${filesToUpload.length} image${filesToUpload.length === 1 ? "" : "s"} to ${prefix || "/"}.`);
+			} catch (uploadError) {
+				setUploadNote(uploadError.message);
+			} finally {
+				setUploadingFiles(false);
+			}
+		},
+		[container, loadDirectory, prefix, startPrefix]
+	);
 
 	const openSingleSelector = useCallback(() => {
 		setSelectorMode("single");
@@ -181,6 +234,7 @@ export default function TTArticleGallery({
 	const closeSelector = useCallback(() => {
 		setModalOpen(false);
 		setEditingGallery(null);
+		setUploadNote("");
 		if (selectorMode === "single") {
 			resolveSinglePick(null);
 		}
@@ -301,6 +355,10 @@ export default function TTArticleGallery({
 
 	return (
 		<div className="space-y-2">
+			<div className="rounded-md border border-base-300 bg-base-200/70 px-3 py-2 text-xs text-base-content/70">
+				You can add pictures by copying and pasting or by drag and drop in the gallery window. You can also choose files from your computer below.
+			</div>
+
 			<style jsx global>{`
 				.ProseMirror a[href^="#tag-gallery-"] {
 					display: inline-flex;
@@ -362,6 +420,50 @@ export default function TTArticleGallery({
 						<div className="flex flex-col md:flex-row flex-1 overflow-hidden">
 							{/* Left panel – browser */}
 							<div className="flex-1 overflow-y-auto p-4 border-r border-base-300">
+								<div className="rounded-md border border-base-300 bg-base-200/60 p-3 mb-3">
+									<div className="text-sm font-semibold mb-2">Upload Images</div>
+									<div className="text-xs text-base-content/60 mb-3">
+										Choose up to {MAX_UPLOAD_FILES} images at once, or drop them into this window.
+									</div>
+									<input
+										ref={uploadInputRef}
+										type="file"
+										accept="image/*"
+										multiple
+										className="hidden"
+										onChange={(event) => {
+											void uploadSelectedImages(event.target.files);
+											event.target.value = "";
+										}}
+									/>
+									<div
+										className="flex flex-wrap gap-2 rounded-md border border-dashed border-base-300 bg-base-100/70 p-3"
+										onDragOver={(event) => event.preventDefault()}
+										onDrop={(event) => {
+											event.preventDefault();
+											void uploadSelectedImages(event.dataTransfer?.files);
+										}}
+									>
+										<button
+											type="button"
+											className="btn btn-sm btn-outline"
+											onClick={openUploadPicker}
+											disabled={uploadingFiles}
+										>
+											{uploadingFiles ? "Uploading..." : "Choose Images"}
+										</button>
+										<button
+											type="button"
+											className="btn btn-sm btn-primary"
+											onClick={openUploadPicker}
+											disabled={uploadingFiles}
+										>
+											Upload Images
+										</button>
+									</div>
+									{uploadNote ? <div className="mt-2 text-xs text-base-content/70 wrap-break-word">{uploadNote}</div> : null}
+								</div>
+
 								{/* Path / nav */}
 								<div className="flex items-center gap-2 mb-3 text-sm flex-wrap">
 									<span className="font-mono text-base-content/60 break-all">{prefix || "/"}</span>
