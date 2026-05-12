@@ -17,6 +17,10 @@ import dynamic from "next/dynamic"
 import longDateOptions from "@/utils/longdateoptions"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
+import SocialReactions from "@/components/social/Reactions"
+import SocialComments from "@/components/social/Comments"
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
+import ArtistCard from "@/components/cards/card_artist"
 import { defaultFieldClass } from "@/utils/formSettings"
 import { PERMISSIONS } from "@/utils/permissions";
 import { hasPermission } from "@/utils/authHelpers";
@@ -144,6 +148,15 @@ function splitBodySegments(html) {
 	return segments;
 }
 
+function formatCompactNumber(value, fallback = 0) {
+	const numeric = Number(value);
+	const safeValue = Number.isFinite(numeric) ? numeric : fallback;
+	if (safeValue >= 1000) {
+		return `${(safeValue / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+	}
+	return String(Math.max(0, Math.floor(safeValue)));
+}
+
 const BlogByslug = props => {
 	const { data: session } = useSession();
 	const [mounted, setMounted] = useState(false)
@@ -157,6 +170,28 @@ const BlogByslug = props => {
 	}, [])
 	const canUpdate = hasPermission(session, PERMISSIONS.BLOG.UPDATE);
 	const bodySegments = splitBodySegments(blog.body);
+	const socialUser = session?.user
+		? {
+			id: session.user.id || session.user.email || session.user.name || "current-user",
+			username: session.user.name || session.user.email || "Artist",
+			displayName: session.user.name || "Artist",
+			avatarUrl: session.user.image || "",
+			isAdmin: false,
+		}
+		: null;
+	const blogContextId = `blog-${props.slug}`;
+	const commentCount = blog?.commentCount ?? (Array.isArray(blog?.comments) ? blog.comments.length : 18);
+	const viewCount = blog?.viewCount ?? blog?.views ?? 3200;
+	const artistCardData = {
+		title: blog.artistName || "Artist Goes Here",
+		byline: blog.artistByline || "Gallery",
+		path: blog.artistPath || "artists",
+		panelSize: "twoThirds",
+		profilePic: {
+			url: blog.artistImage || blog.image || "/blank_image.png",
+			alttext: blog.artistName || "Artist profile image",
+		},
+	};
 
 	const pageMetaData = {
 		title: blog.title,
@@ -175,6 +210,7 @@ const BlogByslug = props => {
 	return (
 		/* suppressHydrationWarning prevents React from logging a hydration mismatch for this subtree.
 		   We also only render the rich `body` HTML after mount to avoid SSR/CSR mismatch. */
+		<SocialRealtimeProvider>
 		<div className="flex flex-col items-center min-h-screen w-full py-8 gap-8" suppressHydrationWarning>
 			<style jsx global>{`
 				.blog-rich-content img[style*="text-align: left"],
@@ -197,6 +233,20 @@ const BlogByslug = props => {
 					margin-left: auto;
 					margin-right: 0;
 				}
+
+				.reaction-scroll > div {
+					display: grid;
+					grid-template-columns: repeat(6, minmax(0, 1fr));
+					gap: 0.4rem;
+					align-items: start;
+					max-height: 6.2rem;
+					overflow-y: auto;
+					padding-right: 0.25rem;
+				}
+
+				.reaction-scroll > div > * {
+					justify-self: stretch;
+				}
 			`}</style>
 			<TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
 			<div className="flex flex-col items-center">
@@ -210,6 +260,38 @@ const BlogByslug = props => {
 				></div>
 				{/* server-stable formatted date */}
 				<div className="font-baloo text-xs shadow-dark">{props.blog.formattedCreated}</div>
+			</div>
+
+			<div className="w-[75%] rounded-box border border-base-300 bg-base-100 p-4">
+				<div className="flex flex-col gap-4 md:flex-row md:items-start">
+					<div className="md:w-[62%]">
+						<ArtistCard
+							artist={artistCardData}
+							compact={false}
+							showHeaderGallery={false}
+							showContentGallery={false}
+						/>
+					</div>
+					<div className="md:w-[38%] md:shrink-0 rounded-box border border-base-300 bg-base-200/40 p-3">
+						<div className="mb-3 flex flex-wrap items-center gap-4 text-sm font-semibold">
+							<span>👁 {formatCompactNumber(viewCount)} views</span>
+							<a href="#comments-section" className="link link-primary">
+								💬 {formatCompactNumber(commentCount)} comments
+							</a>
+						</div>
+						<div className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">Reactions</div>
+						<div className="reaction-scroll">
+							<SocialReactions
+								targetId={blogContextId}
+								targetType="post"
+								initialReactions={blog.reactions || []}
+								currentUser={socialUser}
+								size="md"
+								showQuickReactions
+							/>
+						</div>
+					</div>
+				</div>
 			</div>
 
 			{/* Render full body only on client to avoid hydration mismatch.
@@ -263,7 +345,18 @@ const BlogByslug = props => {
 				Update this blog
 			</Link>
 			)}
+
+			<div id="comments-section" className="w-[75%] rounded-box border border-base-300 bg-base-100 p-4">
+				<div className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">Comments</div>
+				<SocialComments
+					contextId={blogContextId}
+					initialComments={blog.comments || []}
+					currentUser={socialUser}
+					readOnly={false}
+				/>
+			</div>
 		</div>
+		</SocialRealtimeProvider>
 	)
 }
 
