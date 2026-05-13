@@ -18,6 +18,7 @@ import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin } from "@/utils/authHelpers"
 import { sanitizeDefaultHtml } from "@/components/security/sanitize"
+import PictureExplorerCard from "@/components/PictureExplorerCard"
 
 const UPCOMING_DATES = [
   {
@@ -115,7 +116,7 @@ function PreviewMode({ artistProfile, slug, listingCount }) {
   )
 }
 
-function EditMode({ slug }) {
+function EditMode({ slug, artistId }) {
   return (
     <div className="space-y-4">
       <div className="alert alert-warning shadow-sm">
@@ -126,6 +127,15 @@ function EditMode({ slug }) {
           </div>
         </div>
       </div>
+
+      {artistId && (
+        <PictureExplorerCard
+          useCase="artist-portal"
+          startPrefix={`/platformpics/artist/${artistId}/`}
+          allowContainerSwitch={false}
+          preserveStartPrefixOnContainerSwitch={false}
+        />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <DashboardCard title="Profile Editing" badge="Ready for wiring">
@@ -211,7 +221,7 @@ export default function ArtistSlugPortalPage({ slug, artistProfile, listings }) 
         {mode === "preview" ? (
           <PreviewMode artistProfile={artistProfile} slug={slug} listingCount={listingCount} />
         ) : (
-          <EditMode slug={slug} />
+          <EditMode slug={slug} artistId={artistProfile?.id || artistProfile?.artistID} />
         )}
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
