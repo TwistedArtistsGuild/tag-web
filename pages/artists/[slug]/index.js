@@ -45,7 +45,7 @@ const Artist = (props) => {
   const { data: session } = useSession();
   const { setPageSections } = useAppContext();
 
-  const isArtistOnly = isArtist(session) && !isStaff(session) && !isAdmin(session);   
+  const isArtistOnly = isArtist(session) && !isStaff(session) && !isAdmin(session);
   // Artists can update their own page, staff and admins can update any artist page
   const canUpdate = (isArtistOnly && props.artist.userId == session?.user?.id) || (isStaff(session) || isAdmin(session));
 

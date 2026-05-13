@@ -10,13 +10,10 @@
  Open source · low-profit · human-first*/
 
 
-import DynaFormDB from "@/components/widgets/DynaFormDB"
-import getApiURL from "@/components/widgets/GetApiURL"
+import Link from "next/link"
 import { useRouter } from "next/router"
 
 import TagSEO from "@/components/TagSEO"
-
-const formName = "ArtistForm1"
 
 /**
  * Component for updating artist details.
@@ -28,171 +25,37 @@ const formName = "ArtistForm1"
  */
 export default function UpdateArtistForm1(props) {
 	const router = useRouter();
-	const api_url = getApiURL();
-	
-	// Show error message if there was an error loading data
-	if (props.error) {
-		return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/update" />
-				<h2 className="text-xl font-bold text-red-700">Oops!</h2>
-				<p className="text-red-600">{props.error.message}</p>
-				<button 
-					className="mt-4 btn btn-primary"
-					onClick={() => router.back()}
-				>
-					Go Back
-				</button>
-			</div>
-		);
-	}
-	
-	// Make sure metadata and artist data are properly loaded before rendering the form
-	if (!props.metadataProp || !props.artistdata) {
-		return (
-      <div className="flex justify-center items-center min-h-50">
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/update" />
-				<div className="loading loading-spinner loading-lg"></div>
-			</div>
-		);
-	}
-
-	// Set up the metadata with proper URL fields
-	const metadataWithUrls = {
-		...props.metadataProp,
-		FromURL: "/artists/"+ props.slug +"/update.js",
-		redirectURL: "/artists/" + props.slug,
-		APIURL: api_url + "artist/" + props.slug
-	};
+	const { slug } = router.query;
+	const artistSlug = slug || "";
 
 	return (
-      <div className="p-4">
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Update", description: "Explore Github Projects Web Pages Artists Slug Update on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/update" />
-			<h1 className="text-2xl font-bold mb-4">Update Artist</h1>
-			<DynaFormDB 
-				request="update" 
-				metadataProp={metadataWithUrls} 
-				formData={props.artistdata}
-				overrideReadOnly={false}
+		<div className="min-h-[60vh] p-6 md:p-10 bg-base-200">
+			<TagSEO
+				metadataProp={{
+					title: "Artist Update Moved to Portal",
+					description: "Artist profile editing now happens in the Artist Portal.",
+					keywords: "artist, portal, update",
+					og: {
+						title: "Artist Update Moved to Portal",
+						description: "Artist profile editing now happens in the Artist Portal.",
+					},
+				}}
+				canonicalSlug="/artists/[slug]/update"
 			/>
+			<div className="max-w-3xl mx-auto card bg-base-100 shadow border border-base-300">
+				<div className="card-body gap-4">
+					<h1 className="text-2xl font-bold">This Update Page Has Moved</h1>
+					<p className="text-base-content/80">
+						If you own this artist profile, sign in to the Artist Portal to manage updates and media.
+					</p>
+					<div className="flex flex-wrap gap-2">
+						{artistSlug ? (
+							<Link href={`/portal/artist/${artistSlug}`} className="btn btn-primary">Open Artist Workspace</Link>
+						) : null}
+						<button type="button" className="btn btn-ghost" onClick={() => router.back()}>Go Back</button>
+					</div>
+				</div>
+			</div>
 		</div>
-	)
-}
-
-/**
- * Get initial props for component.
- * @async
- * @param {Object} context - Next.js context
- * @returns {Object} - Props for component
- */
-UpdateArtistForm1.getInitialProps = async function (context) {
-	const { slug } = context.query
-	if (!slug) { 
-		return { 
-			error: { message: "Artist's slug is missing from context query" }
-		}
-	}
-
-	const api_url = getApiURL()
-
-	// Debug logging
-	console.log("⬇️ UpdateArtistForm1 fetch starting");
-	console.log("API URL:", api_url);
-	console.log("Artist Slug:", slug);
-
-	let artistData = {}
-	let formMetadata = {}
-	let error = null
-
-	try {
-		// Fetch artist data
-		console.log(`Fetching artist data for ${slug}...`);
-		const res_artist = await fetch(api_url + `artist/${slug}`)
-		if (!res_artist.ok) {
-			throw new Error(`Failed to fetch artist data: ${res_artist.status} ${res_artist.statusText}`)
-		}
-		
-		// Get the response as text first to inspect it
-		const artistText = await res_artist.text();
-		console.log(`Received artist data (${artistText.length} bytes): ${artistText.substring(0, 100)}...`);
-		
-		try {
-			artistData = JSON.parse(artistText);
-		} catch (parseError) {
-			console.error("JSON parse error:", parseError);
-			console.error("Problematic JSON:", artistText);
-			throw new Error(`Failed to parse artist data: ${parseError.message}`);
-		}
-		
-		if (!artistData || (Array.isArray(artistData) && artistData.length === 0)) {
-			throw new Error(`No data found for artist with slug: ${slug}`)
-		}
-
-		// Fetch form metadata
-		console.log(`Fetching form metadata for ${formName}...`);
-		const res_metadata = await fetch(api_url + `forms_metadata/${formName}`)
-		if (!res_metadata.ok) {
-			throw new Error(`Failed to fetch form metadata: ${res_metadata.status} ${res_metadata.statusText}`)
-		}
-		
-		// Get the response as text first to inspect it
-		const metadataText = await res_metadata.text();
-		console.log(`Received metadata response: ${metadataText.substring(0, 100)}...`);
-		
-		try {
-			formMetadata = JSON.parse(metadataText);
-		} catch (parseError) {
-			console.error("JSON parse error:", parseError);
-			console.error("Problematic JSON:", metadataText);
-			throw new Error(`Failed to parse form metadata: ${parseError.message}`);
-		}
-		
-		if (!formMetadata || (Array.isArray(formMetadata) && formMetadata.length === 0)) {
-			throw new Error(`No metadata found for form: ${formName}`)
-		}
-
-		// Ensure we have consistent property names for API URL construction
-		if (formMetadata.apiurLpostfix && !formMetadata.APIURLpostfix) {
-			formMetadata.APIURLpostfix = formMetadata.apiurLpostfix;
-		}
-		
-		// Standardize the metadata if it's an array
-		if (Array.isArray(formMetadata)) {
-			formMetadata = formMetadata[0];
-		}
-		
-		// Force disable any read-only fields in the form metadata
-		if (formMetadata.forms_Fields && Array.isArray(formMetadata.forms_Fields)) {
-			formMetadata.forms_Fields = formMetadata.forms_Fields.map(field => {
-				// Special handling for SEO tags field
-				if (field.name === 'seotags' && !artistData.seotags) {
-					// If artistData has no seotags, set empty string to avoid showing default value
-					artistData.seotags = '';
-				}
-				
-				return {
-					...field,
-					isReadOnly: false // Explicitly set all fields to not be read-only
-				};
-			});
-		}
-	} catch (err) {
-		console.error("Error fetching data:", err);
-		error = { message: err.message || "Failed to load necessary data" };
-	}
-
-	// Debug logging for successful fetch
-	if (artistData && !error) {
-		console.log("✅ Artist data fetched successfully:", {
-			name: artistData.name,
-			dataType: typeof artistData
-		});
-	}
-
-	return {
-		artistdata: artistData,
-		slug: slug,
-		metadataProp: formMetadata,
-		error
-	}
+	);
 }
