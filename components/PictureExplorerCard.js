@@ -31,13 +31,17 @@ function normalizePrefix(value) {
 export default function PictureExplorerCard({
 	useCase = "personal-blog",
 	title,
+	startPrefix,
+	startContainer,
 	allowContainerSwitch = false,
 	preserveStartPrefixOnContainerSwitch = true,
 }) {
 	const config = CONTAINER_CONFIGS[useCase] || CONTAINER_CONFIGS["personal-blog"]
-	const [container, setContainer] = useState(config.container)
-	const [activeStartPrefix, setActiveStartPrefix] = useState(config.startPrefix)
-	const [prefix, setPrefix] = useState(config.startPrefix)
+	const resolvedContainer = startContainer || config.container
+	const resolvedStartPrefix = normalizePrefix(startPrefix ?? config.startPrefix)
+	const [container, setContainer] = useState(resolvedContainer)
+	const [activeStartPrefix, setActiveStartPrefix] = useState(resolvedStartPrefix)
+	const [prefix, setPrefix] = useState(resolvedStartPrefix)
 	const [directories, setDirectories] = useState([])
 	const [files, setFiles] = useState([])
 	const [loading, setLoading] = useState(false)
@@ -278,11 +282,11 @@ export default function PictureExplorerCard({
 
 	useEffect(() => {
 		const initialize = setTimeout(() => {
-			loadDirectory(config.startPrefix, config.startPrefix, config.container)
+			loadDirectory(resolvedStartPrefix, resolvedStartPrefix, resolvedContainer)
 		}, 0)
 		return () => clearTimeout(initialize)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [useCase])
+	}, [useCase, resolvedStartPrefix, resolvedContainer])
 
 	return (
 		<div className="card bg-base-100 shadow-md border border-base-300">

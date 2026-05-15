@@ -3,6 +3,7 @@ import { useState } from "react"
 
 import TagSEO from "@/components/TagSEO"
 import { getMarkdownContent } from "@/components/widgets/markdown"
+import { sanitizeDefaultHtml } from "@/components/security/sanitize"
 
 function TermsAgreementStep({ termsContent }) {
   const [hasReachedBottom, setHasReachedBottom] = useState(false)
@@ -34,7 +35,7 @@ function TermsAgreementStep({ termsContent }) {
           className="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-200/60 p-4 prose prose-sm max-w-none"
           onScroll={handleScroll}
         >
-          <div dangerouslySetInnerHTML={{ __html: termsContent }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(termsContent) }} />
         </div>
 
         <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -111,3 +112,4 @@ export async function getStaticProps() {
     },
   }
 }
+

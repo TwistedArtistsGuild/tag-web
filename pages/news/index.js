@@ -16,6 +16,9 @@ import { HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon } from "lucide-react" 
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
+import getApiURL from "@/components/widgets/GetApiURL"
+import { getSeededStockPhoto } from "@/utils/stockPhotos"
+import { sanitizeCardHtml } from "@/components/security/sanitize";
 
 const featuredArticles = [
   {
@@ -53,13 +56,22 @@ const featuredArticles = [
   },
 ]
 
-export default function News() {
+
+function toUniformPlainText(html) {
+  return String(html || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export default function News(props) {
   const pageMetaData = {
-    title: "News Service",
+    title: "TAG News Service",
     description: "Read artist interviews, community stories, and cultural coverage from the News Service.",
     keywords: "artist interviews, art news, community stories, TAG news service",
     og: {
-      title: "News Service | Artist Stories and Coverage",
+      title: "TAG News Service | Artist Stories and Coverage",
       description: "Artist interviews, community stories, and cultural coverage from Platform.",
     },
   }
@@ -91,16 +103,11 @@ export default function News() {
         <div className="absolute inset-0 bg-black/50 z-10"></div>
         <div className="relative z-20">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-6 text-primary">
-            Twisted Artists Guild News Service
+            TAG News Service
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto text-white">
-            Amplifying artist voices. Exploring the pulse of creativity.
+            
           </p>
-          {/* Social Features Badge */}
-          <div className="badge badge-primary badge-lg gap-2 mb-4">
-            <HeartIcon className="w-4 h-4" />
-            <span>Interactive Social Features Enabled</span>
-          </div>
         </div>
         <div className="absolute inset-0 -z-10">
           <Image
@@ -118,90 +125,96 @@ export default function News() {
       <main className="container mx-auto px-4 py-8 flex-1 w-full">
         {/* News Service Section */}
         <section className="py-12 bg-base-100 rounded-box shadow-lg px-6 mb-12">
-          <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary text-center">
-            🎙️ Twisted Artists Guild News Service
+          <h2 className="text-2xl font-bold mb-4 text-primary text-center">
+            By Artists, For Artists
           </h2>
-          <p className="text-xl text-center mb-12 text-secondary">
-            Amplifying artist voices. Exploring the pulse of creativity.
-          </p>
           <div className="max-w-4xl mx-auto text-center mb-12">
             <p className="text-lg text-base-content/80 mb-6">
-              The TAG News Service is a storytelling initiative powered by our marketing department, designed to
-              spotlight the lives, ideas, and creative journeys of our cooperative’s members. Through rich interviews,
-              cultural coverage, and market research, we document what it means to be a working artist today—with
-              integrity, curiosity, and a community-first lens.
+              The TAG News Service spotlights the lives, ideas, and creative journeys of our community. Through interviews, cultural coverage, and research, we document what it means to be a working artist today—with integrity, curiosity, and artist-first perspective.
             </p>
-            <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2 text-primary">
-              ✨ Our Purpose
-            </h3>
             <p className="text-lg text-base-content/80">
-              Our journalist team works at the intersection of marketing and editorial, blending narrative storytelling
-              with cooperative insight. They conduct interviews from scripted research prompts, capture close-up
-              conversations with artists, and produce engaging social content that benefits visibility and discovery.
-            </p>
-            <p className="text-lg text-base-content/80 mt-4">
-              While rooted in marketing, this branch of TAG follows ethical journalistic standards. In addition to
-              research-driven interviews, our writers pursue broader art coverage—from gallery openings and emerging
-              trends to artist-led movements—always centered on the voices of creators.
+              Our writers blend narrative storytelling with community insight, conducting interviews with artists, capturing conversations, and producing content that celebrates visibility and discovery. We follow ethical journalistic standards while staying rooted in the voices of creators.
             </p>
           </div>
-          <h3 className="text-xl font-bold mb-8 text-center flex items-center justify-center gap-2 text-primary">
-            📚 Featured Articles
+          <h3 className="text-xl font-bold mb-8 text-center text-primary">
+            Stories, Spotlights, and News
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {featuredArticles.map((article) => (
-              <div key={article.id} className={`card bg-base-200 text-base-content shadow-xl overflow-hidden${article.enableSocial ? " group" : ""}`}>
+            {/* Featured Articles + Blog Posts Combined */}
+            {[
+              ...featuredArticles,
+              ...(props.blogs || []).map((blog) => ({
+                id: `blog-${blog.path}`,
+                title: toUniformPlainText(blog.title),
+                description: sanitizeCardHtml(blog.byline),
+                image: blog.image || getSeededStockPhoto(blog.path),
+                alt: "Article cover image",
+                isBlog: true,
+                blog: blog,
+                enableSocial: false,
+              })),
+            ].map((item) => (
+              <div key={item.id} className={`card bg-base-200 text-base-content shadow-xl overflow-hidden${item.enableSocial ? " group" : ""}`}>
                 <figure className="relative h-48 w-full">
                   <Image
-                    src={article.image}
-                    alt={article.alt}
+                    src={item.image}
+                    alt={item.alt}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     style={{ objectFit: "cover" }}
-                    className={article.enableSocial ? "group-hover:scale-105 transition-transform duration-300" : undefined}
+                    className={item.enableSocial ? "group-hover:scale-105 transition-transform duration-300" : undefined}
                   />
                 </figure>
                 <div className="card-body p-6">
-                  <h4 className="card-title text-xl text-primary">{article.title}</h4>
-                  <p className="text-base-content/80 text-sm">{article.description}</p>
-                  {article.enableSocial && (
+                  <h4 className="card-title text-xl text-primary">{item.title}</h4>
+                  <p className="text-base-content/80 text-sm" dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(item.description) }}></p>
+                  {item.enableSocial && (
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-base-300">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1 text-base-content/60">
                           <EyeIcon className="w-4 h-4" />
-                          <span className="text-xs">{socialData[article.id].views}</span>
+                          <span className="text-xs">{socialData[item.id].views}</span>
                         </div>
                         <button
-                          onClick={() => handleSocialAction(article.id, "loves")}
+                          onClick={() => handleSocialAction(item.id, "loves")}
                           className="flex items-center gap-1 text-error hover:scale-105 transition-transform cursor-pointer"
                         >
                           <HeartIcon className="w-4 h-4" />
-                          <span className="text-xs">{socialData[article.id].loves}</span>
+                          <span className="text-xs">{socialData[item.id].loves}</span>
                         </button>
                         <div className="flex items-center gap-1 text-base-content/60">
                           <MessageCircleIcon className="w-4 h-4" />
-                          <span className="text-xs">{socialData[article.id].comments}</span>
+                          <span className="text-xs">{socialData[item.id].comments}</span>
                         </div>
                         <button
-                          onClick={() => handleSocialAction(article.id, "shares")}
+                          onClick={() => handleSocialAction(item.id, "shares")}
                           className="flex items-center gap-1 text-info hover:scale-105 transition-transform cursor-pointer"
                         >
                           <ShareIcon className="w-4 h-4" />
-                          <span className="text-xs">{socialData[article.id].shares}</span>
+                          <span className="text-xs">{socialData[item.id].shares}</span>
                         </button>
                       </div>
                     </div>
                   )}
                   <div className="card-actions justify-end mt-4">
-                    <Link href="#" className="btn btn-sm btn-outline btn-primary">
-                      Read More
-                    </Link>
+                    {item.isBlog ? (
+                      <Link href="/blogs/[slug]" as={`/blogs/${item.blog.path}`} className="btn btn-sm btn-outline btn-primary">
+                        Read More
+                      </Link>
+                    ) : (
+                      <Link href="#" className="btn btn-sm btn-outline btn-primary">
+                        Read More
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </section>
+
+
+
         {/* Call to Action / Footer */}
         <section className="py-16 bg-linear-to-r from-purple-800 to-pink-700 rounded-box shadow-lg px-6">
           <div className="container mx-auto px-4 text-center">
@@ -221,4 +234,31 @@ export default function News() {
     </SocialRealtimeProvider>
   )
 }
+
+News.getInitialProps = async () => {
+  const api_url = getApiURL()
+  let blogs = []
+  
+  // Fetch the blog data to display alongside featured articles
+  try {
+    if (process.env.DEBUG === "true") {
+      console.log("News page blog data fetch starting\n " + api_url + "blog/")
+    }
+    const res = await fetch(api_url + "blog/")
+    if (res.ok) {
+      blogs = await res.json()
+    }
+    if (process.env.DEBUG === "true") {
+      console.log(`News page blog data fetched. Count: ${blogs.length}`)
+    }
+  } catch (error) {
+    console.error("An error occurred fetching blog data for news page: ", error)
+  }
+
+  return {
+    blogs: blogs || [],
+  }
+}
+
+
 

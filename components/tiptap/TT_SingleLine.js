@@ -11,7 +11,7 @@
 
 import TiptapEditor from "@/components/tiptap/tiptap-editor";
 
-export default function TTSingleLine({ value, onChange }) {
+export default function TTSingleLine({ value, onChange, showAlignmentControls = true }) {
 	return (
 		<div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
 			{/*<h2 className="text-lg font-semibold">Single Line</h2>*/}
@@ -25,6 +25,7 @@ export default function TTSingleLine({ value, onChange }) {
 				preset="minimal"
 				singleLine
 				minHeight={44}
+				showAlignmentControls={showAlignmentControls}
 			/>
 		</div>
 	);

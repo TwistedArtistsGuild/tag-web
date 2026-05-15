@@ -15,7 +15,7 @@ import fs from "fs"
 import path from "path"
 import { remark } from "remark"
 import html from "remark-html"
-import sanitizeHtml from "sanitize-html"
+import { sanitizeDefaultHtml } from "@/components/security/sanitize"
 
 export async function getMarkdownContent(filePath) {
 	const normalizedPath = filePath.replace(/\\/g, "/")
@@ -36,5 +36,5 @@ export async function getMarkdownContent(filePath) {
 		.use(html)
 		.process(fileContents)
 
-	return sanitizeHtml(processedContent.toString())
+	return sanitizeDefaultHtml(processedContent.toString())
 }

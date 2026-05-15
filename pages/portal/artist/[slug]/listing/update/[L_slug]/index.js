@@ -14,6 +14,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
+import PictureExplorerCard from "@/components/PictureExplorerCard";
 
 const api_url = getApiURL();
 const formName = "ListingForm1";
@@ -36,22 +37,71 @@ export default function UpdateListingForm2(props) {
         };
     }, [props.metadataProp, props.listingId]);
 
-    if (!enhancedMetadata || !props.listingdata) {
-        return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
+    if (props.loadError) {
+        return (
+            <div className="p-6">
+                <div className="alert alert-error">
+                    <span>{props.loadError}</span>
+                </div>
+            </div>
+        );
     }
 
-    return <div className="p-4"><DynaFormDB request="update" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={props.listingdata} /></div>;
+    if (!enhancedMetadata || !props.listingdata) {
+        return (
+            <div className="p-6">
+                <div className="alert alert-warning">
+                    <span>Listing editor is waiting for required data (metadata or listing payload).</span>
+                </div>
+            </div>
+        );
+    }
+
+    const listingRecord = Array.isArray(props.listingdata) ? props.listingdata[0] : props.listingdata;
+    const artistId = props.artistId || listingRecord?.artistID;
+    const missingVariables = [];
+    if (!props.listingId) {
+        missingVariables.push("listingId");
+    }
+    if (!artistId) {
+        missingVariables.push("artistId");
+    }
+    const uploadPrefix = artistId && props.listingId
+        ? `/platformpics/artist/${artistId}/listing/${props.listingId}/`
+        : null;
+
+    return (
+        <div className="p-4 space-y-6">
+            {uploadPrefix && (
+                <PictureExplorerCard
+                    useCase="artist-portal"
+                    startPrefix={uploadPrefix}
+                    allowContainerSwitch={false}
+                    preserveStartPrefixOnContainerSwitch={false}
+                />
+            )}
+            {!uploadPrefix && (
+                <div className="alert alert-warning">
+                    <span>
+                        Image manager is unavailable because required variable(s) are missing: {missingVariables.join(", ") || "artistId"}.
+                    </span>
+                </div>
+            )}
+            <DynaFormDB request="update" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={props.listingdata} />
+        </div>
+    );
 }
 
 export async function getServerSideProps(context) {
-    const listingId = context.params?.slug || context.query?.slug || context.query?.id;
+    const artistSlug = context.params?.slug || context.query?.slug;
+    const listingSlugOrId = context.params?.L_slug || context.query?.L_slug || context.query?.id;
 
     const session = await getServerSession(context.req, context.res, authOptions);
 
     if (!session?.user) {
         return {
             redirect: {
-                destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(`/portal/artist/listing/update/${listingId || ""}`)}`,
+                destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(`/portal/artist/${artistSlug || ""}/listing/update/${listingSlugOrId || ""}`)}`,
                 permanent: false,
             },
         };
@@ -78,19 +128,64 @@ export async function getServerSideProps(context) {
         };
     }
 
-    if (!listingId) {
+    if (!listingSlugOrId) {
         return {
             notFound: true,
         };
     }
     let data = {};
     let metadata = {};
+    let artistId = null;
+    let listingId = null;
+    let loadError = null;
+
+    const parseNumericId = (value) => {
+        const numeric = Number(value);
+        return Number.isInteger(numeric) && numeric > 0 ? numeric : null;
+    };
+
     try {
-        const res1 = await fetch(`${api_url}listing/byID/${listingId}`);
-        if (res1.ok) {
-            data = await res1.json();
+        const numericListingId = parseNumericId(listingSlugOrId);
+
+        if (numericListingId) {
+            listingId = numericListingId;
+            const byIdResponse = await fetch(`${api_url}listing/byID/${listingId}`);
+            if (byIdResponse.ok) {
+                data = await byIdResponse.json();
+            } else {
+                console.error(`Failed to fetch listing by ID ${listingId}: ${byIdResponse.status} ${byIdResponse.statusText}`);
+                loadError = `Failed to fetch listing by ID ${listingId}: ${byIdResponse.status} ${byIdResponse.statusText}`;
+            }
         } else {
-            console.error(`Failed to fetch listing ${listingId}: ${res1.status} ${res1.statusText}`);
+            if (!artistSlug || artistSlug === "undefined") {
+                loadError = "Missing artist slug in route. Open this editor from a valid artist portal URL.";
+            }
+
+            let byPathResponse = await fetch(`${api_url}listing/artist/${artistSlug}/listing/${listingSlugOrId}`);
+
+            if (byPathResponse.ok) {
+                data = await byPathResponse.json();
+                const listingRecordFromPath = Array.isArray(data) ? data[0] : data;
+                listingId = listingRecordFromPath?.listingID || listingRecordFromPath?.ListingID || null;
+
+                if (listingId) {
+                    const byIdResponse = await fetch(`${api_url}listing/byID/${listingId}`);
+                    if (byIdResponse.ok) {
+                        data = await byIdResponse.json();
+                    }
+                }
+            } else {
+                console.error(`Failed to fetch listing by slug/path ${listingSlugOrId}: ${byPathResponse.status} ${byPathResponse.statusText}`);
+                loadError = `Failed to fetch listing by slug/path ${listingSlugOrId}: ${byPathResponse.status} ${byPathResponse.statusText}`;
+            }
+        }
+
+        const listingRecord = Array.isArray(data) ? data[0] : data;
+        listingId = listingId || listingRecord?.listingID || listingRecord?.ListingID || null;
+        artistId = listingRecord?.artistID || null;
+
+        if (!listingId && !loadError) {
+            loadError = "Could not resolve listingId from route or payload.";
         }
 
         let res2 = await fetch(`${api_url}formsmetadata/${formName}`);
@@ -105,12 +200,15 @@ export async function getServerSideProps(context) {
         }
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);
+        loadError = error.message || "Unknown error while loading listing editor data.";
     }
     return {
         props: {
             listingdata: data,
-            listingId: listingId,
-            metadataProp: metadata
+            artistId,
+            listingId,
+            metadataProp: metadata,
+            loadError
         }
     };
 }

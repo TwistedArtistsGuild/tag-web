@@ -16,9 +16,28 @@ import DateInput from "./DynaDateInput";
 import { useSession } from "next-auth/react";
 import getApiURL from "@/components/widgets/GetApiURL";
 import TTArticle from "@/components/tiptap/TT_Article";
+import TTArticleGallery from "@/components/tiptap/TT_ArticleGallery";
 import TTSingleLine from "@/components/tiptap/TT_SingleLine";
 import TTTitleLine from "@/components/tiptap/TT_TitleLine";
 import TTPortfolio from "@/components/tiptap/TT_Portfolio";
+
+const deprecatedPresetWarnings = new Set();
+
+function warnDeprecatedPreset(presetName, replacementText, fieldName) {
+  if (process.env.NODE_ENV === "production") {
+    return;
+  }
+
+  const key = `${presetName}:${fieldName || "unknown"}`;
+  if (deprecatedPresetWarnings.has(key)) {
+    return;
+  }
+
+  deprecatedPresetWarnings.add(key);
+  console.warn(
+    `[DynaFormDB] Deprecated preset "${presetName}" used for field "${fieldName || "unknown"}". ${replacementText}`
+  );
+}
 
 /**
  * Dynamic Form component that renders form fields based on metadata
@@ -33,6 +52,21 @@ export default function DynaForm(props) {
   const router = useRouter();
   const { data: session } = useSession();
   const api_url = getApiURL();
+
+  const getNumericOrder = (field) => {
+    const rawOrder =
+      field?.fieldOrder ??
+      field?.FieldOrder ??
+      field?.sortOrder ??
+      field?.SortOrder ??
+      field?.displayOrder ??
+      field?.DisplayOrder ??
+      field?.order ??
+      field?.Order;
+
+    const parsed = Number(rawOrder);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
   
   // Unwrap the metadata object. If props.metadataProp is an array, take the first element.
   const metadata = useMemo(() => {
@@ -103,6 +137,37 @@ export default function DynaForm(props) {
 
     return requestMap[props.request] || "POST";
   }, [props.request]);
+
+  const orderedFields = useMemo(() => {
+    const fields = Array.isArray(metadata?.forms_Fields) ? metadata.forms_Fields : [];
+
+    return fields
+      .map((field, index) => ({ field, index }))
+      .sort((a, b) => {
+        const orderA = getNumericOrder(a.field);
+        const orderB = getNumericOrder(b.field);
+        const hasOrderA = orderA !== null;
+        const hasOrderB = orderB !== null;
+
+        // Keep unordered fields first (common for system fields like path).
+        if (hasOrderA !== hasOrderB) {
+          return hasOrderA ? 1 : -1;
+        }
+
+        if (hasOrderA && hasOrderB && orderA !== orderB) {
+          return orderA - orderB;
+        }
+
+        const idA = Number(a.field?.forms_FieldID);
+        const idB = Number(b.field?.forms_FieldID);
+        if (Number.isFinite(idA) && Number.isFinite(idB) && idA !== idB) {
+          return idA - idB;
+        }
+
+        return a.index - b.index;
+      })
+      .map((entry) => entry.field);
+  }, [metadata]);
   
   // Form state - clone initial data to avoid direct prop mutation
   const [formValues, setFormValues] = useState({});
@@ -115,8 +180,8 @@ export default function DynaForm(props) {
     const initialValues = { ...props.formData };
     
     // Add hidden field values
-    if (metadata.forms_Fields && Array.isArray(metadata.forms_Fields)) {
-      metadata.forms_Fields.forEach(field => {
+    if (orderedFields.length > 0) {
+      orderedFields.forEach(field => {
         if (field.hidden && field.name) {
           initialValues[field.name] = 
             props.formData?.[field.name] !== undefined 
@@ -141,7 +206,7 @@ export default function DynaForm(props) {
       console.groupEnd();
     }
     return () => window.cancelAnimationFrame(frameId);
-  }, [api_url, endpoint, metadata, props.formData, props.request, session]);
+  }, [api_url, endpoint, metadata, orderedFields, props.formData, props.request, session]);
 
   /**
    * Handles input field changes and updates form state
@@ -271,7 +336,8 @@ export default function DynaForm(props) {
       const responseData = await response.json().catch(() => ({}));
       
       if (!response.ok) {
-        throw new Error(responseData?.message || responseData?.error || `Server responded with ${response.status}`);
+        const errorMsg = responseData?.message || responseData?.error || responseData?.errors || JSON.stringify(responseData) || `Server responded with ${response.status}`;
+        throw new Error(errorMsg);
       }
       
       // Debug successful submission in console
@@ -314,6 +380,17 @@ export default function DynaForm(props) {
    * @returns {JSX.Element} - Rendered field
    */
   const renderField = (field, index) => {
+    const normalizedType = String(field?.type || "text").trim().toLowerCase();
+    const normalizedName = String(field?.name || "").trim().toLowerCase();
+    const normalizedLabel = String(field?.label || field?.Label || "").trim().toLowerCase();
+    const heightValue = Number(field?.height ?? field?.Height);
+
+    const isLongContentField =
+      normalizedName === "body" ||
+      normalizedName === "content" ||
+      normalizedLabel === "content" ||
+      heightValue >= 10;
+
     // Skip rendering hidden fields (they're already in the form state)
     if (field.hidden === true || field.Hidden === true) {
       return null;
@@ -325,7 +402,7 @@ export default function DynaForm(props) {
     let currentValue = formValues[field.name] !== undefined ? formValues[field.name] : "";
     
     // For checkboxes, make sure the value is boolean
-    if (field.type === "checkbox") {
+    if (normalizedType === "checkbox") {
       currentValue = Boolean(currentValue === true || currentValue === "true");
     } 
     // For all other inputs, ensure we have a string (or empty string)
@@ -357,7 +434,7 @@ export default function DynaForm(props) {
     }
     
     // For date-type fields, use the DateInput component
-    if (field.type === "date" || field.type === "datetime" || field.type === "datetime-local") {
+    if (normalizedType === "date" || normalizedType === "datetime" || normalizedType === "datetime-local") {
       return (
         <div key={index} className="form-control">
           <label className="label" htmlFor={`field-${field.name}`}>
@@ -378,7 +455,7 @@ export default function DynaForm(props) {
             required={isRequired}
             disabled={field.disabled === true || field.Disabled === true}
             readOnly={isReadOnly}
-            includeTime={field.type !== "date"}
+            includeTime={normalizedType !== "date"}
             className={field.className || field.ClassName || "input input-bordered w-full"}
           />
         </div>
@@ -400,10 +477,10 @@ export default function DynaForm(props) {
       readOnly: isReadOnly,
       disabled: field.disabled === true || field.Disabled === true,
       // For non-checkbox inputs, ensure we always have a string value
-      ...(field.type !== "checkbox" && { value: currentValue }),
+      ...(normalizedType !== "checkbox" && { value: currentValue }),
       "aria-readonly": isReadOnly ? "true" : "false",
       onChange: (e) => handleFieldChange(field.name, 
-        field.type === "checkbox" ? e.target.checked : e.target.value)
+        normalizedType === "checkbox" ? e.target.checked : e.target.value)
     };
     
     // Add field constraint attributes from DB model
@@ -432,11 +509,27 @@ export default function DynaForm(props) {
             userID: session?.user?.id || "anonymous",
             category: metadata.imageCategory, // Dynamic based on form type: 'blogs', 'events', 'profile'
             entityID: metadata.entityId || "new",
-            postfix: "" // Default empty, can be set to "-thumbnail" if needed
+          container: metadata.imageContainer,
+          startPrefix: metadata.imageStartPrefix,
+          targetPrefix: metadata.imageTargetPrefix,
+          postfix: "" // Default empty, can be set to "-thumbnail" if needed
             }; 
                 
-          switch (field.type) {
+          switch (normalizedType) {
             case "textarea":
+              if (isLongContentField) {
+                return (
+                  <TTArticleGallery
+                    value={currentValue}
+                    onChange={(html) => handleFieldChange(field.name, html)}
+                    onSubmit={() => { }}
+                    onCancel={() => { }}
+                    minHeight={field.height || field.Height}
+                    uploadContext={uploadContext}
+                  />
+                );
+              }
+
               return (
                 <textarea
                   {...sharedAttributes}
@@ -500,14 +593,59 @@ export default function DynaForm(props) {
                     />
                   );
 
+              case "tiptap_article_gallery":
+                  return (
+                    <TTArticleGallery
+                        value={currentValue}
+                        onChange={(html) => handleFieldChange(field.name, html)}
+                        onSubmit={() => { }}
+                        onCancel={() => { }}
+                        minHeight={field.height || field.Height}
+                        uploadContext={uploadContext}
+                    />
+                  );
+
+              case "tiptap_long":
+              case "tiptap_longform":
+              case "tiptap_content":
+              case "tiptap_body":
+                  return (
+                    <TTArticleGallery
+                        value={currentValue}
+                        onChange={(html) => handleFieldChange(field.name, html)}
+                        onSubmit={() => { }}
+                        onCancel={() => { }}
+                        minHeight={field.height || field.Height}
+                        uploadContext={uploadContext}
+                    />
+                  );
+
               case "tiptap_single":
                   return (
                       <TTSingleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} uploadContext={uploadContext} />
                   );
 
               case "tiptap_title":
+                  // Deprecated: keep this alias for backward compatibility with existing DB metadata.
+                  // Prefer explicit heading presets: tiptap_h1, tiptap_h2, tiptap_h3.
+                  warnDeprecatedPreset("tiptap_title", "Use tiptap_h2 (or tiptap_h1/tiptap_h3 as needed).", field.name);
                   return (
-                      <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} uploadContext={uploadContext} />
+                    <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} headingLevel={2} uploadContext={uploadContext} />
+                  );
+
+                case "tiptap_h1":
+                  return (
+                    <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} headingLevel={1} uploadContext={uploadContext} />
+                  );
+
+                case "tiptap_h2":
+                  return (
+                    <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} headingLevel={2} uploadContext={uploadContext} />
+                  );
+
+                case "tiptap_h3":
+                  return (
+                    <TTTitleLine value={currentValue} onChange={(html) => handleFieldChange(field.name, html)} headingLevel={3} uploadContext={uploadContext} />
                   );
 
               case "tiptap_portfolio":
@@ -540,10 +678,23 @@ export default function DynaForm(props) {
                   );
             // Handle other common input types
             default:
+              if (isLongContentField) {
+                return (
+                  <TTArticleGallery
+                      value={currentValue}
+                      onChange={(html) => handleFieldChange(field.name, html)}
+                      onSubmit={() => { }}
+                      onCancel={() => { }}
+                      minHeight={field.height || field.Height}
+                      uploadContext={uploadContext}
+                  />
+                );
+              }
+
               return (
                 <input
                   {...sharedAttributes}
-                  type={field.type || "text"}
+                  type={normalizedType || "text"}
                   style={{ width: field.Width || '100%' }}
                 />
               );
@@ -583,8 +734,8 @@ export default function DynaForm(props) {
         )}
         
         {/* Render form fields */}
-        {Array.isArray(metadata.forms_Fields) && metadata.forms_Fields.length > 0 && (
-          metadata.forms_Fields.map((field, index) => renderField(field, index))
+        {orderedFields.length > 0 && (
+          orderedFields.map((field, index) => renderField(field, index))
         )}
 
         {/* Submit button and error message placement */}
