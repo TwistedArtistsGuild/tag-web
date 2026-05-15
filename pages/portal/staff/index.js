@@ -46,6 +46,16 @@ export default function Portal_Staff() {
 				membership-drive funnel progress, form responses, and CRM messaging channels.
 			</p>
 			<div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-6xl">
+				<div className="rounded-xl border border-warning/20 bg-base-100 p-5 shadow-sm">
+					<p className="text-xs font-semibold uppercase tracking-[0.18em] text-warning">Tag Blog</p>
+					<h3 className="mt-2 text-xl font-bold text-base-content">Blog Suggestion Form</h3>
+					<p className="mt-2 text-sm text-base-content/70">
+						Open the staff blog suggestion form and submit your idea with your session user ID.
+					</p>
+					<a className="link link-warning text-base font-semibold mt-4 inline-block" href="/portal/staff/tagblog">
+						Open Suggestion Form
+					</a>
+				</div>
 				<div className="rounded-xl border border-base-300 bg-base-100 p-5 shadow-sm">
 					<p className="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">CRM Index</p>
 					<h3 className="mt-2 text-xl font-bold text-base-content">GoHighLevel CRM Dashboard</h3>
@@ -82,7 +92,7 @@ export default function Portal_Staff() {
 }
 
 export async function getServerSideProps(context) {
-	const session = await getServerSession(context.req, context.res, authOptions)
+	const session = await getServerSession(context.req, context.res, authOptions);
 
 	if (!session?.user) {
 		return {
@@ -90,14 +100,14 @@ export async function getServerSideProps(context) {
 				destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/staff")}`,
 				permanent: false,
 			},
-		}
+		};
 	}
 
 	if (!isStaff(session) && !isAdmin(session)) {
 		return {
 			notFound: true,
-		}
+		};
 	}
 
-	return { props: {} }
+	return { props: {} };
 }

@@ -4,6 +4,7 @@ import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { getMarkdownContent } from "@/components/widgets/markdown"
+import { sanitizeDefaultHtml } from "@/components/security/sanitize"
 
 import Registration1 from "./registration1"
 import { Registration2Notes } from "./registration2"
@@ -75,7 +76,7 @@ function TermsAgreementStep({ termsContent }) {
           className="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-200/60 p-4 prose prose-sm max-w-none"
           onScroll={handleScroll}
         >
-          <div dangerouslySetInnerHTML={{ __html: termsContent }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(termsContent) }} />
         </div>
 
         <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -201,3 +202,4 @@ export async function getServerSideProps() {
     },
   }
 }
+

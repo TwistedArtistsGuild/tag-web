@@ -14,10 +14,12 @@ import Link from "next/link"
 import Image from "next/image"
 import ContentTags, { hasExplicitWarning, extractContentWarnings } from "@/components/social/ContentTags"
 
-const ListingCardSmall = ({ listing }) => {
+const ListingCardSmall = ({ listing, artist }) => {
   const contentWarnings = extractContentWarnings(listing)
-  const hideImage = hasExplicitWarning(contentWarnings)
-
+    const hideImage = hasExplicitWarning(contentWarnings)
+    if (!listing.artist && artist) {
+      listing.artist = artist
+    }
   return (
     <div 
       className="card bg-base-100 text-base-content shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full rounded-box group border border-base-300"

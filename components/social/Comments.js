@@ -16,8 +16,8 @@
 */
 
 import { useState, useCallback, memo } from "react";
-import DOMPurify from "dompurify";
 import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5";
+import { sanitizeDefaultHtml } from "@/components/security/sanitize";
 
 // Import components
 import Image from "next/image";
@@ -193,7 +193,7 @@ const SocialComments = ({
         if (!textOnly) return;
         
         // Sanitize content to prevent XSS attacks
-        const sanitizedContent = DOMPurify.sanitize(content);
+        const sanitizedContent = sanitizeDefaultHtml(content);
         
         setComments(prevComments => prevComments.map(comment => {
             // Update top-level comment
@@ -412,13 +412,7 @@ const SocialComments = ({
         });
     }, []);
 
-    const sanitizeHtml = (html) => {
-        // Check if we are in the browser (DOMPurify needs a window)
-        if (typeof window !== 'undefined') {
-            return DOMPurify.sanitize(html);
-        }
-        return html; // Fallback for Server-Side Rendering
-    };
+    const sanitizeCommentHtml = (html) => sanitizeDefaultHtml(html);
 
     /**
      * Comment component - renders a single comment or reply
@@ -529,7 +523,7 @@ const SocialComments = ({
                         
                         {/* Comment content with proper sanitization and styling */}
                         <div 
-                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(comment.body) }} 
+                                dangerouslySetInnerHTML={{ __html: sanitizeCommentHtml(comment.body) }} 
                             className="py-2 prose max-w-none prose-img:rounded-lg prose-video:rounded-lg"
                         />
                         
@@ -663,3 +657,4 @@ const SocialComments = ({
 };
 
 export default SocialComments;
+
