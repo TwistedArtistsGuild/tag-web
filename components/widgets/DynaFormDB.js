@@ -415,7 +415,7 @@ export default function DynaForm(props) {
     if (field.autocomplete !== undefined || field.Autocomplete !== undefined) {
       sharedAttributes.autoComplete = (field.autocomplete || field.Autocomplete) ? "on" : "off";
     }
-    
+      
     return (
       <div key={index} className="form-control">
         <label className="label" htmlFor={`field-${field.name}`}>
@@ -449,17 +449,32 @@ export default function DynaForm(props) {
               );
               
             case "select":
+                let parsedOptions = [];
+                try {
+                    if (field.options) { // Note: Check if 'O' is capital based on your C# Model
+                        parsedOptions = typeof field.options === 'string'
+                            ? JSON.parse(field.options)
+                            : field.options;
+                    }
+                } catch (e) {
+                    console.error("Error parsing select options for " + field.name, e);
+                  }                  
               return (
                 <select
                   {...sharedAttributes}
                   value={currentValue}
                   className={isReadOnly ? `select select-bordered w-full bg-base-300 cursor-not-allowed` : "select select-bordered w-full"}
-                >
-                  {field.options?.map((option, idx) => (
-                    <option key={idx} value={option.value}>
-                      {option.label || option.value}
-                    </option>
-                  )) || <option value="">No options available</option>}
+                  >
+                    <option value="">{field.Placeholder || "Select..."}</option>
+                    {parsedOptions.length > 0 ? (
+                        parsedOptions.map((option, idx) => (
+                            <option key={idx} value={option.value}>
+                                {option.label || option.value}
+                            </option>
+                        ))
+                    ) : (
+                        <option value="">No options available</option>
+                    )}
                 </select>
               );
               
@@ -506,13 +521,30 @@ export default function DynaForm(props) {
                           uploadContext={uploadContext}
                       />
                   );
-              
+              case 'datetime-local': // Handle the new Date/Time type
+                  return (
+                      <div key={field.Forms_FieldID} style={{ width: field.Width || '100%' }}>
+                          <label className="label">
+                              <span className="label-text">{field.Label}</span>
+                          </label>
+                          <input
+                              type={field.Type} // This will pass 'url' or 'datetime-local' directly
+                              placeholder={field.Placeholder}
+                              className={field.ClassName || 'input input-bordered w-full'}
+                              required={field.IsRequired}
+                              name={field.Name}
+                              pattern={field.RegexValidationPattern}
+                              onChange={(html) => handleFieldChange(field.name, html)}
+                          />
+                      </div>
+                  );
             // Handle other common input types
             default:
               return (
                 <input
                   {...sharedAttributes}
                   type={field.type || "text"}
+                  style={{ width: field.Width || '100%' }}
                 />
               );
           }

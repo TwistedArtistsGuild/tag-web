@@ -1,4 +1,4 @@
-/* This file is part of the Twisted Artists Guild project.
+    /* This file is part of the Twisted Artists Guild project.
 
  Copyright (C) 2025 Twisted Artists Guild
 
@@ -9,11 +9,15 @@
 
  Open source · low-profit · human-first*/
 
- "use client"
+"use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
+
 import TagSEO from "@/components/TagSEO"
 import DocumentationSection from "@/components/DocumentationSection"
+import ContestCard from "@/components/cards/card_contest"
+import getApiURL from "@/components/widgets/GetApiURL";
 
 function ContestsIndex() {
   const pageMetaData = {
@@ -26,9 +30,54 @@ function ContestsIndex() {
     },
   }
 
+  const [activeContests, setActiveContests] = useState([])
+  const [archiveContests, setArchiveContests] = useState([])
+  const [loadingActive, setLoadingActive] = useState(true)
+  const [loadingArchive, setLoadingArchive] = useState(true)
+    const [error, setError] = useState(null)
+  const api_url = getApiURL();
+
+  useEffect(() => {
+    // Fetch active contests
+    const fetchActive = async () => {
+      setLoadingActive(true)
+      try {
+        const res = await fetch(`${api_url}contest/active`)
+        if (!res.ok) throw new Error(`Active fetch failed: ${res.status}`)
+        const data = await res.json()
+        // Expect data to be an array; otherwise be defensive
+        setActiveContests(Array.isArray(data) ? data : data?.contests || [])
+      } catch (err) {
+        console.error(err)
+        setError(err)
+      } finally {
+        setLoadingActive(false)
+      }
+    }
+
+    // Fetch archived contests
+    const fetchArchive = async () => {
+      setLoadingArchive(true)
+      try {
+          const res = await fetch(`${api_url}contest/archive`)
+        if (!res.ok) throw new Error(`Archive fetch failed: ${res.status}`)
+        const data = await res.json()
+        setArchiveContests(Array.isArray(data) ? data : data?.contests || [])
+      } catch (err) {
+        console.error(err)
+        setError(err)
+      } finally {
+        setLoadingArchive(false)
+      }
+    }
+
+    fetchActive()
+    fetchArchive()
+  }, [])
+
   return (
     <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
-    <TagSEO metadataProp={pageMetaData} canonicalSlug="contests" />
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="contests" />
       {/* Hero Section */}
       <section className="text-center py-12">
         <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">Art Contests</h1>
@@ -38,6 +87,7 @@ function ContestsIndex() {
           participation, and create durable visibility for members over time.
         </p>
       </section>
+
       <main className="container mx-auto px-4 py-8 flex-1 w-full">
         {/* Contest Framework */}
         <DocumentationSection id="contest-framework" title="How Contests Work" bgColor="bg-base-100" sectionClassName="mb-12 py-0">
@@ -53,42 +103,65 @@ function ContestsIndex() {
           </ul>
         </DocumentationSection>
 
-        {/* Community Reaction Model */}
-        <DocumentationSection id="community-outcomes" title="🗳️ Community-Led Outcomes" bgColor="bg-base-100" sectionClassName="mb-12 py-0">
-          <p className="text-lg text-base-content mb-4">
-            Each public user may apply multiple reactions. This helps authentic enthusiasm and broad community support
-            shape rankings, instead of relying on a single up-vote dynamic.
-          </p>
-          <p className="text-lg text-base-content">
-            The model is intentionally lightweight and transparent: artists submit, the public reacts, and outcomes
-            stay visible.
-          </p>
-          <div className="mt-8 text-center">
-            <Link href="/contests/vote_halloween" className="btn btn-primary btn-lg">
-              View Active Contest
-            </Link>
+        {/* Active contests list */}
+        <section id="active-contests" className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-3xl font-extrabold text-primary">Active Contests</h2>
+              <p className="text-base-content/80">Current contests open for submission and community voting.</p>
+            </div>
+            {/*<div>*/}
+            {/*  <Link href="/contests/vote" className="btn btn-outline btn-sm">*/}
+            {/*    Full Voting Hub*/}
+            {/*  </Link>*/}
+            {/*</div>*/}
           </div>
-        </DocumentationSection>
 
-        {/* Contest Archive */}
-        <DocumentationSection id="contest-archive" title="🏆 Durable Visibility Through Archives" bgColor="bg-base-100" sectionClassName="mb-12 py-0">
-          <p className="text-lg text-base-content mb-4">
-            Every contest is archived with public-facing, indexable links to participating artist profiles and
-            listings. Archives remain accessible long-term to keep work discoverable after the contest window closes.
-          </p>
-          <p className="text-lg text-base-content mb-4">
-            This creates ongoing exposure, backlinking value, and SEO benefits for artists and for the Guild.
-          </p>
-          <p className="text-lg text-base-content font-semibold mb-8">
-            Over time, contests become a growing, searchable history of artist success within the cooperative.
-          </p>
-          <div className="text-center">
-            <Link href="/contests/archive" className="btn btn-primary btn-lg">
-              Explore Contest Archive
-            </Link>
+          {loadingActive ? (
+            <div className="text-center py-8">Loading active contests…</div>
+          ) : activeContests.length === 0 ? (
+            <div className="text-center py-8 text-base-content/70">No active contests at the moment.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activeContests.map((contest) => (
+                <ContestCard key={contest.id || contest.path || contest.slug} contest={contest} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Archive contests list */}
+        <section id="archive-contests" className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-3xl font-extrabold text-primary">Contest Archive</h2>
+              <p className="text-base-content/80">Past contests and their archived results for long-term discovery.</p>
+            </div>
+            {/*<div>*/}
+            {/*  <Link href="/contests/archive" className="btn btn-outline btn-sm">*/}
+            {/*    Browse Full Archive*/}
+            {/*  </Link>*/}
+            {/*</div>*/}
           </div>
-        </DocumentationSection>
 
+          {loadingArchive ? (
+            <div className="text-center py-8">Loading archived contests…</div>
+          ) : archiveContests.length === 0 ? (
+            <div className="text-center py-8 text-base-content/70">No archived contests available.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {archiveContests.map((contest) => (
+                <ContestCard key={contest.id || contest.path || contest.slug} contest={contest} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {error && (
+          <div className="rounded-box border border-error bg-error/5 p-4 text-error">
+            There was an error loading contests. Check console for details.
+          </div>
+        )}
       </main>
     </div>
   )
