@@ -455,5 +455,23 @@ footer.themed-footer {
   border: 2px solid color-mix(in oklab, var(--tag-primary) 45%, transparent);
 }
 
+/* Custom Glassmorphism Input Style */
+.input-dyna {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    /* The "very thin" 0.5px border you liked */
+    border: 0.5px solid rgba(0, 0, 0, 0.15) !important;
+    border-radius: 12px;
+    padding: 10px 16px;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+    .input-dyna:focus {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(59, 130, 246, 0.5) !important; /* Subtle blue focus */
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    }
 
 
