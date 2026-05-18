@@ -40,14 +40,14 @@ export const DEFAULT_SOCIALS = [
     ),
   },
   {
-    name: "TikTok",
-    url: "https://www.tiktok.com/@twistedartistsguild?lang=en",
+    name: "Threads",
+    url: "https://www.threads.net/@twistedartistsguild",
     handle: "@twistedartistsguild",
-    purpose: "Behind-the-scenes and creative process",
-    color: "#6a76ac",
+    purpose: "Short posts, updates, and conversation",
+    color: "#111111",
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-        <path d="M448 209.9a210.1 210.1 0 0 1 -122.8-39.3V349.4A162.6 162.6 0 1 1 185 188.3V278.2a74.6 74.6 0 1 0 52.2 71.2V0l88 0a121.2 121.2 0 0 0 1.9 22.2h0A122.2 122.2 0 0 0 381 102.4a121.4 121.4 0 0 0 67 20.1z" />
+        <path d="M367.7 246.3c-5.5-48.8-23.8-87.1-54.6-114.4-28.8-25.6-66.1-38.3-111.2-38.3-54.7 0-98.4 18.6-130 55.3-30.6 35.4-46.1 84.9-46.1 147.1 0 62.1 15.5 111.6 46.1 147 31.6 36.7 75.3 55.3 130 55.3 42.1 0 76.9-11.3 105-34.4 29.9-24.7 48.4-59.7 55-104.1h-58.1c-4.2 25.1-15.1 44.2-32.9 57.4-17 12.6-38.4 18.9-64.1 18.9-33.4 0-59.8-10.3-79.1-30.7-18.8-19.8-28.7-47.2-29.7-82.1h231.5c5.1-18.5 7.6-40.1 7.6-64.9 0-14-.7-26.2-2-36.8zM135.2 236c1.7-28.1 10.9-49.9 27.5-65.4 17.5-16.4 40.5-24.7 69.1-24.7 29 0 52.1 8.2 69.2 24.6 15.7 15 24.6 36.8 26.4 65.5H135.2z" />
       </svg>
     ),
   },
@@ -121,6 +121,14 @@ export const DEFAULT_STORES = [
   },
 ]
 
+function resolveSocialIcon(name) {
+  return DEFAULT_SOCIALS.find((d) => d.name.toLowerCase() === (name || "").toLowerCase())?.icon || null
+}
+
+function resolveStoreIcon(name) {
+  return DEFAULT_STORES.find((d) => d.name.toLowerCase() === (name || "").toLowerCase())?.icon || null
+}
+
 /**
  * ContactList Card Component
  * Displays social media links and custom contact information for a user or artist.
@@ -157,6 +165,7 @@ export default function ContactCard({
   showIdentity = true,
   compact = true,
   iconOnly = false,
+  contactsHref = "",
 }) {
   const name = displayName || artist?.username || user?.username || "Contact"
   const storeLinks = stores.length > 0 ? stores : salesPlatforms
@@ -191,7 +200,7 @@ export default function ContactCard({
           >
             <button className="btn btn-sm btn-outline border-base-300 bg-base-100 hover:bg-base-200 btn-circle" style={{ color: social.color }}>
               <span className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full [&>svg]:fill-current">
-                {social.icon}
+                {resolveSocialIcon(social.name)}
               </span>
             </button>
           </a>
@@ -209,7 +218,7 @@ export default function ContactCard({
           >
             <button className="btn btn-sm btn-outline border-base-300 bg-base-100 hover:bg-base-200 btn-circle" style={{ color: platform.color }}>
               <span className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full [&>svg]:fill-current">
-                {platform.icon}
+                {resolveSocialIcon(social.name)}
               </span>
             </button>
           </a>
@@ -231,7 +240,7 @@ export default function ContactCard({
 
         <div className={`${showIdentity ? "mt-4" : "mt-0"} grid grid-cols-1 lg:grid-cols-2 gap-6`}>
           <div>
-            {(contactInfo.location || contactInfo.email || contactInfo.customUrls?.length > 0) && (
+            {(contactInfo.location || contactInfo.primaryAddressText || contactInfo.phone || contactInfo.email || contactInfo.customUrls?.length > 0) && (
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-base-content/70 mb-2">Contact</p>
 
@@ -244,12 +253,26 @@ export default function ContactCard({
                   </div>
                 )}
 
+                {contactInfo.primaryAddressText && (
+                  <div className="mb-2">
+                    <div className="text-[11px] uppercase tracking-wide text-base-content/60">Primary Address</div>
+                    <div className="text-sm text-base-content wrap-break-word">{contactInfo.primaryAddressText}</div>
+                  </div>
+                )}
+
                 {contactInfo.email && (
                   <div className="flex items-start gap-2 mb-2">
                     <span className="text-lg text-base-content/60 leading-6">✉</span>
                     <a href={`mailto:${contactInfo.email}`} className="text-sm text-base-content hover:text-primary underline underline-offset-2 break-all">
                       {contactInfo.email}
                     </a>
+                  </div>
+                )}
+
+                {contactInfo.phone && (
+                  <div className="flex items-start gap-2 mb-2">
+                    <span className="text-lg text-base-content/60 leading-6">☎</span>
+                    <span className="text-sm text-base-content break-all">{contactInfo.phone}</span>
                   </div>
                 )}
 
@@ -289,10 +312,10 @@ export default function ContactCard({
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={social.name}
-                      className="group flex items-start gap-2 transition-transform hover:scale-[1.02] p-2 rounded hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                      className="group flex items-start gap-2 transition-transform hover:scale-[1.02] p-2 rounded hover:bg-base-200 focus-visible:outline-2 focus-visible:outline-primary"
                     >
-                      <span className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full [&>svg]:fill-current flex-shrink-0 mt-0.5" style={{ color: social.color }}>
-                        {social.icon}
+                      <span className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full [&>svg]:fill-current shrink-0 mt-0.5" style={{ color: social.color }}>
+                        {resolveSocialIcon(social.name)}
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium text-base-content group-hover:text-primary transition-colors break-all">{social.handle}</div>
@@ -315,10 +338,10 @@ export default function ContactCard({
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={platform.name}
-                      className="group flex items-start gap-2 transition-transform hover:scale-[1.02] p-2 rounded hover:bg-base-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+                      className="group flex items-start gap-2 transition-transform hover:scale-[1.02] p-2 rounded hover:bg-base-200 focus-visible:outline-2 focus-visible:outline-primary"
                     >
-                      <span className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full [&>svg]:fill-current flex-shrink-0 mt-0.5" style={{ color: platform.color }}>
-                        {platform.icon}
+                      <span className="h-6 w-6 [&>svg]:h-full [&>svg]:w-full [&>svg]:fill-current shrink-0 mt-0.5" style={{ color: platform.color }}>
+                        {resolveStoreIcon(platform.name)}
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-medium text-base-content group-hover:text-primary transition-colors break-all">{platform.handle}</div>
@@ -346,7 +369,7 @@ export default function ContactCard({
       {/* Location at top - compact single line */}
       {contactInfo.location && (
         <div className="flex items-center gap-1 mb-2 text-xs text-base-content truncate">
-          <span className="flex-shrink-0">📍</span>
+          <span className="shrink-0">📍</span>
           <span className="text-base-content/75 truncate">{contactInfo.location}</span>
         </div>
       )}
@@ -365,7 +388,7 @@ export default function ContactCard({
             >
               <button className="btn btn-xs btn-outline border-base-300 bg-base-100 hover:bg-base-200 btn-circle" style={{ color: social.color }}>
                 <span className="h-4 w-4 [&>svg]:h-full [&>svg]:w-full [&>svg]:fill-current">
-                  {social.icon}
+                  {resolveSocialIcon(social.name)}
                 </span>
               </button>
             </a>
@@ -374,18 +397,25 @@ export default function ContactCard({
       )}
 
       {/* Custom Contact Info */}
-      {(contactInfo.email || contactInfo.customUrls?.length > 0) && (
+      {(contactInfo.email || contactInfo.phone || contactInfo.customUrls?.length > 0) && (
         <div className={`${sectionMargin} border-t border-base-300 pt-1.5`}>
           {/* Email */}
           {contactInfo.email && (
             <div className="flex items-center gap-1 mb-1 text-xs text-base-content truncate">
-              <span className="flex-shrink-0">✉</span>
+              <span className="shrink-0">✉</span>
               <a
                 href={`mailto:${contactInfo.email}`}
                 className="text-xs text-base-content hover:text-primary underline underline-offset-2 truncate"
               >
                 {contactInfo.email}
               </a>
+            </div>
+          )}
+
+          {contactInfo.phone && (
+            <div className="flex items-center gap-1 mb-1 text-xs text-base-content truncate">
+              <span className="shrink-0">☎</span>
+              <span className="text-xs text-base-content/75 truncate">{contactInfo.phone}</span>
             </div>
           )}
 
@@ -426,12 +456,20 @@ export default function ContactCard({
               >
                 <button className="btn btn-xs btn-outline border-base-300 bg-base-100 hover:bg-base-200 btn-circle" style={{ color: platform.color }}>
                   <span className="h-4 w-4 [&>svg]:h-full [&>svg]:w-full [&>svg]:fill-current">
-                    {platform.icon}
+                    {resolveStoreIcon(platform.name)}
                   </span>
                 </button>
               </a>
             ))}
           </div>
+        </div>
+      )}
+
+      {contactsHref && (
+        <div className="mt-2 pt-2 border-t border-base-300 text-right">
+          <Link href={contactsHref} className="text-xs text-primary hover:underline">
+            View full contact info →
+          </Link>
         </div>
       )}
     </div>

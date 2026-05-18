@@ -67,6 +67,12 @@ const nextConfig = {
         port: "",
         pathname: "**",
       },
+      {
+        protocol: "https",
+        hostname: "vumbnail.com",
+        port: "",
+        pathname: "**",
+      },
     ],
   },
 };

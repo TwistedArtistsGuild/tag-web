@@ -1,6 +1,7 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import formidable from "formidable";
 import fs from "fs";
+import getApiURL from "@/components/widgets/GetApiURL";
 
 const SAFE_SEGMENT_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const ALLOWED_PREFIX_RE = /^[A-Za-z0-9/_\-.]*$/;
@@ -112,7 +113,43 @@ export default async function handler(req, res) {
         // Make sure your container "Access Level" is set to "Blob" or "Container" in Azure Portal
         const url = blockBlobClient.url;
 
-        return res.status(200).json({ url });
+        // 6. Create a minimal Picture record for gallery/API consumers.
+        const nowIso = new Date().toISOString();
+        const normalizedURL = String(url || "").trim().toLowerCase();
+        const api_url = getApiURL();
+        const picturePayload = {
+            URL: url,
+            NormalizedURL: normalizedURL,
+            Path: targetPrefix,
+            Title: baseName,
+            Context: category || null,
+            Created: nowIso,
+            Updated: nowIso,
+        };
+
+        let metadataCreated = true;
+        let metadataError = null;
+        try {
+            const pictureRes = await fetch(`${api_url}picture`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(picturePayload),
+            });
+
+            if (!pictureRes.ok) {
+                metadataCreated = false;
+                metadataError = `Picture metadata create failed (${pictureRes.status})`;
+            }
+        } catch (metadataCreateError) {
+            metadataCreated = false;
+            metadataError = metadataCreateError?.message || "Picture metadata create failed";
+        }
+
+        return res.status(200).json({
+            url,
+            metadataCreated,
+            ...(metadataError ? { metadataError } : {}),
+        });
     } catch (error) {
         console.error("Server-side Upload Error:", error);
         return res.status(500).json({ error: error.message });

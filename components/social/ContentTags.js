@@ -9,7 +9,7 @@
 
  Open source · low-profit · human-first*/
 
-const WARNING_DEFINITIONS = {
+export const WARNING_DEFINITIONS = {
   "nudity": {
     group: "sexual",
     level: "general",

@@ -146,6 +146,13 @@ export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) 
 								>
 									Edit Post
 								</Link>
+								<Link
+									href="/portal/staff/tagblog/[id]"
+									as={`/portal/staff/tagblog/${blog.blogID}`}
+									className="link link-secondary font-semibold"
+								>
+									Edit Credits
+								</Link>
 								<button
 									type="button"
 									onClick={() => handleDeleteBlog(blog)}
