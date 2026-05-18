@@ -74,6 +74,16 @@ const ArtistCardSmall = ({ artist }) => {
         <div className="card-body p-4 grow justify-center">
           <h2 className="card-title text-lg font-semibold text-primary">{artist.title}</h2>
           <p className="text-sm text-base-content/60">{artist.byline}</p>
+          {(artist?.locationSummary || artist?.phoneDisplay) && (
+            <div className="mt-1.5 space-y-0.5">
+              {artist?.locationSummary && (
+                <p className="text-xs text-base-content/70 truncate">{artist.locationSummary}</p>
+              )}
+              {artist?.phoneDisplay && (
+                <p className="text-xs text-base-content/70 truncate">{artist.phoneDisplay}</p>
+              )}
+            </div>
+          )}
         </div>
       </Link>
     </div>

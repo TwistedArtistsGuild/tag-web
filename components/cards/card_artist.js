@@ -37,7 +37,49 @@ const getArtistDescription = (artist) =>
 	artist?.biography ||
 	"Creative portfolio and artist highlights.";
 
+const mapGalleryItemsToMedia = (entity) => {
+	const items = Array.isArray(entity?.gallery?.galleryItems) ? entity.gallery.galleryItems : [];
+	if (items.length === 0) return [];
+
+	return items
+		.slice()
+		.sort((a, b) => (Number(a?.sortOrder) || 0) - (Number(b?.sortOrder) || 0))
+		.map((item) => {
+			const picture = item?.picture;
+			const video = item?.video;
+			const pictureUrl = picture?.url || picture?.URL || "";
+			const pictureThumb = picture?.thumbnailURL || picture?.ThumbnailURL || pictureUrl;
+			const videoThumb = video?.thumbnailURL || video?.ThumbnailURL || video?.url || video?.URL || "";
+			const url = picture ? pictureThumb : videoThumb;
+
+			if (!url) return null;
+
+			return {
+				original: url,
+				thumbnail: url,
+				mediaType: picture ? "picture" : "video",
+				sourceURL: picture ? pictureUrl : (video?.url || video?.URL || ""),
+				embedURL: picture ? (picture?.embedURL || picture?.EmbedURL || "") : (video?.embedURL || video?.EmbedURL || ""),
+				description:
+					item?.captionOverride ||
+					picture?.description ||
+					video?.description ||
+					picture?.title ||
+					video?.title ||
+					"",
+				byline: picture?.byline || video?.byline || "",
+				altText: picture?.altText || picture?.alttext || "",
+			};
+		})
+		.filter(Boolean);
+};
+
 const getArtistGalleryImages = (artist) => {
+	const galleryMedia = mapGalleryItemsToMedia(artist);
+	if (galleryMedia.length > 0) {
+		return galleryMedia;
+	}
+
 	if (Array.isArray(artist?.images) && artist.images.length > 0) {
 		return artist.images;
 	}
@@ -52,6 +94,13 @@ const getArtistHeaderGalleryImages = (artist) => {
 	if (headerUrl) {
 		return [headerUrl];
 	}
+
+	const galleryMedia = mapGalleryItemsToMedia(artist);
+	const firstImage = galleryMedia.find((item) => item?.mediaType !== "video") || galleryMedia[0];
+	if (firstImage) {
+		return [firstImage];
+	}
+
 	// Fallback to first image if available
 	const images = getArtistGalleryImages(artist);
 	return images.length > 0 ? [images[0]] : ["/blank_image.png"];
