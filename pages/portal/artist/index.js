@@ -117,6 +117,12 @@ function MyArtistsCard({ registeredArtists, sessionUser }) {
 										<Link href={artist.path ? `/portal/artist/${artist.path}` : "/portal/artist"} className="btn btn-xs btn-outline">
 											Artist Portal
 										</Link>
+										<Link
+											href={artist.artistID ? `/portal/artist/manage-contacts?artistId=${artist.artistID}` : "/portal/artist/manage-contacts"}
+											className="btn btn-xs btn-primary"
+										>
+											Manage Contacts
+										</Link>
 									</div>
 									<div className="rounded-box border border-base-300 bg-base-100/70 p-3">
 										<SocialComments
@@ -149,6 +155,7 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 
 	const artistConceptLinks = [
 		{ href: "/join/artist", title: "Register Artist", description: "Start another artist registration flow if you need a new linked profile.", icon: "🎨" },
+		{ href: "/portal/artist/manage-contacts", title: "Manage Contacts", description: "Use DynaForm to add contact records linked to your artist profile.", icon: "📇" },
 	]
 
 	return (
