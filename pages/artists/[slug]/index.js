@@ -13,6 +13,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { SearchIcon } from "lucide-react"
 
 import TagSEO from "@/components/TagSEO"
@@ -23,15 +24,16 @@ import ListingCardSmall from "@/components/cards/card_listing_small"
 import ContactCard from "@/components/cards/card_contactList"
 import SocialComments from "@/components/social/Comments"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
-import ArtistFeaturedArtwork from "@/components/artist/ArtistFeaturedArtwork"
 import ArtistEventsSection from "@/components/artist/ArtistEventsSection"
 import { isArtist, isStaff, isAdmin } from "@/utils/authHelpers"
 import { sanitizeDefaultHtml } from "@/components/security/sanitize"
 import { pickContactCardData } from "@/utils/artistContactUtils"
 
+const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false })
+
 const artistSections = [
   { id: "profile", label: "Profile" },
-  { id: "artwork", label: "Featured Artwork" },
+  { id: "gallery", label: "Gallery" },
   { id: "events", label: "Events & Exhibitions" },
   { id: "listings", label: "Art Listings" },
   { id: "comments", label: "Comments & Feedback" },
@@ -72,6 +74,55 @@ const Artist = (props) => {
     ...l,
     artist: { ...(l.artist || {}), path: l.artist?.path || props.slug },
   }))
+
+  const galleryItems =
+    props.artist?.gallery?.galleryItems ||
+    props.artist?.gallery?.items ||
+    props.artist?.relatedGallery?.galleryItems ||
+    []
+
+  const relatedGalleryImages = galleryItems
+    .map((item, index) => {
+      const pictureUrl = item?.picture?.url || item?.picture?.URL
+      const pictureThumbUrl = item?.picture?.thumbnailURL || item?.picture?.thumbnailUrl || item?.picture?.ThumbnailURL || pictureUrl
+      const videoThumbUrl = item?.video?.thumbnailURL || item?.video?.thumbnailUrl || item?.video?.ThumbnailURL || item?.video?.url || item?.video?.URL
+      const videoPlaybackUrl = item?.video?.url || item?.video?.URL || ""
+      const videoEmbedUrl = item?.video?.embedURL || item?.video?.embedUrl || item?.video?.EmbedURL || ""
+
+      if (pictureUrl) {
+        return {
+          key: `gallery-picture-${item?.galleryItemID || index}`,
+          original: pictureThumbUrl,
+          thumbnail: pictureThumbUrl,
+          mediaType: "picture",
+          sourceURL: pictureUrl,
+          embedURL: item?.picture?.embedURL || item?.picture?.embedUrl || item?.picture?.EmbedURL || "",
+          description: item?.captionOverride || item?.picture?.description || item?.picture?.title || "",
+          byline: item?.picture?.byline || "",
+          altText: item?.picture?.altText || item?.picture?.alttext || "",
+        }
+      }
+
+      if (videoThumbUrl || videoEmbedUrl) {
+        return {
+          key: `gallery-video-${item?.galleryItemID || index}`,
+          original: videoThumbUrl,
+          thumbnail: videoThumbUrl,
+          mediaType: "video",
+          sourceURL: videoPlaybackUrl,
+          linkUrl: videoEmbedUrl || videoPlaybackUrl || null,
+          embedURL: videoEmbedUrl,
+          description: item?.captionOverride || item?.video?.description || item?.video?.title || "",
+          byline: item?.video?.byline || "",
+          altText: item?.captionOverride || item?.video?.title || "Gallery video",
+        }
+      }
+
+      return null
+    })
+    .filter(Boolean)
+
+  const hasGalleryItemsButNoMedia = galleryItems.length > 0 && relatedGalleryImages.length === 0
 
   return (
     <SocialRealtimeProvider>
@@ -123,6 +174,32 @@ const Artist = (props) => {
               </div>
             </div>
 
+            {/* Gallery */}
+            <div id="gallery" className="mt-12">
+              <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">Gallery</h2>
+              {relatedGalleryImages.length > 0 ? (
+                <div className="w-full">
+                  <PhotoGallery
+                    images={relatedGalleryImages}
+                    mode="standalone"
+                    navigationMode="manual"
+                    imageEffect="landscape"
+                    showThumbnails={relatedGalleryImages.length > 1}
+                    showContentWarnings={false}
+                  />
+                </div>
+              ) : (
+                <div className="rounded-box border border-base-300 bg-base-100 min-h-65 p-6 flex flex-col justify-center">
+                  <h3 className="text-base font-semibold text-base-content">Gallery unavailable</h3>
+                  <p className="text-sm text-base-content/70 mt-2">
+                    {hasGalleryItemsButNoMedia
+                      ? "Gallery items were found, but none include renderable image/video URLs."
+                      : "No gallery media is available for this artist yet."}
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Artist Statement */}
             <div id="statement" className="mt-12 prose max-w-none bg-base-100 p-6 shadow-lg">
               <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">Artist Statement</h2>
@@ -132,9 +209,6 @@ const Artist = (props) => {
                 }}
               />
             </div>
-
-            <ArtistFeaturedArtwork />
-
             <ArtistEventsSection />
 
             {/* Listings */}
@@ -251,6 +325,11 @@ Artist.getInitialProps = async (context) => {
     listings: [],
     links: [],
   })
+
+  const artistGalleryData = await fetchData(`${api_url}artist/${slug}`, null)
+  if (artistData?.artist && artistGalleryData?.gallery) {
+    artistData.artist.gallery = artistGalleryData.gallery
+  }
 
   let contactCardData = { socials: [], stores: [], contactInfo: {} }
   const artistID = Number(artistData?.artist?.artistID || artistData?.artist?.ArtistID || 0)

@@ -11,6 +11,8 @@
 
 
 import React, { useMemo } from "react";
+import Link from "next/link";
+import GalleryManager from "@/components/gallery/GalleryManager"
 import DynaFormDB from "@/components/widgets/DynaFormDB"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { getServerSession } from "next-auth/next";
@@ -40,7 +42,7 @@ export default function UpdateBlogForm1(props) {
             : props.metadataProp;
 
         if (process.env.NODE_ENV === 'development') {
-            console.log('UpdateBlogForm1 props:', { base, blogdata: props.blogdata, slug: props.slug });
+            console.log('UpdateBlogForm1 props:', { base, blogdata: props.blogdata, id: props.id });
         }
 
         // If metadata is missing, return null so DynaFormDB shows the error state
@@ -53,8 +55,8 @@ export default function UpdateBlogForm1(props) {
 
         return {
             ...base,
-            FromURL: `/portal/staff/tagblog/${props.slug}/update.js`,
-            redirectURL: `/blogs/${props.slug}`,
+            FromURL: `/portal/staff/tagblog/${props.id}/update`,
+            redirectURL: props.blogdata?.path ? `/blogs/${props.blogdata.path}` : "/blogs",
             // Reuse the normalized base URL from getApiURL() to keep env fallback/overrides consistent
             APIURL: `${api_url}blog/${props.blogdata?.blogID}`,
             imageCategory: 'blogs',
@@ -63,7 +65,7 @@ export default function UpdateBlogForm1(props) {
             imageStartPrefix,
             imageTargetPrefix
         };
-    }, [props.slug, props.blogdata, props.metadataProp]);
+    }, [props.id, props.blogdata, props.metadataProp]);
 
     // Only render DynaFormDB if we actually have data, otherwise show a loader
     if (!props.blogdata || !enhancedMetadata) {
@@ -72,12 +74,29 @@ export default function UpdateBlogForm1(props) {
 
     return (
       <div className="p-4">
-            <TagSEO metadataProp={{ title: "Github Projects Web Pages Blogs Slug Update", description: "Explore Github Projects Web Pages Blogs Slug Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Blogs Slug Update", description: "Explore Github Projects Web Pages Blogs Slug Update on Platform." } }} canonicalSlug="/portal/staff/tagblog/[slug]/update" />
+        <TagSEO metadataProp={{ title: "Github Projects Web Pages Blogs ID Update", description: "Explore Github Projects Web Pages Blogs ID Update on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Blogs ID Update", description: "Explore Github Projects Web Pages Blogs ID Update on Platform." } }} canonicalSlug="/portal/staff/tagblog/[id]/update" />
+            <div className="mb-6">
+                <GalleryManager
+                    entityType="blog"
+                    entityId={props.blogdata?.blogID}
+                    entityLabel={props.blogdata?.path ? `Blog #${props.blogdata.blogID}: ${props.blogdata.path}` : `Blog #${props.blogdata?.blogID}`}
+                    currentUser={props.currentUser}
+                />
+            </div>
             <DynaFormDB
                 request="update"
                 metadataProp={enhancedMetadata}
                 formData={props.blogdata}
             />
+            <div className="mt-4 flex justify-end">
+                <Link
+                    href="/portal/staff/tagblog/[id]"
+                    as={`/portal/staff/tagblog/${props.blogdata?.blogID}`}
+                    className="btn btn-outline btn-sm"
+                >
+                    Edit Credits
+                </Link>
+            </div>
         </div>
     );
 }
@@ -106,14 +125,14 @@ export async function getServerSideProps(context) {
         };
     }
 
-    const { slug } = context.query;
-    if (!slug) {
+    const { id } = context.query;
+    if (!id) {
         return { notFound: true };
     }
     let data = {};
     let metadata = null;
     try {
-        const res1 = await fetch(api_url + `blog/path/${slug}`);
+        const res1 = await fetch(api_url + `blog/${id}`);
         data = await res1.json();
 
         const metadataResponse = await fetch(`${api_url}formsmetadata/${formName}`);
@@ -123,7 +142,7 @@ export async function getServerSideProps(context) {
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);
         if (typeof window !== 'undefined') {
-            console.log('getInitialProps result:', { data, metadata, slug });
+            console.log('getInitialProps result:', { data, metadata, id });
         }
 
     }
@@ -131,8 +150,9 @@ export async function getServerSideProps(context) {
     return {
         props: {
             blogdata: data,
-            slug: slug,
-            metadataProp: metadata || {}
+            id: id,
+            metadataProp: metadata || {},
+            currentUser: session.user?.name || session.user?.email || ""
         }
     };
 }

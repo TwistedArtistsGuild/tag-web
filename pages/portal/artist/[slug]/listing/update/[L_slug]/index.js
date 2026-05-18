@@ -14,7 +14,9 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
-import PictureExplorerCard from "@/components/PictureExplorerCard";
+import GalleryManager from "@/components/gallery/GalleryManager";
+import ListingCard from "@/components/cards/card_listing";
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 
 const api_url = getApiURL();
 const formName = "ListingForm1";
@@ -59,32 +61,41 @@ export default function UpdateListingForm2(props) {
 
     const listingRecord = Array.isArray(props.listingdata) ? props.listingdata[0] : props.listingdata;
     const artistId = props.artistId || listingRecord?.artistID;
-    const missingVariables = [];
-    if (!props.listingId) {
-        missingVariables.push("listingId");
-    }
-    if (!artistId) {
-        missingVariables.push("artistId");
-    }
-    const uploadPrefix = artistId && props.listingId
-        ? `/platformpics/artist/${artistId}/listing/${props.listingId}/`
+
+    const previewListing = listingRecord
+        ? {
+            ...listingRecord,
+            path: listingRecord?.path || listingRecord?.Path || String(props.listingId || ""),
+            artist: {
+                ...(listingRecord?.artist || {}),
+                path: props.artistSlug || listingRecord?.artist?.path || "",
+                title: listingRecord?.artist?.title || "Artist",
+                profilePic: listingRecord?.artist?.profilePic || {},
+            },
+        }
         : null;
 
     return (
         <div className="p-4 space-y-6">
-            {uploadPrefix && (
-                <PictureExplorerCard
-                    useCase="artist-portal"
-                    startPrefix={uploadPrefix}
-                    allowContainerSwitch={false}
-                    preserveStartPrefixOnContainerSwitch={false}
+            {props.listingId ? (
+                <GalleryManager
+                    entityType="listing"
+                    entityId={props.listingId}
+                    entityLabel={`Listing #${props.listingId}`}
+                    currentUser={props.currentUser}
                 />
-            )}
-            {!uploadPrefix && (
+            ) : (
                 <div className="alert alert-warning">
-                    <span>
-                        Image manager is unavailable because required variable(s) are missing: {missingVariables.join(", ") || "artistId"}.
-                    </span>
+                    <span>Gallery manager unavailable: listingId is missing.</span>
+                </div>
+            )}
+
+            {previewListing && (
+                <div className="rounded-box border border-base-300 bg-base-100 p-3">
+                    <div className="mb-2 text-sm font-semibold text-base-content/80">Listing Preview (Gallery-Aware)</div>
+                        <SocialRealtimeProvider>
+                            <ListingCard listing={previewListing} panelSize="full" showGalleryThumbnails />
+                        </SocialRealtimeProvider>
                 </div>
             )}
             <DynaFormDB request="update" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={props.listingdata} />
@@ -206,9 +217,11 @@ export async function getServerSideProps(context) {
         props: {
             listingdata: data,
             artistId,
+            artistSlug,
             listingId,
             metadataProp: metadata,
-            loadError
+            loadError,
+            currentUser: session.user?.email || session.user?.name || null,
         }
     };
 }

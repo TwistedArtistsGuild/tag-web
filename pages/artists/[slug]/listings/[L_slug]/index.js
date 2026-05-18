@@ -13,17 +13,102 @@ import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContex
 import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
+import dynamic from "next/dynamic"
 import { useSession } from "next-auth/react";
+import { useEffect, useMemo, useState } from "react"
 import { PERMISSIONS } from "@/utils/permissions";
 import { hasPermission } from "@/utils/authHelpers";
 
-const DEFAULT_LISTING_IMAGES = [
-  "https://picsum.photos/id/1015/1000/600",
-  "https://picsum.photos/id/1019/1000/600",
-  "https://picsum.photos/id/1018/1000/600",
-]
+const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false })
+
+const mapGalleryItemsToMedia = (entity) => {
+  const items =
+    (Array.isArray(entity?.gallery?.galleryItems) && entity.gallery.galleryItems) ||
+    (Array.isArray(entity?.gallery?.GalleryItems) && entity.gallery.GalleryItems) ||
+    (Array.isArray(entity?.gallery?.items) && entity.gallery.items) ||
+    (Array.isArray(entity?.relatedGallery?.galleryItems) && entity.relatedGallery.galleryItems) ||
+    (Array.isArray(entity?.relatedGallery?.GalleryItems) && entity.relatedGallery.GalleryItems) ||
+    []
+  if (items.length === 0) return []
+
+  return items
+    .slice()
+    .sort((a, b) => (Number(a?.sortOrder) || 0) - (Number(b?.sortOrder) || 0))
+    .map((item) => {
+      const picture = item?.picture || item?.Picture
+      const video = item?.video || item?.Video
+      const pictureUrl =
+        picture?.url ||
+        picture?.URL ||
+        picture?.path ||
+        picture?.Path ||
+        picture?.normalizedURL ||
+        picture?.NormalizedURL ||
+        picture?.contentUrl ||
+        picture?.contentURL ||
+        picture?.src ||
+        item?.url ||
+        item?.URL ||
+        item?.path ||
+        item?.Path ||
+        item?.contentUrl ||
+        item?.contentURL ||
+        ""
+
+      const pictureThumb =
+        picture?.thumbnailURL ||
+        picture?.thumbnailUrl ||
+        picture?.ThumbnailURL ||
+        picture?.thumbnail ||
+        item?.thumbnailURL ||
+        item?.thumbnailUrl ||
+        item?.ThumbnailURL ||
+        pictureUrl
+
+      const videoThumb =
+        video?.thumbnailURL ||
+        video?.thumbnailUrl ||
+        video?.ThumbnailURL ||
+        video?.thumbnail ||
+        item?.thumbnailURL ||
+        item?.thumbnailUrl ||
+        item?.ThumbnailURL ||
+        "/blank_image.png"
+      const url = picture ? pictureThumb : videoThumb
+
+      if (!url) return null
+
+      if (picture && !pictureUrl) return null
+
+      if (!picture && !video) return null
+
+      return {
+        original: url,
+        thumbnail: url,
+        mediaType: picture ? "picture" : "video",
+        sourceURL: picture ? pictureUrl : (video?.url || video?.URL || ""),
+        embedURL: picture ? (picture?.embedURL || picture?.EmbedURL || "") : (video?.embedURL || video?.embedUrl || video?.EmbedURL || ""),
+        description:
+          item?.captionOverride ||
+          item?.CaptionOverride ||
+          picture?.description ||
+          video?.description ||
+          picture?.title ||
+          video?.title ||
+          "",
+        byline: picture?.byline || video?.byline || "",
+        altText: picture?.altText || picture?.alttext || "",
+      }
+    })
+    .filter(Boolean)
+}
 
 const getListingGalleryImages = (listing) => {
+  const galleryMedia = mapGalleryItemsToMedia(listing)
+  if (galleryMedia.length > 0) {
+    return galleryMedia
+  }
+
   const metadataCollections = [
     listing?.pictureMetadata,
     listing?.imageMetadata,
@@ -59,16 +144,25 @@ const getListingGalleryImages = (listing) => {
     return dbImages
   }
 
-  if (listing?.profilePic?.url) {
-    return [listing.profilePic.url, ...DEFAULT_LISTING_IMAGES]
+  return []
+}
+
+const normalizeListingPayload = (payload) => {
+  if (!payload) {
+    return {}
   }
 
-  return DEFAULT_LISTING_IMAGES
+  if (Array.isArray(payload)) {
+    return payload[0] || {}
+  }
+
+  return payload
 }
 
 const ListingDetails = ({ listing, slug }) => {
   const { data: session } = useSession();
   const canAddComment = hasPermission(session, PERMISSIONS.LISTING.COMMENT);
+  const [blobGalleryResult, setBlobGalleryResult] = useState({ listingId: null, items: [] })
 
   const canonicalSlug = listing.seoCanonicalSlug
   const pageMetaData = {
@@ -83,6 +177,68 @@ const ListingDetails = ({ listing, slug }) => {
   }
 
   const listingGalleryImages = getListingGalleryImages(listing)
+  const listingId = useMemo(
+    () => listing?.listingID || listing?.ListingID || listing?.listingid || listing?.listingId || listing?.ListingId || null,
+    [listing],
+  )
+
+  useEffect(() => {
+    if (!listingId) {
+      return
+    }
+
+    const galleryPrefix = `platformpics/listing/${listingId}/gallery/`
+
+    const fetchBlobGallery = async () => {
+      try {
+        const res = await fetch(`/api/image/list?container=tagpictures&startPrefix=${encodeURIComponent(galleryPrefix)}&prefix=${encodeURIComponent(galleryPrefix)}`)
+        if (!res.ok) return
+
+        const payload = await res.json()
+        const files = Array.isArray(payload?.files) ? payload.files : []
+        const mapped = files
+          .filter((file) => {
+            const ct = String(file?.contentType || "").toLowerCase()
+            return ct.startsWith("image/") || !ct
+          })
+          .map((file) => ({
+            original: file?.url,
+            thumbnail: file?.url,
+            mediaType: "picture",
+            sourceURL: file?.url,
+            embedURL: "",
+            description: "",
+            byline: "",
+            altText: file?.name || "Gallery image",
+          }))
+          .filter((item) => Boolean(item?.original))
+
+        setBlobGalleryResult({ listingId, items: mapped })
+      } catch (error) {
+        console.error("Error loading listing gallery blobs:", error)
+      }
+    }
+
+    fetchBlobGallery()
+  }, [listingId])
+
+  const blobGalleryImages = useMemo(
+    () => (blobGalleryResult.listingId === listingId ? blobGalleryResult.items : []),
+    [blobGalleryResult, listingId],
+  )
+  const effectiveGalleryImages = useMemo(() => {
+    const merged = [...listingGalleryImages, ...blobGalleryImages]
+    const seen = new Set()
+
+    return merged.filter((item) => {
+      const key = String(item?.sourceURL || item?.original || "").trim().toLowerCase()
+      if (!key) return false
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }, [listingGalleryImages, blobGalleryImages])
+  const hasRealGalleryMedia = effectiveGalleryImages.length > 0
 
   const listingForCard = {
     ...listing,
@@ -208,7 +364,25 @@ const ListingDetails = ({ listing, slug }) => {
         <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
         <div className="mb-8">
           <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
-            <ListingCard listing={listingForCard} panelSize="full" showGalleryThumbnails />
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold border-b pb-2 text-primary">Listing Gallery</h2>
+              {hasRealGalleryMedia ? (
+                <PhotoGallery
+                  images={effectiveGalleryImages}
+                  mode="standalone"
+                  navigationMode="manual"
+                  imageEffect="landscape"
+                  showThumbnails={effectiveGalleryImages.length > 1}
+                  showContentWarnings={false}
+                />
+              ) : (
+                <div className="rounded-box border border-base-300 bg-base-200 p-4 text-sm text-base-content/70">
+                  No gallery media is available for this listing yet.
+                </div>
+              )}
+            </div>
+
+            <ListingCard listing={listingForCard} panelSize="full" showGalleryThumbnails hideGallery />
 
           <div className="overflow-x-auto mt-8">
             <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Artwork Details</h2>
@@ -308,7 +482,29 @@ ListingDetails.getInitialProps = async (context) => {
       return { listing: {} } // Return empty object on failure
     }
 
-    data = await res.json()
+    data = normalizeListingPayload(await res.json())
+
+    const listingId = data?.listingID || data?.ListingID || data?.listingid || data?.listingId || data?.ListingId || null
+    const numericFromSlug = Number(L_slug)
+    const fallbackListingId = Number.isInteger(numericFromSlug) && numericFromSlug > 0 ? numericFromSlug : null
+    const resolvedListingId = listingId || fallbackListingId
+
+    if (resolvedListingId) {
+      const byIdRes = await fetch(`${api_url}listing/byID/${resolvedListingId}`)
+      if (byIdRes.ok) {
+        const byIdData = normalizeListingPayload(await byIdRes.json())
+        data = {
+          ...data,
+          ...byIdData,
+          artist: {
+            ...(data?.artist || {}),
+            ...(byIdData?.artist || {}),
+          },
+          gallery: byIdData?.gallery || data?.gallery || null,
+          relatedGallery: byIdData?.relatedGallery || data?.relatedGallery || null,
+        }
+      }
+    }
   } catch (error) {
     console.error("Error fetching listing details:", error)
   }

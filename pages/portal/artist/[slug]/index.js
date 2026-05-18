@@ -12,13 +12,17 @@
 import Link from "next/link"
 import { getServerSession } from "next-auth/next"
 import { useState } from "react"
+import dynamic from "next/dynamic"
 
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin } from "@/utils/authHelpers"
 import { sanitizeDefaultHtml } from "@/components/security/sanitize"
-import PictureExplorerCard from "@/components/PictureExplorerCard"
+import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
+import GalleryManager from "@/components/gallery/GalleryManager"
+
+const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false })
 
 const UPCOMING_DATES = [
   {
@@ -68,6 +72,54 @@ function DashboardCard({ title, badge, children }) {
 }
 
 function PreviewMode({ artistProfile, slug, listingCount }) {
+  const galleryItems =
+    artistProfile?.gallery?.galleryItems ||
+    artistProfile?.gallery?.items ||
+    artistProfile?.relatedGallery?.galleryItems ||
+    []
+
+  const relatedGalleryImages = galleryItems
+    .map((item, index) => {
+      const pictureUrl = item?.picture?.url || item?.picture?.URL
+      const pictureThumbUrl = item?.picture?.thumbnailURL || item?.picture?.thumbnailUrl || item?.picture?.ThumbnailURL || pictureUrl
+      const videoThumbUrl = item?.video?.thumbnailURL || item?.video?.thumbnailUrl || item?.video?.ThumbnailURL || item?.video?.url || item?.video?.URL
+      const videoPlaybackUrl = item?.video?.url || item?.video?.URL || ""
+      const videoEmbedUrl = item?.video?.embedURL || item?.video?.embedUrl || item?.video?.EmbedURL || ""
+
+      if (pictureUrl) {
+        return {
+          key: `gallery-picture-${item?.galleryItemID || index}`,
+          original: pictureThumbUrl,
+          thumbnail: pictureThumbUrl,
+          mediaType: "picture",
+          sourceURL: pictureUrl,
+          embedURL: item?.picture?.embedURL || item?.picture?.embedUrl || item?.picture?.EmbedURL || "",
+          description: item?.captionOverride || item?.picture?.description || item?.picture?.title || "",
+          byline: item?.picture?.byline || "",
+          altText: item?.picture?.altText || item?.picture?.alttext || "",
+        }
+      }
+
+      if (videoThumbUrl || videoEmbedUrl) {
+        return {
+          key: `gallery-video-${item?.galleryItemID || index}`,
+          original: videoThumbUrl,
+          thumbnail: videoThumbUrl,
+          mediaType: "video",
+          sourceURL: videoPlaybackUrl,
+          embedURL: videoEmbedUrl,
+          description: item?.captionOverride || item?.video?.description || item?.video?.title || "",
+          byline: item?.video?.byline || "",
+          altText: item?.captionOverride || item?.video?.title || "Gallery video",
+        }
+      }
+
+      return null
+    })
+    .filter(Boolean)
+
+  const hasGalleryItemsButNoMedia = galleryItems.length > 0 && relatedGalleryImages.length === 0
+
   return (
     <div className="space-y-4">
       <div className="alert alert-info shadow-sm">
@@ -106,6 +158,31 @@ function PreviewMode({ artistProfile, slug, listingCount }) {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Gallery Preview</h3>
+            {relatedGalleryImages.length > 0 ? (
+              <div className="w-full">
+                <PhotoGallery
+                  images={relatedGalleryImages}
+                  mode="standalone"
+                  navigationMode="manual"
+                  imageEffect="landscape"
+                  showThumbnails={relatedGalleryImages.length > 1}
+                  showContentWarnings={false}
+                />
+              </div>
+            ) : (
+              <div className="rounded-box border border-base-300 bg-base-100 min-h-65 p-6 flex flex-col justify-center">
+                <h4 className="text-base font-semibold text-base-content">Gallery preview unavailable</h4>
+                <p className="text-sm text-base-content/70 mt-2">
+                  {hasGalleryItemsButNoMedia
+                    ? "This gallery has items, but none of the image/video URLs are currently renderable in preview."
+                    : "No gallery media could be loaded for preview at the moment."}
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="prose max-w-none text-base-content">
             <h3>Statement Preview</h3>
             <div dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(artistProfile?.statement || "<p>No statement available yet.</p>") }} />
@@ -116,7 +193,7 @@ function PreviewMode({ artistProfile, slug, listingCount }) {
   )
 }
 
-function EditMode({ slug, artistId }) {
+function EditMode({ slug, artistId, currentUser }) {
   return (
     <div className="space-y-4">
       <div className="alert alert-warning shadow-sm">
@@ -128,14 +205,18 @@ function EditMode({ slug, artistId }) {
         </div>
       </div>
 
-      {artistId && (
-        <PictureExplorerCard
-          useCase="artist-portal"
-          startPrefix={`/platformpics/artist/${artistId}/`}
-          allowContainerSwitch={false}
-          preserveStartPrefixOnContainerSwitch={false}
-        />
-      )}
+      <DashboardCard title="Artist Gallery Operations" badge="Primary Focus">
+        {artistId ? (
+          <GalleryManager
+            entityType="artist"
+            entityId={artistId}
+            entityLabel={`Artist: ${slug}`}
+            currentUser={currentUser}
+          />
+        ) : (
+          <div className="alert alert-warning text-sm">Artist ID not available — cannot load gallery manager.</div>
+        )}
+      </DashboardCard>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <DashboardCard title="Profile Editing" badge="Ready for wiring">
@@ -162,7 +243,7 @@ function EditMode({ slug, artistId }) {
   )
 }
 
-export default function ArtistSlugPortalPage({ slug, artistProfile, listings }) {
+export default function ArtistSlugPortalPage({ slug, artistProfile, listings, currentUser }) {
   const [mode, setMode] = useState("preview")
   const listingCount = Array.isArray(listings) ? listings.length : 0
 
@@ -220,9 +301,11 @@ export default function ArtistSlugPortalPage({ slug, artistProfile, listings }) 
         </section>
 
         {mode === "preview" ? (
-          <PreviewMode artistProfile={artistProfile} slug={slug} listingCount={listingCount} />
+          <SocialRealtimeProvider>
+            <PreviewMode artistProfile={artistProfile} slug={slug} listingCount={listingCount} />
+          </SocialRealtimeProvider>
         ) : (
-          <EditMode slug={slug} artistId={artistProfile?.id || artistProfile?.artistID} />
+          <EditMode slug={slug} artistId={artistProfile?.id || artistProfile?.artistID} currentUser={currentUser} />
         )}
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -375,19 +458,31 @@ export async function getServerSideProps(context) {
   const apiUrl = getApiURL()
 
   try {
-    const response = await fetch(`${apiUrl}artist/${slug}/profile`)
+    const [profileResponse, artistResponse] = await Promise.all([
+      fetch(`${apiUrl}artist/${slug}/profile`),
+      fetch(`${apiUrl}artist/${slug}`),
+    ])
 
-    if (!response.ok) {
+    if (!profileResponse.ok) {
       return { notFound: true }
     }
 
-    const data = await response.json()
+    const profileData = await profileResponse.json()
+    const artistData = artistResponse.ok ? await artistResponse.json() : null
+
+    const artistProfile = {
+      ...(profileData?.artist || {}),
+      profilePic: profileData?.profilePic || artistData?.profilePic || null,
+      coverPic: profileData?.coverPic || artistData?.coverPic || null,
+      gallery: artistData?.gallery || profileData?.artist?.gallery || null,
+    }
 
     return {
       props: {
         slug,
-        artistProfile: data?.artist || null,
-        listings: data?.listings || [],
+        artistProfile,
+        listings: profileData?.listings || [],
+        currentUser: session.user?.email || session.user?.name || null,
       },
     }
   } catch (error) {
@@ -398,6 +493,7 @@ export async function getServerSideProps(context) {
         slug,
         artistProfile: null,
         listings: [],
+        currentUser: session.user?.email || session.user?.name || null,
       },
     }
   }
