@@ -35,6 +35,11 @@ export default function PictureExplorerCard({
 	startContainer,
 	allowContainerSwitch = false,
 	preserveStartPrefixOnContainerSwitch = true,
+	showAssetForms = true,
+	onMetadataSave,
+	onCreditsSave,
+	defaultMetadata = {},
+	defaultCredits = {},
 }) {
 	const config = CONTAINER_CONFIGS[useCase] || CONTAINER_CONFIGS["personal-blog"]
 	const resolvedContainer = startContainer || config.container
@@ -57,6 +62,23 @@ export default function PictureExplorerCard({
 	const [isDragOver, setIsDragOver] = useState(false)
 	const [selectedImageUrl, setSelectedImageUrl] = useState("")
 	const [selectedImageName, setSelectedImageName] = useState("")
+	const [selectedFile, setSelectedFile] = useState(null)
+	const [metadataDraft, setMetadataDraft] = useState({
+		title: "",
+		altText: "",
+		byline: "",
+		description: "",
+	})
+	const [creditsDraft, setCreditsDraft] = useState({
+		copyrightOwner: "",
+		photographer: "",
+		makeup: "",
+		additionalCredits: "",
+	})
+	const [savingMetadata, setSavingMetadata] = useState(false)
+	const [savingCredits, setSavingCredits] = useState(false)
+	const [formsMessage, setFormsMessage] = useState("")
+	const [formsError, setFormsError] = useState("")
 	const fileInputRef = useRef(null)
 
 	const rootSegments = useMemo(() => activeStartPrefix.split("/").filter(Boolean), [activeStartPrefix])
@@ -87,6 +109,28 @@ export default function PictureExplorerCard({
 		if (bytes < 1024) return `${bytes} B`
 		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
 		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+	}
+
+	const buildMetadataDraft = () => ({
+		title: defaultMetadata.title || "",
+		altText: defaultMetadata.altText || "",
+		byline: defaultMetadata.byline || "",
+		description: defaultMetadata.description || "",
+	})
+
+	const buildCreditsDraft = () => ({
+		copyrightOwner: defaultCredits.copyrightOwner || "",
+		photographer: defaultCredits.photographer || "",
+		makeup: defaultCredits.makeup || "",
+		additionalCredits: defaultCredits.additionalCredits || "",
+	})
+
+	const resetFormsForFile = (file) => {
+		setSelectedFile(file || null)
+		setMetadataDraft(buildMetadataDraft())
+		setCreditsDraft(buildCreditsDraft())
+		setFormsMessage("")
+		setFormsError("")
 	}
 
 	const loadDirectory = async (
@@ -123,15 +167,18 @@ export default function PictureExplorerCard({
 			if (nextImageFiles.length > 0) {
 				setSelectedImageUrl(nextImageFiles[0].url)
 				setSelectedImageName(nextImageFiles[0].name)
+				resetFormsForFile(nextImageFiles[0])
 			} else {
 				setSelectedImageUrl("")
 				setSelectedImageName("")
+				resetFormsForFile(null)
 			}
 		} catch (loadError) {
 			setDirectories([])
 			setFiles([])
 			setSelectedImageUrl("")
 			setSelectedImageName("")
+			resetFormsForFile(null)
 			setError(loadError.message)
 		} finally {
 			setLoading(false)
@@ -231,6 +278,70 @@ export default function PictureExplorerCard({
 		if (!isImageFile(file)) return
 		setSelectedImageUrl(file.url)
 		setSelectedImageName(file.name)
+		resetFormsForFile(file)
+	}
+
+	const fallbackSave = async (payload, successMessage) => {
+		await navigator.clipboard.writeText(JSON.stringify(payload, null, 2))
+		setFormsMessage(`${successMessage} (payload copied to clipboard)`)
+	}
+
+	const handleMetadataSave = async () => {
+		if (!selectedFile) return
+
+		setSavingMetadata(true)
+		setFormsError("")
+		setFormsMessage("")
+
+		const payload = {
+			container,
+			prefix,
+			startPrefix: activeStartPrefix,
+			file: selectedFile,
+			metadata: metadataDraft,
+		}
+
+		try {
+			if (typeof onMetadataSave === "function") {
+				await onMetadataSave(payload)
+				setFormsMessage("Metadata saved.")
+			} else {
+				await fallbackSave(payload, "Metadata captured")
+			}
+		} catch (saveError) {
+			setFormsError(saveError.message || "Unable to save metadata.")
+		} finally {
+			setSavingMetadata(false)
+		}
+	}
+
+	const handleCreditsSave = async () => {
+		if (!selectedFile) return
+
+		setSavingCredits(true)
+		setFormsError("")
+		setFormsMessage("")
+
+		const payload = {
+			container,
+			prefix,
+			startPrefix: activeStartPrefix,
+			file: selectedFile,
+			credits: creditsDraft,
+		}
+
+		try {
+			if (typeof onCreditsSave === "function") {
+				await onCreditsSave(payload)
+				setFormsMessage("Credits saved.")
+			} else {
+				await fallbackSave(payload, "Credits captured")
+			}
+		} catch (saveError) {
+			setFormsError(saveError.message || "Unable to save credits.")
+		} finally {
+			setSavingCredits(false)
+		}
 	}
 
 	const uploadFileToCurrentDirectory = async (imageFile) => {
@@ -292,6 +403,9 @@ export default function PictureExplorerCard({
 		<div className="card bg-base-100 shadow-md border border-base-300">
 			<div className="card-body gap-4">
 				<h2 className="card-title">{title || config.label}</h2>
+
+				{formsError ? <div className="alert alert-error">{formsError}</div> : null}
+				{formsMessage ? <div className="alert alert-success">{formsMessage}</div> : null}
 
 				{allowContainerSwitch && (
 					<div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
@@ -551,6 +665,107 @@ export default function PictureExplorerCard({
 						<div className="text-sm text-base-content/60">Select an image row above to preview it here.</div>
 					)}
 				</div>
+
+				{showAssetForms ? (
+					<div className="rounded-md border border-base-300 bg-base-200 p-3">
+						<div className="text-sm font-semibold mb-3">Metadata And Credits</div>
+						{selectedFile ? (
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+								<div className="rounded-md border border-base-300 bg-base-100 p-3">
+									<div className="font-semibold mb-2">Metadata</div>
+									<div className="space-y-2">
+										<input
+											type="text"
+											className={defaultFieldClass}
+											placeholder="Title"
+											value={metadataDraft.title}
+											onChange={(e) => setMetadataDraft((current) => ({ ...current, title: e.target.value }))}
+										/>
+										<input
+											type="text"
+											className={defaultFieldClass}
+											placeholder="Alt text"
+											value={metadataDraft.altText}
+											onChange={(e) => setMetadataDraft((current) => ({ ...current, altText: e.target.value }))}
+										/>
+										<input
+											type="text"
+											className={defaultFieldClass}
+											placeholder="Byline"
+											value={metadataDraft.byline}
+											onChange={(e) => setMetadataDraft((current) => ({ ...current, byline: e.target.value }))}
+										/>
+										<textarea
+											className="textarea textarea-bordered w-full"
+											rows={3}
+											placeholder="Description"
+											value={metadataDraft.description}
+											onChange={(e) => setMetadataDraft((current) => ({ ...current, description: e.target.value }))}
+										/>
+										<div className="flex justify-end">
+											<button
+												type="button"
+												className="btn btn-sm btn-primary"
+												onClick={handleMetadataSave}
+												disabled={savingMetadata}
+											>
+												{savingMetadata ? "Saving..." : "Save Metadata"}
+											</button>
+										</div>
+									</div>
+								</div>
+
+								<div className="rounded-md border border-base-300 bg-base-100 p-3">
+									<div className="font-semibold mb-2">Credits</div>
+									<div className="space-y-2">
+										<input
+											type="text"
+											className={defaultFieldClass}
+											placeholder="Copyright owner"
+											value={creditsDraft.copyrightOwner}
+											onChange={(e) => setCreditsDraft((current) => ({ ...current, copyrightOwner: e.target.value }))}
+										/>
+										<input
+											type="text"
+											className={defaultFieldClass}
+											placeholder="Photographer or videographer"
+											value={creditsDraft.photographer}
+											onChange={(e) => setCreditsDraft((current) => ({ ...current, photographer: e.target.value }))}
+										/>
+										<input
+											type="text"
+											className={defaultFieldClass}
+											placeholder="Makeup or styling"
+											value={creditsDraft.makeup}
+											onChange={(e) => setCreditsDraft((current) => ({ ...current, makeup: e.target.value }))}
+										/>
+										<textarea
+											className="textarea textarea-bordered w-full"
+											rows={3}
+											placeholder="Additional credits"
+											value={creditsDraft.additionalCredits}
+											onChange={(e) => setCreditsDraft((current) => ({ ...current, additionalCredits: e.target.value }))}
+										/>
+										<div className="flex justify-end">
+											<button
+												type="button"
+												className="btn btn-sm btn-secondary"
+												onClick={handleCreditsSave}
+												disabled={savingCredits}
+											>
+												{savingCredits ? "Saving..." : "Save Credits"}
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						) : (
+							<div className="text-sm text-base-content/60">
+								Select an image first to edit metadata and credits.
+							</div>
+						)}
+					</div>
+				) : null}
 
 				{renameFile && (
 					<div className="modal modal-open">
