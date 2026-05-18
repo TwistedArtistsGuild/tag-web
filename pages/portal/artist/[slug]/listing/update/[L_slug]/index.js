@@ -14,9 +14,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
-import GalleryManager from "@/components/gallery/GalleryManager";
-import ListingCard from "@/components/cards/card_listing";
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
+import PictureExplorerCard from "@/components/PictureExplorerCard";
 
 const api_url = getApiURL();
 const formName = "ListingForm1";

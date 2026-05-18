@@ -373,3 +373,4 @@ Artist.getInitialProps = async (context) => {
 }
 
 export default Artist
+
