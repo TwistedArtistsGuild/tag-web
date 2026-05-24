@@ -22,10 +22,12 @@ export default function ContestEnterPage({ contest = {}, listings = [], artists 
     };
 
     const startDate = parseDate(contest.startDate || contest.starts || contest.created || contest.opened);
+    const warmupEndDate = parseDate(contest.warmupEndDate);
     const endDate = parseDate(contest.endDate || contest.ends || contest.closed || contest.deadline);
     const now = new Date();
     const hasEnded = endDate ? endDate < now : false;
     const isActive = !hasEnded && (!startDate || startDate <= now);
+    const isUpcoming = isActive && warmupEndDate > now;
 
     // Get the first artist's path for the "Add Listing" button
     const firstArtistPath = artists.length > 0 ? (artists[0].path || artists[0].Path) : null;
@@ -90,7 +92,7 @@ export default function ContestEnterPage({ contest = {}, listings = [], artists 
                                     <div className="mt-4">
                                         {hasEnded ? (
                                             <span className="badge badge-error badge-lg">Contest Ended</span>
-                                        ) : isActive ? (
+                                        ) : isActive && !isUpcoming ? (
                                             <span className="badge badge-success badge-lg">Open - Accepting Entries</span>
                                         ) : (
                                             <span className="badge badge-info badge-lg">Upcoming</span>

@@ -208,21 +208,31 @@ export default function DynaForm(props) {
     return () => window.cancelAnimationFrame(frameId);
   }, [api_url, endpoint, metadata, orderedFields, props.formData, props.request, session]);
 
-  /**
-   * Handles input field changes and updates form state
-   * @param {string} fieldName - Name of the field
-   * @param {string|number|boolean} value - New value
-   */
-  const handleFieldChange = (fieldName, value) => {
-    setFormValues(prevValues => ({
-      ...prevValues,
-      [fieldName]: value
-    }));
-    
-    if (process.env.NEXT_PUBLIC_DEBUG === "true") {
-      console.log(`Field changed: ${fieldName} = ${value}`);
-    }
-  };
+    /**
+        * Handles input field changes and updates form state
+        * @param {string} fieldName - Name of the field
+        * @param {string|number|boolean} value - New value
+        */
+    const handleFieldChange = (fieldName, value) => {
+        // 1. Apply the immediate manual change
+        let updatedValues = {
+            ...formValues,
+            [fieldName]: value
+        };
+
+        // 2. Clear out the localized business rules engine and fire an external listener hook instead
+        if (props.onStateValueChange) {
+            // Pass the updated dictionary and the ordered schema fields to the parent page handler
+            updatedValues = props.onStateValueChange(updatedValues, orderedFields);
+        }
+
+        // 3. Commit everything to the React view model state simultaneously
+        setFormValues(updatedValues);
+
+        if (process.env.NEXT_PUBLIC_DEBUG === "true") {
+            console.log(`Field changed: ${fieldName} = ${value}`);
+        }
+    };
 
   /**
    * Validates form data before submission
@@ -449,7 +459,10 @@ export default function DynaForm(props) {
             name={field.name}
             id={`field-${field.name}`}
             value={currentValue || ""} // Never pass null/undefined 
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            onChange={(e) => {
+                const val = e && e.target ? e.target.value : e;
+                handleFieldChange(field.name, val);
+            }}
             label={field.label || field.Label || field.name}
             placeholder={field.placeholder || field.Placeholder || ""}
             required={isRequired}
@@ -672,7 +685,11 @@ export default function DynaForm(props) {
                               required={field.IsRequired}
                               name={field.Name}
                               pattern={field.RegexValidationPattern}
-                              onChange={(html) => handleFieldChange(field.name, html)}
+                              value={currentValue || ""}
+                              onChange={(e) => {
+                                  const val = e && e.target ? e.target.value : e;
+                                  handleFieldChange(field.name, val);
+                              }}
                           />
                       </div>
                   );
