@@ -12,6 +12,7 @@
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
+import TagSEO from "@/components/TagSEO";
 
 const api_url = getApiURL();
 const formName = "UserForm1";
@@ -23,7 +24,24 @@ const formName = "UserForm1";
  * @returns {JSX.Element}
  */
 export default function RegisterUserForm1(props) {
-    return <div><DynaFormDB request="add" formName={formName} metadataProp={props.metadata} formData={props.data} /></div>;
+    return (
+        <div>
+            <TagSEO
+                metadataProp={{
+                    title: "Register Account",
+                    description: "Create a new user account.",
+                    robots: "noindex, nofollow",
+                    keywords: "registration, account",
+                    og: {
+                        title: "Register Account",
+                        description: "Create a new user account.",
+                    },
+                }}
+                canonicalSlug="authenticate/register"
+            />
+            <DynaFormDB request="add" formName={formName} metadataProp={props.metadata} formData={props.data} />
+        </div>
+    );
 }
 
 /**

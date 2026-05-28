@@ -16,6 +16,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
+import TagSEO from "@/components/TagSEO";
 
 const api_url = getApiURL();
 const formName = "ListingForm1";
@@ -48,7 +49,24 @@ export default function CreateListingForm1(props) {
         return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
     }
 
-    return <div className="p-4"><DynaFormDB request="add" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={null} /></div>;
+    return (
+        <div className="p-4">
+            <TagSEO
+                metadataProp={{
+                    title: "Create Listing",
+                    description: "Create a new artist listing.",
+                    robots: "noindex, nofollow",
+                    keywords: "artist portal, create listing",
+                    og: {
+                        title: "Create Listing",
+                        description: "Create a new artist listing.",
+                    },
+                }}
+                canonicalSlug="portal/artist/[slug]/listing/create"
+            />
+            <DynaFormDB request="add" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={null} />
+        </div>
+    );
 }
 
 export async function getServerSideProps(context) {

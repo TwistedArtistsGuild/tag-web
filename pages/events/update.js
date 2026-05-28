@@ -13,6 +13,7 @@
 
 import DynaFormDB from "@/components/widgets/DynaFormDB"
 import getApiURL from "@/components/widgets/GetApiURL"
+import TagSEO from "@/components/TagSEO"
 
 //broken but don't care!!!!
 
@@ -28,7 +29,24 @@ export default function UpdateEventForm1(props) {
     props.metadataProp.FromURL = "/events/" + props.slug + "/update.js";
     props.metadataProp.redirectURL = "/events/" + props.slug;
     props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}/${props.slug}`;
-    return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.eventdata} /></div>;
+    return (
+        <div className="p-4">
+            <TagSEO
+                metadataProp={{
+                    title: "Update Event",
+                    description: "Update an existing event listing.",
+                    robots: "noindex, nofollow",
+                    keywords: "events, update event",
+                    og: {
+                        title: "Update Event",
+                        description: "Update an existing event listing.",
+                    },
+                }}
+                canonicalSlug="events/update"
+            />
+            <DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.eventdata} />
+        </div>
+    );
 }
 
 /**
