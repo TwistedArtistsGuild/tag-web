@@ -37,29 +37,49 @@ const defaults = {
 
 const BRAND_SUFFIX = "TAG - Twisted Artists Guild"
 
+const stripHtmlTags = (value) => String(value || "").replace(/<[^>]*>/g, " ")
+
+const sanitizeTitleText = (value) =>
+	stripHtmlTags(value)
+		.replace(/&nbsp;/gi, " ")
+		.replace(/&amp;/gi, "&")
+		.replace(/\s+/g, " ")
+		.trim()
+
+const normalizeCanonicalSlug = (canonicalSlug) => String(canonicalSlug || "").trim().replace(/^\/+/, "")
+
+const titleFromCanonicalSlug = (canonicalSlug) => {
+	const normalizedSlug = normalizeCanonicalSlug(canonicalSlug)
+
+	if (!normalizedSlug) {
+		return "Homepage"
+	}
+
+	return normalizedSlug
+		.split("/")
+		.filter(Boolean)
+		.map((segment) => {
+			if (segment.startsWith("[") && segment.endsWith("]")) {
+				return "Details"
+			}
+
+			return segment
+				.replace(/[-_]+/g, " ")
+				.replace(/\b\w/g, (char) => char.toUpperCase())
+		})
+		.join(" - ")
+}
+
 const normalizeBaseTitle = (rawTitle, canonicalSlug) => {
 	if (!rawTitle && !canonicalSlug) {
 		return "Homepage"
 	}
 
 	if (!rawTitle && canonicalSlug) {
-		const fromSlug = canonicalSlug
-			.split("/")
-			.filter(Boolean)
-			.map((segment) => {
-				if (segment.startsWith("[") && segment.endsWith("]")) {
-					return "Details"
-				}
-				return segment
-					.replace(/[-_]+/g, " ")
-					.replace(/\b\w/g, (char) => char.toUpperCase())
-			})
-			.join(" - ")
-
-		return fromSlug || "Homepage"
+		return titleFromCanonicalSlug(canonicalSlug)
 	}
 
-	let title = String(rawTitle || "").trim()
+	let title = sanitizeTitleText(rawTitle)
 
 	// Strip existing site suffix patterns to avoid duplication.
 	title = title
@@ -73,7 +93,7 @@ const normalizeBaseTitle = (rawTitle, canonicalSlug) => {
 	}
 
 	if (!title && canonicalSlug) {
-		return normalizeBaseTitle("", canonicalSlug)
+		return titleFromCanonicalSlug(canonicalSlug)
 	}
 
 	return title
@@ -95,8 +115,9 @@ const TagSEO = ({
 
 	// Overwrite defaults with metadataProp if it exists
 	const metadata = { ...defaults, ...metadataProp };
-	const normalizedTitle = formatBrandedTitle(metadata.title, canonicalSlug)
-	const normalizedOgTitle = formatBrandedTitle(metadata.og?.title || metadata.title, canonicalSlug)
+	const canonicalPath = normalizeCanonicalSlug(canonicalSlug)
+	const normalizedTitle = formatBrandedTitle(metadata.title, canonicalPath)
+	const normalizedOgTitle = formatBrandedTitle(metadata.og?.title || metadata.title, canonicalPath)
 
 	return (
 		<Head>
@@ -156,7 +177,7 @@ const TagSEO = ({
 			{/* CANONICAL TAG */}
 			<link
 				rel="canonical"
-				href={`https://${config.domainName}/${canonicalSlug}`}
+				href={`https://${config.domainName}/${canonicalPath}`}
 			/>
 
 			{/* CHILDREN TAGS */}
