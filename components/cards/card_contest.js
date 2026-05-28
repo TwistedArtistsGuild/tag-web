@@ -23,6 +23,21 @@ export default function ContestCard({ contest = {}, compact = false }) {
 
   const contestHref = `/contests/${contest?.path || contest?.slug || id}`
 
+  // Date parsing and status logic (same as [slug]/index.js)
+  const parseDate = (v) => {
+    if (!v) return null
+    const d = new Date(v)
+    return Number.isNaN(d.getTime()) ? null : d
+  }
+
+  const startDate = parseDate(contest.startDate || contest.starts || contest.created || contest.opened)
+  const warmupEndDate = parseDate(contest.warmupEndDate)
+  const endDate = parseDate(contest.endDate || contest.ends || contest.closed || contest.deadline)
+  const now = new Date()
+  const hasEnded = endDate ? endDate < now : false
+  const isActive = !hasEnded && (!startDate || startDate <= now)
+  const isUpcoming = isActive && warmupEndDate && warmupEndDate > now
+
   return (
     <article className={`${CARD_SHELL_CLASS} h-auto overflow-hidden`}>
       <div className={`card-body ${compact ? "gap-2 p-3" : "gap-4 p-4"}`}>
@@ -33,6 +48,16 @@ export default function ContestCard({ contest = {}, compact = false }) {
             fill
             style={{ objectFit: "cover" }}
           />
+          {/* Status badge overlay */}
+          <div className="absolute top-2 right-2 z-10">
+            {hasEnded ? (
+              <span className="badge badge-error badge-sm">Ended</span>
+            ) : isActive && !isUpcoming ? (
+              <span className="badge badge-success badge-sm">Open</span>
+            ) : isUpcoming ? (
+              <span className="badge badge-info badge-sm">Upcoming</span>
+            ) : null}
+          </div>
         </figure>
 
         {cadence && <p className="text-xs uppercase tracking-wide text-secondary font-semibold mb-1">{cadence}</p>}
