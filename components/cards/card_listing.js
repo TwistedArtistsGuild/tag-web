@@ -12,28 +12,18 @@
 
 import Link from "next/link"
 import { useMemo } from "react"
+import { useSession } from "next-auth/react"
 import PhotoGallery from "@/components/cards/card_photoGallery"
 import ArtistCard from "@/components/cards/card_artist"
-import SocialReactions from "@/components/social/Reactions"
-import ColoredTagCard from "@/components/cards/card_coloredTags"
+import ImpressionReactions from "@/components/social/ImpressionReactions"
 import { extractContentWarnings } from "@/components/social/ContentTags"
 import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout"
+import { useImpressions, ImpressionTargetType } from "@/hooks/useImpressions"
 
 const getSeededCount = (seed, max, min = 1, salt = "") => {
   const base = `${seed || "listing"}-${salt}`
   const hash = base.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
   return (hash % max) + min
-}
-
-const buildReactionSeed = (count, emoji, prefix) => {
-  const safeCount = Math.max(0, Number(count) || 0)
-  const displayCount = Math.min(safeCount, 24)
-  return Array.from({ length: displayCount }, (_, index) => ({
-    emoji,
-    userId: `${prefix}-${index + 1}`,
-    username: `${prefix}${index + 1}`,
-    timestamp: new Date(2026, 0, 1 + index).toISOString(),
-  }))
 }
 
 const mapGalleryItemsToMedia = (entity) => {
@@ -137,49 +127,32 @@ const getArtistProfilePic = (listing) => {
   }
 }
 
-const getListingWarnings = (listing) => {
-  const source =
-    listing?.contentWarnings ||
-    listing?.contentwarnings ||
-    listing?.warnings ||
-    listing?.warningTags ||
-    listing?.contentTags ||
-    []
+const ListingCard = ({ 
+  listing, 
+  panelSize = "third", 
+  showGalleryThumbnails = false, 
+  hideGallery = false,
+  currentUser: propCurrentUser = null,
+  enableDynamicImpressions = true
+}) => {
+  const { data: session } = useSession()
+  const currentUser = propCurrentUser || session?.user || null
+  
+  const listingSeed = listing?.listingid || listing?.listingID || listing?.path || listing?.title
+  const targetId = listingSeed
+  const targetType = ImpressionTargetType.LISTING
 
-  if (!Array.isArray(source)) {
-    return []
-  }
-
-  return source
-    .map((item) => {
-      if (typeof item === "string") {
-        return item.trim()
-      }
-
-      if (item && typeof item === "object") {
-        return String(item.label || item.name || item.tag || item.title || "").trim()
-      }
-
-      return ""
-    })
-    .filter(Boolean)
-}
-
-const ListingCard = ({ listing, panelSize = "third", showGalleryThumbnails = false, hideGallery = false }) => {
-  const listingSeed = listing?.listingid || listing?.path || listing?.title
+  const { 
+    impressions, 
+    loading: impressionsLoading,
+    toggleReaction
+  } = useImpressions(targetId, targetType, enableDynamicImpressions)
 
   const isLargePanel = ["twoThirds", "threeQuarters", "full"].includes(panelSize)
   const galleryImages = useMemo(() => getListingGalleryImages(listing), [listing])
   const contentWarnings = useMemo(() => extractContentWarnings(listing), [listing])
   const listingPath = `/artists/${listing?.artist?.path}/listings/${listing?.path}`
   const artistProfilePic = useMemo(() => getArtistProfilePic(listing), [listing])
-
-  const initialReactions = [
-    ...buildReactionSeed(listing?.loves, "❤️", `listing-love-${listingSeed}`),
-    ...buildReactionSeed(listing?.likes, "👏", `listing-clap-${listingSeed}`),
-    ...buildReactionSeed(listing?.followers, "🔥", `listing-fire-${listingSeed}`),
-    ...buildReactionSeed(listing?.reactions?.love ?? getSeededCount(listingSeed, 8, 1, "love"), "😍", `listing-love2-${listingSeed}`),
-  ]
 
   const artistForCard = useMemo(
     () => ({
@@ -195,11 +168,12 @@ const ListingCard = ({ listing, panelSize = "third", showGalleryThumbnails = fal
         ? listing.artist.images
         : [artistProfilePic.url],
       profilePic: artistProfilePic,
+          artistID: listing?.artistID,
     }),
     [artistProfilePic, listing, panelSize],
   )
 
-  const totalReactionCount = initialReactions.length
+  const totalReactionCount = impressions?.reduce((sum, imp) => sum + (imp.count || 0), 0) || 0
 
   return (
     <article className={`${CARD_SHELL_CLASS} h-auto w-full overflow-hidden`}>
@@ -216,38 +190,44 @@ const ListingCard = ({ listing, panelSize = "third", showGalleryThumbnails = fal
           />
         )}
 
-        <>
-          <div className="space-y-2">
-            <Link href={listingPath} className="block text-xl font-semibold leading-tight text-primary hover:underline">
-              {listing?.title || "Untitled"}
-            </Link>
-            <p className="text-sm text-base-content/80 line-clamp-3">
-              {listing?.description || "No description available"}
-            </p>
-          </div>
+        <div className="space-y-2">
+          <Link href={listingPath} className="block text-xl font-semibold leading-tight text-primary hover:underline">
+            {listing?.title || "Untitled"}
+          </Link>
+          <p className="text-sm text-base-content/80 line-clamp-3">
+            {listing?.description || "No description available"}
+          </p>
+        </div>
 
-          <div className="flex flex-wrap gap-2">
-            <span className="badge badge-outline badge-sm">Created: {formatCreatedDate(listing?.created)}</span>
-            <span className="badge badge-outline badge-sm">Category: {listing?.artCategory?.category || "No category"}</span>
-            {isLargePanel && listing?.price !== undefined && listing?.price !== null && (
-              <span className="badge badge-primary badge-outline badge-sm">${Number(listing.price).toFixed(2)}</span>
-            )}
-          </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="badge badge-outline badge-sm">Created: {formatCreatedDate(listing?.created)}</span>
+          <span className="badge badge-outline badge-sm">Category: {listing?.artCategory?.category || "No category"}</span>
+          {isLargePanel && listing?.price !== undefined && listing?.price !== null && (
+            <span className="badge badge-primary badge-outline badge-sm">${Number(listing.price).toFixed(2)}</span>
+          )}
+        </div>
 
-          <div className="rounded-box border border-base-300 bg-base-100/70 p-1.5 md:max-w-120">
-            <ArtistCard artist={artistForCard} compact />
-          </div>
-        </>
+        <div className="rounded-box border border-base-300 bg-base-100/70 p-1.5 md:max-w-120">
+          <ArtistCard artist={artistForCard} compact enableDynamicImpressions={true} showReactions={true} />
+        </div>
 
         <div className="space-y-2">
-          <SocialReactions
-            targetId={`listing-${listingSeed}`}
-            targetType="post"
-            initialReactions={initialReactions}
-            readOnly
-            showDetails
-            size="sm"
-          />
+          {!impressionsLoading && impressions && impressions.length > 0 ? (
+            <ImpressionReactions
+              impressions={impressions}
+              currentUser={currentUser}
+              onToggle={toggleReaction}
+              readOnly={false}
+              size="sm"
+              showDetails
+              targetId={`listing-${targetId}`}
+              targetType="listing"
+            />
+          ) : impressionsLoading ? (
+            <div className="text-sm text-base-content/50">Loading reactions...</div>
+          ) : (
+            <div className="text-sm text-base-content/50">No reactions data</div>
+          )}
           <p className="text-xs text-base-content/65">
             {totalReactionCount} reactions • {listing.commentCount ?? getSeededCount(listingSeed, 15, 1, "comments")} comments
           </p>

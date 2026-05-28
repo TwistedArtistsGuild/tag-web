@@ -18,6 +18,7 @@
 import { useState, useCallback, memo } from "react";
 import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5";
 import { sanitizeDefaultHtml } from "@/components/security/sanitize";
+import { ClientDate } from "@/utils/hydration";
 
 // Import components
 import Image from "next/image";
@@ -412,8 +413,6 @@ const SocialComments = ({
         });
     }, []);
 
-    const sanitizeCommentHtml = (html) => sanitizeDefaultHtml(html);
-
     /**
      * Comment component - renders a single comment or reply
      */
@@ -512,19 +511,17 @@ const SocialComments = ({
                             
                             <div className="flex justify-between w-full">
                                 <p className="font-semibold">{comment.authorDisplayName || comment.author}</p>
-                                <time 
-                                    className="text-sm text-base-content/60" 
-                                    dateTime={comment.created}
-                                >
-                                    {new Date(comment.created).toLocaleString()}
-                                </time>
+                                    <ClientDate
+                                        dateString={comment.created}
+                                        className="text-sm text-base-content/60"
+                                    />
                             </div>
                         </div>
                         
                         {/* Comment content with proper sanitization and styling */}
                         <div 
-                                dangerouslySetInnerHTML={{ __html: sanitizeCommentHtml(comment.body) }} 
                             className="py-2 prose max-w-none prose-img:rounded-lg prose-video:rounded-lg"
+                            dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(comment.body) }}
                         />
                         
                         {/* Reactions and Action buttons in one line */}

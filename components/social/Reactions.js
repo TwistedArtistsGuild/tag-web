@@ -55,6 +55,7 @@ function buildReactionMap(initialReactions = [], currentUser) {
  * @param {boolean} props.showDetails - Whether to show detailed reaction info
  * @param {boolean} props.showQuickReactions - Whether to show first 4 reactions as quick buttons
  * @param {string} props.size - Size variant ('sm', 'md', 'lg')
+ * @param {Array} props.availableReactions - Available reaction options (optional, falls back to default)
  */
 const SocialReactions = ({
     targetId,
@@ -66,7 +67,8 @@ const SocialReactions = ({
     readOnly = false,
     showDetails = true,
     showQuickReactions = false,
-    size = 'md'
+    size = 'md',
+    availableReactions: customAvailableReactions = null
 }) => {
     const [reactions, setReactions] = useState(() => buildReactionMap(initialReactions, currentUser));
     const [isLoading, setIsLoading] = useState(false);
@@ -76,15 +78,15 @@ const SocialReactions = ({
 
     const handleMouseEnter = () => {
         clearTimeout(collapseTimer.current);
-        if (!readOnly || reactions.size > 0) setExpanded(true);
+        setExpanded(true);
     };
 
     const handleMouseLeave = () => {
         collapseTimer.current = setTimeout(() => setExpanded(false), 300);
     };
 
-    // Available reaction options
-    const availableReactions = [
+    // Default available reaction options (can be overridden via props)
+    const defaultAvailableReactions = [
         { emoji: '❤️', name: 'love', label: 'Love' },
         { emoji: '👏', name: 'applause', label: 'Applause' },
         { emoji: '🔥', name: 'fire', label: 'Fire' },
@@ -96,6 +98,8 @@ const SocialReactions = ({
         { emoji: '🤩', name: 'star_struck', label: 'Star Struck' },
         { emoji: '🙌', name: 'praise', label: 'Praise' }
     ];
+
+    const availableReactions = customAvailableReactions || defaultAvailableReactions;
 
     // Handle real-time reaction updates
     const handleRealtimeUpdate = useCallback((update) => {
@@ -129,8 +133,6 @@ const SocialReactions = ({
                     if (currentUser && userId === currentUser.id) {
                         current.hasReacted = true;
                     }
-                    
-                    // Trigger animation
                 }
             } else if (update.type === 'reaction_removed') {
                 const userIndex = current.users.findIndex(user => user.id === userId);
@@ -142,7 +144,6 @@ const SocialReactions = ({
                         current.hasReacted = false;
                     }
                     
-                    // Remove reaction if count reaches 0
                     if (current.count === 0) {
                         newReactions.delete(reaction);
                     }
@@ -358,9 +359,8 @@ const SocialReactions = ({
     const totalCount = reactionArray.reduce((sum, r) => sum + r.count, 0);
     const hasAnyReaction = reactionArray.some(r => r.hasReacted);
 
-    if (readOnly && totalCount === 0) {
-        return null;
-    }
+    // Show component even with 0 count, but only hide if explicitly set to not show
+    // Allow users to see available reactions even if no one has reacted yet
 
     return (
         <div
@@ -373,13 +373,13 @@ const SocialReactions = ({
                 <button
                     className={`
                         inline-flex items-center gap-1 rounded-full border-2 px-3 py-1.5 text-sm
-                        transition-colors duration-150 cursor-default select-none
+                        transition-colors duration-150 select-none
                         ${hasAnyReaction
-                            ? 'bg-primary/10 border-primary text-primary'
-                            : 'bg-base-100 border-base-300 text-base-content/60'
+                            ? 'bg-primary/10 border-primary text-primary cursor-pointer hover:bg-primary/20'
+                            : 'bg-base-100 border-base-300 text-base-content/60 cursor-pointer hover:border-primary/30'
                         }
                     `}
-                    tabIndex={-1}
+                    onClick={() => setExpanded(true)}
                     aria-label={`${totalCount} reaction${totalCount !== 1 ? 's' : ''}`}
                 >
                     <span className="flex items-center gap-0.5 leading-none">
@@ -402,6 +402,7 @@ const SocialReactions = ({
                     {availableReactions.map((reactionOption) => {
                         const current = reactions.get(reactionOption.emoji);
                         const hasReacted = current?.hasReacted || false;
+                        const count = current?.count || 0;
 
                         return (
                             <div key={reactionOption.name} className="relative group/reaction">
@@ -411,22 +412,23 @@ const SocialReactions = ({
                                     whitespace-nowrap rounded bg-neutral text-neutral-content text-xs px-2 py-0.5
                                     opacity-0 group-hover/reaction:opacity-100 transition-opacity duration-150 z-50
                                 ">
-                                    {reactionOption.label}
+                                    {reactionOption.label} {count > 0 && `(${count})`}
                                 </span>
                                 <button
                                     onClick={() => !readOnly && toggleReaction(reactionOption.emoji)}
                                     disabled={readOnly || isLoading}
                                     className={`
-                                        inline-flex items-center justify-center rounded-full border-2
+                                        inline-flex items-center justify-center gap-1 rounded-full border-2
                                         ${sizeClasses.reaction} transition-colors duration-150
                                         ${hasReacted
                                             ? 'bg-primary/10 border-primary text-primary'
                                             : 'bg-base-100 border-base-300 text-base-content hover:border-primary/50 hover:bg-base-200'
                                         }
-                                        ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                                        ${(readOnly || isLoading) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                     `}
                                 >
                                     <span className="leading-none">{reactionOption.emoji}</span>
+                                    {count > 0 && <span className="text-xs font-medium">{count}</span>}
                                 </button>
                             </div>
                         );

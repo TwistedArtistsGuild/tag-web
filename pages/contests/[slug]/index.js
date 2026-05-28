@@ -116,7 +116,7 @@ function ContestView(props) {
             <h1 className="text-4xl md:text-5xl font-extrabold text-primary mb-3" dangerouslySetInnerHTML={{ __html: contest.title || (loading ? "Loading..." : "Contest") }}></h1>
             {contest.byline && <p className="text-lg text-secondary mb-4">{contest.byline}</p>}
 
-            <div className="prose max-w-none mb-6">
+                      <div className="prose max-w-none mb-6" suppressHydrationWarning>
               <p dangerouslySetInnerHTML={{ __html: contest.description || contest.summary || "" }} />
             </div>
 
