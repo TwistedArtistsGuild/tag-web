@@ -233,7 +233,14 @@ export async function getServerSideProps(context) {
             listingId,
             metadataProp: metadata,
             loadError,
-            currentUser: session.user?.email || session.user?.name || null,
+            currentUser: session.user
+                ? {
+                                        id: session.user.id || "",
+                    name: session.user.name || "",
+                    email: session.user.email || "",
+                    username: session.user.username || "",
+                  }
+                : null,
         }
     };
 }

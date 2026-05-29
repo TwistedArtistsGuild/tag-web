@@ -192,7 +192,7 @@ const PhotoGallery = ({
 	const galleryClassName = `custom-gallery custom-gallery--${normalizedEffect}`;
 	const safeCurrentIndex = currentIndex < galleryItems.length ? currentIndex : 0;
 	const currentImageAttribution = galleryItems[safeCurrentIndex];
-	const showInfoControl = (isFullscreen || !hoverControlsHidden) && (navConfig.showFullscreenButton || (navConfig.showNav && hasMultipleItems));
+	const showInfoControl = galleryItems.length > 0;
 	const hasAttributionData =
 		(Array.isArray(currentImageAttribution?.credits) && currentImageAttribution.credits.length > 0) ||
 		currentImageAttribution?.photographer ||
@@ -246,7 +246,7 @@ const PhotoGallery = ({
 						showInfoControl ? (
 							<button
 								type="button"
-								className="image-gallery-custom-info-control absolute top-4 right-4 inline-flex h-10 w-10 items-center justify-center rounded-full border border-base-300 bg-base-100/95 text-base-content shadow-md backdrop-blur-sm transition hover:scale-105 hover:bg-base-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary pointer-events-auto"
+								className="image-gallery-custom-info-control absolute top-4 right-4 z-60 inline-flex h-10 w-10 items-center justify-center rounded-full border border-base-300 bg-base-100/95 text-base-content shadow-md backdrop-blur-sm transition hover:scale-105 hover:bg-base-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary pointer-events-auto"
 								onClick={(event) => {
 									event.stopPropagation();
 									setShowAttributionModal(true);
@@ -384,7 +384,8 @@ const PhotoGallery = ({
 					.custom-gallery-host--controls-hidden .image-gallery-left-nav,
 					.custom-gallery-host--controls-hidden .image-gallery-right-nav,
 					.custom-gallery-host--controls-hidden .image-gallery-fullscreen-button,
-					.custom-gallery-host--controls-hidden .image-gallery-play-button {
+					.custom-gallery-host--controls-hidden .image-gallery-play-button,
+					.custom-gallery-host--controls-hidden .image-gallery-custom-info-control {
 						opacity: 0;
 						pointer-events: none;
 					}
@@ -468,7 +469,8 @@ const PhotoGallery = ({
 				.custom-gallery-host--controls-hidden .image-gallery-left-nav,
 				.custom-gallery-host--controls-hidden .image-gallery-right-nav,
 				.custom-gallery-host--controls-hidden .image-gallery-fullscreen-button,
-				.custom-gallery-host--controls-hidden .image-gallery-play-button {
+				.custom-gallery-host--controls-hidden .image-gallery-play-button,
+				.custom-gallery-host--controls-hidden .image-gallery-custom-info-control {
 					opacity: 0;
 					pointer-events: none;
 				}
