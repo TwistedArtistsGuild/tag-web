@@ -9,6 +9,8 @@
 
  Open source · low-profit · human-first*/
 
+import Link from "next/link"
+
 function getSizeClasses(size) {
 	if (size === "large") {
 		return {
@@ -42,10 +44,20 @@ function getSizeClasses(size) {
 function normalizeCreditEntry(credit) {
 	if (!credit) return null;
 
+	const rawUrl = credit.externalURL || credit.url || "";
+	const rawName = credit.displayName || credit.name || credit.partyName || "";
+
+	// If the URL is an internal artist profile path, prefer that as the link.
+	// Never display a bare email address as the credit name.
+	const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawName);
+	const displayName = isEmail ? (credit.partyName || "Contributor") : (rawName || "Unnamed contributor");
+
 	return {
 		role: credit.role || credit.roleLabel || credit.keyName || "Contributor",
-		name: credit.displayName || credit.name || credit.partyName || "Unnamed contributor",
-		url: credit.externalURL || credit.url || "",
+		name: displayName,
+		url: rawUrl,
+		// Flag whether the link is an internal artist profile page
+		isInternalArtistLink: rawUrl.startsWith("/artists/"),
 		note: credit.creditText || credit.note || credit.bioNote || "",
 	};
 }
@@ -73,7 +85,14 @@ export default function MediaCredits({
 					{normalizedCredits.map((credit, index) => (
 						<li key={`${credit.role}-${credit.name}-${index}`} className="rounded-md border border-base-300/70 bg-base-200/40 p-2">
 							<p className={`font-semibold text-primary ${sizeClasses.role}`}>{credit.role}</p>
-							{credit.url ? (
+							{credit.isInternalArtistLink ? (
+								<Link
+									href={credit.url}
+									className={`mt-0.5 block underline decoration-primary/60 underline-offset-2 hover:decoration-primary ${sizeClasses.name}`}
+								>
+									{credit.name}
+								</Link>
+							) : credit.url ? (
 								<a
 									href={credit.url}
 									target="_blank"

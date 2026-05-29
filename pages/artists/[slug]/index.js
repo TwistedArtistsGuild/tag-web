@@ -31,6 +31,27 @@ import { pickContactCardData } from "@/utils/artistContactUtils"
 
 const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false })
 
+function mapCreditsByPictureId(rows) {
+  if (!Array.isArray(rows)) return {}
+  return rows.reduce((acc, row) => {
+    const pictureId = Number(row?.pictureID || row?.PictureID || row?.pictureId || row?.PictureId || 0)
+    if (!pictureId) return acc
+
+    const sourceCredits = Array.isArray(row?.credits) ? row.credits : Array.isArray(row?.Credits) ? row.Credits : []
+    const credits = sourceCredits
+      .map((entry) => ({
+          role: entry?.role || entry?.Role || "Contributor",
+          name: entry?.name || entry?.Name || "Unknown",
+          url: entry?.url || entry?.Url || "",
+          note: entry?.note || entry?.Note || "",
+        }))
+      .filter((entry) => String(entry?.name || "").trim() || String(entry?.note || "").trim())
+
+    acc[pictureId] = credits
+    return acc
+  }, {})
+}
+
 const artistSections = [
   { id: "profile", label: "Profile" },
   { id: "gallery", label: "Gallery" },
@@ -92,6 +113,16 @@ const Artist = (props) => {
       const videoEmbedUrl = item?.video?.embedURL || item?.video?.embedUrl || item?.video?.EmbedURL || ""
 
       if (pictureUrl) {
+        const pictureId = Number(
+          item?.picture?.pictureID ||
+          item?.picture?.PictureID ||
+          item?.picture?.pictureId ||
+          item?.picture?.PictureId ||
+          item?.pictureID ||
+          item?.PictureID ||
+          0
+        )
+        const credits = pictureId > 0 ? (props.pictureCreditsById?.[pictureId] || []) : []
         return {
           key: `gallery-picture-${item?.galleryItemID || index}`,
           original: pictureThumbUrl,
@@ -102,6 +133,7 @@ const Artist = (props) => {
           description: item?.captionOverride || item?.picture?.description || item?.picture?.title || "",
           byline: item?.picture?.byline || "",
           altText: item?.picture?.altText || item?.picture?.alttext || "",
+          credits,
         }
       }
 
@@ -333,6 +365,31 @@ Artist.getInitialProps = async (context) => {
     artistData.artist.gallery = artistGalleryData.gallery
   }
 
+  const galleryItems =
+    artistData?.artist?.gallery?.galleryItems ||
+    artistData?.artist?.gallery?.GalleryItems ||
+    []
+  const pictureIds = galleryItems
+    .map((item) => Number(
+      item?.picture?.pictureID ||
+      item?.picture?.PictureID ||
+      item?.picture?.pictureId ||
+      item?.picture?.PictureId ||
+      item?.pictureID ||
+      item?.PictureID ||
+      0
+    ))
+    .filter((id) => Number.isInteger(id) && id > 0)
+
+  const pictureCreditsById = pictureIds.length
+    ? mapCreditsByPictureId(
+        await fetchData(
+          `${api_url}picture/credits?pictureIds=${encodeURIComponent([...new Set(pictureIds)].join(","))}`,
+          []
+        )
+      )
+    : {}
+
   let contactCardData = { socials: [], stores: [], contactInfo: {} }
   const artistID = Number(artistData?.artist?.artistID || artistData?.artist?.ArtistID || 0)
   if (artistID > 0) {
@@ -371,6 +428,7 @@ Artist.getInitialProps = async (context) => {
     listings: artistData.listings,
     links: artistData.links,
     contactCardData,
+    pictureCreditsById,
   }
 }
 
