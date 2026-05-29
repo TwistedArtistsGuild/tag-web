@@ -39,6 +39,86 @@ function warnDeprecatedPreset(presetName, replacementText, fieldName) {
   );
 }
 
+function getFieldName(field) {
+  return field?.name || field?.Name || "";
+}
+
+function getFieldLabel(field) {
+  return field?.label || field?.Label || getFieldName(field);
+}
+
+function isFieldRequired(field) {
+  const explicit =
+    field?.isRequired ??
+    field?.IsRequired ??
+    field?.required ??
+    field?.Required;
+
+  if (typeof explicit === "boolean") {
+    return explicit;
+  }
+
+  if (typeof explicit === "number") {
+    return explicit === 1;
+  }
+
+  if (typeof explicit === "string") {
+    const normalized = explicit.trim().toLowerCase();
+    if (["true", "1", "yes", "required"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "0", "no"].includes(normalized)) {
+      return false;
+    }
+  }
+
+  const validationValue = field?.validation || field?.Validation;
+  if (typeof validationValue === "string") {
+    const normalized = validationValue.toLowerCase();
+    if (normalized.includes("required") || normalized.includes("validate_required")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function hasMeaningfulRichText(value) {
+  if (value === null || value === undefined) {
+    return false;
+  }
+
+  const text = String(value)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return text.length > 0;
+}
+
+function isValueMissing(field, value) {
+  const normalizedType = String(field?.type || field?.Type || "text").trim().toLowerCase();
+
+  if (normalizedType === "checkbox") {
+    return value !== true;
+  }
+
+  if (normalizedType.startsWith("tiptap") || normalizedType === "textarea") {
+    return !hasMeaningfulRichText(value);
+  }
+
+  if (value === null || value === undefined) {
+    return true;
+  }
+
+  if (typeof value === "string") {
+    return value.trim() === "";
+  }
+
+  return false;
+}
+
 /**
  * Dynamic Form component that renders form fields based on metadata
  * @param {Object} props - Component properties
@@ -239,26 +319,31 @@ export default function DynaForm(props) {
    * @returns {boolean} - Whether the form is valid
    */
   const validateForm = () => {
-    // Validation is a future feature - for now, we're not validating anything
-    // and just returning true to allow submission
-    
-    /* VALIDATION DISABLED - FUTURE FEATURE
-    if (metadata.forms_Fields && Array.isArray(metadata.forms_Fields)) {
-      const requiredFields = metadata.forms_Fields.filter(field => 
-        field.validation && 
-        (field.validation.includes('required') || field.validation.includes('validate_'))
-      );
-      
-      for (const field of requiredFields) {
-        const value = formValues[field.name];
-        if (value === undefined || value === "" || value === null) {
-          setFormError(`${field.label || field.name} is required`);
-          return false;
-        }
+    const fields = Array.isArray(orderedFields) ? orderedFields : [];
+
+    for (const field of fields) {
+      if (field.hidden === true || field.Hidden === true) {
+        continue;
+      }
+
+      if (field.disabled === true || field.Disabled === true) {
+        continue;
+      }
+
+      if (!isFieldRequired(field)) {
+        continue;
+      }
+
+      const fieldName = getFieldName(field);
+      const fieldValue = formValues[fieldName];
+
+      if (isValueMissing(field, fieldValue)) {
+        const fieldLabel = getFieldLabel(field) || fieldName || "This field";
+        setFormError(`${fieldLabel} is required.`);
+        return false;
       }
     }
-    */
-    
+
     setFormError(null);
     return true;
   };
@@ -429,8 +514,7 @@ export default function DynaForm(props) {
     const isReadOnly = props.overrideReadOnly === false &&
       (field.isReadOnly === true || field.IsReadOnly === true);
     
-    // Disabled until future validation implementation
-    const isRequired = false; // This is where validation will be used later
+    const isRequired = isFieldRequired(field);
     
     // Debug field properties in development mode
     if (process.env.NODE_ENV === 'development' && process.env.DEBUG_FORMS === 'true') {
@@ -487,6 +571,7 @@ export default function DynaForm(props) {
       name: field.name,
       className,
       placeholder: field.placeholder || field.Placeholder || "",
+      required: isRequired,
       readOnly: isReadOnly,
       disabled: field.disabled === true || field.Disabled === true,
       // For non-checkbox inputs, ensure we always have a string value
@@ -590,6 +675,7 @@ export default function DynaForm(props) {
                   {...sharedAttributes}
                   type="checkbox"
                   checked={currentValue}
+                  required={isRequired}
                   className={isReadOnly ? `checkbox bg-base-300 cursor-not-allowed` : "checkbox"}
                 />
               );
@@ -712,6 +798,7 @@ export default function DynaForm(props) {
                 <input
                   {...sharedAttributes}
                   type={normalizedType || "text"}
+                  required={isRequired}
                   style={{ width: field.Width || '100%' }}
                 />
               );
