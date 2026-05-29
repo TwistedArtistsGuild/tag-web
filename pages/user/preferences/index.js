@@ -65,7 +65,7 @@ export default function Preferences() {
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO title="User Preferences" />
+			<TagSEO metadataProp={{ title: "User Preferences", description: "Manage account and app preferences.", robots: "noindex, nofollow", keywords: "user preferences, account settings", og: { title: "User Preferences", description: "Manage account and app preferences." } }} canonicalSlug="user/preferences" />
 			<div className="max-w-5xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg border border-base-300">
 					<div className="card-body">

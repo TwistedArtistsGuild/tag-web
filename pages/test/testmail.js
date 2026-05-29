@@ -32,7 +32,7 @@ export default function TestMail() {
 
 	return (
       <div>
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Test Testmail", description: "Explore Github Projects Web Pages Test Testmail on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Test Testmail", description: "Explore Github Projects Web Pages Test Testmail on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/testmail" />
+			<TagSEO metadataProp={{ title: "Test Mail", description: "Send a test email from the platform.", keywords: "test, email, tooling", robots: "noindex, nofollow", og: { title: "Test Mail", description: "Send a test email from the platform." } }} canonicalSlug="test/testmail" />
 			<h1>Send Test Email</h1>
 				<button className={defaultButtonClass} onClick={handleSendTestEmail}>
 					Send Test Email

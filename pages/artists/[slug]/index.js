@@ -77,8 +77,10 @@ const Artist = (props) => {
 
   const galleryItems =
     props.artist?.gallery?.galleryItems ||
+    props.artist?.gallery?.GalleryItems ||
     props.artist?.gallery?.items ||
     props.artist?.relatedGallery?.galleryItems ||
+    props.artist?.relatedGallery?.GalleryItems ||
     []
 
   const relatedGalleryImages = galleryItems

@@ -17,6 +17,7 @@ import React, { useMemo } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
+import TagSEO from "@/components/TagSEO";
 
 const api_url = getApiURL();
 const formName = "BlogForm1";
@@ -63,7 +64,24 @@ export default function CreateBlogForm1(props) {
         return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
     }
 
-    return <div className="p-4"><DynaFormDB request="add" metadataProp={enhancedMetadata} formData={null} /></div>;
+    return (
+        <div className="p-4">
+            <TagSEO
+                metadataProp={{
+                    title: "Create Blog Post",
+                    description: "Internal staff and author blog creation form.",
+                    robots: "noindex, nofollow",
+                    keywords: "staff, blog, create",
+                    og: {
+                        title: "Create Blog Post",
+                        description: "Internal staff and author blog creation form.",
+                    },
+                }}
+                canonicalSlug="portal/staff/tagblog/create"
+            />
+            <DynaFormDB request="add" metadataProp={enhancedMetadata} formData={null} />
+        </div>
+    );
 }
 
 export async function getServerSideProps(context) {

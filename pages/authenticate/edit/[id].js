@@ -20,6 +20,7 @@
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
+import TagSEO from "@/components/TagSEO";
 
 const api_url = getApiURL();
 
@@ -34,7 +35,24 @@ export default function UpdateUserForm1(props) {
     props.metadataProp.FromURL = "/authenticate/edit/" + props.id + ".js";
     props.metadataProp.redirectURL = "/authenticate/edit/" + props.id;
     props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}/${props.id}`;
-    return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.userdata} /></div>;
+    return (
+        <div className="p-4">
+            <TagSEO
+                metadataProp={{
+                    title: "Edit Account",
+                    description: "Update your account profile details.",
+                    robots: "noindex, nofollow",
+                    keywords: "account, edit profile",
+                    og: {
+                        title: "Edit Account",
+                        description: "Update your account profile details.",
+                    },
+                }}
+                canonicalSlug="authenticate/edit/[id]"
+            />
+            <DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.userdata} />
+        </div>
+    );
 }
 
 /**

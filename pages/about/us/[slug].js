@@ -26,7 +26,7 @@ export default function ProfilePage() {
 	if (!profile) {
 		return (
       <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages About Us Slug", description: "Explore Github Projects Web Pages About Us Slug on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages About Us Slug", description: "Explore Github Projects Web Pages About Us Slug on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/us/[slug]" />
+				<TagSEO metadataProp={{ title: "Profile Not Found", description: "The requested profile could not be found.", keywords: "artists, profile", robots: "noindex, follow", og: { title: "Profile Not Found", description: "The requested profile could not be found." } }} canonicalSlug="about/us/[slug]" />
 				<div className="alert alert-error max-w-sm">
 					<span>Profile not found.</span>
 				</div>

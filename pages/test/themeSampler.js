@@ -43,7 +43,7 @@ const ThemeSampler = () => {
 
   return (
       <div className="p-8 min-h-screen bg-base-200 text-base-content">
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Test Themesampler", description: "Explore Github Projects Web Pages Test Themesampler on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Test Themesampler", description: "Explore Github Projects Web Pages Test Themesampler on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/themeSampler" />
+			<TagSEO metadataProp={{ title: "Theme Sampler", description: "Preview and compare available UI themes.", keywords: "themes, daisyUI, test", robots: "noindex, nofollow", og: { title: "Theme Sampler", description: "Preview and compare available UI themes." } }} canonicalSlug="test/themeSampler" />
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8 text-center">daisyUI Theme Sampler</h1>
 
