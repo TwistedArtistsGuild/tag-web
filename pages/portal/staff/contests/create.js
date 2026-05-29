@@ -4,7 +4,8 @@
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import TagSEO from "@/components/TagSEO";
 
 const api_url = getApiURL();
 
@@ -30,10 +31,105 @@ export default function CreateContestForm(props) {
             ...base,
             FromURL: "/contests/create.js",
             redirectURL: "/contests",
-            // APIURL is built from base.apiurlpostfix seeded as 'api/contest/create'
             APIURL: `${api_url}contest/create`
         };
     }, [props.metadataProp]);
+
+    /**
+      * Contest Specific Business Rule Interceptor Engine
+      * @param {Object} currentFormValues - The updated form state payload dictionary
+      * @param {Array} schemaFields - The structural dynamic table config fields array
+      * @returns {Object} - Fully augmented state dictionary
+      */
+    const handleContestDateCalculations = (currentFormValues, schemaFields) => {
+        // Create a shallow copy to safely mutate properties
+        let updatedValues = { ...currentFormValues };
+
+        // Safely extract names from the backend schema metadata array mappings
+        const targetFields = schemaFields.map(f => f.name || f.Name).filter(Boolean);
+        const findExactKey = (alternatives) => {
+            return targetFields.find(f => alternatives.map(a => a.toLowerCase()).includes(f.toLowerCase())) || alternatives[0];
+        };
+
+        const startDateKey = findExactKey(["startDate", "StartDate", "start_date"]);
+        const periodKey = findExactKey(["period", "Period"]);
+        const warmupKey = findExactKey(["warmupDate", "WarmupDate", "warmup_date", "warmupStartDate", "WarmupStartDate"]);
+        const warmupEndKey = findExactKey(["warmupEndDate", "WarmupEndDate", "warmup_end_date"]);
+        const endKey = findExactKey(["endDate", "EndDate", "end_date"]);
+
+        // Extract values using exact dynamic casing matching
+        let startDate = updatedValues[startDateKey] || updatedValues[startDateKey.toLowerCase()];
+        const period = updatedValues[periodKey] || updatedValues[periodKey.toLowerCase()];
+
+        // Execute timeline projections if conditions are satisfied
+        if (startDate && period) {
+            // Standardize the selected Start Date to 8:00 PM (20:00) 
+            if (startDate.includes("T")) {
+                // Strip existing offset or Z if present to prevent double appending
+                const pureDate = startDate.split("T")[0];
+                startDate = `${pureDate}T20:00`;
+
+                // CRITICAL FIX: Append 'Z' to tell PostgreSQL Npgsql provider this is UTC
+                updatedValues[startDateKey] = `${startDate}Z`;
+                updatedValues[startDateKey.toLowerCase()] = `${startDate}Z`;
+            }
+
+            const baseAnchor = new Date(startDate.endsWith('Z') ? startDate : `${startDate}Z`);
+            let calculatedWarmupStart = new Date(baseAnchor);
+            let calculatedEnd = new Date(baseAnchor);
+            let timelineAltered = false;
+
+            switch (String(period).trim().toLowerCase()) {
+                case "weekly":
+                    calculatedWarmupStart.setDate(baseAnchor.getDate() - 2);
+                    calculatedEnd.setDate(baseAnchor.getDate() + 5);
+                    timelineAltered = true;
+                    break;
+                case "monthly":
+                    calculatedWarmupStart.setDate(baseAnchor.getDate() - 10);
+                    calculatedEnd.setDate(baseAnchor.getDate() + 20);
+                    timelineAltered = true;
+                    break;
+                case "quarterly":
+                    calculatedWarmupStart.setDate(baseAnchor.getDate() - 30);
+                    calculatedEnd.setDate(baseAnchor.getDate() + 60);
+                    timelineAltered = true;
+                    break;
+                case "yearly":
+                    calculatedWarmupStart.setDate(baseAnchor.getDate() - 90);
+                    calculatedEnd.setDate(baseAnchor.getDate() + 275);
+                    timelineAltered = true;
+                    break;
+            }
+
+            if (timelineAltered) {
+                // Helper that extracts the pure date segment and locks it with a UTC specifier
+                const formatTo8PMWithUtc = (d) => {
+                    const year = d.getUTCFullYear();
+                    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+                    const day = String(d.getUTCDate()).padStart(2, '0');
+                    // Appending 'Z' fixes the Kind=Unspecified exception on Npgsql backend maps
+                    return `${year}-${month}-${day}T20:00Z`;
+                };
+
+                const warmupStartStr = formatTo8PMWithUtc(calculatedWarmupStart);
+                const activeEndStr = formatTo8PMWithUtc(calculatedEnd);
+                const startUtcStr = startDate.endsWith('Z') ? startDate : `${startDate}Z`;
+
+                // Assign valid PostgreSQL timestamp strings to schema-defined key variants
+                updatedValues[warmupKey] = warmupStartStr;
+                updatedValues[warmupEndKey] = startUtcStr;
+                updatedValues[endKey] = activeEndStr;
+
+                // Sync lowercase variants to handle raw layout renders
+                updatedValues[warmupKey.toLowerCase()] = warmupStartStr;
+                updatedValues[warmupEndKey.toLowerCase()] = startUtcStr;
+                updatedValues[endKey.toLowerCase()] = activeEndStr;
+            }
+        }
+
+        return updatedValues;
+    };
 
     if (!enhancedMetadata) {
         return (
@@ -46,13 +142,24 @@ export default function CreateContestForm(props) {
 
     return (
         <div className="p-4 max-w-5xl mx-auto">
-            {/* request="add" tells DynaFormDB to treat this as a new POST 
-                formData={null} ensures the form starts empty
-            */}
+            <TagSEO
+                metadataProp={{
+                    title: "Create Contest",
+                    description: "Internal staff contest creation form.",
+                    robots: "noindex, nofollow",
+                    keywords: "staff, contests, create",
+                    og: {
+                        title: "Create Contest",
+                        description: "Internal staff contest creation form.",
+                    },
+                }}
+                canonicalSlug="portal/staff/contests/create"
+            />
             <DynaFormDB
                 request="add"
                 metadataProp={enhancedMetadata}
                 formData={null}
+                onStateValueChange={handleContestDateCalculations}
             />
         </div>
     );

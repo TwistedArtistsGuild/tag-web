@@ -2,10 +2,12 @@ import CrmSocialChat from "@/components/ghl/CrmSocialChat"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
+import TagSEO from "@/components/TagSEO"
 
 export default function GHLChatPage() {
   return (
     <div className="min-h-screen bg-base-200 p-4 md:p-6">
+			<TagSEO metadataProp={{ title: "GHL Staff Chat", description: "Internal GoHighLevel staff chat workspace.", robots: "noindex, nofollow", keywords: "staff, crm, chat", og: { title: "GHL Staff Chat", description: "Internal GoHighLevel staff chat workspace." } }} canonicalSlug="portal/staff/ghl-chat" />
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="rounded-2xl border border-base-300 bg-base-100 p-6 shadow-sm">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">

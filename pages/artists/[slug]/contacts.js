@@ -195,7 +195,7 @@ const ContactsPage = ({ links, slug, artistSummary, email, location, phone, prim
 
   return (
     <div className="card bg-base-100 text-base-content border border-base-300 shadow-lg p-4 rounded-box">
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Artists Slug Contacts", description: "Explore Github Projects Web Pages Artists Slug Contacts on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Artists Slug Contacts", description: "Explore Github Projects Web Pages Artists Slug Contacts on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/artists/[slug]/contacts" />
+			<TagSEO metadataProp={{ title: "Artist Contacts", description: "Contact details and links for this artist.", keywords: "artists, contacts, art community", og: { title: "Artist Contacts", description: "Contact details and links for this artist." } }} canonicalSlug="artists/[slug]/contacts" />
       <div className="mb-4">
         <ArtistCardSmall
           artist={{

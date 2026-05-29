@@ -24,6 +24,86 @@ function sanitizeFilenamePart(value, fallback) {
     return sanitized || fallback;
 }
 
+function normalizeResourceUrl(value) {
+    return String(value || "").trim().toLowerCase();
+}
+
+function parseEntityId(value) {
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function normalizeScopeType(value) {
+    const v = String(value || "").trim().toLowerCase();
+    if (v === "artist" || v === "artists") return "artist";
+    if (v === "blog" || v === "blogs") return "blog";
+    if (v === "listing" || v === "listings") return "listing";
+    return null;
+}
+
+function resolveEntityContext({ category, entityID, targetPrefix }) {
+    const normalizedPrefix = normalizePrefix(targetPrefix || "");
+    const isGalleryPath = /\/gallery\/?$/i.test(normalizedPrefix);
+
+    // Preferred: infer from the folder structure itself.
+    const pathMatch = normalizedPrefix.match(/(?:^|\/)platformpics\/(artist|artists|blog|blogs|listing|listings)\/(\d+)\/gallery\/?$/i)
+        || normalizedPrefix.match(/(?:^|\/)(artist|artists|blog|blogs|listing|listings)\/(\d+)\/gallery\/?$/i);
+
+    if (pathMatch) {
+        const scopeType = normalizeScopeType(pathMatch[1]);
+        const scopeEntityID = parseEntityId(pathMatch[2]);
+        if (scopeType && scopeEntityID) {
+            return { scopeType, scopeEntityID, isGalleryPath: true };
+        }
+    }
+
+    // Fallback: infer from explicit category + entityID.
+    const scopeType = normalizeScopeType(category);
+    const scopeEntityID = parseEntityId(entityID);
+    if (scopeType && scopeEntityID && isGalleryPath) {
+        return { scopeType, scopeEntityID, isGalleryPath };
+    }
+
+    return null;
+}
+
+async function resolvePictureByUrl(api_url, normalizedURL) {
+    const response = await fetch(`${api_url}picture`);
+    if (!response.ok) return null;
+    const rows = await response.json();
+    if (!Array.isArray(rows)) return null;
+
+    return rows.find((row) => {
+        const candidateUrl = normalizeResourceUrl(row?.URL || row?.url);
+        const candidateNormalized = normalizeResourceUrl(row?.NormalizedURL || row?.normalizedURL);
+        return candidateUrl === normalizedURL || candidateNormalized === normalizedURL;
+    }) || null;
+}
+
+function getEntityReadEndpoint(api_url, category, entityId) {
+    switch (category) {
+        case "artist":
+            return `${api_url}artist/byID/${entityId}`;
+        case "blog":
+            return `${api_url}blog/${entityId}`;
+        case "listing":
+            return `${api_url}listing/byID/${entityId}`;
+        default:
+            return null;
+    }
+}
+
+function getEntityGalleryOrderEndpoint(api_url, category, entityId) {
+    switch (category) {
+        case "artist":
+        case "blog":
+        case "listing":
+            return `${api_url}${category}/${entityId}/gallery/order`;
+        default:
+            return null;
+    }
+}
+
 // Disable the default body parser to handle file uploads
 export const config = {
     api: {
@@ -44,7 +124,7 @@ export default async function handler(req, res) {
 
         // Extract the new fields
         const userID = fields.userID?.[0] || "unknown";
-        const category = fields.category?.[0] || "general";
+        const category = String(fields.category?.[0] || "general").trim().toLowerCase();
         const entityID = fields.entityID?.[0] || "default";
         const postfix = fields.postfix?.[0] || "";
         const requestedContainer = fields.container?.[0] || "tagpictures";
@@ -129,6 +209,7 @@ export default async function handler(req, res) {
 
         let metadataCreated = true;
         let metadataError = null;
+        let persistedPictureId = null;
         try {
             const pictureRes = await fetch(`${api_url}picture`, {
                 method: "POST",
@@ -139,16 +220,75 @@ export default async function handler(req, res) {
             if (!pictureRes.ok) {
                 metadataCreated = false;
                 metadataError = `Picture metadata create failed (${pictureRes.status})`;
+                const resolved = await resolvePictureByUrl(api_url, normalizedURL);
+                persistedPictureId = resolved?.PictureID || resolved?.pictureID || null;
+            } else {
+                const created = await pictureRes.json().catch(() => null);
+                persistedPictureId = created?.PictureID || created?.pictureID || null;
             }
         } catch (metadataCreateError) {
             metadataCreated = false;
             metadataError = metadataCreateError?.message || "Picture metadata create failed";
+            const resolved = await resolvePictureByUrl(api_url, normalizedURL).catch(() => null);
+            persistedPictureId = resolved?.PictureID || resolved?.pictureID || null;
+        }
+
+        const entityContext = resolveEntityContext({ category, entityID, targetPrefix });
+        const canSeedGallery = Boolean(entityContext?.scopeEntityID && entityContext?.scopeType && entityContext?.isGalleryPath && persistedPictureId);
+        let galleryLinked = false;
+        let galleryLinkError = null;
+
+        if (canSeedGallery) {
+            try {
+            const readEndpoint = getEntityReadEndpoint(api_url, entityContext.scopeType, entityContext.scopeEntityID);
+            const orderEndpoint = getEntityGalleryOrderEndpoint(api_url, entityContext.scopeType, entityContext.scopeEntityID);
+
+                if (readEndpoint && orderEndpoint) {
+                    const entityResponse = await fetch(readEndpoint);
+                    if (entityResponse.ok) {
+                        const entityData = await entityResponse.json();
+                        const existingItems = Array.isArray(entityData?.gallery?.galleryItems)
+                            ? entityData.gallery.galleryItems
+                            : (Array.isArray(entityData?.gallery?.GalleryItems) ? entityData.gallery.GalleryItems : []);
+
+                        if (existingItems.length === 0) {
+                            const seedPayload = {
+                                items: [
+                                    {
+                                        mediaType: "picture",
+                                        pictureID: persistedPictureId,
+                                        url,
+                                    },
+                                ],
+                            };
+
+                            const orderResponse = await fetch(orderEndpoint, {
+                                method: "PUT",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify(seedPayload),
+                            });
+
+                            if (!orderResponse.ok) {
+                                const orderError = await orderResponse.json().catch(() => ({}));
+                                galleryLinkError = orderError?.message || orderError?.error || `Gallery seed failed (${orderResponse.status})`;
+                            } else {
+                                galleryLinked = true;
+                            }
+                        }
+                    }
+                }
+            } catch (seedError) {
+                galleryLinkError = seedError?.message || "Gallery seed failed";
+            }
         }
 
         return res.status(200).json({
             url,
             metadataCreated,
+            persistedPictureId,
+            galleryLinked,
             ...(metadataError ? { metadataError } : {}),
+            ...(galleryLinkError ? { galleryLinkError } : {}),
         });
     } catch (error) {
         console.error("Server-side Upload Error:", error);

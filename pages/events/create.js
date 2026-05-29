@@ -10,6 +10,7 @@
  Open source · low-profit · human-first*/
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
+import TagSEO from "@/components/TagSEO";
 
 const api_url = getApiURL();
 const formName = "EventForm1";
@@ -20,7 +21,24 @@ export default function CreateEventForm1(props) {
     props.metadataProp.FromURL = "/events/create.js";
     props.metadataProp.redirectURL = "/events/";
     props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}`;
-    return <div className="p-4"><DynaFormDB request="add" metadataProp={props.metadataProp} /></div>;
+    return (
+        <div className="p-4">
+            <TagSEO
+                metadataProp={{
+                    title: "Create Event",
+                    description: "Create a new event listing.",
+                    robots: "noindex, nofollow",
+                    keywords: "events, create event",
+                    og: {
+                        title: "Create Event",
+                        description: "Create a new event listing.",
+                    },
+                }}
+                canonicalSlug="events/create"
+            />
+            <DynaFormDB request="add" metadataProp={props.metadataProp} />
+        </div>
+    );
 }
 
 CreateEventForm1.getInitialProps = async function () {

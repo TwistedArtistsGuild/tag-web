@@ -526,6 +526,8 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     formData.append("startPrefix", galleryPrefix)
     formData.append("targetPrefix", galleryPrefix)
     formData.append("userID", "staff")
+    formData.append("category", entityType)
+    formData.append("entityID", String(entityId || ""))
 
     const res = await fetch("/api/image/upload", { method: "POST", body: formData })
     const data = await res.json()
@@ -539,7 +541,11 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
       blobName = file.name
     }
 
-    return { name: blobName, url: data.url }
+    return {
+      name: blobName,
+      url: data.url,
+      persistedPictureId: data?.persistedPictureId || null,
+    }
   }
 
   const syncVideoToGallery = useCallback(async ({ provider, videoId, sourceUrl, previewImage, embedUrl }) => {

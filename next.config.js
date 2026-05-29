@@ -15,6 +15,10 @@ if (process.env.NODE_ENV === 'development') {
 
 const nextConfig = {
   reactStrictMode: true,
+  // Suppress hydration warnings in development
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
   images: {
     // NextJS <Image> component needs to whitelist remote patterns for src{}
     formats: ["image/avif", "image/webp"],

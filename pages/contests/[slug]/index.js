@@ -86,10 +86,12 @@ function ContestView(props) {
   }
 
   const startDate = parseDate(contest.startDate || contest.starts || contest.created || contest.opened)
+  const warmupEndDate = parseDate(contest.warmupEndDate);
   const endDate = parseDate(contest.endDate || contest.ends || contest.closed || contest.deadline)
   const now = new Date()
   const hasEnded = endDate ? endDate < now : false
   const isActive = !hasEnded && (!startDate || startDate <= now)
+  const isUpcoming = isActive && warmupEndDate > now;
 
   const entries = Array.isArray(contest.entries) ? contest.entries : []
 
@@ -114,7 +116,7 @@ function ContestView(props) {
             <h1 className="text-4xl md:text-5xl font-extrabold text-primary mb-3" dangerouslySetInnerHTML={{ __html: contest.title || (loading ? "Loading..." : "Contest") }}></h1>
             {contest.byline && <p className="text-lg text-secondary mb-4">{contest.byline}</p>}
 
-            <div className="prose max-w-none mb-6">
+                      <div className="prose max-w-none mb-6" suppressHydrationWarning>
               <p dangerouslySetInnerHTML={{ __html: contest.description || contest.summary || "" }} />
             </div>
 
@@ -147,7 +149,7 @@ function ContestView(props) {
                   <div className="mt-4">
                     {hasEnded ? (
                       <span className="badge badge-error badge-lg">Contest Ended</span>
-                    ) : isActive ? (
+                    ) : isActive && !isUpcoming ? (
                       <span className="badge badge-success badge-lg">Open - Accepting Entries</span>
                     ) : (
                       <span className="badge badge-info badge-lg">Upcoming</span>
@@ -158,7 +160,7 @@ function ContestView(props) {
             </div>
 
             <div className="mt-6">
-              {isActive && (
+              {isActive && !isUpcoming && (
                 <Link
                   href={`/contests/${slug}/enter`}
                   className="btn btn-primary btn-lg"
@@ -183,35 +185,36 @@ function ContestView(props) {
           </aside>
         </div>
       </header>
+      {isActive && !isUpcoming && (
+              <main className="container mx-auto px-4 pb-12">
+                  <section className="mb-8">
+                      <div className="flex items-center justify-between mb-4">
+                          <h2 className="text-2xl font-bold text-primary">Participating Entries</h2>
+                          <p className="text-sm text-base-content/70">{entries.length} entries</p>
+                      </div>
 
-      <main className="container mx-auto px-4 pb-12">
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-primary">Participating Entries</h2>
-            <p className="text-sm text-base-content/70">{entries.length} entries</p>
-          </div>
-
-          {loading ? (
-            <div className="rounded-box border border-base-300 bg-base-100/60 p-6 text-center text-base-content/70">
-              Loading contest entries...
-            </div>
-          ) : error ? (
-            <div className="rounded-box border border-error bg-error/5 p-6 text-center text-error">
-              There was an error loading contest data.
-            </div>
-          ) : entries.length === 0 ? (
-            <div className="rounded-box border border-base-300 bg-base-100/60 p-6 text-center text-base-content/70">
-              No entries have been submitted yet.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {entries.map((entry) => (
-                <ListingCardSmall key={entry.listing?.listingid} listing={entry.listing} artist={entry.artist} />
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
+                      {loading ? (
+                          <div className="rounded-box border border-base-300 bg-base-100/60 p-6 text-center text-base-content/70">
+                              Loading contest entries...
+                          </div>
+                      ) : error ? (
+                          <div className="rounded-box border border-error bg-error/5 p-6 text-center text-error">
+                              There was an error loading contest data.
+                          </div>
+                      ) : entries.length === 0 ? (
+                          <div className="rounded-box border border-base-300 bg-base-100/60 p-6 text-center text-base-content/70">
+                              No entries have been submitted yet.
+                          </div>
+                      ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                              {entries.map((entry) => (
+                                  <ListingCardSmall key={entry.listing?.listingid} listing={entry.listing} artist={entry.artist} />
+                              ))}
+                          </div>
+                      )}
+                  </section>
+              </main>
+      )}
     </div>
   )
 }

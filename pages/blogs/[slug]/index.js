@@ -86,27 +86,38 @@ const BlogByslug = props => {
 	}, [])
 
 	const canUpdate = hasPermission(session, PERMISSIONS.BLOG.UPDATE);
-	const relatedGalleryImages = Array.isArray(blog?.gallery?.galleryItems)
-		? blog.gallery.galleryItems
-			.sort((a, b) => (Number(a?.sortOrder) || 0) - (Number(b?.sortOrder) || 0))
-			.map((item) => {
-				const picture = item.picture;
-				const video = item.video;
-				const url = picture?.url || video?.thumbnailURL || video?.url || "/blank_image.png";
-				const thumbnailURL = picture?.thumbnailURL || video?.thumbnailURL || url;
-				
-				return {
-					original: thumbnailURL,
-					thumbnail: thumbnailURL,
-					mediaType: picture ? "picture" : "video",
-					sourceURL: picture?.url || video?.url || "",
-					embedURL: picture?.embedURL || video?.embedURL || "",
-					description: item.captionOverride || picture?.description || video?.description || picture?.title || video?.title || "",
-					byline: picture?.byline || video?.byline || "",
-					altText: picture?.altText || "",
-				};
-			})
-		: [];
+	const relatedGalleryItems = Array.isArray(blog?.gallery?.galleryItems) ? blog.gallery.galleryItems : []
+	const relatedGalleryImages = relatedGalleryItems
+		.slice()
+		.sort((a, b) => (Number(a?.sortOrder) || 0) - (Number(b?.sortOrder) || 0))
+		.map((item) => {
+			const picture = item?.picture || item?.Picture || null
+			const video = item?.video || item?.Video || null
+			const url = picture?.url || picture?.URL || video?.thumbnailURL || video?.ThumbnailURL || video?.url || video?.URL || "/blank_image.png"
+			const thumbnailURL = picture?.thumbnailURL || picture?.ThumbnailURL || video?.thumbnailURL || video?.ThumbnailURL || url
+
+			return {
+				original: thumbnailURL,
+				thumbnail: thumbnailURL,
+				mediaType: picture ? "picture" : "video",
+				sourceURL: picture?.url || picture?.URL || video?.url || video?.URL || "",
+				embedURL: picture?.embedURL || picture?.EmbedURL || video?.embedURL || video?.EmbedURL || "",
+				description:
+					item?.captionOverride ||
+					item?.CaptionOverride ||
+					picture?.description ||
+					picture?.Description ||
+					video?.description ||
+					video?.Description ||
+					picture?.title ||
+					picture?.Title ||
+					video?.title ||
+					video?.Title ||
+					"",
+				byline: picture?.byline || picture?.Byline || video?.byline || video?.Byline || "",
+				altText: picture?.altText || picture?.AltText || "",
+			}
+		})
 	const socialUser = session?.user
 		? {
 			id: session.user.id || session.user.email || session.user.name || "current-user",

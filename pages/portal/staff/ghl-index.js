@@ -11,6 +11,7 @@ import {
 } from "recharts"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
+import TagSEO from "@/components/TagSEO"
 
 export default function GHLIndexPage() {
   const [contacts, setContacts] = useState([])
@@ -202,6 +203,7 @@ export default function GHLIndexPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
+				<TagSEO metadataProp={{ title: "GHL CRM Dashboard", description: "Internal GoHighLevel CRM dashboard.", robots: "noindex, nofollow", keywords: "staff, crm, dashboard", og: { title: "GHL CRM Dashboard", description: "Internal GoHighLevel CRM dashboard." } }} canonicalSlug="portal/staff/ghl-index" />
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading GoHighLevel data...</p>
@@ -213,6 +215,7 @@ export default function GHLIndexPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-red-50 p-6">
+				<TagSEO metadataProp={{ title: "GHL CRM Dashboard", description: "Internal GoHighLevel CRM dashboard.", robots: "noindex, nofollow", keywords: "staff, crm, dashboard", og: { title: "GHL CRM Dashboard", description: "Internal GoHighLevel CRM dashboard." } }} canonicalSlug="portal/staff/ghl-index" />
         <div className="max-w-4xl mx-auto">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             <strong>Error:</strong> {error}
@@ -224,6 +227,7 @@ export default function GHLIndexPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
+			<TagSEO metadataProp={{ title: "GHL CRM Dashboard", description: "Internal GoHighLevel CRM dashboard.", robots: "noindex, nofollow", keywords: "staff, crm, dashboard", og: { title: "GHL CRM Dashboard", description: "Internal GoHighLevel CRM dashboard." } }} canonicalSlug="portal/staff/ghl-index" />
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">GoHighLevel CRM Index</h1>
 
