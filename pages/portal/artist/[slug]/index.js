@@ -57,6 +57,27 @@ const AD_SPEND_ROWS = [
   { channel: "Google local ads", spend: "$120", returnLabel: "0 tracked sales", status: "Needs review" },
 ]
 
+function mapCreditsByPictureId(rows) {
+  if (!Array.isArray(rows)) return {}
+  return rows.reduce((acc, row) => {
+    const pictureId = Number(row?.pictureID || row?.PictureID || row?.pictureId || row?.PictureId || 0)
+    if (!pictureId) return acc
+
+    const sourceCredits = Array.isArray(row?.credits) ? row.credits : Array.isArray(row?.Credits) ? row.Credits : []
+    const credits = sourceCredits
+      .map((entry) => ({
+          role: entry?.role || entry?.Role || "Contributor",
+          name: entry?.name || entry?.Name || "Unknown",
+          url: entry?.url || entry?.Url || "",
+          note: entry?.note || entry?.Note || "",
+        }))
+      .filter((entry) => String(entry?.name || "").trim() || String(entry?.note || "").trim())
+
+    acc[pictureId] = credits
+    return acc
+  }, {})
+}
+
 function DashboardCard({ title, badge, children }) {
   return (
     <section className="card bg-base-100 shadow border border-base-300">
@@ -71,7 +92,7 @@ function DashboardCard({ title, badge, children }) {
   )
 }
 
-function PreviewMode({ artistProfile, slug, listingCount }) {
+function PreviewMode({ artistProfile, slug, listingCount, pictureCreditsById }) {
   const galleryItems =
     artistProfile?.gallery?.galleryItems ||
     artistProfile?.gallery?.items ||
@@ -87,6 +108,16 @@ function PreviewMode({ artistProfile, slug, listingCount }) {
       const videoEmbedUrl = item?.video?.embedURL || item?.video?.embedUrl || item?.video?.EmbedURL || ""
 
       if (pictureUrl) {
+        const pictureId = Number(
+          item?.picture?.pictureID ||
+          item?.picture?.PictureID ||
+          item?.picture?.pictureId ||
+          item?.picture?.PictureId ||
+          item?.pictureID ||
+          item?.PictureID ||
+          0
+        )
+        const credits = pictureId > 0 ? (pictureCreditsById?.[pictureId] || []) : []
         return {
           key: `gallery-picture-${item?.galleryItemID || index}`,
           original: pictureThumbUrl,
@@ -97,6 +128,7 @@ function PreviewMode({ artistProfile, slug, listingCount }) {
           description: item?.captionOverride || item?.picture?.description || item?.picture?.title || "",
           byline: item?.picture?.byline || "",
           altText: item?.picture?.altText || item?.picture?.alttext || "",
+          credits,
         }
       }
 
@@ -243,7 +275,7 @@ function EditMode({ slug, artistId, currentUser }) {
   )
 }
 
-export default function ArtistSlugPortalPage({ slug, artistProfile, listings, currentUser }) {
+export default function ArtistSlugPortalPage({ slug, artistProfile, listings, currentUser, pictureCreditsById }) {
   const [mode, setMode] = useState("preview")
   const listingCount = Array.isArray(listings) ? listings.length : 0
 
@@ -302,7 +334,7 @@ export default function ArtistSlugPortalPage({ slug, artistProfile, listings, cu
 
         {mode === "preview" ? (
           <SocialRealtimeProvider>
-            <PreviewMode artistProfile={artistProfile} slug={slug} listingCount={listingCount} />
+            <PreviewMode artistProfile={artistProfile} slug={slug} listingCount={listingCount} pictureCreditsById={pictureCreditsById} />
           </SocialRealtimeProvider>
         ) : (
           <EditMode slug={slug} artistId={artistProfile?.id || artistProfile?.artistID} currentUser={currentUser} />
@@ -477,12 +509,36 @@ export async function getServerSideProps(context) {
       gallery: artistData?.gallery || profileData?.artist?.gallery || null,
     }
 
+    const galleryItems =
+      artistProfile?.gallery?.galleryItems ||
+      artistProfile?.gallery?.GalleryItems ||
+      []
+    const pictureIds = galleryItems
+      .map((item) => Number(
+        item?.picture?.pictureID ||
+        item?.picture?.PictureID ||
+        item?.picture?.pictureId ||
+        item?.picture?.PictureId ||
+        item?.pictureID ||
+        item?.PictureID ||
+        0
+      ))
+      .filter((id) => Number.isInteger(id) && id > 0)
+
+    const pictureCreditsRows = pictureIds.length
+      ? await fetch(`${apiUrl}picture/credits?pictureIds=${encodeURIComponent([...new Set(pictureIds)].join(","))}`)
+          .then((response) => (response.ok ? response.json() : []))
+          .catch(() => [])
+      : []
+    const pictureCreditsById = mapCreditsByPictureId(pictureCreditsRows)
+
     return {
       props: {
         slug,
         artistProfile,
         listings: profileData?.listings || [],
         currentUser: session.user?.email || session.user?.name || null,
+        pictureCreditsById,
       },
     }
   } catch (error) {
@@ -494,6 +550,7 @@ export async function getServerSideProps(context) {
         artistProfile: null,
         listings: [],
         currentUser: session.user?.email || session.user?.name || null,
+        pictureCreditsById: {},
       },
     }
   }
