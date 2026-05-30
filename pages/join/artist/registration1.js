@@ -14,6 +14,7 @@
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
 import React, { useMemo } from "react";
+import TagSEO from "@/components/TagSEO";
 
 const api_url = getApiURL();
 const formName = "ArtistForm1";
@@ -46,7 +47,24 @@ export default function CreateArtistForm1(props) {
         return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
     }
 
-    return <div className="p-4"><DynaFormDB request="add" metadataProp={enhancedMetadata} formData={null} /></div>;
+    return (
+        <div className="p-4">
+            <TagSEO
+                metadataProp={{
+                    title: "Artist Registration",
+                    description: "Register as an artist on the platform.",
+                    robots: "noindex, nofollow",
+                    keywords: "artist registration, join",
+                    og: {
+                        title: "Artist Registration",
+                        description: "Register as an artist on the platform.",
+                    },
+                }}
+                canonicalSlug="join/artist/registration1"
+            />
+            <DynaFormDB request="add" metadataProp={enhancedMetadata} formData={null} />
+        </div>
+    );
 }
 
 CreateArtistForm1.getInitialProps = async function () {

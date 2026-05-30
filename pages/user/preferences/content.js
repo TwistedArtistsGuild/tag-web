@@ -106,7 +106,7 @@ export default function ContentPreferences() {
 
     return (
         <div className="min-h-screen bg-base-200 p-4 md:p-8">
-            <TagSEO title="Content Preferences | TAG" />
+			<TagSEO metadataProp={{ title: "Content Preferences", description: "Manage your content moderation and visibility preferences.", robots: "noindex, nofollow", keywords: "user preferences, content settings", og: { title: "Content Preferences", description: "Manage your content moderation and visibility preferences." } }} canonicalSlug="user/preferences/content" />
             <div className="max-w-5xl mx-auto space-y-6">
                 {/* Header Section */}
                 <div className="card bg-base-100 shadow-lg border border-base-300">

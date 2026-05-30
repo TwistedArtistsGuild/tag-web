@@ -31,31 +31,87 @@ import TagSEO from "@/components/TagSEO"
  */
 export default function UpdateFormsForm1(props) {
   const router = useRouter();
-  const [selectedForm, setSelectedForm] = useState('');
+  const [selectedForm, setSelectedForm] = useState(props.slug || '');
   const api_url = getApiURL();
 
+  const mapFieldToEditorData = (field) => ({
+    Forms_FieldID: field?.forms_FieldID,
+    Forms_MetadataID: field?.forms_MetadataID,
+    Name: field?.name ?? "",
+    Type: field?.type ?? "",
+    Placeholder: field?.placeholder ?? "",
+    Label: field?.label ?? "",
+    DefaultValue: field?.defaultValue ?? "",
+    ClassName: field?.className ?? "",
+    Width: field?.width ?? "",
+    Height: field?.height ?? "",
+    RegexValidationPattern: field?.regexValidationPattern ?? "",
+    FieldOrder: field?.fieldOrder ?? "",
+    IsRequired: field?.isRequired ?? false,
+    IsReadOnly: field?.isReadOnly ?? false,
+    Min: field?.min ?? "",
+    Max: field?.max ?? "",
+  })
+
+  const mapMetadataToEditorData = (metadataRecord) => ({
+    Forms_MetadataID: metadataRecord?.forms_MetadataID,
+    name: metadataRecord?.name ?? "",
+    Name: metadataRecord?.name ?? "",
+    APIURLpostfix: metadataRecord?.apiurLpostfix ?? metadataRecord?.apiurlpostfix ?? metadataRecord?.APIURLpostfix ?? "",
+    RequestType: metadataRecord?.requestType ?? "",
+    SegmentationType: metadataRecord?.segmentationType ?? "",
+    FormBody: metadataRecord?.formBody ?? "",
+    FormStyle: metadataRecord?.formStyle ?? "",
+    H1: metadataRecord?.h1 ?? "",
+    H2: metadataRecord?.h2 ?? "",
+    H3: metadataRecord?.h3 ?? "",
+  })
+
+  // If there's an error loading the form data, show error message
+  if (props.error) {
+    return (
+      <div>
+        <TagSEO metadataProp={{ title: "Error Loading Form", description: "Error loading form data.", keywords: "error", og: { title: "Error", description: "Error loading form data." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/updateForms/[slug]" />
+        <div className="alert alert-error shadow-lg">
+          <div>
+            <span>Failed to load form: {props.error}</span>
+          </div>
+        </div>
+        <button className="btn btn-primary mt-4" onClick={() => router.push('/test/updateForms')}>
+          Back to Forms
+        </button>
+      </div>
+    );
+  }
+
   // Filter out "UpdateFormsMeta" and "UpdateFormsFields" from the dropdown options
-  const filteredFormNames = props.formNames.filter(
-    (formName) => formName !== 'UpdateFormsMeta' && formName !== 'UpdateFormsFields'
-  );
+  const filteredFormNames = Array.isArray(props.formNames)
+    ? props.formNames.filter(
+        (formName) => formName !== 'UpdateFormsMeta' && formName !== 'UpdateFormsFields'
+      )
+    : [];
 
   // Build URL properties on the metadata object
   // (Ensure that the property keys match what your API provides.)
-  props.metadataProp.FromURL = `/test/updateForms`;
-  props.metadataProp.redirectURL = `/test/updateForms/${props.slug}`;
-  props.metadataProp.APIURL =
-    api_url + `${props.metadataProp.apiurLpostfix}/${props.metadataProp.name}`;
+  if (props.metadataProp && typeof props.metadataProp === 'object') {
+    props.metadataProp.FromURL = `/test/updateForms`;
+    props.metadataProp.redirectURL = `/test/updateForms/${props.slug}`;
+    props.metadataProp.APIURL =
+      api_url + `${props.metadataProp.apiurLpostfix || ''}/${props.metadataProp.name || ''}`;
+  }
 
   // For the form structure metadata used for designing/updating the form
-  props.FormStructure_metadata.FromURL = `/test/updateForms`;
-  props.FormStructure_metadata.redirectURL = `/test/updateForms/${props.slug}`;
-  props.FormStructure_metadata.APIURL =
-    api_url +
-    `${props.FormStructure_metadata.apiurLpostfix}/${props.FormStructure_metadata.name}`;
+  if (props.FormStructure_metadata && typeof props.FormStructure_metadata === 'object') {
+    props.FormStructure_metadata.FromURL = `/test/updateForms`;
+    props.FormStructure_metadata.redirectURL = `/test/updateForms/${props.slug}`;
+    props.FormStructure_metadata.APIURL =
+      api_url +
+      `${props.FormStructure_metadata.apiurLpostfix || ''}/${props.FormStructure_metadata.name || ''}`;
+  }
 
   return (
       <div>
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Test Updateforms Slug", description: "Explore Github Projects Web Pages Test Updateforms Slug on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Test Updateforms Slug", description: "Explore Github Projects Web Pages Test Updateforms Slug on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/test/updateForms/[slug]" />
+			<TagSEO metadataProp={{ title: "Update Form", description: "Update form metadata and fields.", keywords: "forms, update, test", robots: "noindex, nofollow", og: { title: "Update Form", description: "Update form metadata and fields." } }} canonicalSlug="test/updateForms/[slug]" />
       <div>
         <h2 className="text-lg font-bold mb-4">Available Forms</h2>
         <div className="form-control w-full max-w-xs">
@@ -82,26 +138,26 @@ export default function UpdateFormsForm1(props) {
       {/* Render the current form metadata and its fields */}
       <DynaFormDB
         metadataProp={props.metadataProp}
-        fieldsProp={props.metadataProp.forms_Fields}
+        fieldsProp={Array.isArray(props.metadataProp?.forms_Fields) ? props.metadataProp.forms_Fields : []}
       />
 
 	  <h2 className="text-lg font-bold mt-6">Here you may edit the metadata of the above form:</h2>
 	  <DynaFormDB
               metadataProp={props.FormStructure_metadata}
-              fieldsProp={props.FormStructure_metadata.forms_Fields}
-              formData={props.metadataProp}
+              fieldsProp={Array.isArray(props.FormStructure_metadata?.forms_Fields) ? props.FormStructure_metadata.forms_Fields : []}
+              formData={mapMetadataToEditorData(props.metadataProp)}
               displayHeaders={false}
             />
 
       <h2 className="text-lg font-bold mt-6">Here are the fields to be edited.</h2>
 	  <ul>
         {/* Render each form field separately using the form structure */}
-        {props.metadataProp.forms_Fields.map((field, index) => (
-          <li key={index} className="mb-4">
+        {Array.isArray(props.metadataProp?.forms_Fields) && props.metadataProp.forms_Fields.map((field, index) => (
+          <li key={field?.forms_FieldID || index} className="mb-4">
             <DynaFormDB
               metadataProp={props.FormStructure_field}
-              fieldsProp={props.FormStructure_field.forms_Fields}
-              formData={props.fieldsProp}
+              fieldsProp={Array.isArray(props.FormStructure_field?.forms_Fields) ? props.FormStructure_field.forms_Fields : []}
+              formData={mapFieldToEditorData(field)}
               displayHeaders={false}
             />
           </li>
@@ -109,11 +165,11 @@ export default function UpdateFormsForm1(props) {
       </ul>
 	  <ul>
         <div className="text-lg font-bold mt-6">Create a new form field:</div>
-        {/* Set the requestType to "add" */}
-        {props.FormStructure_metadata.requestType = "add"}
+        {/* Set the requestType to "add" on the field structure form */}
+        {props.FormStructure_field.requestType = "add"}
         <DynaFormDB
-          metadataProp={props.FormStructure_metadata}
-          fieldsProp={props.FormStructure_metadata.forms_Fields}
+          metadataProp={props.FormStructure_field}
+          fieldsProp={Array.isArray(props.FormStructure_field?.forms_Fields) ? props.FormStructure_field.forms_Fields : []}
           displayHeaders={false}
         />
       </ul>
@@ -141,24 +197,40 @@ UpdateFormsForm1.getInitialProps = async function (context) {
 
   try {
     // Fetch metadata for the specified form slug.
-    const metadataRes = await fetch(`${api_url}forms_metadata/${slug}`);
+    const metadataRes = await fetch(`${api_url}FormsMetadata/${slug}`);
+    if (!metadataRes.ok) {
+      console.error(`Failed to fetch metadata for slug "${slug}": ${metadataRes.status} ${metadataRes.statusText}`);
+      throw new Error(`HTTP error! status: ${metadataRes.status}`);
+    }
     const metadataArray = await metadataRes.json();
     // Extract the first element from the returned array.
     const metadata = Array.isArray(metadataArray) ? metadataArray[0] : metadataArray;
     console.log('MetadataProp from API:', metadata);
 
     // Fetch the metadata that defines the form structure.
-    const formStructureRes = await fetch(`${api_url}forms_metadata/UpdateFormsMeta`);
+    const formStructureRes = await fetch(`${api_url}FormsMetadata/UpdateFormsMeta`);
+    if (!formStructureRes.ok) {
+      console.error(`Failed to fetch form structure metadata: ${formStructureRes.status} ${formStructureRes.statusText}`);
+      throw new Error(`HTTP error! status: ${formStructureRes.status}`);
+    }
     const FormStructure_metadata = await formStructureRes.json();
     console.log('FormStructure_Metadata from API:', FormStructure_metadata);
 
-	// Fetch the metadata that defines the form structure.
-	const FormStructure_fieldRes = await fetch(`${api_url}forms_metadata/UpdateFormsFields`);
+	// Fetch the metadata that defines the form field structure.
+	const FormStructure_fieldRes = await fetch(`${api_url}FormsMetadata/UpdateFormsFields`);
+	if (!FormStructure_fieldRes.ok) {
+	  console.error(`Failed to fetch form fields structure: ${FormStructure_fieldRes.status} ${FormStructure_fieldRes.statusText}`);
+	  throw new Error(`HTTP error! status: ${FormStructure_fieldRes.status}`);
+	}
 	const FormStructure_field = await FormStructure_fieldRes.json();
 	console.log('FormStructure_field from API:', FormStructure_field);
 
     // Fetch list of available form names.
-    const formNamesRes = await fetch(`${api_url}forms_metadata/listOfForms`);
+    const formNamesRes = await fetch(`${api_url}FormsMetadata/listOfForms`);
+    if (!formNamesRes.ok) {
+      console.error(`Failed to fetch list of forms: ${formNamesRes.status} ${formNamesRes.statusText}`);
+      throw new Error(`HTTP error! status: ${formNamesRes.status}`);
+    }
     const formNames = await formNamesRes.json();
 
     return {
@@ -171,11 +243,12 @@ UpdateFormsForm1.getInitialProps = async function (context) {
   } catch (error) {
     console.error('Error fetching form meta or field data:', error);
     return {
-      metadataProp: {},
-      FormStructure_metadata: {},
-	  FormStructure_field: {},
+      metadataProp: { forms_Fields: [] },
+      FormStructure_metadata: { forms_Fields: [] },
+	  FormStructure_field: { forms_Fields: [] },
       formNames: [],
       slug: slug,
+      error: error?.message || 'Failed to load form data',
     };
   }
 };

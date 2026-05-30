@@ -59,9 +59,164 @@ function warningKeyToLabel(key) {
     .join(" - ")
 }
 
-function CreditsAdder({ credits, onChange, artists, onSave, saving, roleOptions, defaultRoleID, onDirty }) {
-  const [picker, setPicker] = useState({ open: false, index: null, artist: null })
-  const searchTimersRef = useRef({})
+function getProfileDisplayName(profile) {
+  return (
+    profile?.stageName ||
+    profile?.title ||
+    profile?.Title ||
+    profile?.preferredName ||
+    profile?.username ||
+    profile?.displayName ||
+    profile?.name ||
+    profile?.path ||
+    profile?.Path ||
+    profile?.emailOne ||
+    profile?.email ||
+    ""
+  )
+}
+
+function getUserDisplayName(user) {
+  return user?.displayName || user?.name || user?.preferredName || user?.username || user?.email || user?.emailOne || ""
+}
+
+function isArtistLikeProfile(profile) {
+  return Boolean(
+    profile?.artistID
+    || profile?.ArtistID
+    || profile?.stageName
+    || profile?.title
+    || profile?.path
+    || profile?.isArtist
+  )
+}
+
+function mergeArtists(primary = [], extra = []) {
+  const combined = [...primary, ...extra]
+  const seen = new Set()
+  const merged = []
+
+  for (const artist of combined) {
+    const key = String(
+      artist?.artistID
+      || artist?.ArtistID
+      || artist?.path
+      || artist?.Path
+      || getProfileDisplayName(artist)
+      || ""
+    ).toLowerCase().trim()
+
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    merged.push(artist)
+  }
+
+  return merged
+}
+
+function getCurrentUserLabel(currentUser) {
+  if (!currentUser) return ""
+  if (typeof currentUser === "string") return currentUser
+  return currentUser.name || currentUser.displayName || currentUser.username || currentUser.email || ""
+}
+
+function toNumber(value) {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 0
+}
+
+function mapApiCreditsToEditorRows(credits = []) {
+  if (!Array.isArray(credits)) return []
+  return credits.map((credit) => ({
+    role: credit?.role || credit?.Role || "",
+    creditRoleID: String(credit?.creditRoleID || credit?.CreditRoleID || ""),
+    mode: "lookup",
+    artistQuery: credit?.displayName || credit?.DisplayName || "",
+    artistResults: [],
+    selectedArtist: null,
+    displayName: credit?.displayName || credit?.DisplayName || "",
+    externalURL: credit?.externalURL || credit?.ExternalURL || "",
+    bioNote: credit?.creditText || credit?.CreditText || credit?.bioNote || credit?.BioNote || "",
+    creditPartyID: credit?.creditPartyID || credit?.CreditPartyID || null,
+  }))
+}
+
+function buildCreditsSavePayload(credits = [], defaultRoleID = "") {
+  if (!Array.isArray(credits)) return []
+
+  return credits
+    .map((credit, index) => {
+      const selectedArtist = credit?.selectedArtist || null
+      const artistID =
+        toNumber(selectedArtist?.artistID) ||
+        toNumber(selectedArtist?.ArtistID) ||
+        toNumber(credit?.artistID) ||
+        toNumber(credit?.ArtistID) ||
+        null
+
+      const userID =
+        toNumber(selectedArtist?.userID) ||
+        toNumber(selectedArtist?.UserID) ||
+        toNumber(credit?.userID) ||
+        toNumber(credit?.UserID) ||
+        null
+
+      const displayName = String(credit?.displayName || "").trim()
+      const externalURL = String(credit?.externalURL || "").trim()
+      const bioNote = String(credit?.bioNote || "").trim()
+      const creditRoleID = toNumber(credit?.creditRoleID || defaultRoleID)
+      const creditPartyID = toNumber(credit?.creditPartyID || credit?.CreditPartyID) || null
+
+      const hasAnyValue = Boolean(displayName || externalURL || bioNote || artistID || userID || creditPartyID)
+      if (!hasAnyValue || !creditRoleID) return null
+
+      return {
+        creditPartyID,
+        creditRoleID,
+        sortOrder: index + 1,
+        creditText: bioNote || null,
+        party: creditPartyID
+          ? null
+          : {
+              userID,
+              artistID,
+              displayName: displayName || null,
+              externalURL: externalURL || null,
+              bioNote: bioNote || null,
+            },
+      }
+    })
+    .filter(Boolean)
+}
+
+function CreditsAdder({ credits, onChange, artists, users, onSave, saving, roleOptions, defaultRoleID, onDirty, currentUser }) {
+  const ownerAutofillRef = useRef(false)
+  const ownerFocusClearedRef = useRef(false)
+
+  const userSuggestion = useMemo(() => {
+    if (!currentUser) return null
+    if (typeof currentUser === "string") {
+      return {
+        kind: "you",
+        label: "You",
+        displayName: currentUser,
+        username: "",
+        email: String(currentUser).includes("@") ? currentUser : "",
+        externalURL: "",
+      }
+    }
+
+    const displayName = currentUser.name || currentUser.displayName || currentUser.username || currentUser.email || ""
+    if (!displayName) return null
+    return {
+      kind: "you",
+      label: "You",
+      displayName,
+      username: currentUser.username || "",
+      email: currentUser.email || "",
+      externalURL: "",
+    }
+  }, [currentUser])
 
   const updateCredit = useCallback((index, updates) => {
     onChange(credits.map((c, i) => (i === index ? { ...c, ...updates } : c)))
@@ -69,31 +224,78 @@ function CreditsAdder({ credits, onChange, artists, onSave, saving, roleOptions,
   }, [credits, onChange, onDirty])
 
   useEffect(() => {
-    return () => {
-      Object.values(searchTimersRef.current).forEach((id) => clearTimeout(id))
+    if (!credits?.length) return
+    const first = credits[0]
+    if (String(first?.creditRoleID || "").trim()) return
+    updateCredit(0, {
+      creditRoleID: defaultRoleID,
+      role: mapRoleLabel(roleOptions, defaultRoleID) || "Copyright Owner",
+    })
+  }, [credits, defaultRoleID, roleOptions, updateCredit])
+
+  useEffect(() => {
+    if (ownerAutofillRef.current) return
+    if (!userSuggestion?.displayName) return
+    if (!credits?.length) return
+    if (String(credits[0]?.displayName || "").trim()) return
+
+    ownerAutofillRef.current = true
+    
+    // If currentUser is an object with an ID, fetch their linked artists to find their primary artist profile
+    const currentUserId = typeof currentUser === "object" ? currentUser?.id : null
+    if (!currentUserId) {
+      // User is not logged in or no ID; just use the user suggestion
+      updateCredit(0, {
+        displayName: userSuggestion.displayName,
+        externalURL: "",
+        selectedArtist: null,
+        creditRoleID: credits[0]?.creditRoleID || defaultRoleID,
+        role: credits[0]?.role || mapRoleLabel(roleOptions, defaultRoleID) || "Copyright Owner",
+      })
+      return
     }
-  }, [])
 
-  const handleArtistQueryChange = (index, query) => {
-    updateCredit(index, { artistQuery: query })
-    if (searchTimersRef.current[index]) clearTimeout(searchTimersRef.current[index])
+    // Fetch the current user's linked artists
+    fetch(`${api_url}linker_usertoartist/byUserID/${currentUserId}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => {
+        if (!Array.isArray(data) || !data.length) {
+          // No artist linked; use user name
+          updateCredit(0, {
+            displayName: userSuggestion.displayName,
+            externalURL: "",
+            selectedArtist: null,
+            creditRoleID: credits[0]?.creditRoleID || defaultRoleID,
+            role: credits[0]?.role || mapRoleLabel(roleOptions, defaultRoleID) || "Copyright Owner",
+          })
+          return
+        }
 
-    searchTimersRef.current[index] = setTimeout(() => {
-      const lowered = String(query || "").toLowerCase().trim()
-      const results = !lowered
-        ? []
-        : artists
-            .filter((a) => {
-              const stageName = String(a?.stageName || "").toLowerCase()
-              const username = String(a?.username || "").toLowerCase()
-              const preferredName = String(a?.preferredName || "").toLowerCase()
-              const email = String(a?.emailOne || "").toLowerCase()
-              return stageName.includes(lowered) || username.includes(lowered) || preferredName.includes(lowered) || email.includes(lowered)
-            })
-            .slice(0, 8)
-      updateCredit(index, { artistResults: results })
-    }, 300)
-  }
+        // Use the first (primary) linked artist
+        const userArtist = data[0]
+        const displayName = getProfileDisplayName(userArtist)
+        const artistPath = String(userArtist?.path || userArtist?.Path || "").trim()
+        const externalURL = artistPath ? `/artists/${artistPath}` : ""
+
+        updateCredit(0, {
+          displayName,
+          externalURL,
+          selectedArtist: userArtist,
+          creditRoleID: credits[0]?.creditRoleID || defaultRoleID,
+          role: credits[0]?.role || mapRoleLabel(roleOptions, defaultRoleID) || "Copyright Owner",
+        })
+      })
+      .catch(() => {
+        // Fallback to user name if fetch fails
+        updateCredit(0, {
+          displayName: userSuggestion.displayName,
+          externalURL: "",
+          selectedArtist: null,
+          creditRoleID: credits[0]?.creditRoleID || defaultRoleID,
+          role: credits[0]?.role || mapRoleLabel(roleOptions, defaultRoleID) || "Copyright Owner",
+        })
+      })
+  }, [credits, currentUser, defaultRoleID, roleOptions, updateCredit, userSuggestion])
 
   const addCredit = () => {
     onChange([...credits, makeEmptyCreditRow("", defaultRoleID)])
@@ -105,29 +307,140 @@ function CreditsAdder({ credits, onChange, artists, onSave, saving, roleOptions,
     onDirty?.()
   }
 
-  const applyPickedArtist = () => {
-    if (picker.index === null || !picker.artist) {
-      setPicker({ open: false, index: null, artist: null })
-      return
+  const buildSuggestions = (query) => {
+    const lowered = String(query || "").toLowerCase().trim()
+    const suggestions = []
+
+    if (userSuggestion) {
+      const matchesSelf = !lowered
+        || String(userSuggestion.displayName || "").toLowerCase().includes(lowered)
+        || String(userSuggestion.email || "").toLowerCase().includes(lowered)
+      if (matchesSelf) suggestions.push(userSuggestion)
     }
 
-    const artist = picker.artist
-    updateCredit(picker.index, {
-      selectedArtist: artist,
-      artistQuery: artist.stageName || artist.username || "",
+    const userMatches = users
+      .filter((user) => {
+        const displayName = getUserDisplayName(user)
+        const username = String(user?.username || "").trim()
+        const email = String(user?.email || user?.emailOne || "").trim()
+        if (!displayName && !username && !email) return false
+        if (!lowered) return true
+
+        const displayNameLower = String(displayName).toLowerCase()
+        const usernameLower = username.toLowerCase()
+        const emailLower = email.toLowerCase()
+        return displayNameLower.includes(lowered) || usernameLower.includes(lowered) || emailLower.includes(lowered)
+      })
+      .map((user) => ({
+        kind: isArtistLikeProfile(user) ? "artist" : "user",
+        label: isArtistLikeProfile(user) ? "Artist" : "User",
+        displayName: getUserDisplayName(user),
+        username: user?.username || "",
+        email: user?.email || user?.emailOne || "",
+        externalURL: user?.externalURL || user?.webSite || "",
+        sourceArtist: isArtistLikeProfile(user) ? user : null,
+        sourceUser: user,
+      }))
+      .filter((suggestion) => String(suggestion.displayName || "").trim())
+
+    const artistMatches = artists
+      .filter((artist) => {
+        const displayName = getProfileDisplayName(artist)
+        const username = String(artist?.username || "").trim()
+        const email = String(artist?.emailOne || artist?.email || "").trim()
+        if (!displayName && !username && !email) return false
+        if (!lowered) return true
+
+        const displayNameLower = String(displayName).toLowerCase()
+        const titleLower = String(artist?.title || artist?.Title || "").toLowerCase()
+        const pathLower = String(artist?.path || artist?.Path || "").toLowerCase()
+        const usernameLower = username.toLowerCase()
+        const preferredName = String(artist?.preferredName || "").toLowerCase()
+        const emailLower = email.toLowerCase()
+        const externalURL = String(artist?.externalURL || artist?.webSite || "").toLowerCase()
+        return (
+          displayNameLower.includes(lowered) ||
+          titleLower.includes(lowered) ||
+          pathLower.includes(lowered) ||
+          usernameLower.includes(lowered) ||
+          preferredName.includes(lowered) ||
+          emailLower.includes(lowered) ||
+          externalURL.includes(lowered)
+        )
+      })
+      .slice(0, 10)
+      .map((artist) => {
+        const artistPath = String(artist?.path || artist?.Path || "").trim()
+        return {
+          kind: "artist",
+          label: "Artist",
+          displayName: getProfileDisplayName(artist),
+          artistPath,
+          // Use internal profile URL if path exists, otherwise fall back to external URL
+          externalURL: artistPath ? `/artists/${artistPath}` : (artist?.externalURL || artist?.webSite || ""),
+          username: artist?.username || "",
+          email: artist?.emailOne || artist?.email || "",
+          sourceArtist: artist,
+        }
+      })
+      .filter((suggestion) => String(suggestion.displayName || "").trim())
+
+    // Keep artists ahead of users so dedupe preserves the richer artist identity/tag.
+    const combined = [...suggestions, ...artistMatches, ...userMatches]
+    const deduped = []
+    const seen = new Set()
+    for (const entry of combined) {
+      const key = `${String(entry.displayName || "").toLowerCase()}::${String(entry.email || "").toLowerCase()}::${String(entry.username || "").toLowerCase()}`
+      if (!String(entry.displayName || "").trim()) continue
+      if (seen.has(key)) continue
+      seen.add(key)
+      deduped.push(entry)
+    }
+
+    return deduped.slice(0, 20)
+  }
+
+  const applySuggestion = (index, suggestion) => {
+    const profileName = suggestion.displayName || ""
+    // Prefer internal artist profile link; fall back to external URL on suggestion
+    const profileUrl = suggestion.externalURL || credits[index]?.externalURL || ""
+    updateCredit(index, {
+      selectedArtist: suggestion.sourceArtist || null,
+      displayName: profileName,
+      artistQuery: profileName,
       artistResults: [],
-      displayName: artist.stageName || artist.username || "",
-      externalURL: artist.externalURL || artist.webSite || "",
-      bioNote: artist.bioNote || "",
+      externalURL: profileUrl,
+      mode: "lookup",
+    })
+  }
+
+  const tryResolveLinkToArtist = (index, maybeUrl) => {
+    const normalized = normalizeUrl(maybeUrl)
+    if (!normalized) return
+
+    const match = artists.find((artist) => {
+      const url = normalizeUrl(artist?.externalURL || artist?.webSite)
+      if (!url) return false
+      return normalized === url || normalized.includes(url) || url.includes(normalized)
     })
 
-    setPicker({ open: false, index: null, artist: null })
+    if (!match) return
+
+    updateCredit(index, {
+      selectedArtist: match,
+      displayName: getProfileDisplayName(match),
+      artistQuery: getProfileDisplayName(match),
+      artistResults: [],
+      externalURL: match?.externalURL || match?.webSite || maybeUrl,
+      mode: "lookup",
+    })
   }
 
   return (
     <>
       <div className="rounded-md border border-base-300 bg-base-200 p-3 space-y-3">
         <div className="font-semibold text-sm">Credits</div>
+        <p className="text-xs text-base-content/60">Copyright Owner defaults to your profile. Click into Owner Name to clear and quickly pick from profiles (friends will be prioritized once that list is wired).</p>
 
         {credits.map((credit, index) => (
           <div key={index} className="rounded-md border border-base-300 bg-base-100 p-3 space-y-2">
@@ -140,71 +453,92 @@ function CreditsAdder({ credits, onChange, artists, onSave, saving, roleOptions,
               )}
             </div>
 
-            {index > 0 && (
-              <label className="form-control">
-                <span className="label-text text-xs">Role</span>
-                <select
-                  className="select select-bordered w-full"
-                  value={credit.creditRoleID || ""}
-                  onChange={(e) => {
-                    const roleId = e.target.value
-                    updateCredit(index, { creditRoleID: roleId, role: mapRoleLabel(roleOptions, roleId) })
-                  }}
-                >
-                  <option value="">Select role</option>
-                  {roleOptions.map((role) => (
-                    <option key={role.creditRoleID} value={role.creditRoleID}>{role.label}</option>
+            <label className="form-control">
+              <span className="label-text text-xs">Role</span>
+              <select
+                className="select select-bordered w-full"
+                value={credit.creditRoleID || (index === 0 ? defaultRoleID : "")}
+                onChange={(e) => {
+                  const roleId = e.target.value
+                  updateCredit(index, { creditRoleID: roleId, role: mapRoleLabel(roleOptions, roleId) })
+                }}
+              >
+                <option value="">Select role</option>
+                {roleOptions.map((role) => (
+                  <option key={role.creditRoleID} value={role.creditRoleID}>{role.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <div className="relative">
+              <input
+                className={defaultFieldClass}
+                placeholder={index === 0 ? "Copyright owner name or profile link" : "Display name"}
+                value={credit.displayName}
+                onFocus={() => {
+                  if (index === 0 && !ownerFocusClearedRef.current && userSuggestion?.displayName && credit.displayName === userSuggestion.displayName) {
+                    ownerFocusClearedRef.current = true
+                    updateCredit(index, { displayName: "" })
+                  }
+                  updateCredit(index, {
+                    artistResults: buildSuggestions(index === 0 ? "" : credit.displayName || ""),
+                    mode: "lookup",
+                  })
+                }}
+                onPaste={(e) => {
+                  const pasted = e.clipboardData?.getData("text") || ""
+                  if (/^https?:\/\//i.test(String(pasted).trim())) {
+                    setTimeout(() => tryResolveLinkToArtist(index, String(pasted).trim()), 0)
+                  }
+                }}
+                onChange={(e) => {
+                  const query = e.target.value
+                  updateCredit(index, {
+                    displayName: query,
+                    artistQuery: query,
+                    artistResults: buildSuggestions(query),
+                    mode: "lookup",
+                  })
+                }}
+              />
+
+              {credit.artistResults?.length > 0 && (
+                <div className="absolute z-10 w-full bg-base-100 border border-base-300 rounded-md shadow-lg mt-1 max-h-40 overflow-auto">
+                  {credit.artistResults.map((a, suggestionIndex) => (
+                    <button
+                      key={`${a.kind || "artist"}-${a.displayName || "unknown"}-${suggestionIndex}`}
+                      type="button"
+                      className="w-full text-left px-3 py-2 hover:bg-base-200 text-sm"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => applySuggestion(index, a)}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate">{a.displayName || "Unknown profile"}</span>
+                        <span className="badge badge-ghost badge-xs">{a.label || "Artist"}</span>
+                      </div>
+                      {a.kind === "artist" && a.artistPath
+                        ? <div className="text-[11px] text-base-content/60 truncate">/artists/{a.artistPath}</div>
+                        : (a.username || a.email) ? <div className="text-[11px] text-base-content/60 truncate">{a.username || a.email}</div> : null}
+                    </button>
                   ))}
-                </select>
-              </label>
+                </div>
+              )}
+            </div>
+
+            {credit.selectedArtist && (
+              <div className="badge badge-success mt-1">
+                Selected: {getProfileDisplayName(credit.selectedArtist) || credit.displayName}
+              </div>
             )}
 
             <input
               className={defaultFieldClass}
-              placeholder={index === 0 ? "Copyright owner name or entity" : "Display name"}
-              value={credit.displayName}
-              onChange={(e) => updateCredit(index, { displayName: e.target.value })}
+              placeholder="External URL (optional)"
+              value={credit.externalURL}
+              onBlur={(e) => tryResolveLinkToArtist(index, e.target.value)}
+              onChange={(e) => updateCredit(index, { externalURL: e.target.value })}
             />
-
-            {index > 0 && (
-              <>
-                <div className="flex gap-2">
-                  <button type="button" className={`btn btn-xs ${credit.mode === "lookup" ? "btn-primary" : "btn-outline"}`} onClick={() => updateCredit(index, { mode: "lookup" })}>Artist Lookup</button>
-                  <button type="button" className={`btn btn-xs ${credit.mode === "manual" ? "btn-primary" : "btn-outline"}`} onClick={() => updateCredit(index, { mode: "manual" })}>Manual Entry</button>
-                </div>
-
-                {credit.mode === "lookup" && (
-                  <div className="relative">
-                    <input
-                      className={defaultFieldClass}
-                      placeholder="Search by artist/user/profile..."
-                      value={credit.artistQuery}
-                      onChange={(e) => handleArtistQueryChange(index, e.target.value)}
-                    />
-
-                    {credit.artistResults?.length > 0 && (
-                      <div className="absolute z-10 w-full bg-base-100 border border-base-300 rounded-md shadow-lg mt-1 max-h-40 overflow-auto">
-                        {credit.artistResults.map((a) => (
-                          <button
-                            key={a.artistID || a.id || a.username}
-                            type="button"
-                            className="w-full text-left px-3 py-2 hover:bg-base-200 text-sm"
-                            onClick={() => setPicker({ open: true, index, artist: a })}
-                          >
-                            {a.stageName || a.username || `Artist #${a.artistID}`}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {credit.selectedArtist && <div className="badge badge-success mt-1">Selected: {credit.selectedArtist.stageName || credit.selectedArtist.username}</div>}
-                  </div>
-                )}
-
-                <input className={defaultFieldClass} placeholder="External URL (optional)" value={credit.externalURL} onChange={(e) => updateCredit(index, { externalURL: e.target.value })} />
-                <input className={defaultFieldClass} placeholder="Credit note (optional)" value={credit.bioNote} onChange={(e) => updateCredit(index, { bioNote: e.target.value })} />
-              </>
-            )}
+            <input className={defaultFieldClass} placeholder="Credit note (optional)" value={credit.bioNote} onChange={(e) => updateCredit(index, { bioNote: e.target.value })} />
           </div>
         ))}
 
@@ -213,19 +547,6 @@ function CreditsAdder({ credits, onChange, artists, onSave, saving, roleOptions,
           <button type="button" className="btn btn-sm btn-secondary" onClick={onSave} disabled={saving}>{saving ? "Saving..." : "Save Credits"}</button>
         </div>
       </div>
-
-      {picker.open && picker.artist && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg">Use This Profile?</h3>
-            <p className="text-sm mt-2">{picker.artist.stageName || picker.artist.username || "Unknown profile"}</p>
-            <div className="modal-action">
-              <button type="button" className="btn btn-ghost" onClick={() => setPicker({ open: false, index: null, artist: null })}>Cancel</button>
-              <button type="button" className="btn btn-primary" onClick={applyPickedArtist}>Use Profile</button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }
@@ -277,6 +598,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
   const [savingVideoCredits, setSavingVideoCredits] = useState(false)
   const [videoCreditsDirty, setVideoCreditsDirty] = useState(false)
 
+  const [users, setUsers] = useState([])
   const [artists, setArtists] = useState([])
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
@@ -289,6 +611,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     () => Object.keys(WARNING_DEFINITIONS).map((key) => ({ key, label: warningKeyToLabel(key) })),
     []
   )
+  const currentUserLabel = useMemo(() => getCurrentUserLabel(currentUser), [currentUser])
 
   const roleOptions = creditRoles.length ? creditRoles : fallbackRoleOptions
   const defaultRoleID = String(roleOptions[0]?.creditRoleID || "")
@@ -445,22 +768,41 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
   }, [loadFiles, loadPictureMetadata, loadLocalCredits, loadLocalWarnings])
 
   useEffect(() => {
+    const currentUserId = typeof currentUser === "object" ? currentUser?.id : null
+
+    fetch(`${api_url}user`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data) => setUsers(Array.isArray(data) ? data : []))
+      .catch(() => setUsers([]))
+
     fetch(`${api_url}artist`)
       .then((r) => r.json())
       .then((data) => setArtists(Array.isArray(data) ? data : []))
       .catch(() => {})
 
+    if (currentUserId) {
+      fetch(`${api_url}linker_usertoartist/byUserID/${currentUserId}`)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((data) => {
+          if (!Array.isArray(data) || !data.length) return
+          setArtists((prev) => mergeArtists(prev, data))
+        })
+        .catch(() => {})
+    }
+
     fetch(`${api_url}blog/credit-roles`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setCreditRoles(Array.isArray(data) ? data : []))
       .catch(() => {})
-  }, [])
+  }, [currentUser])
 
   const applySelectedFileData = useCallback((file) => {
     const key = normalizeUrl(file?.url)
     const pic = pictureByUrl[key]
     const cachedCredits = creditsByUrl[key]
     const cachedWarnings = warningsByUrl[key]
+    const persistedPictureId = toNumber(file?.persistedPictureId || pic?.pictureID || pic?.PictureID)
+    const persistedVideoId = toNumber(file?.persistedVideoId)
 
     setPicMetadata({
       title: pic?.title || pic?.Title || "",
@@ -471,11 +813,40 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     setPicMetaDirty(false)
 
     if (Array.isArray(cachedCredits) && cachedCredits.length) {
-      setPicCredits(cachedCredits)
+      if (file?.isVideoPreview) {
+        setVideoCredits(cachedCredits)
+      } else {
+        setPicCredits(cachedCredits)
+      }
+    } else if (file?.isVideoPreview) {
+      setVideoCredits([makeEmptyCreditRow("Copyright Owner", defaultRoleID)])
+      if (persistedVideoId) {
+        fetch(`${api_url}picture/video/${persistedVideoId}/credits`)
+          .then((res) => (res.ok ? res.json() : []))
+          .then((rows) => {
+            const mapped = mapApiCreditsToEditorRows(rows)
+            if (!mapped.length) return
+            setCreditsByUrl((prev) => ({ ...prev, [key]: mapped }))
+            setVideoCredits(mapped)
+          })
+          .catch(() => {})
+      }
     } else {
       setPicCredits([makeEmptyCreditRow("Copyright Owner", defaultRoleID)])
+      if (persistedPictureId) {
+        fetch(`${api_url}picture/${persistedPictureId}/credits`)
+          .then((res) => (res.ok ? res.json() : []))
+          .then((rows) => {
+            const mapped = mapApiCreditsToEditorRows(rows)
+            if (!mapped.length) return
+            setCreditsByUrl((prev) => ({ ...prev, [key]: mapped }))
+            setPicCredits(mapped)
+          })
+          .catch(() => {})
+      }
     }
     setPicCreditsDirty(false)
+    setVideoCreditsDirty(false)
 
     setSelectedWarnings(Array.isArray(cachedWarnings) ? cachedWarnings : [])
     setWarningsDirty(false)
@@ -526,6 +897,8 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     formData.append("startPrefix", galleryPrefix)
     formData.append("targetPrefix", galleryPrefix)
     formData.append("userID", "staff")
+    formData.append("category", entityType)
+    formData.append("entityID", String(entityId || ""))
 
     const res = await fetch("/api/image/upload", { method: "POST", body: formData })
     const data = await res.json()
@@ -539,7 +912,11 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
       blobName = file.name
     }
 
-    return { name: blobName, url: data.url }
+    return {
+      name: blobName,
+      url: data.url,
+      persistedPictureId: data?.persistedPictureId || null,
+    }
   }
 
   const syncVideoToGallery = useCallback(async ({ provider, videoId, sourceUrl, previewImage, embedUrl }) => {
@@ -781,13 +1158,40 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
 
     try {
       const key = normalizeUrl(selectedFile.url)
-      const next = { ...creditsByUrl, [key]: picCredits }
+      const picture = pictureByUrl[key]
+      const pictureId = toNumber(selectedFile?.persistedPictureId || picture?.pictureID || picture?.PictureID)
+      if (!pictureId) {
+        throw new Error("Save image metadata first so a PictureID exists, then save credits.")
+      }
+
+      const payload = {
+        credits: buildCreditsSavePayload(picCredits, defaultRoleID),
+      }
+
+      const res = await fetch(`${api_url}picture/${pictureId}/credits`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        if (res.status === 404) {
+          throw new Error("Credits endpoint not found (404). Restart the API server so the latest routes are loaded.")
+        }
+        throw new Error(errorData?.message || errorData?.error || "Failed to save image credits.")
+      }
+
+      const savedRows = await res.json()
+      const mapped = mapApiCreditsToEditorRows(savedRows)
+      const next = { ...creditsByUrl, [key]: mapped }
       setCreditsByUrl(next)
+      setPicCredits(mapped.length ? mapped : [makeEmptyCreditRow("Copyright Owner", defaultRoleID)])
       localStorage.setItem(localCreditsKey, JSON.stringify(next))
       setPicCreditsDirty(false)
       showMessage("Image credits saved.")
-    } catch {
-      showError("Failed to save credits.")
+    } catch (err) {
+      showError(err.message || "Failed to save credits.")
     } finally {
       setSavingPicCredits(false)
     }
@@ -878,13 +1282,43 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
   }
 
   const handleSaveVideoCredits = async () => {
+    if (!selectedFile?.isVideoPreview) return
     setSavingVideoCredits(true)
     try {
-      await new Promise((r) => setTimeout(r, 300))
+      const key = normalizeUrl(selectedFile.url)
+      const videoId = toNumber(selectedFile?.persistedVideoId)
+      if (!videoId) {
+        throw new Error("Save or attach the video to gallery first, then save credits.")
+      }
+
+      const payload = {
+        credits: buildCreditsSavePayload(videoCredits, defaultRoleID),
+      }
+
+      const res = await fetch(`${api_url}picture/video/${videoId}/credits`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        if (res.status === 404) {
+          throw new Error("Credits endpoint not found (404). Restart the API server so the latest routes are loaded.")
+        }
+        throw new Error(errorData?.message || errorData?.error || "Failed to save video credits.")
+      }
+
+      const savedRows = await res.json()
+      const mapped = mapApiCreditsToEditorRows(savedRows)
+      const next = { ...creditsByUrl, [key]: mapped }
+      setCreditsByUrl(next)
+      setVideoCredits(mapped.length ? mapped : [makeEmptyCreditRow("Copyright Owner", defaultRoleID)])
+      localStorage.setItem(localCreditsKey, JSON.stringify(next))
       setVideoCreditsDirty(false)
       showMessage("Video credits saved.")
-    } catch {
-      showError("Failed to save video credits.")
+    } catch (err) {
+      showError(err.message || "Failed to save video credits.")
     } finally {
       setSavingVideoCredits(false)
     }
@@ -1035,7 +1469,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
 
                     <div className="form-control">
                       <label className="label pb-0"><span className="label-text text-xs">Submitted by</span></label>
-                      <input className="input input-bordered w-full bg-base-300 cursor-not-allowed" value={currentUser || ""} readOnly tabIndex={-1} />
+                      <input className="input input-bordered w-full bg-base-300 cursor-not-allowed" value={currentUserLabel} readOnly tabIndex={-1} />
                     </div>
 
                     <div className="flex justify-end">
@@ -1049,11 +1483,13 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                     credits={videoCredits}
                     onChange={(next) => { setVideoCredits(next); setVideoCreditsDirty(true) }}
                     artists={artists}
+                    users={users}
                     onSave={handleSaveVideoCredits}
                     saving={savingVideoCredits}
                     roleOptions={roleOptions}
                     defaultRoleID={defaultRoleID}
                     onDirty={() => setVideoCreditsDirty(true)}
+                    currentUser={currentUser}
                   />
 
                   <div className="rounded-md border border-base-300 bg-base-200 p-3 space-y-3">
@@ -1119,7 +1555,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
 
                   <div className="form-control">
                     <label className="label pb-0"><span className="label-text text-xs">Uploaded by</span></label>
-                    <input className="input input-bordered w-full bg-base-300 cursor-not-allowed" value={currentUser || ""} readOnly tabIndex={-1} />
+                    <input className="input input-bordered w-full bg-base-300 cursor-not-allowed" value={currentUserLabel} readOnly tabIndex={-1} />
                   </div>
 
                   <div className="flex justify-end">
@@ -1133,11 +1569,13 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                   credits={picCredits}
                   onChange={(next) => { setPicCredits(next); setPicCreditsDirty(true) }}
                   artists={artists}
+                  users={users}
                   onSave={handleSavePicCredits}
                   saving={savingPicCredits}
                   roleOptions={roleOptions}
                   defaultRoleID={defaultRoleID}
                   onDirty={() => setPicCreditsDirty(true)}
+                  currentUser={currentUser}
                 />
 
                 <div className="rounded-md border border-base-300 bg-base-200 p-3 space-y-3">

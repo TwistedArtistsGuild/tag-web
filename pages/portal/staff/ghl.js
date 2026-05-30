@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
+import TagSEO from "@/components/TagSEO"
 
 export default function GHLTester() {
   const [contacts, setContacts] = useState([])
@@ -287,6 +288,7 @@ export default function GHLTester() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
+				<TagSEO metadataProp={{ title: "GHL Integration Tester", description: "Internal GoHighLevel integration testing workspace.", robots: "noindex, nofollow", keywords: "staff, crm, testing", og: { title: "GHL Integration Tester", description: "Internal GoHighLevel integration testing workspace." } }} canonicalSlug="portal/staff/ghl" />
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading GoHighLevel data...</p>
@@ -298,6 +300,7 @@ export default function GHLTester() {
   if (error) {
     return (
       <div className="min-h-screen bg-red-50 p-6">
+				<TagSEO metadataProp={{ title: "GHL Integration Tester", description: "Internal GoHighLevel integration testing workspace.", robots: "noindex, nofollow", keywords: "staff, crm, testing", og: { title: "GHL Integration Tester", description: "Internal GoHighLevel integration testing workspace." } }} canonicalSlug="portal/staff/ghl" />
         <div className="max-w-4xl mx-auto">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
             <strong>Error:</strong> {error}
@@ -309,6 +312,7 @@ export default function GHLTester() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
+			<TagSEO metadataProp={{ title: "GHL Integration Tester", description: "Internal GoHighLevel integration testing workspace.", robots: "noindex, nofollow", keywords: "staff, crm, testing", og: { title: "GHL Integration Tester", description: "Internal GoHighLevel integration testing workspace." } }} canonicalSlug="portal/staff/ghl" />
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">GoHighLevel Integration Tester</h1>
 

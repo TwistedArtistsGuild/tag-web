@@ -11,7 +11,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
+import { useSession } from "next-auth/react"
 import { defaultFieldClass } from "@/utils/formSettings"
+import getApiURL from "@/components/widgets/GetApiURL"
 
 const CONTAINER_CONFIGS = {
 	// This will get depreciated - the intent was to pass in the starting location and ensure the user can't drift into unathorized areas.
@@ -28,6 +30,15 @@ function normalizePrefix(value) {
 	return String(value || "").replace(/^\/+/, "")
 }
 
+function normalizeUrl(value) {
+	if (!value) return ""
+	return String(value).trim().toLowerCase()
+}
+
+function displayProfileName(profile) {
+	return profile?.stageName || profile?.preferredName || profile?.username || profile?.displayName || profile?.name || profile?.email || ""
+}
+
 export default function PictureExplorerCard({
 	useCase = "personal-blog",
 	title,
@@ -40,7 +51,10 @@ export default function PictureExplorerCard({
 	onCreditsSave,
 	defaultMetadata = {},
 	defaultCredits = {},
+	creditsMode = "legacy",
 }) {
+	const apiUrl = getApiURL()
+	const { data: session } = useSession()
 	const config = CONTAINER_CONFIGS[useCase] || CONTAINER_CONFIGS["personal-blog"]
 	const resolvedContainer = startContainer || config.container
 	const resolvedStartPrefix = normalizePrefix(startPrefix ?? config.startPrefix)
@@ -70,16 +84,22 @@ export default function PictureExplorerCard({
 		description: "",
 	})
 	const [creditsDraft, setCreditsDraft] = useState({
+		creditRoleID: "1",
+		role: "Copyright Owner",
 		copyrightOwner: "",
-		photographer: "",
-		makeup: "",
+		ownerProfileUrl: "",
 		additionalCredits: "",
 	})
+	const [creditRoleOptions, setCreditRoleOptions] = useState([])
+	const [artistProfiles, setArtistProfiles] = useState([])
+	const [ownerSuggestions, setOwnerSuggestions] = useState([])
+	const [showOwnerSuggestions, setShowOwnerSuggestions] = useState(false)
 	const [savingMetadata, setSavingMetadata] = useState(false)
 	const [savingCredits, setSavingCredits] = useState(false)
 	const [formsMessage, setFormsMessage] = useState("")
 	const [formsError, setFormsError] = useState("")
 	const fileInputRef = useRef(null)
+	const ownerFieldPrimedRef = useRef(false)
 
 	const rootSegments = useMemo(() => activeStartPrefix.split("/").filter(Boolean), [activeStartPrefix])
 	const currentSegments = useMemo(() => prefix.split("/").filter(Boolean), [prefix])
@@ -119,9 +139,10 @@ export default function PictureExplorerCard({
 	})
 
 	const buildCreditsDraft = () => ({
+		creditRoleID: defaultCredits.creditRoleID || "1",
+		role: defaultCredits.role || "Copyright Owner",
 		copyrightOwner: defaultCredits.copyrightOwner || "",
-		photographer: defaultCredits.photographer || "",
-		makeup: defaultCredits.makeup || "",
+		ownerProfileUrl: defaultCredits.ownerProfileUrl || defaultCredits.externalURL || "",
 		additionalCredits: defaultCredits.additionalCredits || "",
 	})
 
@@ -278,7 +299,96 @@ export default function PictureExplorerCard({
 		if (!isImageFile(file)) return
 		setSelectedImageUrl(file.url)
 		setSelectedImageName(file.name)
+		ownerFieldPrimedRef.current = false
 		resetFormsForFile(file)
+	}
+
+	const currentUserProfile = useMemo(() => {
+		if (!session?.user) return null
+		return {
+			type: "session",
+			id: session.user.id || session.user.email || session.user.name || "current-user",
+			displayName: session.user.name || session.user.email || "Current User",
+			username: session.user.username || session.user.name || "",
+			email: session.user.email || "",
+			externalURL: "",
+		}
+	}, [session])
+
+	const buildOwnerSuggestions = useMemo(() => {
+		return (query = "", includeDefault = false) => {
+			const lowered = String(query || "").trim().toLowerCase()
+			const matches = []
+			if (currentUserProfile && (includeDefault || !lowered || displayProfileName(currentUserProfile).toLowerCase().includes(lowered) || String(currentUserProfile.email || "").toLowerCase().includes(lowered))) {
+				matches.push({
+					...currentUserProfile,
+					badge: "You",
+				})
+			}
+
+			const artistMatches = artistProfiles
+				.filter((artist) => {
+					if (!lowered) return true
+					const stageName = String(artist?.stageName || "").toLowerCase()
+					const username = String(artist?.username || "").toLowerCase()
+					const preferredName = String(artist?.preferredName || "").toLowerCase()
+					const email = String(artist?.email || "").toLowerCase()
+					const externalURL = String(artist?.externalURL || artist?.webSite || "").toLowerCase()
+					return stageName.includes(lowered) || username.includes(lowered) || preferredName.includes(lowered) || email.includes(lowered) || externalURL.includes(lowered)
+				})
+				.slice(0, 12)
+				.map((artist) => ({
+					type: "artist",
+					id: artist.artistID || artist.id || artist.userID || artist.username,
+					displayName: displayProfileName(artist),
+					username: artist.username || "",
+					email: artist.email || "",
+					externalURL: artist.externalURL || artist.webSite || "",
+					badge: "Artist",
+				}))
+
+			const merged = [...matches, ...artistMatches]
+			const seen = new Set()
+			return merged.filter((item) => {
+				const key = `${String(item.displayName || "").toLowerCase()}::${String(item.email || "").toLowerCase()}`
+				if (!key || seen.has(key)) return false
+				seen.add(key)
+				return true
+			})
+		}
+	}, [artistProfiles, currentUserProfile])
+
+	const applyOwnerSuggestion = (suggestion) => {
+		setCreditsDraft((current) => ({
+			...current,
+			copyrightOwner: suggestion.displayName,
+			ownerProfileUrl: suggestion.externalURL || current.ownerProfileUrl || "",
+		}))
+		setShowOwnerSuggestions(false)
+	}
+
+	const tryResolveOwnerByLink = (link) => {
+		const normalized = normalizeUrl(link)
+		if (!normalized) return
+
+		const match = artistProfiles.find((artist) => {
+			const externalURL = normalizeUrl(artist?.externalURL || artist?.webSite)
+			if (!externalURL) return false
+			return externalURL === normalized || normalized.includes(externalURL) || externalURL.includes(normalized)
+		})
+
+		if (!match) return
+
+		const displayName = displayProfileName(match)
+		if (!displayName) return
+
+		setCreditsDraft((current) => ({
+			...current,
+			copyrightOwner: displayName,
+			ownerProfileUrl: match.externalURL || match.webSite || current.ownerProfileUrl || "",
+		}))
+		setFormsMessage(`Matched profile link to ${displayName}.`)
+		setFormsError("")
 	}
 
 	const fallbackSave = async (payload, successMessage) => {
@@ -398,6 +508,33 @@ export default function PictureExplorerCard({
 		return () => clearTimeout(initialize)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [useCase, resolvedStartPrefix, resolvedContainer])
+
+	useEffect(() => {
+		fetch(`${apiUrl}artist`)
+			.then((response) => (response.ok ? response.json() : []))
+			.then((data) => setArtistProfiles(Array.isArray(data) ? data : []))
+			.catch(() => setArtistProfiles([]))
+	}, [apiUrl])
+
+	useEffect(() => {
+		fetch(`${apiUrl}blog/credit-roles`)
+			.then((r) => (r.ok ? r.json() : []))
+			.then((data) => setCreditRoleOptions(Array.isArray(data) ? data : []))
+			.catch(() => setCreditRoleOptions([]))
+	}, [apiUrl])
+
+
+	useEffect(() => {
+		if (!selectedFile) return
+		if (!currentUserProfile) return
+		setCreditsDraft((current) => {
+			if (String(current.copyrightOwner || "").trim()) return current
+			return {
+				...current,
+				copyrightOwner: currentUserProfile.displayName || "",
+			}
+		})
+	}, [currentUserProfile, selectedFile])
 
 	return (
 		<div className="card bg-base-100 shadow-md border border-base-300">
@@ -718,27 +855,117 @@ export default function PictureExplorerCard({
 								<div className="rounded-md border border-base-300 bg-base-100 p-3">
 									<div className="font-semibold mb-2">Credits</div>
 									<div className="space-y-2">
-										<input
-											type="text"
-											className={defaultFieldClass}
-											placeholder="Copyright owner"
-											value={creditsDraft.copyrightOwner}
-											onChange={(e) => setCreditsDraft((current) => ({ ...current, copyrightOwner: e.target.value }))}
-										/>
-										<input
-											type="text"
-											className={defaultFieldClass}
-											placeholder="Photographer or videographer"
-											value={creditsDraft.photographer}
-											onChange={(e) => setCreditsDraft((current) => ({ ...current, photographer: e.target.value }))}
-										/>
-										<input
-											type="text"
-											className={defaultFieldClass}
-											placeholder="Makeup or styling"
-											value={creditsDraft.makeup}
-											onChange={(e) => setCreditsDraft((current) => ({ ...current, makeup: e.target.value }))}
-										/>
+										{creditsMode === "smart-owner" ? (
+											<>
+												<label className="form-control">
+													<span className="label-text text-xs">Role</span>
+													<select
+														className="select select-bordered w-full"
+														value={creditsDraft.creditRoleID || "1"}
+														onChange={(e) => {
+															const roleId = e.target.value
+															const role = creditRoleOptions.find((option) => String(option.creditRoleID) === String(roleId))
+															setCreditsDraft((current) => ({ ...current, creditRoleID: roleId, role: role?.label || "Copyright Owner" }))
+														}}
+													>
+														{creditRoleOptions.map((option) => (
+															<option key={option.creditRoleID} value={String(option.creditRoleID)}>
+																{option.label}
+															</option>
+														))}
+													</select>
+												</label>
+
+												<div className="relative">
+													<input
+														type="text"
+														className={defaultFieldClass}
+														placeholder="Copyright owner name, artist, or profile link"
+														value={creditsDraft.copyrightOwner}
+														onFocus={() => {
+															if (!ownerFieldPrimedRef.current) {
+																ownerFieldPrimedRef.current = true
+																setCreditsDraft((current) => ({ ...current, copyrightOwner: "" }))
+															}
+															setOwnerSuggestions(buildOwnerSuggestions("", true))
+															setShowOwnerSuggestions(true)
+														}}
+														onBlur={() => {
+															setTimeout(() => setShowOwnerSuggestions(false), 100)
+														}}
+														onPaste={(e) => {
+															const pasted = e.clipboardData?.getData("text") || ""
+															if (/^https?:\/\//i.test(pasted.trim())) {
+																setTimeout(() => tryResolveOwnerByLink(pasted.trim()), 0)
+															}
+														}}
+														onChange={(e) => {
+															const value = e.target.value
+															setCreditsDraft((current) => ({ ...current, copyrightOwner: value }))
+															setOwnerSuggestions(buildOwnerSuggestions(value))
+															setShowOwnerSuggestions(true)
+														}}
+													/>
+													{showOwnerSuggestions && ownerSuggestions.length > 0 ? (
+														<div className="absolute z-20 mt-1 w-full rounded-md border border-base-300 bg-base-100 shadow-lg max-h-56 overflow-auto">
+															{ownerSuggestions.map((suggestion) => (
+																<button
+																	key={`${suggestion.type}-${suggestion.id}-${suggestion.displayName}`}
+																	type="button"
+																	className="w-full px-3 py-2 text-left text-sm hover:bg-base-200"
+																	onClick={() => applyOwnerSuggestion(suggestion)}
+																>
+																	<div className="flex items-center justify-between gap-2">
+																		<span className="truncate">{suggestion.displayName}</span>
+																		<span className="badge badge-ghost badge-xs">{suggestion.badge}</span>
+																	</div>
+																	{suggestion.username || suggestion.email ? (
+																		<div className="text-[11px] text-base-content/60 truncate">{suggestion.username || suggestion.email}</div>
+																	) : null}
+																</button>
+															))}
+														</div>
+													) : null}
+												</div>
+
+												<input
+													type="text"
+													className={defaultFieldClass}
+													placeholder="Profile link (optional)"
+													value={creditsDraft.ownerProfileUrl}
+													onBlur={(e) => tryResolveOwnerByLink(e.target.value)}
+													onChange={(e) => setCreditsDraft((current) => ({ ...current, ownerProfileUrl: e.target.value }))}
+												/>
+
+												<div className="text-xs text-base-content/60">
+													Starts by suggesting your profile. Friends can be prioritized next once friend graph is wired in.
+												</div>
+											</>
+										) : (
+											<>
+												<input
+													type="text"
+													className={defaultFieldClass}
+													placeholder="Copyright owner"
+													value={creditsDraft.copyrightOwner}
+													onChange={(e) => setCreditsDraft((current) => ({ ...current, copyrightOwner: e.target.value }))}
+												/>
+												<input
+													type="text"
+													className={defaultFieldClass}
+													placeholder="Photographer or videographer"
+													value={creditsDraft.photographer || ""}
+													onChange={(e) => setCreditsDraft((current) => ({ ...current, photographer: e.target.value }))}
+												/>
+												<input
+													type="text"
+													className={defaultFieldClass}
+													placeholder="Makeup or styling"
+													value={creditsDraft.makeup || ""}
+													onChange={(e) => setCreditsDraft((current) => ({ ...current, makeup: e.target.value }))}
+												/>
+											</>
+										)}
 										<textarea
 											className="textarea textarea-bordered w-full"
 											rows={3}

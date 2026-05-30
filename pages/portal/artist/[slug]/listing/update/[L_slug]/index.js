@@ -15,6 +15,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
 import PictureExplorerCard from "@/components/PictureExplorerCard";
+import TagSEO from "@/components/TagSEO";
 
 const api_url = getApiURL();
 const formName = "ListingForm1";
@@ -75,6 +76,19 @@ export default function UpdateListingForm2(props) {
 
     return (
         <div className="p-4 space-y-6">
+            <TagSEO
+                metadataProp={{
+                    title: "Update Listing",
+                    description: "Update an existing artist listing.",
+                    robots: "noindex, nofollow",
+                    keywords: "artist portal, update listing",
+                    og: {
+                        title: "Update Listing",
+                        description: "Update an existing artist listing.",
+                    },
+                }}
+                canonicalSlug="portal/artist/[slug]/listing/update/[L_slug]"
+            />
             {props.listingId ? (
                 <GalleryManager
                     entityType="listing"
@@ -219,7 +233,14 @@ export async function getServerSideProps(context) {
             listingId,
             metadataProp: metadata,
             loadError,
-            currentUser: session.user?.email || session.user?.name || null,
+            currentUser: session.user
+                ? {
+                                        id: session.user.id || "",
+                    name: session.user.name || "",
+                    email: session.user.email || "",
+                    username: session.user.username || "",
+                  }
+                : null,
         }
     };
 }
