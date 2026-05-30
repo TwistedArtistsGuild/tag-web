@@ -22,8 +22,8 @@ import { useAppContext } from "@/components/Context"
 import ArtistCard from "@/components/cards/card_artist"
 import ListingCardSmall from "@/components/cards/card_listing_small"
 import ContactCard from "@/components/cards/card_contactList"
-import SocialComments from "@/components/social/Comments"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
+import DynamicComments, { CommentTargetType } from "@/components/social/DynamicComments"
 import ArtistEventsSection from "@/components/artist/ArtistEventsSection"
 import { isArtist, isStaff, isAdmin } from "@/utils/authHelpers"
 import { sanitizeDefaultHtml } from "@/components/security/sanitize"
@@ -264,11 +264,18 @@ const Artist = (props) => {
             <div id="comments" className="mt-12 mb-8">
               <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">Comments & Feedback</h2>
               <div className="card bg-base-100 shadow-lg p-6">
-                <SocialComments
-                  contextId={`artist-${props.artist?.artistid || props.slug}`}
-                  initialComments={[]}
-                  readOnly={false}
-                />
+                {props.artist?.artistid || props.artist?.artistID ? (
+                  <DynamicComments
+                    targetId={props.artist.artistid || props.artist.artistID}
+                    targetType={CommentTargetType.ARTIST}
+                    allowMedia={true}
+                    enabled={true}
+                  />
+                ) : (
+                  <div className="alert alert-warning">
+                    <span>Unable to load comments.</span>
+                  </div>
+                )}
               </div>
             </div>
 
