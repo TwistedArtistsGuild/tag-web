@@ -125,6 +125,21 @@ function toNumber(value) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 0
 }
 
+function getManagedPrefix(entityType, entityId, folderKind = "gallery") {
+  const normalizedEntityType = String(entityType || "").trim().toLowerCase()
+  const normalizedFolderKind = String(folderKind || "gallery").trim().toLowerCase()
+
+  if (normalizedEntityType === "artist") {
+    return `platformpics/artists/${entityId}/${normalizedFolderKind}/`
+  }
+
+  if (normalizedEntityType === "user") {
+    return `platformpics/users/${entityId}/${normalizedFolderKind}/`
+  }
+
+  return `platformpics/${normalizedEntityType}/${entityId}/${normalizedFolderKind}/`
+}
+
 function mapApiCreditsToEditorRows(credits = []) {
   if (!Array.isArray(credits)) return []
   return credits.map((credit) => ({
@@ -551,8 +566,12 @@ function CreditsAdder({ credits, onChange, artists, users, onSave, saving, roleO
   )
 }
 
-export default function GalleryManager({ entityType, entityId, entityLabel, currentUser }) {
-  const galleryPrefix = `platformpics/${entityType}/${entityId}/gallery/`
+export default function GalleryManager({ entityType, entityId, entityLabel, currentUser, basePrefix, folderKind = "gallery", title = "Gallery Manager", allowVideo, onFilesChanged }) {
+  const normalizedFolderKind = String(folderKind || "gallery").trim().toLowerCase()
+  const galleryPrefix = basePrefix || getManagedPrefix(entityType, entityId, normalizedFolderKind)
+  const canManageOrder = normalizedFolderKind === "gallery"
+  const canPostVideo = typeof allowVideo === "boolean" ? allowVideo : normalizedFolderKind === "gallery"
+  const folderDisplayName = normalizedFolderKind.charAt(0).toUpperCase() + normalizedFolderKind.slice(1)
   const localCreditsKey = useMemo(() => `gallery-manager:${entityType}:${entityId}:credits`, [entityType, entityId])
   const localWarningsKey = useMemo(() => `gallery-manager:${entityType}:${entityId}:warnings`, [entityType, entityId])
 
@@ -649,17 +668,18 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
 
   const loadFiles = useCallback(async () => {
     setLoadingFiles(true)
-    const entityFetchUrl = entityType === "blog"
-      ? `${api_url}blog/${entityId}`
-      : `${api_url}${entityType}/byID/${entityId}`
     try {
-      const [entityRes, blobRes] = await Promise.all([
-        fetch(entityFetchUrl),
-        fetch(`/api/image/list?container=tagpictures&startPrefix=${encodeURIComponent(galleryPrefix)}&prefix=${encodeURIComponent(galleryPrefix)}`),
-      ])
+      const entityFetchUrl = entityType === "blog"
+        ? `${api_url}blog/${entityId}`
+        : `${api_url}${entityType}/byID/${entityId}`
 
-      const entityData = entityRes.ok ? await entityRes.json() : null
-      const galleryItems = Array.isArray(entityData?.gallery?.galleryItems) ? entityData.gallery.galleryItems : []
+      const blobResPromise = fetch(`/api/image/list?container=tagpictures&startPrefix=${encodeURIComponent(galleryPrefix)}&prefix=${encodeURIComponent(galleryPrefix)}`)
+      const entityResPromise = canManageOrder ? fetch(entityFetchUrl) : Promise.resolve(null)
+
+      const [entityRes, blobRes] = await Promise.all([entityResPromise, blobResPromise])
+
+      const entityData = entityRes?.ok ? await entityRes.json() : null
+      const galleryItems = canManageOrder && Array.isArray(entityData?.gallery?.galleryItems) ? entityData.gallery.galleryItems : []
       const blobData = blobRes.ok ? await blobRes.json() : null
       const remoteFiles = Array.isArray(blobData?.files) ? blobData.files : []
 
@@ -713,13 +733,15 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         byUrl.set(key, item)
       })
 
-      setFiles(Array.from(byUrl.values()))
+      const nextFiles = Array.from(byUrl.values())
+      setFiles(nextFiles)
+      onFilesChanged?.(nextFiles)
     } catch (err) {
       showError(err.message)
     } finally {
       setLoadingFiles(false)
     }
-  }, [entityType, entityId, galleryPrefix])
+  }, [canManageOrder, entityType, entityId, galleryPrefix, onFilesChanged])
 
   const loadPictureMetadata = useCallback(async () => {
     try {
@@ -988,6 +1010,70 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     }
   }
 
+  const persistGalleryItems = useCallback(async (items) => {
+    if (!entityId || !canManageOrder) return
+
+    const payload = {
+      items: items.map((file) => {
+        if (file?.isVideoPreview) {
+          return {
+            mediaType: "video",
+            videoID: file.persistedVideoId || null,
+            url: file.sourceVideoUrl || file.url,
+            embedURL: file.embedUrl || null,
+          }
+        }
+
+        return {
+          mediaType: "picture",
+          pictureID: file.persistedPictureId || null,
+          url: file.url,
+        }
+      }),
+    }
+
+    const res = await fetch(`${api_url}${entityType}/${entityId}/gallery/order`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}))
+      throw new Error(errorData?.message || errorData?.error || "Failed to save gallery order")
+    }
+  }, [canManageOrder, entityId, entityType])
+
+  const handleArchive = async (file) => {
+    if (!file || file?.isVideoPreview) return
+
+    const timestampFolder = new Date().toISOString().replace(/[:.]/g, "-")
+    const fileName = displayFileName(file.name)
+    const archivedName = `${galleryPrefix}${timestampFolder}/${fileName}`
+
+    try {
+      const response = await fetch("/api/image/rename", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          container: "tagpictures",
+          oldName: file.name,
+          newName: archivedName,
+        }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(data?.error || data?.message || "Archive move failed")
+      }
+
+      showMessage(`Archived: ${fileName}`)
+      loadFiles()
+    } catch (err) {
+      showError(err.message || "Failed to archive file.")
+    }
+  }
+
   const handleDelete = async (file) => {
     if (file?.isVideoPreview) {
       setFiles((prev) => prev.filter((f) => !(f.isVideoPreview && f.virtualKey === file.virtualKey)))
@@ -1003,7 +1089,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
       const res = await fetch("/api/image/delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: file.url }),
+        body: JSON.stringify({ imageUrl: file.url, pictureId: file.persistedPictureId || null }),
       })
 
       if (!res.ok) {
@@ -1011,8 +1097,14 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         throw new Error(d.error || d.message || "Delete failed")
       }
 
-      setFiles((prev) => prev.filter((f) => f.url !== file.url))
+      const nextFiles = files.filter((f) => f.url !== file.url)
+      setFiles(nextFiles)
+      onFilesChanged?.(nextFiles)
       if (selectedFile?.url === file.url) setSelectedFile(null)
+      if (canManageOrder) {
+        await persistGalleryItems(nextFiles)
+        setOrderDirty(false)
+      }
       showMessage(`Deleted: ${displayFileName(file.name)}`)
     } catch (err) {
       showError(err.message)
@@ -1056,39 +1148,11 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
   }
 
   const handleSaveOrder = async () => {
-    if (!entityId || !files.length) return
+    if (!entityId || !files.length || !canManageOrder) return
 
     setSavingOrder(true)
     try {
-      const payload = {
-        items: files.map((file) => {
-          if (file?.isVideoPreview) {
-            return {
-              mediaType: "video",
-              videoID: file.persistedVideoId || null,
-              url: file.sourceVideoUrl || file.url,
-              embedURL: file.embedUrl || null,
-            }
-          }
-
-          return {
-            mediaType: "picture",
-            pictureID: file.persistedPictureId || null,
-            url: file.url,
-          }
-        }),
-      }
-
-      const res = await fetch(`${api_url}${entityType}/${entityId}/gallery/order`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}))
-        throw new Error(errorData?.message || errorData?.error || "Failed to save gallery order")
-      }
+      await persistGalleryItems(files)
 
       setOrderDirty(false)
       showMessage("Gallery order saved.")
@@ -1328,8 +1392,8 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     <div className="card bg-base-100 shadow-md border border-base-300">
       <div className="card-body gap-4">
         <div>
-          <h2 className="card-title">Gallery Manager</h2>
-          <p className="text-sm text-base-content/60">Editing gallery for {entityLabel || `${entityType} #${entityId}`}</p>
+          <h2 className="card-title">{title}</h2>
+          <p className="text-sm text-base-content/60">Editing {normalizedFolderKind} media for {entityLabel || `${entityType} #${entityId}`}</p>
         </div>
 
         {error ? <div className="alert alert-error text-sm">{error}</div> : null}
@@ -1350,7 +1414,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                 if (dragIndexRef.current === null) uploadFiles(e.dataTransfer.files)
               }}
             >
-              <div className="font-semibold mb-1">Upload to gallery</div>
+              <div className="font-semibold mb-1">Upload to {normalizedFolderKind}</div>
               <div className="text-xs text-base-content/60 mb-3 font-mono">{galleryPrefix}</div>
               <input
                 ref={fileInputRef}
@@ -1368,6 +1432,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
               </button>
             </div>
 
+            {canPostVideo && (
             <div className="rounded-md border border-base-300 bg-base-200 p-4 space-y-2">
               <div className="font-semibold text-sm">Post video URL</div>
               <input className={defaultFieldClass} placeholder="Paste a Vimeo or YouTube URL" value={videoUrl} onChange={(e) => { void handleVideoUrlChange(e.target.value) }} />
@@ -1376,6 +1441,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                 {videoSyncing ? <span className="loading loading-spinner loading-xs" /> : null}
               </div>
             </div>
+            )}
           </div>
 
           {uploadError ? <div className="alert alert-error text-sm">{uploadError}</div> : null}
@@ -1383,7 +1449,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
 
           <div className="border border-base-300 rounded-md">
             <div className="px-3 py-2 border-b border-base-300 text-sm font-semibold flex justify-between items-center">
-              <span>Gallery Images ({files.length})</span>
+              <span>{folderDisplayName} Images ({files.length})</span>
               <div className="flex items-center gap-2">
                 <button type="button" className="btn btn-xs btn-outline" onClick={() => fileInputRef.current?.click()} disabled={uploadLoading}>
                   {uploadLoading ? "Uploading..." : "Upload"}
@@ -1391,7 +1457,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                 <button type="button" className="btn btn-xs btn-ghost" onClick={loadFiles} disabled={loadingFiles}>
                   {loadingFiles ? "Loading..." : "Refresh"}
                 </button>
-                {orderDirty ? (
+                {canManageOrder && orderDirty ? (
                   <button type="button" className="btn btn-xs btn-primary" onClick={handleSaveOrder} disabled={savingOrder}>
                     {savingOrder ? "Saving..." : "Save Order"}
                   </button>
@@ -1421,6 +1487,15 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                       </button>
 
                       <div className="absolute top-1 left-1 badge badge-sm badge-neutral opacity-70 select-none pointer-events-none">{index + 1}</div>
+
+                      <button
+                        type="button"
+                        className="absolute top-1 right-8 btn btn-xs btn-warning opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleArchive(file)}
+                        title="Archive image"
+                      >
+                        A
+                      </button>
 
                       <button
                         type="button"
