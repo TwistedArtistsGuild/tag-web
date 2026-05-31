@@ -41,7 +41,19 @@ export function useCommentCount(targetId, targetType, enabled = true) {
       }
 
       const data = await response.json()
-      setCommentCount(data.count || data || 0)
+      
+      // Ensure we extract the number from the response
+      let count = 0
+      if (typeof data === 'number') {
+        count = data
+      } else if (data && typeof data.count === 'number') {
+        count = data.count
+      } else if (data && typeof data === 'object') {
+        // Fallback: try to parse any numeric property
+        count = parseInt(data.count || data.Count || data.total || 0, 10)
+      }
+      
+      setCommentCount(count)
     } catch (err) {
       console.error('Error fetching comment count:', err)
       setCommentCount(0)
