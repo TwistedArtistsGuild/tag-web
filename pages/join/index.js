@@ -13,7 +13,7 @@ const JOIN_SECTIONS = [
     href: "/join/user",
     title: "User",
     description: "General user onboarding and account-creation flows.",
-    countLabel: "No forms published yet",
+    countLabel: "2 registration pages available",
   },
   {
     href: "/join/vendor",
