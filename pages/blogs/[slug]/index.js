@@ -18,15 +18,15 @@ import dynamic from "next/dynamic"
 import longDateOptions from "@/utils/longdateoptions"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
-import SocialReactions from "@/components/social/Reactions"
-import SocialComments from "@/components/social/Comments"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
+import DynamicComments, { CommentTargetType } from "@/components/social/DynamicComments"
+import ImpressionReactions from "@/components/social/ImpressionReactions"
+import { useImpressions, ImpressionTargetType } from "@/hooks/useImpressions"
+import { useCommentCount } from "@/hooks/useCommentCount"
 import { defaultFieldClass } from "@/utils/formSettings"
 import { PERMISSIONS } from "@/utils/permissions";
 import { hasPermission } from "@/utils/authHelpers";
 import { sanitizeDefaultHtml, sanitizeCardHtml } from "@/components/security/sanitize";
-
-const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false });
 
 
 
@@ -86,49 +86,63 @@ const BlogByslug = props => {
 	}, [])
 
 	const canUpdate = hasPermission(session, PERMISSIONS.BLOG.UPDATE);
-	const relatedGalleryItems = Array.isArray(blog?.gallery?.galleryItems) ? blog.gallery.galleryItems : []
-	const relatedGalleryImages = relatedGalleryItems
-		.slice()
-		.sort((a, b) => (Number(a?.sortOrder) || 0) - (Number(b?.sortOrder) || 0))
-		.map((item) => {
-			const picture = item?.picture || item?.Picture || null
-			const video = item?.video || item?.Video || null
-			const url = picture?.url || picture?.URL || video?.thumbnailURL || video?.ThumbnailURL || video?.url || video?.URL || "/blank_image.png"
-			const thumbnailURL = picture?.thumbnailURL || picture?.ThumbnailURL || video?.thumbnailURL || video?.ThumbnailURL || url
+	
+	// Get the blog ID - try multiple property names
+	const blogId = blog?.blogID || blog?.id || blog?.BlogID;
+	
+	// Add impressions hook
+	const { 
+		impressions, 
+		loading: impressionsLoading,
+		toggleReaction
+	} = useImpressions(
+		blogId, 
+		ImpressionTargetType.BLOG,
+		!!blogId && mounted // Only fetch when blog ID exists and component is mounted
+	);
+	
+	// Debug logging (remove after testing)
+	useEffect(() => {
+		console.log('Blog impressions debug:', {
+			blogId,
+			impressions,
+			impressionsLoading,
+			mounted
+		});
+	}, [blogId, impressions, impressionsLoading, mounted]);
+	
+	const relatedGalleryImages = Array.isArray(blog?.gallery?.galleryItems)
+		? blog.gallery.galleryItems
+			.sort((a, b) => (Number(a?.sortOrder) || 0) - (Number(b?.sortOrder) || 0))
+			.map((item) => {
+				const picture = item.picture;
+				const video = item.video;
+				const url = picture?.url || video?.thumbnailURL || video?.url || "/blank_image.png";
+				const thumbnailURL = picture?.thumbnailURL || video?.thumbnailURL || url;
+				
+				return {
+					original: thumbnailURL,
+					thumbnail: thumbnailURL,
+					mediaType: picture ? "picture" : "video",
+					sourceURL: picture?.url || video?.url || "",
+					embedURL: picture?.embedURL || video?.embedURL || "",
+					description: item.captionOverride || picture?.description || video?.description || picture?.title || video?.title || "",
+					byline: picture?.byline || video?.byline || "",
+					altText: picture?.altText || "",
+				};
+			})
+		: [];
+	
+	const { 
+		commentCount: apiCommentCount,
+		loading: commentCountLoading
+	} = useCommentCount(
+		blogId, 
+		CommentTargetType.BLOG,
+		!!blogId && mounted
+	);
 
-			return {
-				original: thumbnailURL,
-				thumbnail: thumbnailURL,
-				mediaType: picture ? "picture" : "video",
-				sourceURL: picture?.url || picture?.URL || video?.url || video?.URL || "",
-				embedURL: picture?.embedURL || picture?.EmbedURL || video?.embedURL || video?.EmbedURL || "",
-				description:
-					item?.captionOverride ||
-					item?.CaptionOverride ||
-					picture?.description ||
-					picture?.Description ||
-					video?.description ||
-					video?.Description ||
-					picture?.title ||
-					picture?.Title ||
-					video?.title ||
-					video?.Title ||
-					"",
-				byline: picture?.byline || picture?.Byline || video?.byline || video?.Byline || "",
-				altText: picture?.altText || picture?.AltText || "",
-			}
-		})
-	const socialUser = session?.user
-		? {
-			id: session.user.id || session.user.email || session.user.name || "current-user",
-			username: session.user.name || session.user.email || "Artist",
-			displayName: session.user.name || "Artist",
-			avatarUrl: session.user.image || "",
-			isAdmin: false,
-		}
-		: null;
-	const blogContextId = `blog-${props.slug}`;
-	const commentCount = blog?.commentCount ?? (Array.isArray(blog?.comments) ? blog.comments.length : 18);
+	const commentCount = apiCommentCount ?? blog?.commentCount ?? 0;
 	const viewCount = blog?.viewCount ?? blog?.views ?? 3200;
 
 	const pageMetaData = {
@@ -290,19 +304,35 @@ const BlogByslug = props => {
 							<div className="mb-3 flex flex-wrap items-center gap-4 text-sm font-semibold">
 								<span>👁 {formatCompactNumber(viewCount)} views</span>
 								<a href="#comments-section" className="link link-primary">
-									💬 {formatCompactNumber(commentCount)} comments
+									💬 {commentCountLoading ? '...' : formatCompactNumber(commentCount)} comments
 								</a>
 							</div>
-							<div className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">Reactions</div>
+							<div className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">
+								Reactions {blogId && `(Blog ID: ${blogId})`}
+							</div>
 							<div className="reaction-scroll">
-								<SocialReactions
-									targetId={blogContextId}
-									targetType="post"
-									initialReactions={blog.reactions || []}
-									currentUser={socialUser}
-									size="md"
-									showQuickReactions
-								/>
+								{!impressionsLoading && impressions && impressions.length > 0 ? (
+									<ImpressionReactions
+										impressions={impressions}
+										currentUser={session?.user}
+										onToggle={toggleReaction}
+										readOnly={false}
+										size="md"
+										showDetails={true}
+										targetId={blogId}
+										targetType="blog"
+									/>
+								) : impressionsLoading ? (
+									<div className="text-sm text-base-content/50">Loading reactions...</div>
+								) : blogId ? (
+									<div className="text-sm text-base-content/50">
+										No reactions available for blog {blogId}
+									</div>
+								) : (
+									<div className="text-sm text-base-content/50">
+										Blog ID not found
+									</div>
+								)}
 							</div>
 						</div>
 
@@ -329,14 +359,21 @@ const BlogByslug = props => {
 			</Link>
 			)}
 
+			{/* Comments Section - Updated to use DynamicComments */}
 			<div id="comments-section" className="w-[75%] rounded-box border border-base-300 bg-base-100 p-4">
 				<div className="mb-2 text-xs font-semibold uppercase tracking-wide text-base-content/60">Comments</div>
-				<SocialComments
-					contextId={blogContextId}
-					initialComments={blog.comments || []}
-					currentUser={socialUser}
-					readOnly={false}
-				/>
+				{blogId ? (
+					<DynamicComments
+						targetId={blogId}
+						targetType={CommentTargetType.BLOG}
+						allowMedia={true}
+						enabled={true}
+					/>
+				) : (
+					<div className="alert alert-warning">
+						<span>Unable to load comments. Blog ID: {JSON.stringify({ blogID: blog?.blogID, id: blog?.id })}</span>
+					</div>
+				)}
 			</div>
 		</div>
 		</SocialRealtimeProvider>
@@ -354,7 +391,7 @@ BlogByslug.getInitialProps = async function (context) {
   
 	const res = await fetch (api_url + `blog/path/${slug}`)
 	const data = await res.json ()
-
+	
 	const blogData = Array.isArray(data) ? data[0] : data;
 
 	let formattedCreated = "";

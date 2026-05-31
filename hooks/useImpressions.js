@@ -9,13 +9,17 @@
 
  Open source · low-profit · human-first*/
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import getApiURL from '@/components/widgets/GetApiURL'
+
+// Cache to prevent duplicate requests
+const impressionCache = new Map()
+const pendingRequests = new Map()
 
 /**
  * Hook to fetch and manage impressions/reactions for any target (listing, artist, post, etc.)
  * @param {string} targetId - Unique identifier for the target
- * @param {number} targetType - Type of target: 1 for Listing, 2 for Artist
+ * @param {number} targetType - Type of target: 1 for Listing, 2 for Artist, 3 for Comment
  * @param {boolean} enabled - Whether to fetch impressions (default: true)
  * @returns {Object} - impressions data and mutation functions
  */
@@ -23,6 +27,7 @@ export function useImpressions(targetId, targetType, enabled = true) {
   const [impressions, setImpressions] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const isMountedRef = useRef(true)
 
   const fetchImpressions = useCallback(async () => {
     if (!enabled || !targetId || !targetType) {
@@ -30,33 +35,90 @@ export function useImpressions(targetId, targetType, enabled = true) {
       return
     }
 
+    const cacheKey = `${targetType}-${targetId}`
+    
+    // Check cache first (5 second TTL)
+    const cached = impressionCache.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < 5000) {
+      console.log(`Using cached impressions for ${cacheKey}`)
+      setImpressions(cached.data)
+      setError(null)
+      setLoading(false)
+      return
+    }
+
+    // Check if request is already in flight
+    if (pendingRequests.has(cacheKey)) {
+      console.log(`Waiting for pending request for ${cacheKey}`)
+      try {
+        const data = await pendingRequests.get(cacheKey)
+        if (isMountedRef.current) {
+          setImpressions(data)
+          setError(null)
+          setLoading(false)
+        }
+      } catch (err) {
+        if (isMountedRef.current) {
+          console.error('Error from pending request:', err)
+          setError(err.message)
+          setImpressions([])
+          setLoading(false)
+        }
+      }
+      return
+    }
+
     try {
       setLoading(true)
       const apiUrl = getApiURL()
-      const response = await fetch(
+      
+      // Create promise for this request
+      const requestPromise = fetch(
         `${apiUrl}impression/primary?targetId=${encodeURIComponent(targetId)}&targetType=${targetType}`
-      )
+      ).then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch impressions: ${response.status}`)
+        }
+        const data = await response.json()
+        return Array.isArray(data) ? data : (data.impressions || data.data || [])
+      })
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch impressions: ${response.status}`)
+      // Store pending request
+      pendingRequests.set(cacheKey, requestPromise)
+      
+      const impressionData = await requestPromise
+      
+      // Cache the result
+      impressionCache.set(cacheKey, {
+        data: impressionData,
+        timestamp: Date.now()
+      })
+      
+      if (isMountedRef.current) {
+        setImpressions(impressionData)
+        setError(null)
       }
-
-      const data = await response.json()
-      const impressionData = Array.isArray(data) ? data : (data.impressions || data.data || [])
-      
-      setImpressions(impressionData)
-      setError(null)
     } catch (err) {
       console.error('Error fetching impressions:', err)
-      setError(err.message)
-      setImpressions([])
+      if (isMountedRef.current) {
+        setError(err.message)
+        setImpressions([])
+      }
     } finally {
-      setLoading(false)
+      pendingRequests.delete(cacheKey)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
   }, [targetId, targetType, enabled])
 
   useEffect(() => {
+    isMountedRef.current = true
     fetchImpressions()
+    
+    return () => {
+      isMountedRef.current = false
+    }
   }, [fetchImpressions])
 
   /**
@@ -95,6 +157,10 @@ export function useImpressions(targetId, targetType, enabled = true) {
       const wasRemoved = result.removed === true
       const message = result.message || (wasRemoved ? 'Reaction removed' : 'Reaction added')
       
+      // Invalidate cache
+      const cacheKey = `${targetType}-${targetId}`
+      impressionCache.delete(cacheKey)
+      
       await fetchImpressions()
 
       return { 
@@ -123,5 +189,7 @@ export function useImpressions(targetId, targetType, enabled = true) {
  */
 export const ImpressionTargetType = {
   LISTING: 1,
-  ARTIST: 2
+  ARTIST: 2,
+  COMMENT: 3,
+  BLOG: 4
 }
