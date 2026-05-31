@@ -5,7 +5,6 @@
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
 import React, { useMemo, useState } from "react";
-import TagSEO from "@/components/TagSEO";
 
 const api_url = getApiURL();
 
@@ -142,19 +141,6 @@ export default function CreateContestForm(props) {
 
     return (
         <div className="p-4 max-w-5xl mx-auto">
-            <TagSEO
-                metadataProp={{
-                    title: "Create Contest",
-                    description: "Internal staff contest creation form.",
-                    robots: "noindex, nofollow",
-                    keywords: "staff, contests, create",
-                    og: {
-                        title: "Create Contest",
-                        description: "Internal staff contest creation form.",
-                    },
-                }}
-                canonicalSlug="portal/staff/contests/create"
-            />
             <DynaFormDB
                 request="add"
                 metadataProp={enhancedMetadata}

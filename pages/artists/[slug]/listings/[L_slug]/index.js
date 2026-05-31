@@ -8,19 +8,22 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import SocialComments from "@/components/social/Comments" // Import SocialComments component
+import SocialComments from "@/components/social/Comments"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
 import dynamic from "next/dynamic"
-import { useSession } from "next-auth/react";
+import { useSession } from "next-auth/react"
 import { useEffect, useMemo, useState } from "react"
-import { PERMISSIONS } from "@/utils/permissions";
-import { hasPermission } from "@/utils/authHelpers";
+import { useRouter } from "next/router"
+import { PERMISSIONS } from "@/utils/permissions"
+import { hasPermission } from "@/utils/authHelpers"
+import DynamicComments, { CommentTargetType } from "@/components/social/DynamicComments"
 
 const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false })
 
+// Helper functions
 const mapGalleryItemsToMedia = (entity) => {
   const items =
     (Array.isArray(entity?.gallery?.galleryItems) && entity.gallery.galleryItems) ||
@@ -77,9 +80,7 @@ const mapGalleryItemsToMedia = (entity) => {
       const url = picture ? pictureThumb : videoThumb
 
       if (!url) return null
-
       if (picture && !pictureUrl) return null
-
       if (!picture && !video) return null
 
       return {
@@ -109,42 +110,12 @@ const getListingGalleryImages = (listing) => {
     return galleryMedia
   }
 
-  const metadataCollections = [
-    listing?.pictureMetadata,
-    listing?.imageMetadata,
-    listing?.imagesMetadata,
-    listing?.contentImages,
-    listing?.content,
-  ]
-
-  const metadataUrls = metadataCollections
-    .flatMap((collection) => (Array.isArray(collection) ? collection : []))
-    .map((item) => {
-      if (typeof item === "string") return item
-      return item?.contentUrl || item?.contentURL || item?.url || item?.src || ""
-    })
-    .map((url) => String(url || "").trim())
-    .filter(Boolean)
-
-  if (metadataUrls.length > 0) {
-    return metadataUrls
+  if (Array.isArray(listing?.images) && listing.images.length > 0) {
+    return listing.images
   }
 
-  const dbImages = Array.isArray(listing?.images)
-    ? listing.images
-      .map((item) => {
-        if (typeof item === "string") return item
-        return item?.contentUrl || item?.contentURL || item?.url || item?.src || ""
-      })
-      .map((url) => String(url || "").trim())
-      .filter(Boolean)
-    : []
-
-  if (dbImages.length > 0) {
-    return dbImages
-  }
-
-  return []
+  const fallback = listing?.profilePic?.url || "/blank_image.png"
+  return [fallback]
 }
 
 const normalizeListingPayload = (payload) => {
@@ -159,29 +130,176 @@ const normalizeListingPayload = (payload) => {
   return payload
 }
 
-const ListingDetails = ({ listing, slug }) => {
-  const { data: session } = useSession();
-  const canAddComment = hasPermission(session, PERMISSIONS.LISTING.COMMENT);
+const ListingDetails = () => {
+  // ALL HOOKS MUST BE AT THE TOP - NO CONDITIONAL HOOKS!
+  const router = useRouter()
+  const { slug, L_slug } = router.query
+  const { data: session } = useSession()
+  const canAddComment = hasPermission(session, PERMISSIONS.LISTING.COMMENT)
+  
+  const [listing, setListing] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [blobGalleryResult, setBlobGalleryResult] = useState({ listingId: null, items: [] })
 
-  const canonicalSlug = listing.seoCanonicalSlug
-  const pageMetaData = {
-    title: listing.seoTitle,
-    description: listing.seoDescription,
-    keywords: listing.seoKeywords,
-    og: {
-      title: listing.seoOgTitle,
-      description: listing.seoOgDescription,
-      image: listing.seoImage,
-    },
-  }
-
-  const listingGalleryImages = getListingGalleryImages(listing)
+  // Calculate listingId - MUST be before any conditional returns
   const listingId = useMemo(
     () => listing?.listingID || listing?.ListingID || listing?.listingid || listing?.listingId || listing?.ListingId || null,
     [listing],
   )
 
+  // Calculate gallery images - MUST be before any conditional returns
+  const listingGalleryImages = useMemo(
+    () => getListingGalleryImages(listing),
+    [listing]
+  )
+
+  const blobGalleryImages = useMemo(
+    () => (blobGalleryResult.listingId === listingId ? blobGalleryResult.items : []),
+    [blobGalleryResult, listingId],
+  )
+  
+  const effectiveGalleryImages = useMemo(() => {
+    const merged = [...listingGalleryImages, ...blobGalleryImages]
+    const seen = new Set()
+
+    return merged.filter((item) => {
+      const key = String(item?.sourceURL || item?.original || "").trim().toLowerCase()
+      if (!key) return false
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+  }, [listingGalleryImages, blobGalleryImages])
+  
+  const hasRealGalleryMedia = effectiveGalleryImages.length > 0
+
+  const listingForCard = useMemo(() => ({
+    ...listing,
+    panelSize: "half",
+    images: listingGalleryImages,
+    path: listing?.path || "",
+    artist: {
+      ...(listing?.artist || {}),
+      path: listing?.artist?.path || slug || "",
+    },
+  }), [listing, listingGalleryImages, slug])
+
+  const canonicalSlug = listing.seoCanonicalSlug || `artists/${slug}/listings/${L_slug}`
+  const pageMetaData = useMemo(() => ({
+    title: listing.seoTitle || listing.title || 'Listing Details',
+    description: listing.seoDescription || listing.description || '',
+    keywords: listing.seoKeywords || '',
+    og: {
+      title: listing.seoOgTitle || listing.title || 'Listing',
+      description: listing.seoOgDescription || listing.description || '',
+      image: listing.seoImage || listing.profilePic?.url || '',
+    },
+  }), [listing])
+
+  // Fetch listing data
+  useEffect(() => {
+    const fetchListing = async () => {
+      if (!router.isReady) {
+        console.log("Router not ready yet...")
+        return
+      }
+
+      if (!slug || !L_slug) {
+        console.log("Missing slug or L_slug:", { slug, L_slug })
+        return
+      }
+
+      console.log("=== STARTING LISTING FETCH ===")
+      console.log("Artist slug:", slug)
+      console.log("Listing slug:", L_slug)
+      
+      setLoading(true)
+      setError(null)
+
+      try {
+        const api_url = getApiURL()
+        console.log("API Base URL:", api_url)
+        
+        const fullUrl = `${api_url}listing/artist/${slug}/listing/${L_slug}`
+        console.log("Full URL:", fullUrl)
+        
+        console.log("Fetching listing...")
+        const res = await fetch(fullUrl)
+        console.log("Response status:", res.status)
+        console.log("Response ok:", res.ok)
+
+        if (!res.ok) {
+          const errorText = await res.text()
+          console.error("API Error Response:", errorText)
+          throw new Error(`Failed to fetch: ${res.status} - ${errorText}`)
+        }
+
+        const rawData = await res.json()
+        console.log("Raw API response:", rawData)
+        
+        let data = normalizeListingPayload(rawData)
+        console.log("Normalized data:", data)
+
+        const fetchedListingId = data?.listingID || data?.ListingID || data?.listingid || data?.listingId || data?.ListingId || null
+        console.log("Extracted listing ID:", fetchedListingId)
+        
+        const numericFromSlug = Number(L_slug)
+        const fallbackListingId = Number.isInteger(numericFromSlug) && numericFromSlug > 0 ? numericFromSlug : null
+        console.log("Fallback listing ID from slug:", fallbackListingId)
+        
+        const resolvedListingId = fetchedListingId || fallbackListingId
+        console.log("Resolved listing ID:", resolvedListingId)
+
+        if (resolvedListingId) {
+          console.log("Fetching by ID:", resolvedListingId)
+          const byIdUrl = `${api_url}listing/byID/${resolvedListingId}`
+          console.log("ByID URL:", byIdUrl)
+          
+          const byIdRes = await fetch(byIdUrl)
+          console.log("ByID Response status:", byIdRes.status)
+          
+          if (byIdRes.ok) {
+            const byIdRaw = await byIdRes.json()
+            console.log("ByID raw response:", byIdRaw)
+            
+            const byIdData = normalizeListingPayload(byIdRaw)
+            console.log("ByID normalized data:", byIdData)
+            
+            data = {
+              ...data,
+              ...byIdData,
+              artist: {
+                ...(data?.artist || {}),
+                ...(byIdData?.artist || {}),
+              },
+              gallery: byIdData?.gallery || data?.gallery || null,
+              relatedGallery: byIdData?.relatedGallery || data?.relatedGallery || null,
+            }
+            console.log("Merged data:", data)
+          }
+        }
+
+        console.log("Final listing data:", data)
+        console.log("Has listingID?", !!data.listingID)
+        
+        setListing(data)
+        setError(null)
+      } catch (err) {
+        console.error("=== ERROR FETCHING LISTING ===")
+        console.error("Error:", err)
+        console.error("Error message:", err.message)
+        setError(err.message)
+      } finally {
+        console.log("=== FETCH COMPLETE ===")
+        setLoading(false)
+      }
+    }
+
+    fetchListing()
+  }, [router.isReady, slug, L_slug])
+
+  // Fetch blob gallery
   useEffect(() => {
     if (!listingId) {
       return
@@ -222,142 +340,86 @@ const ListingDetails = ({ listing, slug }) => {
     fetchBlobGallery()
   }, [listingId])
 
-  const blobGalleryImages = useMemo(
-    () => (blobGalleryResult.listingId === listingId ? blobGalleryResult.items : []),
-    [blobGalleryResult, listingId],
-  )
-  const effectiveGalleryImages = useMemo(() => {
-    const merged = [...listingGalleryImages, ...blobGalleryImages]
-    const seen = new Set()
+  // NOW we can do conditional rendering AFTER all hooks are called
+  const isListingEmpty = !listing || Object.keys(listing).length === 0 || !listingId
 
-    return merged.filter((item) => {
-      const key = String(item?.sourceURL || item?.original || "").trim().toLowerCase()
-      if (!key) return false
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
-    })
-  }, [listingGalleryImages, blobGalleryImages])
-  const hasRealGalleryMedia = effectiveGalleryImages.length > 0
-
-  const listingForCard = {
-    ...listing,
-    panelSize: "half",
-    images: listingGalleryImages,
-    path: listing?.path || "",
-    artist: {
-      ...(listing?.artist || {}),
-      path: listing?.artist?.path || slug || "",
-      title: listing?.artist?.title || listing?.artistTitle || "Artist",
-      profilePic: listing?.artist?.profilePic || {},
-    },
+  // Show loading state
+  if (loading) {
+    return (
+      <SocialRealtimeProvider>
+        <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
+          <div className="flex flex-col justify-center items-center min-h-screen">
+            <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary mb-4"></div>
+            <p className="text-base-content/70">Loading listing details...</p>
+            <p className="text-xs text-base-content/50 mt-2">
+              Artist: {slug || 'N/A'}, Listing: {L_slug || 'N/A'}
+            </p>
+            <p className="text-xs text-base-content/50 mt-1">
+              Router ready: {router.isReady ? 'Yes' : 'No'}
+            </p>
+          </div>
+        </div>
+      </SocialRealtimeProvider>
+    )
   }
 
-  // Sample comments for the listing
-  const sampleComments = [
-    {
-      id: 1,
-      body: "<p>I love how this piece captures the essence of the subject. The use of light and shadow is masterful!</p>",
-      authorId: "user1",
-      author: "ArtCollector",
-      authorDisplayName: "Art Collector",
-      avatarUrl: "https://i.pravatar.cc/100?img=11",
-      likes: 8,
-      created: "2023-12-02T14:30:00Z",
-      replies: [],
-    },
-    {
-      id: 2,
-      body: "<p>This would be a perfect centerpiece for our upcoming exhibition on contemporary expressions.</p>",
-      authorId: "user2",
-      author: "GalleryOwner",
-      authorDisplayName: "Gallery Owner",
-      avatarUrl: "https://i.pravatar.cc/100?img=12",
-      likes: 5,
-      created: "2023-11-28T09:45:00Z",
-      replies: [
-        {
-          id: 21,
-          body: "<p>Thank you for your interest! I'd be honored to have it featured in your exhibition. Let's discuss the details.</p>",
-          authorId: "user3",
-          author: "ArtistInStudio",
-          authorDisplayName: "Artist In Studio",
-          avatarUrl: "https://i.pravatar.cc/100?img=18",
-          likes: 3,
-          created: "2023-11-29T15:20:00Z",
-        },
-      ],
-    },
-    {
-      id: 3,
-      body: "<p>The technique here reminds me of early 20th century movements, but with a modern twist. Beautiful execution!</p>",
-      authorId: "user4",
-      author: "ArtHistory101",
-      authorDisplayName: "Art History Professor",
-      avatarUrl: "https://i.pravatar.cc/100?img=13",
-      likes: 12,
-      created: "2023-11-25T11:15:00Z",
-      replies: [],
-    },
-    {
-      id: 4,
-      body: "<p>The composition is stunning. I'd love to know more about the inspiration behind this work.</p>",
-      authorId: "user5",
-      author: "DesignEnthusiast",
-      authorDisplayName: "Design Enthusiast",
-      avatarUrl: "https://i.pravatar.cc/100?img=14",
-      likes: 4,
-      created: "2023-11-20T16:40:00Z",
-      replies: [
-        {
-          id: 41,
-          body: "<p>I was thinking the same thing! The balance of elements is really striking - would make a great case study for our design students.</p>",
-          authorId: "user6",
-          author: "CreativeDirector",
-          authorDisplayName: "Creative Director",
-          avatarUrl: "https://i.pravatar.cc/100?img=19",
-          likes: 2,
-          created: "2023-11-21T10:05:00Z",
-        },
-        {
-          id: 42,
-          body: "<p>The artist mentioned in an interview that the coastal landscapes of their childhood were a major influence on this series.</p>",
-          authorId: "user7",
-          author: "ArtisticVision",
-          authorDisplayName: "Art Curator",
-          avatarUrl: "https://i.pravatar.cc/100?img=20",
-          likes: 5,
-          created: "2023-11-22T13:25:00Z",
-        },
-      ],
-    },
-  ]
-
-  // Current user mock data for SocialComments component
-  const currentUser = {
-    id: "currentUser1",
-    username: "currentUser",
-    displayName: "Current User",
-    avatarUrl: "https://i.pravatar.cc/100?img=7",
-    isAdmin: false,
+  // Show error state
+  if (error) {
+    return (
+      <SocialRealtimeProvider>
+        <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
+          <div className="flex flex-col justify-center items-center min-h-screen">
+            <div className="alert alert-error max-w-2xl">
+              <div>
+                <h3 className="font-bold">Error Loading Listing</h3>
+                <div className="text-sm mt-2">{error}</div>
+                <div className="text-xs mt-2 opacity-70">
+                  Artist: {slug}, Listing: {L_slug}
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => router.reload()} 
+              className="btn btn-primary mt-4"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </SocialRealtimeProvider>
+    )
   }
 
-  // Callback functions for SocialComments component
-  const handleAddComment = (newComment, parentId = null) => {
-    console.log("New comment added:", newComment, "Parent ID:", parentId)
-    // In a real implementation, this would send data to the backend
+  // Show empty state
+  if (isListingEmpty) {
+    return (
+      <SocialRealtimeProvider>
+        <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
+          <div className="flex flex-col justify-center items-center min-h-screen">
+            <div className="alert alert-warning max-w-2xl">
+              <div>
+                <h3 className="font-bold">Listing Not Found</h3>
+                <div className="text-sm mt-2">
+                  The listing could not be found or returned empty data.
+                </div>
+                <div className="text-xs mt-2 opacity-70">
+                  Artist: {slug}, Listing: {L_slug}
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => router.push('/artists')} 
+              className="btn btn-primary mt-4"
+            >
+              Browse Artists
+            </button>
+          </div>
+        </div>
+      </SocialRealtimeProvider>
+    )
   }
 
-  const handleUpdateComment = (updatedComment, parentId = null) => {
-    console.log("Comment updated:", updatedComment, "Parent ID:", parentId)
-    // In a real implementation, this would update data on the backend
-  }
-
-  const handleLikeComment = (comment, parentId = null) => {
-    console.log("Comment liked:", comment, "Parent ID:", parentId)
-    // In a real implementation, this would update like count on the backend
-  }
-
+  // Render the full page
   return (
     <SocialRealtimeProvider>
       <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
@@ -381,62 +443,40 @@ const ListingDetails = ({ listing, slug }) => {
                 </div>
               )}
             </div>
+          </div>
 
-            <ListingCard listing={listingForCard} panelSize="full" showGalleryThumbnails hideGallery />
+          <div className="mt-8">
+            <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Listing Details</h2>
+            <ListingCard listing={listingForCard} panelSize="half" />
+          </div>
 
-          <div className="overflow-x-auto mt-8">
-            <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Artwork Details</h2>
-            <table className="table w-full border border-base-300 bg-base-100 text-base-content">
+          <div className="mt-8">
+            <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Additional Information</h2>
+            <table className="table w-full border border-base-300">
               <tbody>
-                <tr className="hover:bg-base-200">
-                  <th className="bg-base-100 text-base-content font-medium">Category</th>
-                  <td className="bg-base-100 text-base-content">{listing?.artCategory?.category || "N/A"}</td>
-                  <th className="bg-base-100 text-base-content font-medium">Commission Inquiry</th>
-                  <td className="bg-base-100 text-base-content">{listing.commissionInquiryWelcome ? "Yes" : "No"}</td>
-                </tr>
-                <tr className="hover:bg-base-200">
+                <tr className="border-b border-base-300">
                   <th className="bg-base-100 text-base-content font-medium">Price</th>
                   <td className="bg-base-100 text-base-content">
-                    {listing.price !== null ? `$${listing.price}` : "N/A"}
+                    {listing.price !== null && listing.price !== undefined ? `$${Number(listing.price).toFixed(2)}` : "Contact for pricing"}
                   </td>
-                  <th className="bg-base-100 text-base-content font-medium">Created</th>
+                </tr>
+                <tr className="border-b border-base-300">
+                  <th className="bg-base-100 text-base-content font-medium">Status</th>
+                  <td className="bg-base-100 text-base-content">{listing.status || "Available"}</td>
+                </tr>
+                <tr className="border-b border-base-300">
+                  <th className="bg-base-100 text-base-content font-medium">Dimensions</th>
                   <td className="bg-base-100 text-base-content">
-                    {listing.created ? new Date(listing.created).toLocaleDateString("en-US") : "N/A"}
+                    {listing.width && listing.height
+                      ? `${listing.width} x ${listing.height} ${listing.dimensionUnit || "in"}`
+                      : "N/A"}
                   </td>
                 </tr>
-                <tr className="hover:bg-base-200">
-                  <th className="bg-base-100 text-base-content font-medium">Credits</th>
-                  <td className="bg-base-100 text-base-content">{listing.credits || "N/A"}</td>
-                  <th className="bg-base-100 text-base-content font-medium">Culture</th>
-                  <td className="bg-base-100 text-base-content">{listing.culture || "N/A"}</td>
-                </tr>
-                <tr className="hover:bg-base-200">
+                <tr className="border-b border-base-300">
                   <th className="bg-base-100 text-base-content font-medium">Medium</th>
                   <td className="bg-base-100 text-base-content">{listing.medium || "N/A"}</td>
-                  <th className="bg-base-100 text-base-content font-medium">Locale</th>
-                  <td className="bg-base-100 text-base-content">{listing.locale || "N/A"}</td>
                 </tr>
-                <tr className="hover:bg-base-200">
-                  <th className="bg-base-100 text-base-content font-medium">Date</th>
-                  <td className="bg-base-100 text-base-content">{listing.date || "N/A"}</td>
-                  <th className="bg-base-100 text-base-content font-medium">Department</th>
-                  <td className="bg-base-100 text-base-content">{listing.department || "N/A"}</td>
-                </tr>
-                <tr className="hover:bg-base-200">
-                  <th className="bg-base-100 text-base-content font-medium">Locus</th>
-                  <td className="bg-base-100 text-base-content">{listing.locus || "N/A"}</td>
-                  <th className="bg-base-100 text-base-content font-medium">Period</th>
-                  <td className="bg-base-100 text-base-content">{listing.period || "N/A"}</td>
-                </tr>
-                <tr className="hover:bg-base-200">
-                  <th className="bg-base-100 text-base-content font-medium">Repository</th>
-                  <td className="bg-base-100 text-base-content">{listing.repository || "N/A"}</td>
-                  <th className="bg-base-100 text-base-content font-medium">Rights</th>
-                  <td className="bg-base-100 text-base-content">{listing.rights || "N/A"}</td>
-                </tr>
-                <tr className="hover:bg-base-200">
-                  <th className="bg-base-100 text-base-content font-medium">Tax Jurisdiction</th>
-                  <td className="bg-base-100 text-base-content">{listing.taxJurisdiction || "N/A"}</td>
+                <tr className="border-b border-base-300">
                   <th className="bg-base-100 text-base-content font-medium">Work Dates</th>
                   <td className="bg-base-100 text-base-content">
                     {listing.work_BeginDate || "N/A"} - {listing.work_CompletionDate || "N/A"}
@@ -446,70 +486,20 @@ const ListingDetails = ({ listing, slug }) => {
             </table>
           </div>
 
-          {/* Comments Section - REPLACED WITH SocialComments COMPONENT */}
+          {/* Comments Section */}
           <div className="mt-8">
             <h2 className="text-xl font-bold mb-4 border-b pb-2 text-primary">Comments & Feedback</h2>
-            <SocialComments
-              initialComments={sampleComments}
-              onAddComment={handleAddComment}
-              onUpdateComment={handleUpdateComment}
-              onLikeComment={handleLikeComment}
-              contextId={`listing-${listing.listingID}`}
-              currentUser={currentUser}
+            <DynamicComments
+              targetId={listingId}
+              targetType={CommentTargetType.LISTING}
               allowMedia={true}
-              readOnly={!canAddComment}
-              className="bg-base-100 text-base-content"
+              enabled={true}
             />
           </div>
         </div>
       </div>
-    </div>
     </SocialRealtimeProvider>
   )
-}
-
-ListingDetails.getInitialProps = async (context) => {
-  const { slug, L_slug } = context.query
-  const api_url = getApiURL()
-  let data = {}
-
-  try {
-    // Use the new endpoint that considers artist slug and listing slug together
-    const res = await fetch(`${api_url}listing/artist/${slug}/listing/${L_slug}`)
-
-    if (!res.ok) {
-      console.error(`Error fetching listing details: ${res.status} ${res.statusText}`)
-      return { listing: {} } // Return empty object on failure
-    }
-
-    data = normalizeListingPayload(await res.json())
-
-    const listingId = data?.listingID || data?.ListingID || data?.listingid || data?.listingId || data?.ListingId || null
-    const numericFromSlug = Number(L_slug)
-    const fallbackListingId = Number.isInteger(numericFromSlug) && numericFromSlug > 0 ? numericFromSlug : null
-    const resolvedListingId = listingId || fallbackListingId
-
-    if (resolvedListingId) {
-      const byIdRes = await fetch(`${api_url}listing/byID/${resolvedListingId}`)
-      if (byIdRes.ok) {
-        const byIdData = normalizeListingPayload(await byIdRes.json())
-        data = {
-          ...data,
-          ...byIdData,
-          artist: {
-            ...(data?.artist || {}),
-            ...(byIdData?.artist || {}),
-          },
-          gallery: byIdData?.gallery || data?.gallery || null,
-          relatedGallery: byIdData?.relatedGallery || data?.relatedGallery || null,
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Error fetching listing details:", error)
-  }
-
-  return { listing: data, slug, L_slug }
 }
 
 export default ListingDetails
