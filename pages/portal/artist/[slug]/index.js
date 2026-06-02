@@ -307,6 +307,7 @@ export default function ArtistSlugPortalPage({ slug, artistProfile, listings, cu
               </div>
               <div className="flex gap-2 flex-wrap">
                 <Link href="/portal/artist" className="btn btn-sm btn-ghost">Back to Artist Portal</Link>
+                <Link href={`/portal/artist/${slug}/edit`} className="btn btn-sm btn-accent">Edit Profile</Link>
                 <Link href={`/portal/artist/${slug}/manage-contacts`} className="btn btn-sm btn-primary">Manage Contacts</Link>
                 <Link href={`/artists/${slug}`} className="btn btn-sm btn-outline">Public Profile</Link>
               </div>
