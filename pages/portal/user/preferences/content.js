@@ -227,7 +227,7 @@ export default function ContentPreferences({ embedded = false }) {
 
     return (
         <div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={{ title: "Content Preferences", description: "Manage your content moderation and visibility preferences.", robots: "noindex, nofollow", keywords: "user preferences, content settings", og: { title: "Content Preferences", description: "Manage your content moderation and visibility preferences." } }} canonicalSlug="user/preferences/content" />
+			<TagSEO metadataProp={{ title: "Content Preferences", description: "Manage your content moderation and visibility preferences.", robots: "noindex, nofollow", keywords: "user preferences, content settings", og: { title: "Content Preferences", description: "Manage your content moderation and visibility preferences." } }} canonicalSlug="portal/user/preferences/content" />
             {content}
         </div>
     )

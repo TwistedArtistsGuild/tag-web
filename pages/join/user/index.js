@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { getServerSession } from "next-auth/next";
+import { useState } from "react";
 
-import TagSEO from "@/components/TagSEO";
-import RegisterSlug from "@/components/forms/register_slug";
-import DynaFormDB from "@/components/widgets/DynaFormDB";
+import RegisterSlug from "@/components/forms/onboarding/register-slug";
+import JoinPageShell from "@/components/join/common/join-page-shell";
 import getApiURL from "@/components/widgets/GetApiURL";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import {
   getUserRegistrationProgress,
   markUserRegistrationStepComplete,
@@ -13,156 +11,226 @@ import {
 } from "@/utils/onboarding/userWorkflow";
 
 const apiUrl = getApiURL();
-const formName = "UserForm1";
+
+function getRequestOrigin(req) {
+  const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim();
+  const forwardedHost = String(req?.headers?.["x-forwarded-host"] || "").trim();
+  const host = forwardedHost || String(req?.headers?.host || "").trim();
+
+  if (!host) {
+    return null;
+  }
+
+  const protocol = forwardedProto || (process.env.NODE_ENV === "development" ? "http" : "https");
+  return `${protocol}://${host}`;
+}
+
+async function getSessionFromRequest(context) {
+  const origin = getRequestOrigin(context?.req);
+  if (!origin) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${origin}/api/auth/session`, {
+      headers: {
+        cookie: context?.req?.headers?.cookie || "",
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
 
 function getWizardStep(rawStep) {
   const parsed = Number(rawStep || 1);
   return parsed === 2 ? 2 : 1;
 }
 
-function buildUserJoinHref(step, userId) {
-  if (userId) {
-    return `/join/user?step=${step}&id=${userId}`;
+function buildUserJoinHref(step, username, userId) {
+  const normalizedUsername = String(username || "").trim().toLowerCase();
+  if (normalizedUsername) {
+    const idSegment = userId ? `&id=${encodeURIComponent(String(userId))}` : "";
+    return `/join/user/${encodeURIComponent(normalizedUsername)}?step=${step}${idSegment}`;
   }
 
   return `/join/user?step=${step}`;
 }
 
-async function fetchFormMetadata() {
-  let response = await fetch(`${apiUrl}formsmetadata/${formName}`);
+export default function JoinUserIndexPage({ sessionUser, currentStep, userId, routeUsername }) {
+  const initialProgress = typeof window !== "undefined" ? (getUserRegistrationProgress?.() || {}) : {};
+  const [tcAccepted, setTcAccepted] = useState(Boolean(initialProgress?.tcAccepted));
+  const reservedUsername = String(routeUsername || initialProgress?.slug || sessionUser?.username || "").trim().toLowerCase();
+  const routeUserId = Number(userId || 0);
 
-  if (!response.ok) {
-    response = await fetch(`${apiUrl}forms_metadata/${formName}`);
-  }
+  const getScopedProgress = () => {
+    const progress = getUserRegistrationProgress?.() || {};
+    const progressEntityId = Number(progress?.entityId || 0);
 
-  if (!response.ok) {
-    return null;
-  }
+    if (routeUserId <= 0) {
+      return {
+        ...progress,
+        entityId: null,
+      };
+    }
 
-  return response.json();
-}
+    if (progressEntityId > 0 && progressEntityId !== routeUserId) {
+      return {
+        ...progress,
+        entityId: routeUserId,
+      };
+    }
 
-export default function JoinUserIndexPage({ sessionUser, currentStep, userId, metadataProp, userData }) {
+    return progress;
+  };
+
   const pageMetaData = {
     title: "Join User",
-    description: "User onboarding wizard with slug registration first and DynaForm packets after.",
+    description: "User onboarding starts with terms and username reservation.",
     keywords: "join, user, onboarding",
     robots: "noindex, nofollow",
     og: {
       title: "Join User",
-      description: "User onboarding wizard with slug registration first and DynaForm packets after.",
+      description: "User onboarding starts with terms and username reservation.",
     },
   };
 
-  const baseMetadata = Array.isArray(metadataProp) ? metadataProp[0] : metadataProp;
-  const enhancedMetadata = baseMetadata && userId
-    ? {
-        ...baseMetadata,
-        FromURL: "/join/user",
-        redirectURL: "/user",
-        APIURL: `${apiUrl}user/${userId}`,
-      }
-    : null;
-
   return (
-    <div className="min-h-screen bg-base-200 p-4 md:p-8">
-      <TagSEO metadataProp={pageMetaData} canonicalSlug="join/user" />
-
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="card bg-base-100 shadow-lg border border-base-300">
-          <div className="card-body gap-3">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h1 className="text-3xl font-bold text-base-content">Join as a User</h1>
-              <Link href="/join" className="btn btn-sm btn-ghost">Back to Join</Link>
-            </div>
-            <p className="text-base-content/70">
-              Browse back and forth between registration pages. Step 1 reserves slug and row; Step 2 sends DynaForm packets.
-            </p>
-          </div>
-        </div>
-
+    <JoinPageShell
+      title="Join as a User"
+      description="Start with terms and username reservation, then continue to profile, preferences, and privacy setup in the slug route."
+      canonicalSlug="join/user"
+      metadata={pageMetaData}
+      steps={[
+        {
+          href: "/join/user?step=1",
+          label: "Terms",
+          isActive: currentStep === 1,
+        },
+        {
+          href: buildUserJoinHref(2, reservedUsername, userId),
+          label: "Username",
+          isActive: currentStep === 2,
+        },
+      ]}
+      badge={userId ? `User ID: ${userId}` : null}
+    >
+      {currentStep === 1 ? (
         <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body gap-3">
-            <div className="flex gap-2 flex-wrap">
-              <Link href={buildUserJoinHref(1, userId)} className={`btn btn-sm ${currentStep === 1 ? "btn-primary" : "btn-outline"}`}>
-                1. Reserve Slug
-              </Link>
-              <Link href={buildUserJoinHref(2, userId)} className={`btn btn-sm ${currentStep === 2 ? "btn-primary" : "btn-outline"}`}>
-                2. Profile Packets
-              </Link>
-              {userId && <span className="badge badge-info">User ID: {userId}</span>}
+          <div className="card-body gap-4">
+            <div>
+              <h2 className="card-title">Step 1: Terms and Conditions</h2>
+              <p className="text-sm text-base-content/70">Review and accept terms before reserving your username.</p>
+            </div>
+
+            <div className="rounded-box border border-base-300 bg-base-200/40 p-4 max-h-64 overflow-y-auto text-sm space-y-2">
+              <h3 className="font-semibold">User Registration Terms</h3>
+              <p>By creating a user account, you agree to:</p>
+              <ul className="list-disc list-inside space-y-1 text-base-content/80">
+                <li>Provide accurate registration details.</li>
+                <li>Follow guild conduct and moderation policies.</li>
+                <li>Keep your account credentials secure.</li>
+                <li>Avoid illegal, abusive, or deceptive platform use.</li>
+                <li>Respect intellectual property and privacy rights.</li>
+              </ul>
+            </div>
+
+            <label className="form-control">
+              <div className="label cursor-pointer gap-3">
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  checked={tcAccepted}
+                  onChange={(event) => setTcAccepted(event.target.checked)}
+                />
+                <span className="label-text">I accept the terms and conditions</span>
+              </div>
+            </label>
+
+            <div className="flex gap-2 justify-end flex-wrap">
+              <Link href="/join" className="btn btn-sm btn-outline">Back to Join</Link>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                disabled={!tcAccepted}
+                onClick={() => {
+                  if (!tcAccepted) {
+                    return;
+                  }
+
+                  setUserRegistrationProgress({ tcAccepted: true });
+                  window.location.href = "/join/user?step=2";
+                }}
+              >
+                Continue to Username
+              </button>
             </div>
           </div>
         </div>
+      ) : null}
 
-        {currentStep === 1 && (
-          <RegisterSlug
-            domain="user"
-            domainLabel="User"
-            apiBaseUrl={apiUrl}
-            reserveEndpoint={`${apiUrl}user/reserve-slug`}
-            updateEndpoint={(id) => `${apiUrl}user/${id}/update-slug`}
-            checkEndpoint={(candidateSlug, currentId) => `${apiUrl}user/check-slug/${encodeURIComponent(candidateSlug)}${currentId ? `?excludeId=${encodeURIComponent(currentId)}` : ""}`}
-            nextRoute={(id) => buildUserJoinHref(2, id)}
-            sessionUser={sessionUser}
-            progressApi={{
-              getProgress: getUserRegistrationProgress,
-              setProgress: setUserRegistrationProgress,
-              markStepComplete: markUserRegistrationStepComplete,
-            }}
-          />
-        )}
-
-        {currentStep === 2 && !userId && (
-          <div className="alert alert-warning">
-            <span>Start at Step 1 first so we can reserve your slug and create your user record.</span>
-          </div>
-        )}
-
-        {currentStep === 2 && userId && !enhancedMetadata && (
-          <div className="alert alert-error">
-            <span>Unable to load form metadata for UserForm1.</span>
-          </div>
-        )}
-
-        {currentStep === 2 && userId && enhancedMetadata && (
-          <div className="card bg-base-100 shadow border border-base-300">
-            <div className="card-body">
-              <DynaFormDB request="update" metadataProp={enhancedMetadata} formData={userData} />
-              <div className="mt-4 flex gap-2 justify-between flex-wrap">
-                <Link href={buildUserJoinHref(1, userId)} className="btn btn-sm btn-outline">Back to Slug Step</Link>
-                <Link href="/user" className="btn btn-sm btn-primary">Finish and Open User Dashboard</Link>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+      {currentStep === 2 ? (
+        <RegisterSlug
+          domain="user"
+          domainLabel="User"
+          apiBaseUrl={apiUrl}
+          reserveEndpoint={`${apiUrl}user-details/reserve-username`}
+          updateEndpoint={(id) => `${apiUrl}user-details/${id}/update-username`}
+          checkEndpoint={(candidateSlug, currentId) => {
+            const currentNumericId = Number(currentId || 0);
+            const canExcludeCurrentUser = routeUserId > 0 && currentNumericId === routeUserId;
+            const excludeQuery = canExcludeCurrentUser ? `?excludeId=${encodeURIComponent(String(currentNumericId))}` : "";
+            return `${apiUrl}user-details/check-username/${encodeURIComponent(candidateSlug)}${excludeQuery}`;
+          }}
+          nextRoute={(id) => {
+            const progress = getUserRegistrationProgress?.() || {};
+            return buildUserJoinHref(2, progress.slug, id);
+          }}
+          sessionUser={sessionUser}
+          initialTitle={reservedUsername}
+          titleFieldLabel="Username"
+          titlePlaceholder="Enter your username"
+          showSlugField={false}
+          extendPayload={({ payload }) => ({
+            payload: {
+              username: payload.slug,
+            },
+          })}
+          progressApi={{
+            getProgress: getScopedProgress,
+            setProgress: setUserRegistrationProgress,
+            markStepComplete: markUserRegistrationStepComplete,
+          }}
+        />
+      ) : null}
+    </JoinPageShell>
   );
 }
 
 export async function getServerSideProps(context) {
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const session = await getSessionFromRequest(context);
   const currentStep = getWizardStep(context.query?.step);
-  const userId = Number(context.query?.id || 0);
+  const queryUserId = Number(context.query?.id || 0);
+  const sessionUserId = Number(session?.user?.id || 0);
+  const resolvedUserId = queryUserId > 0 ? queryUserId : (sessionUserId > 0 ? sessionUserId : 0);
 
-  let metadataProp = null;
-  let userData = null;
+  let routeUsername = String(context.query?.slug || "").trim().toLowerCase();
 
-  if (userId > 0) {
+  if (!routeUsername && resolvedUserId > 0) {
     try {
-      metadataProp = await fetchFormMetadata();
-    } catch (error) {
-      console.error("Unable to load user metadata:", error.message);
-    }
-
-    try {
-      const response = await fetch(`${apiUrl}user/${userId}`);
+      const response = await fetch(`${apiUrl}user-details/${resolvedUserId}/private?viewerUserId=${resolvedUserId}`);
       if (response.ok) {
-        userData = await response.json();
+        const userData = await response.json();
+        routeUsername = String(userData?.username || userData?.Username || "").trim().toLowerCase();
       }
-    } catch (error) {
-      console.error("Unable to load user data by ID:", error.message);
+    } catch {
+      // no-op: keep routeUsername empty if API fetch fails
     }
   }
 
@@ -170,9 +238,8 @@ export async function getServerSideProps(context) {
     props: {
       sessionUser: session?.user || null,
       currentStep,
-      userId: userId > 0 ? userId : null,
-      metadataProp,
-      userData,
+      userId: resolvedUserId > 0 ? resolvedUserId : null,
+      routeUsername,
     },
   };
 }

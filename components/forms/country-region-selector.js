@@ -315,10 +315,44 @@ export function getCountryLabel(countryCode) {
   return match?.label || "";
 }
 
+export function normalizeCountryCode(countryValue) {
+  const rawValue = String(countryValue || "").trim();
+  if (!rawValue) {
+    return "";
+  }
+
+  const byCode = COUNTRY_OPTIONS.find((option) => option.value === rawValue);
+  if (byCode) {
+    return byCode.value;
+  }
+
+  const lowerValue = rawValue.toLowerCase();
+  const byLabel = COUNTRY_OPTIONS.find((option) => String(option.label || "").trim().toLowerCase() === lowerValue);
+  return byLabel?.value || rawValue;
+}
+
 export function getRegionLabel(countryCode, regionCode) {
   const options = REGION_OPTIONS_BY_COUNTRY[countryCode] || DEFAULT_REGION_OPTIONS;
   const match = options.find((option) => option.value === regionCode);
   return match?.label || "";
+}
+
+export function normalizeRegionCode(countryCode, regionValue) {
+  const normalizedCountry = normalizeCountryCode(countryCode);
+  const rawValue = String(regionValue || "").trim();
+  if (!rawValue) {
+    return "";
+  }
+
+  const options = REGION_OPTIONS_BY_COUNTRY[normalizedCountry] || DEFAULT_REGION_OPTIONS;
+  const byCode = options.find((option) => option.value === rawValue);
+  if (byCode) {
+    return byCode.value;
+  }
+
+  const lowerValue = rawValue.toLowerCase();
+  const byLabel = options.find((option) => String(option.label || "").trim().toLowerCase() === lowerValue);
+  return byLabel?.value || rawValue;
 }
 
 export default function CountryRegionSelector({
@@ -329,8 +363,14 @@ export default function CountryRegionSelector({
   countryLabel = "Country",
   regionLabel = "State or Region",
   disabled = false,
+  countryName,
+  regionName,
+  countryAutoComplete,
+  regionAutoComplete,
 }) {
-  const regionOptions = REGION_OPTIONS_BY_COUNTRY[country] || DEFAULT_REGION_OPTIONS;
+  const normalizedCountry = normalizeCountryCode(country);
+  const normalizedRegion = normalizeRegionCode(normalizedCountry, region);
+  const regionOptions = REGION_OPTIONS_BY_COUNTRY[normalizedCountry] || DEFAULT_REGION_OPTIONS;
 
   return (
     <>
@@ -340,12 +380,13 @@ export default function CountryRegionSelector({
         </div>
         <select
           className="select select-bordered w-full"
-          value={country}
+          value={normalizedCountry}
+          name={countryName}
+          autoComplete={countryAutoComplete}
           disabled={disabled}
           onChange={(event) => {
             const nextCountry = event.target.value;
             onCountryChange(nextCountry);
-            onRegionChange("");
           }}
         >
           {COUNTRY_OPTIONS.map((option) => (
@@ -362,8 +403,10 @@ export default function CountryRegionSelector({
         </div>
         <select
           className="select select-bordered w-full"
-          value={region}
-          disabled={disabled || !country}
+          value={normalizedRegion}
+          name={regionName}
+          autoComplete={regionAutoComplete}
+          disabled={disabled || !normalizedCountry}
           onChange={(event) => onRegionChange(event.target.value)}
         >
           {regionOptions.map((option) => (

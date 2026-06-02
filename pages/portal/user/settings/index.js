@@ -17,7 +17,7 @@ import Link from "next/link"
 
 export default function Settings() {
 	// Custom hook to make private pages easier to deal with (see /hooks folder)
-	const [session, status] = usePrivate("/user/settings")
+	const [session, status] = usePrivate("/portal/user/settings")
 
 	// Show a loader when the session is loading. Not needed but recommended if you show user data like email/name
 	if (status === "loading") {
@@ -48,21 +48,21 @@ export default function Settings() {
 	}
 
 	const settingLinks = [
-		{ href: "/user/settings/notifications", label: "Notification Preferences", icon: "🔔", description: "Control likes, comments, mentions, follows, and DM alerts.", status: "Mock" },
-		{ href: "/user/settings/password", label: "Security Center", icon: "🔐", description: "Password changes, session management, and account protection.", status: "Mock" },
-		{ href: "/user/settings/address", label: "Address & Region", icon: "📍", description: "Manage shipping region, locale, and legal contact details.", status: "Mock" },
-		{ href: "/user/settings/credit-card", label: "Billing & Payment", icon: "💳", description: "Payment method preferences and billing controls.", status: "Mock" },
+		{ href: "/portal/user/settings/notifications", label: "Notification Preferences", icon: "🔔", description: "Control likes, comments, mentions, follows, and DM alerts.", status: "Mock" },
+		{ href: "/portal/user/settings/password", label: "Security Center", icon: "🔐", description: "Password changes, session management, and account protection.", status: "Mock" },
+		{ href: "/portal/user/settings/address", label: "Address & Region", icon: "📍", description: "Manage shipping region, locale, and legal contact details.", status: "Mock" },
+		{ href: "/portal/user/settings/credit-card", label: "Billing & Payment", icon: "💳", description: "Payment method preferences and billing controls.", status: "Mock" },
 	]
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="user/settings" />
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user/settings" />
 			<div className="max-w-5xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg border border-base-300">
 					<div className="card-body">
 						<div className="flex items-center justify-between gap-3 flex-wrap">
 							<h1 className="text-2xl font-bold text-base-content">Your Settings</h1>
-							<Link href="/user" className="btn btn-sm btn-ghost">Back to Dashboard</Link>
+							<Link href="/portal/user" className="btn btn-sm btn-ghost">Back to Dashboard</Link>
 						</div>
 					</div>
 				</div>

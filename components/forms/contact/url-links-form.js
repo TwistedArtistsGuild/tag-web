@@ -58,6 +58,30 @@ const REQUIRED_FALLBACK_LABELS = [
   "sales",
   "other",
 ]
+const CONTACT_SCOPE_OPTIONS = [
+  { value: "private", label: "Private" },
+  { value: "primary", label: "Primary" },
+  { value: "secondary", label: "Secondary" },
+]
+
+function normalizeScope(value, fallback = "secondary") {
+  const normalized = String(value || "").trim().toLowerCase()
+  if (normalized === "private" || normalized === "primary" || normalized === "secondary") {
+    return normalized
+  }
+
+  return fallback
+}
+
+function sortByScopeAndOrder(entries = []) {
+  const rank = { primary: 0, private: 1, secondary: 2 }
+  return [...entries].sort((a, b) => {
+    const aScope = rank[normalizeScope(a?.scope)] ?? 9
+    const bScope = rank[normalizeScope(b?.scope)] ?? 9
+    if (aScope !== bScope) return aScope - bScope
+    return Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0)
+  })
+}
 
 const LABEL_DOMAIN_MAP = {
   website: "example.com",
@@ -245,10 +269,10 @@ function LabelDropdown({ value, urlValue, groupedOptions, onSelect }) {
   )
 }
 
-function makeInitialEntries(existingContacts = []) {
-  const sorted = [...existingContacts].sort((a, b) => Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0))
+function makeInitialEntries(existingContacts = [], defaultScope = "secondary") {
+  const sorted = sortByScopeAndOrder(existingContacts)
   if (sorted.length === 0) {
-    return [{ id: "url-0", label: "Website", urlValue: "", description: "", isPrimary: true, mode: "edit" }]
+    return [{ id: "url-0", label: "Website", urlValue: "", description: "", scope: normalizeScope(defaultScope), mode: "edit" }]
   }
 
   return sorted.map((contact, index) => ({
@@ -256,8 +280,7 @@ function makeInitialEntries(existingContacts = []) {
     label: String(contact?.label || "Website").trim(),
     urlValue: String(contact?.value || "").trim(),
     description: String(contact?.description || "").trim(),
-    isPrivate: Boolean(contact?.isPrivate || contact?.private || false),
-    isPrimary: index === 0,
+    scope: normalizeScope(contact?.scope, defaultScope),
     previewStatus: "idle",
     previewTitle: "",
     previewHint: "",
@@ -265,9 +288,20 @@ function makeInitialEntries(existingContacts = []) {
   }))
 }
 
-export default function UrlLinksForm({ artistID, existingContacts = [], onSaved }) {
+export default function UrlLinksForm({
+  context = "artist",
+  entityID,
+  artistID,
+  existingContacts = [],
+  onSaved,
+  defaultScope = "secondary",
+  availableScopes = ["private", "primary", "secondary"],
+}) {
   const apiUrl = getApiURL()
-  const initialEntries = useMemo(() => makeInitialEntries(existingContacts), [existingContacts])
+  const resolvedContext = String(context || "artist").trim().toLowerCase() || "artist"
+  const resolvedEntityId = Number(entityID || artistID || 0)
+  const canChooseScope = availableScopes.length > 1
+  const initialEntries = useMemo(() => makeInitialEntries(existingContacts, defaultScope), [defaultScope, existingContacts])
 
   const [entries, setEntries] = useState(initialEntries)
   const [draggingId, setDraggingId] = useState("")
@@ -279,9 +313,9 @@ export default function UrlLinksForm({ artistID, existingContacts = [], onSaved 
   const previewTimersRef = useRef({})
 
   useEffect(() => {
-    setEntries(makeInitialEntries(existingContacts))
+    setEntries(makeInitialEntries(existingContacts, defaultScope))
     setHasUnsavedChanges(false)
-  }, [existingContacts])
+  }, [defaultScope, existingContacts])
 
   useEffect(() => {
     let ignore = false
@@ -351,7 +385,7 @@ export default function UrlLinksForm({ artistID, existingContacts = [], onSaved 
         label: "Website",
         urlValue: "",
         description: "",
-        isPrivate: false,
+        scope: normalizeScope(defaultScope),
         previewStatus: "idle",
         previewTitle: "",
         previewHint: "",
@@ -433,8 +467,8 @@ export default function UrlLinksForm({ artistID, existingContacts = [], onSaved 
     setResultMessage("")
     setErrorMessage("")
 
-    if (!artistID) {
-      setErrorMessage("Artist context is missing.")
+    if (!resolvedEntityId) {
+      setErrorMessage("Contact context is missing.")
       return
     }
 
@@ -449,14 +483,14 @@ export default function UrlLinksForm({ artistID, existingContacts = [], onSaved 
         }
 
         return {
-          context: "artist",
-          entityID: artistID,
+          context: resolvedContext,
+          entityID: resolvedEntityId,
           contactType: "url",
           label: entry.label.trim() || "Website",
           category: "website",
           value: finalUrl,
           description: entry.description.trim() || null,
-          isPrivate: Boolean(entry.isPrivate),
+          scope: normalizeScope(entry.scope, defaultScope),
           displayOrder: index,
         }
       })
@@ -500,8 +534,8 @@ export default function UrlLinksForm({ artistID, existingContacts = [], onSaved 
 
       <div className="max-h-128 overflow-y-auto overflow-x-hidden pr-1 space-y-3">
         <div className="rounded-box border border-primary/40 bg-primary/5 p-3">
-          <div className="text-xs font-semibold uppercase tracking-wide text-primary">Primary URL (linked to entity)</div>
-          <div className="text-xs text-base-content/70">The first URL is treated as your primary website. Additional links are secondary details.</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-primary">Lead URL Entry</div>
+          <div className="text-xs text-base-content/70">{canChooseScope ? "Set scope to Primary only if this URL should be the direct linked website record." : "This URL will be saved as a private contact."}</div>
         </div>
 
         {entries.map((entry, index) => (
@@ -522,10 +556,11 @@ export default function UrlLinksForm({ artistID, existingContacts = [], onSaved 
                   <img src={getFaviconUrl(entry.urlValue, entry.label)} alt="" className="h-7 w-7 rounded-sm" loading="lazy" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-primary">{entry.label || "Website"}{index === 0 ? " (Primary)" : ""}</div>
+                  <div className="font-semibold text-primary">{entry.label || "Website"}</div>
                   <a href={entry.urlValue} target="_blank" rel="noopener noreferrer" className="text-sm link link-primary truncate block">
                     {entry.urlValue}
                   </a>
+                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(entry.scope, defaultScope))?.label || "Secondary"}</div>
                   {entry.description ? <p className="text-xs text-base-content/60 mt-0.5 truncate">{entry.description}</p> : null}
                 </div>
                 <button
@@ -632,18 +667,24 @@ export default function UrlLinksForm({ artistID, existingContacts = [], onSaved 
                     />
                   </label>
                   <div className="flex items-center justify-between gap-3">
-                    <label className="inline-flex items-center gap-2 text-xs cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="checkbox checkbox-xs"
-                        checked={Boolean(entry.isPrivate)}
-                        onChange={(event) => {
-                          setHasUnsavedChanges(true)
-                          updateEntry(entry.id, (old) => ({ ...old, isPrivate: event.target.checked }))
-                        }}
-                      />
-                      <span>Private</span>
-                    </label>
+                    {canChooseScope ? (
+                      <label className="form-control min-w-40">
+                        <span className="label-text mb-1">Scope</span>
+                        <select
+                          className="select select-bordered"
+                          value={normalizeScope(entry.scope, defaultScope)}
+                          onChange={(event) => {
+                            setHasUnsavedChanges(true)
+                            updateEntry(entry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
+                          }}
+                        >
+                          {availableScopes.map((scope) => {
+                            const option = CONTACT_SCOPE_OPTIONS.find((row) => row.value === scope)
+                            return <option key={scope} value={scope}>{option?.label || scope}</option>
+                          })}
+                        </select>
+                      </label>
+                    ) : <div className="flex-1" />}
                     <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
                       Delete
                     </button>

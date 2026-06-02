@@ -143,7 +143,7 @@ function makeInitialEntries(existingContacts = []) {
       urlValue: String(saved?.value || "").trim(),
       label: String(saved?.label || socialPlatforms[platformKey]?.label || "").trim(),
       description: String(saved?.description || "").trim(),
-      isPrivate: Boolean(saved?.isPrivate || saved?.private || false),
+      scope: String(saved?.scope || "secondary").trim().toLowerCase() || "secondary",
       previewStatus: "idle",
       previewTitle: "",
       previewHint: "",
@@ -152,7 +152,7 @@ function makeInitialEntries(existingContacts = []) {
   })
 }
 
-function SocialEntryDisplay({ entry, icon, onEdit, onDragStart, onDelete, onTogglePrivate }) {
+function SocialEntryDisplay({ entry, icon, onEdit, onDragStart, onDelete }) {
   return (
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-2 shrink-0">
@@ -188,10 +188,7 @@ function SocialEntryDisplay({ entry, icon, onEdit, onDragStart, onDelete, onTogg
         {entry.description ? (
           <p className="text-xs text-base-content/60 mt-0.5 truncate">{entry.description}</p>
         ) : null}
-        <label className="mt-2 inline-flex items-center gap-2 text-xs cursor-pointer">
-          <input type="checkbox" className="checkbox checkbox-xs" checked={Boolean(entry.isPrivate)} onChange={onTogglePrivate} />
-          <span>Private</span>
-        </label>
+        <div className="mt-2 text-xs text-base-content/60">Scope: {String(entry.scope || "secondary")}</div>
       </div>
 
       <button type="button" className="btn btn-sm btn-ghost shrink-0" onClick={onEdit}>
@@ -219,11 +216,14 @@ function SocialEntryDisplay({ entry, icon, onEdit, onDragStart, onDelete, onTogg
  * Props:
  *   artistID        — number, required for submit
  *   existingContacts — array of saved contact rows from the API (optional)
- *   isPrivate       — boolean, controlled from parent (optional; defaults to internal state)
+ *   availableScopes — allowed scope values for this surface
  *   onSaved         — callback(savedCount) after successful save
  */
-export default function SocialHandlesForm({ artistID, existingContacts = [], isPrivate: isPrivateProp, onSaved }) {
+export default function SocialHandlesForm({ context = "artist", entityID, artistID, existingContacts = [], defaultScope = "secondary", availableScopes = ["secondary"], onSaved }) {
   const apiUrl = getApiURL()
+  const resolvedContext = String(context || "artist").trim().toLowerCase() || "artist"
+  const resolvedEntityId = Number(entityID || artistID || 0)
+  const canChooseScope = availableScopes.length > 1
 
   const initialEntries = useMemo(() => makeInitialEntries(existingContacts), [existingContacts])
   const [entries, setEntries] = useState(initialEntries)
@@ -355,8 +355,8 @@ export default function SocialHandlesForm({ artistID, existingContacts = [], isP
     setResultMessage("")
     setErrorMessage("")
 
-    if (!artistID) {
-      setErrorMessage("Artist context is missing.")
+    if (!resolvedEntityId) {
+      setErrorMessage("Contact context is missing.")
       return
     }
 
@@ -365,15 +365,15 @@ export default function SocialHandlesForm({ artistID, existingContacts = [], isP
         const finalUrl = normalizeUrl(entry.urlValue || buildUrlFromHandle(entry.platform, entry.handle))
         if (!finalUrl) return null
         return {
-          context: "artist",
-          entityID: artistID,
+          context: resolvedContext,
+          entityID: resolvedEntityId,
           contactType: "url",
           label: entry.label.trim() || socialPlatforms[entry.platform]?.label || "Website",
           category: entry.platform,
           value: finalUrl,
           handle: entry.handle.trim().replace(/^@/, "") || null,
           description: entry.description.trim() || null,
-          isPrivate: Boolean(entry.isPrivate),
+          scope: String(entry.scope || defaultScope).trim().toLowerCase() || defaultScope,
           displayOrder: index,
         }
       })
@@ -417,7 +417,7 @@ export default function SocialHandlesForm({ artistID, existingContacts = [], isP
           handle: "",
           urlValue: "",
           description: "",
-          isPrivate: false,
+          scope: defaultScope,
           previewStatus: "idle",
           previewTitle: "",
           previewHint: "",
@@ -465,10 +465,6 @@ export default function SocialHandlesForm({ artistID, existingContacts = [], isP
                   onEdit={() => updateEntry(entry.id, (e) => ({ ...e, mode: "edit" }))}
                   onDragStart={(event) => onGripDragStart(event, entry.id)}
                   onDelete={() => deleteEntry(entry.id)}
-                  onTogglePrivate={() => {
-                    setHasUnsavedChanges(true)
-                    updateEntry(entry.id, (e) => ({ ...e, isPrivate: !e.isPrivate }))
-                  }}
                 />
               ) : (
               <>
@@ -547,18 +543,23 @@ export default function SocialHandlesForm({ artistID, existingContacts = [], isP
               </div>
 
                 <div className="flex items-center justify-between gap-3 mt-1">
-                  <label className="inline-flex items-center gap-2 text-xs cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-xs"
-                      checked={Boolean(entry.isPrivate)}
-                      onChange={(event) => {
-                        setHasUnsavedChanges(true)
-                        updateEntry(entry.id, (old) => ({ ...old, isPrivate: event.target.checked }))
-                      }}
-                    />
-                    <span>Private</span>
-                  </label>
+                  {canChooseScope ? (
+                    <label className="form-control min-w-40">
+                      <span className="label-text mb-1">Scope</span>
+                      <select
+                        className="select select-bordered"
+                        value={String(entry.scope || defaultScope).trim().toLowerCase() || defaultScope}
+                        onChange={(event) => {
+                          setHasUnsavedChanges(true)
+                          updateEntry(entry.id, (old) => ({ ...old, scope: String(event.target.value || defaultScope).trim().toLowerCase() || defaultScope }))
+                        }}
+                      >
+                        {availableScopes.map((scope) => (
+                          <option key={scope} value={scope}>{scope}</option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : <div className="flex-1" />}
                   <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
                     Delete
                   </button>

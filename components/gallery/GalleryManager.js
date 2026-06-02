@@ -125,6 +125,10 @@ function toNumber(value) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 0
 }
 
+function getCurrentUserId(currentUser) {
+  return toNumber(currentUser?.id || currentUser?.userID || currentUser?.UserID)
+}
+
 function getManagedPrefix(entityType, entityId, folderKind = "gallery") {
   const normalizedEntityType = String(entityType || "").trim().toLowerCase()
   const normalizedFolderKind = String(folderKind || "gallery").trim().toLowerCase()
@@ -631,6 +635,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     []
   )
   const currentUserLabel = useMemo(() => getCurrentUserLabel(currentUser), [currentUser])
+  const currentUserId = useMemo(() => getCurrentUserId(currentUser), [currentUser])
 
   const roleOptions = creditRoles.length ? creditRoles : fallbackRoleOptions
   const defaultRoleID = String(roleOptions[0]?.creditRoleID || "")
@@ -918,7 +923,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     formData.append("container", "tagpictures")
     formData.append("startPrefix", galleryPrefix)
     formData.append("targetPrefix", galleryPrefix)
-    formData.append("userID", "staff")
+    formData.append("userID", String(currentUserId || entityId || "staff"))
     formData.append("category", entityType)
     formData.append("entityID", String(entityId || ""))
 

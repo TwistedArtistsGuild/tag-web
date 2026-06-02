@@ -39,11 +39,18 @@ export default function RegisterSlug({
   onReserved,
   extendPayload,
   children,
+  titleFieldLabel = "Title",
+  titlePlaceholder,
+  showSlugField = true,
+  slugFieldLabel = "Slug",
+  slugPlaceholder = "lowercase-dashed-slug",
+  slugDescription = "You can update the slug later, but each change requires another uniqueness check.",
 }) {
   const router = useRouter();
 
   const [title, setTitle] = useState(initialTitle);
   const [slug, setSlug] = useState("");
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const [email, setEmail] = useState(sessionUser?.email || "");
   const [entityId, setEntityId] = useState(null);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
@@ -65,6 +72,9 @@ export default function RegisterSlug({
 
     if (progress.slug) {
       setSlug(progress.slug);
+      if (progress.title) {
+        setIsSlugManuallyEdited(toSlug(progress.title) !== progress.slug);
+      }
     }
 
     if (progress.entityId) {
@@ -232,7 +242,7 @@ export default function RegisterSlug({
         return;
       }
 
-      const resolvedId = body?.artistID || body?.userID || entityId;
+      const resolvedId = body?.artistID || body?.ArtistID || body?.userID || body?.UserID || body?.vendorID || body?.VendorID || body?.venueID || body?.VenueID || entityId;
 
       if (!resolvedId) {
         setFeedback({
@@ -265,6 +275,11 @@ export default function RegisterSlug({
         type: "success",
         message: successMessage,
       });
+
+      // Mark workflow step complete if this is an artist domain
+      if (normalizedDomain === "artist" && progressApi?.markWorkflowStep) {
+        await progressApi.markWorkflowStep(resolvedId, "reserved_slug");
+      }
 
       if (onReserved) {
         await onReserved({
@@ -309,48 +324,68 @@ export default function RegisterSlug({
 
         <label className="form-control w-full">
           <div className="label">
-            <span className="label-text">Title</span>
+            <span className="label-text">{titleFieldLabel}</span>
           </div>
           <input
             type="text"
             className="input input-bordered w-full"
             value={title}
             onChange={(event) => {
-              setTitle(event.target.value);
+              const nextTitle = event.target.value;
+              setTitle(nextTitle);
+              if (!isSlugManuallyEdited || !showSlugField) {
+                setSlug(toSlug(nextTitle));
+              }
               setSlugStatus("idle");
             }}
-            placeholder={`Enter ${domainLabel.toLowerCase()} title`}
+            placeholder={titlePlaceholder || `Enter ${domainLabel.toLowerCase()} title`}
           />
         </label>
 
-        <label className="form-control w-full">
-          <div className="label">
-            <span className="label-text">Slug</span>
+        {showSlugField ? (
+          <label className="form-control w-full">
+            <div className="label">
+              <span className="label-text">{slugFieldLabel}</span>
+            </div>
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                className="input input-bordered w-full"
+                value={slug}
+                onChange={(event) => {
+                  setSlug(toSlug(event.target.value));
+                  setIsSlugManuallyEdited(true);
+                  setSlugStatus("idle");
+                }}
+                placeholder={slugPlaceholder}
+              />
+              <button
+                type="button"
+                className="btn btn-outline whitespace-nowrap"
+                onClick={handleCheckSlug}
+                disabled={isChecking || isSubmitting}
+              >
+                {isChecking ? "Checking..." : "Check Uniqueness"}
+              </button>
+            </div>
+            <div className="label">
+              <span className="label-text-alt">{slugDescription}</span>
+            </div>
+          </label>
+        ) : (
+          <div className="rounded-box border border-base-300 bg-base-200/40 p-3 text-sm">
+            <div className="font-semibold">Username slug preview</div>
+            <div className="text-base-content/70">{slug || "(enter a username above)"}</div>
             <button
               type="button"
-              className="btn btn-xs btn-ghost"
-              onClick={() => {
-                setSlug(toSlug(title));
-                setSlugStatus("idle");
-              }}
+              className="btn btn-sm btn-outline mt-2"
+              onClick={handleCheckSlug}
+              disabled={isChecking || isSubmitting || !slug}
             >
-              Generate from title
+              {isChecking ? "Checking..." : "Check Username"}
             </button>
           </div>
-          <input
-            type="text"
-            className="input input-bordered w-full"
-            value={slug}
-            onChange={(event) => {
-              setSlug(toSlug(event.target.value));
-              setSlugStatus("idle");
-            }}
-            placeholder="lowercase-dashed-slug"
-          />
-          <div className="label">
-            <span className="label-text-alt">You can update the slug later, but each change requires another uniqueness check.</span>
-          </div>
-        </label>
+        )}
 
         {normalizedDomain === "user" && (
           <label className="form-control w-full">
@@ -370,9 +405,6 @@ export default function RegisterSlug({
         {children}
 
         <div className="flex gap-2 flex-wrap">
-          <button type="button" className="btn btn-outline" onClick={handleCheckSlug} disabled={isChecking || isSubmitting}>
-            {isChecking ? "Checking..." : "Check Uniqueness"}
-          </button>
           <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={!canSubmit || isSubmitting}>
             {isSubmitting ? "Saving..." : entityId ? "Update Slug + Continue" : "Reserve Slug + Continue"}
           </button>

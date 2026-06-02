@@ -19,7 +19,7 @@ import Link from "next/link"
 
 export default function Preferences() {
 	// Custom hook to make private pages easier to deal with (see /hooks folder)
-	const [session, status] = usePrivate("/user/preferences")
+	const [session, status] = usePrivate("/portal/user/preferences")
 	const [isLoading, setIsLoading] = useState(false)
 	const [theme, setTheme] = useState(session?.user?.preferences?.theme || "light")
 	const [notifications, setNotifications] = useState(session?.user?.preferences?.notifications || true)
@@ -65,19 +65,19 @@ export default function Preferences() {
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={{ title: "User Preferences", description: "Manage account and app preferences.", robots: "noindex, nofollow", keywords: "user preferences, account settings", og: { title: "User Preferences", description: "Manage account and app preferences." } }} canonicalSlug="user/preferences" />
+			<TagSEO metadataProp={{ title: "User Preferences", description: "Manage account and app preferences.", robots: "noindex, nofollow", keywords: "user preferences, account settings", og: { title: "User Preferences", description: "Manage account and app preferences." } }} canonicalSlug="portal/user/preferences" />
 			<div className="max-w-5xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg border border-base-300">
 					<div className="card-body">
 						<div className="flex items-center justify-between gap-3 flex-wrap">
 							<h1 className="text-2xl font-bold text-base-content">User Preferences</h1>
-							<Link href="/user" className="btn btn-sm btn-ghost">Back to Dashboard</Link>
+							<Link href="/portal/user" className="btn btn-sm btn-ghost">Back to Dashboard</Link>
 						</div>
 						<p className="text-sm text-base-content/70">
 							{status === "authenticated" ? `Welcome ${session?.user?.name}` : "You are not logged in"}
 						</p>
 						<div>
-							<Link href="/user/preferences/content" className="btn btn-sm btn-outline btn-accent">
+							<Link href="/portal/user/preferences/content" className="btn btn-sm btn-outline btn-accent">
 								Open Content Preferences
 							</Link>
 						</div>

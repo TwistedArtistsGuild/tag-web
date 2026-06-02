@@ -405,11 +405,7 @@ Artist.getInitialProps = async (context) => {
       if (contactsRes.ok) {
         const contactsData = await contactsRes.json()
         const rows = Array.isArray(contactsData?.contacts) ? contactsData.contacts : []
-        contactCardData = pickContactCardData(
-          rows,
-          contactsData?.primaryPhone || null,
-          contactsData?.primaryAddress || null
-        )
+        contactCardData = pickContactCardData(rows)
       }
     } catch (error) {
       console.error(`Error fetching contacts for artist ${artistID}:`, error)

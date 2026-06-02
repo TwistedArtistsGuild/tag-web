@@ -36,13 +36,13 @@ export default function NotificationSettings() {
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="user/settings/notifications" />
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user/settings/notifications" />
 			<div className="max-w-5xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg border border-base-300">
 					<div className="card-body">
 						<div className="flex items-center justify-between gap-3 flex-wrap">
 							<h1 className="text-2xl font-bold text-base-content">Notification Preferences</h1>
-							<Link href="/user/settings" className="btn btn-sm btn-ghost">Back to Settings</Link>
+							<Link href="/portal/user/settings" className="btn btn-sm btn-ghost">Back to Settings</Link>
 						</div>
 						<p className="text-sm text-base-content/70">Notification controls and delivery options.</p>
 					</div>
@@ -94,7 +94,7 @@ export default function NotificationSettings() {
 
 						<div className="flex gap-2 flex-wrap">
 							<button className="btn btn-primary" onClick={() => alert("Notification settings saved (mock).")}>Save Notification Settings</button>
-							<Link href="/user/preferences" className="btn btn-ghost">Open Preferences Hub</Link>
+							<Link href="/portal/user/preferences" className="btn btn-ghost">Open Preferences Hub</Link>
 						</div>
 					</div>
 				</div>

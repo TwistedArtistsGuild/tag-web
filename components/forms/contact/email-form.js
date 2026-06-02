@@ -13,6 +13,30 @@ import { useEffect, useMemo, useState } from "react"
 import getApiURL from "@/components/widgets/GetApiURL"
 
 const FALLBACK_LABELS = ["home", "work", "mobile", "office", "studio", "regional office", "support", "booking", "press", "billing", "sales", "other"]
+const CONTACT_SCOPE_OPTIONS = [
+  { value: "private", label: "Private" },
+  { value: "primary", label: "Primary" },
+  { value: "secondary", label: "Secondary" },
+]
+
+function normalizeScope(value, fallback = "secondary") {
+  const normalized = String(value || "").trim().toLowerCase()
+  if (normalized === "private" || normalized === "primary" || normalized === "secondary") {
+    return normalized
+  }
+
+  return fallback
+}
+
+function sortByScopeAndOrder(entries = []) {
+  const rank = { primary: 0, private: 1, secondary: 2 }
+  return [...entries].sort((a, b) => {
+    const aScope = rank[normalizeScope(a?.scope)] ?? 9
+    const bScope = rank[normalizeScope(b?.scope)] ?? 9
+    if (aScope !== bScope) return aScope - bScope
+    return Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0)
+  })
+}
 
 function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase()
@@ -29,31 +53,37 @@ function dedupeEmailEntries(entries = []) {
   })
 }
 
-function makeInitialEntries(existingContacts = []) {
-  const sorted = [...existingContacts].sort((a, b) => Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0))
+function makeInitialEntries(existingContacts = [], defaultScope = "secondary") {
+  const sorted = sortByScopeAndOrder(existingContacts)
   const entries = dedupeEmailEntries(
     sorted.map((contact, index) => ({
       id: `email-${index}`,
       email: String(contact?.value || "").trim(),
       label: String(contact?.label || "booking").trim() || "booking",
       description: String(contact?.description || "").trim(),
-      isPrivate: Boolean(contact?.isPrivate || contact?.private || false),
-      isPrimary: index === 0,
+      scope: normalizeScope(contact?.scope, defaultScope),
       mode: contact?.value ? "display" : "edit",
     }))
   )
 
   if (entries.length === 0) {
-    return [{ id: "email-0", email: "", label: "booking", description: "", isPrivate: false, isPrimary: true, mode: "edit" }]
+    return [{ id: "email-0", email: "", label: "booking", description: "", scope: normalizeScope(defaultScope), mode: "edit" }]
   }
 
   return entries
 }
 
-export default function EmailForm({ context = "artist", entityID, existingContacts = [], onSaved }) {
+export default function EmailForm({
+  context = "artist",
+  entityID,
+  existingContacts = [],
+  onSaved,
+  defaultScope = "secondary",
+  availableScopes = ["private", "primary", "secondary"],
+}) {
   const apiUrl = getApiURL()
   const [labelOptions, setLabelOptions] = useState([])
-  const initialEntries = useMemo(() => makeInitialEntries(existingContacts), [existingContacts])
+  const initialEntries = useMemo(() => makeInitialEntries(existingContacts, defaultScope), [defaultScope, existingContacts])
 
   const [entries, setEntries] = useState(initialEntries)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
@@ -62,9 +92,9 @@ export default function EmailForm({ context = "artist", entityID, existingContac
   const [errorMessage, setErrorMessage] = useState("")
 
   useEffect(() => {
-    setEntries(makeInitialEntries(existingContacts))
+    setEntries(makeInitialEntries(existingContacts, defaultScope))
     setHasUnsavedChanges(false)
-  }, [existingContacts])
+  }, [defaultScope, existingContacts])
 
   useEffect(() => {
     let ignore = false
@@ -93,7 +123,7 @@ export default function EmailForm({ context = "artist", entityID, existingContac
   const addEntry = () => {
     setEntries((prev) => ([
       ...prev,
-      { id: `email-${Date.now()}`, email: "", label: "booking", description: "", isPrivate: false, mode: "edit" },
+      { id: `email-${Date.now()}`, email: "", label: "booking", description: "", scope: normalizeScope(defaultScope), mode: "edit" },
     ]))
     setHasUnsavedChanges(true)
   }
@@ -126,9 +156,8 @@ export default function EmailForm({ context = "artist", entityID, existingContac
           category: "email",
           value: email,
           description: entry.description.trim() || null,
-          isPrivate: Boolean(entry.isPrivate),
+          scope: normalizeScope(entry.scope, defaultScope),
           displayOrder: index,
-          setAsPrimary: index === 0,
         }
       })
       .filter(Boolean)
@@ -167,6 +196,7 @@ export default function EmailForm({ context = "artist", entityID, existingContac
     ? labelOptions.map((option) => option.label)
     : FALLBACK_LABELS
 
+  const canChooseScope = availableScopes.length > 1
   const headingContext = context === "user" ? "User" : "Artist"
   const primaryEntry = entries[0] || null
   const secondaryEntries = entries.slice(1)
@@ -179,8 +209,8 @@ export default function EmailForm({ context = "artist", entityID, existingContac
 
       <div className="space-y-3">
         <div className="rounded-box border border-primary/40 bg-primary/5 p-3">
-          <div className="text-xs font-semibold uppercase tracking-wide text-primary">Primary Email (linked to entity)</div>
-          <div className="text-xs text-base-content/70">This email is treated as the primary contact for this {headingContext.toLowerCase()}.</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-primary">Lead Email Entry</div>
+          <div className="text-xs text-base-content/70">{canChooseScope ? `Set scope to Primary only if this email should be the direct linked contact for this ${headingContext.toLowerCase()}.` : `This email will be saved as a private contact for this ${headingContext.toLowerCase()}.`}</div>
         </div>
 
         {primaryEntry ? (
@@ -188,8 +218,9 @@ export default function EmailForm({ context = "artist", entityID, existingContac
             {primaryEntry.mode === "display" ? (
               <div className="flex items-center gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-primary">{primaryEntry.label || "Email"} (Primary)</div>
+                  <div className="font-semibold text-primary">{primaryEntry.label || "Email"}</div>
                   <div className="text-sm break-all">{primaryEntry.email}</div>
+                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(primaryEntry.scope, defaultScope))?.label || "Secondary"}</div>
                   {primaryEntry.description ? <p className="text-xs text-base-content/60 mt-0.5 truncate">{primaryEntry.description}</p> : null}
                 </div>
                 <button
@@ -253,17 +284,21 @@ export default function EmailForm({ context = "artist", entityID, existingContac
                 </label>
 
                 <div className="md:col-span-1 flex items-end justify-between gap-3">
-                  <label className="inline-flex items-center gap-2 text-xs cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-xs"
-                      checked={Boolean(primaryEntry.isPrivate)}
+                  <label className="form-control flex-1">
+                    <span className="label-text mb-1">Scope</span>
+                    <select
+                      className="select select-bordered"
+                      value={normalizeScope(primaryEntry.scope, defaultScope)}
                       onChange={(event) => {
                         setHasUnsavedChanges(true)
-                        updateEntry(primaryEntry.id, (old) => ({ ...old, isPrivate: event.target.checked }))
+                        updateEntry(primaryEntry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
                       }}
-                    />
-                    <span>Private</span>
+                    >
+                      {availableScopes.map((scope) => {
+                        const option = CONTACT_SCOPE_OPTIONS.find((entry) => entry.value === scope)
+                        return <option key={scope} value={scope}>{option?.label || scope}</option>
+                      })}
+                    </select>
                   </label>
                   <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(primaryEntry.id)}>
                     Delete
@@ -287,6 +322,7 @@ export default function EmailForm({ context = "artist", entityID, existingContac
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-primary">{entry.label || "Email"}</div>
                   <div className="text-sm break-all">{entry.email}</div>
+                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(entry.scope, defaultScope))?.label || "Secondary"}</div>
                   {entry.description ? <p className="text-xs text-base-content/60 mt-0.5 truncate">{entry.description}</p> : null}
                 </div>
                 <button
@@ -350,18 +386,24 @@ export default function EmailForm({ context = "artist", entityID, existingContac
                 </label>
 
                 <div className="md:col-span-1 flex items-end justify-between gap-3">
-                  <label className="inline-flex items-center gap-2 text-xs cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-xs"
-                      checked={Boolean(entry.isPrivate)}
-                      onChange={(event) => {
-                        setHasUnsavedChanges(true)
-                        updateEntry(entry.id, (old) => ({ ...old, isPrivate: event.target.checked }))
-                      }}
-                    />
-                    <span>Private</span>
-                  </label>
+                  {canChooseScope ? (
+                    <label className="form-control flex-1">
+                      <span className="label-text mb-1">Scope</span>
+                      <select
+                        className="select select-bordered"
+                        value={normalizeScope(entry.scope, defaultScope)}
+                        onChange={(event) => {
+                          setHasUnsavedChanges(true)
+                          updateEntry(entry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
+                        }}
+                      >
+                        {availableScopes.map((scope) => {
+                          const option = CONTACT_SCOPE_OPTIONS.find((row) => row.value === scope)
+                          return <option key={scope} value={scope}>{option?.label || scope}</option>
+                        })}
+                      </select>
+                    </label>
+                  ) : <div className="flex-1" />}
                   <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
                     Delete
                   </button>

@@ -32,6 +32,30 @@ const PHONE_PREFIX_OPTIONS = [
 ]
 
 const DEFAULT_PHONE_PREFIX = "+1"
+const CONTACT_SCOPE_OPTIONS = [
+  { value: "private", label: "Private" },
+  { value: "primary", label: "Primary" },
+  { value: "secondary", label: "Secondary" },
+]
+
+function normalizeScope(value, fallback = "secondary") {
+  const normalized = String(value || "").trim().toLowerCase()
+  if (normalized === "private" || normalized === "primary" || normalized === "secondary") {
+    return normalized
+  }
+
+  return fallback
+}
+
+function sortByScopeAndOrder(entries = []) {
+  const rank = { primary: 0, private: 1, secondary: 2 }
+  return [...entries].sort((a, b) => {
+    const aScope = rank[normalizeScope(a?.scope)] ?? 9
+    const bScope = rank[normalizeScope(b?.scope)] ?? 9
+    if (aScope !== bScope) return aScope - bScope
+    return Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0)
+  })
+}
 
 function normalizePhone(value) {
   return String(value || "").replace(/[^\d+]/g, "").trim()
@@ -139,47 +163,40 @@ function dedupePhoneEntries(entries = []) {
   })
 }
 
-function makeInitialEntries(existingContacts = [], primaryPhone = null) {
-  const sorted = [...existingContacts].sort((a, b) => Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0))
+function makeInitialEntries(existingContacts = [], defaultScope = "secondary") {
+  const sorted = sortByScopeAndOrder(existingContacts)
   const entries = dedupePhoneEntries(sorted.map((contact, index) => ({
     ...splitPhoneNumber(contact?.value || ""),
     id: `phone-${index}`,
     label: String(contact?.phoneLabel || contact?.label || "Mobile").trim(),
     description: String(contact?.description || "").trim(),
-    isPrivate: Boolean(contact?.isPrivate || contact?.private || false),
-    isPrimary: false,
+    scope: normalizeScope(contact?.scope, defaultScope),
     mode: contact?.value ? "display" : "edit",
   })))
 
-  if (primaryPhone?.phoneNumber) {
-    const normalizedPrimary = normalizePhone(primaryPhone.phoneNumber)
-    const match = entries.find((entry) => normalizePhone(composePhoneNumber(entry.phonePrefix, entry.phoneNumber)) === normalizedPrimary)
-    if (match) {
-      match.isPrimary = true
-    } else {
-      entries.unshift({
-        ...splitPhoneNumber(primaryPhone.phoneNumber || ""),
-        id: "phone-primary",
-        label: String(primaryPhone?.phoneContactLabel?.label || primaryPhone?.phoneLabel || "Mobile").trim(),
-        description: String(primaryPhone?.description || "").trim(),
-        isPrivate: Boolean(primaryPhone?.isPrivate || false),
-        isPrimary: true,
-        mode: "display",
-      })
-    }
-  }
-
   if (entries.length === 0) {
-    return [{ id: "phone-0", phonePrefix: DEFAULT_PHONE_PREFIX, phoneNumber: "", label: "Mobile", description: "", isPrivate: false, isPrimary: false, mode: "edit" }]
+    return [{ id: "phone-0", phonePrefix: DEFAULT_PHONE_PREFIX, phoneNumber: "", label: "Mobile", description: "", scope: normalizeScope(defaultScope), mode: "edit" }]
   }
 
   return entries
 }
 
-export default function PhoneForm({ artistID, existingContacts = [], primaryPhone = null, onSaved }) {
+export default function PhoneForm({
+  context = "artist",
+  entityID,
+  artistID,
+  existingContacts = [],
+  onSaved,
+  defaultScope = "secondary",
+  availableScopes = ["private", "primary", "secondary"],
+  requirePrimaryPhone = false,
+}) {
   const apiUrl = getApiURL()
+  const resolvedContext = String(context || "artist").trim().toLowerCase() || "artist"
+  const resolvedEntityId = Number(entityID || artistID || 0)
+  const canChooseScope = availableScopes.length > 1
   const [labelOptions, setLabelOptions] = useState([])
-  const initialEntries = useMemo(() => makeInitialEntries(existingContacts, primaryPhone), [existingContacts, primaryPhone])
+  const initialEntries = useMemo(() => makeInitialEntries(existingContacts, defaultScope), [defaultScope, existingContacts])
 
   const [entries, setEntries] = useState(initialEntries)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
@@ -188,9 +205,9 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
   const [errorMessage, setErrorMessage] = useState("")
 
   useEffect(() => {
-    setEntries(makeInitialEntries(existingContacts, primaryPhone))
+    setEntries(makeInitialEntries(existingContacts, defaultScope))
     setHasUnsavedChanges(false)
-  }, [existingContacts, primaryPhone])
+  }, [defaultScope, existingContacts])
 
   useEffect(() => {
     let ignore = false
@@ -219,7 +236,7 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
   const addEntry = () => {
     setEntries((prev) => ([
       ...prev,
-      { id: `phone-${Date.now()}`, phonePrefix: DEFAULT_PHONE_PREFIX, phoneNumber: "", label: "Mobile", description: "", isPrivate: false, isPrimary: false, mode: "edit" },
+      { id: `phone-${Date.now()}`, phonePrefix: DEFAULT_PHONE_PREFIX, phoneNumber: "", label: "Mobile", description: "", scope: normalizeScope(defaultScope), mode: "edit" },
     ]))
     setHasUnsavedChanges(true)
   }
@@ -234,18 +251,35 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
     setResultMessage("")
     setErrorMessage("")
 
-    if (!artistID) {
-      setErrorMessage("Artist context is missing.")
+    if (!resolvedEntityId) {
+      setErrorMessage("Contact context is missing.")
       return
     }
 
-    const payloadEntries = entries
-      .map((entry, index) => {
+    const primaryEntry = entries[0]
+    const primaryPhoneValue = composePhoneNumber(primaryEntry?.phonePrefix, primaryEntry?.phoneNumber)
+    if (requirePrimaryPhone && !primaryPhoneValue) {
+      setErrorMessage("Primary phone number is required.")
+      return
+    }
+
+    const entriesToSubmit = entries
+      .map((entry) => {
         const phoneValue = composePhoneNumber(entry.phonePrefix, entry.phoneNumber)
         if (!phoneValue) return null
         return {
-          context: "artist",
-          entityID: artistID,
+          ...entry,
+          phoneValue,
+        }
+      })
+      .filter(Boolean)
+
+    const payloadEntries = entriesToSubmit
+      .map((entry, index) => {
+        const phoneValue = entry.phoneValue
+        return {
+          context: resolvedContext,
+          entityID: resolvedEntityId,
           contactType: "phone",
           label: entry.label.trim() || "Mobile",
           category: "phone",
@@ -253,12 +287,10 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
           phoneNumber: phoneValue,
           phoneDescription: entry.description.trim() || null,
           description: entry.description.trim() || null,
-          isPrivate: Boolean(entry.isPrivate),
+          scope: normalizeScope(entry.scope, defaultScope),
           displayOrder: index,
-          setAsPrimary: index === 0,
         }
       })
-      .filter(Boolean)
 
     if (payloadEntries.length === 0) {
       setErrorMessage("Add at least one phone number before saving.")
@@ -298,8 +330,8 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
 
       <div className="space-y-3">
         <div className="rounded-box border border-primary/40 bg-primary/5 p-3">
-          <div className="text-xs font-semibold uppercase tracking-wide text-primary">Primary Phone (linked to entity)</div>
-          <div className="text-xs text-base-content/70">This number is treated as the primary phone contact.</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-primary">Lead Phone Entry</div>
+          <div className="text-xs text-base-content/70">{canChooseScope ? "Set scope to Primary only if this phone should be the direct linked contact number." : "This phone number will be saved as a private contact."}</div>
         </div>
 
         {entries.slice(0, 1).map((entry) => (
@@ -307,10 +339,11 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
             {entry.mode === "display" ? (
               <div className="flex items-center gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-primary">{entry.label || "Phone"} (Primary)</div>
+                  <div className="font-semibold text-primary">{entry.label || "Phone"}</div>
                   <div className="text-sm">
                     {entry.phonePrefix || DEFAULT_PHONE_PREFIX} {formatPhoneLocalForPrefix(entry.phonePrefix, entry.phoneNumber)}
                   </div>
+                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(entry.scope, defaultScope))?.label || "Secondary"}</div>
                   {entry.description ? <p className="text-xs text-base-content/60 mt-0.5 truncate">{entry.description}</p> : null}
                 </div>
                 <button
@@ -330,7 +363,7 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="form-control md:col-span-2">
-                  <span className="label-text mb-1">Phone Number</span>
+                  <span className="label-text mb-1">Phone Number{requirePrimaryPhone ? " *" : ""}</span>
                   <div className="grid grid-cols-3 gap-2">
                     <select
                       className="select select-bordered col-span-1"
@@ -352,6 +385,7 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
                       className="input input-bordered col-span-2"
                       value={formatPhoneLocalForPrefix(entry.phonePrefix, entry.phoneNumber)}
                       name="tel"
+                      required={requirePrimaryPhone}
                       autoComplete="tel"
                       inputMode="tel"
                       placeholder={placeholderForPrefix(entry.phonePrefix)}
@@ -400,18 +434,24 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
                 </label>
 
                 <div className="md:col-span-3 flex items-center justify-between gap-3">
-                  <label className="inline-flex items-center gap-2 text-xs cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-xs"
-                      checked={Boolean(entry.isPrivate)}
-                      onChange={(event) => {
-                        setHasUnsavedChanges(true)
-                        updateEntry(entry.id, (old) => ({ ...old, isPrivate: event.target.checked }))
-                      }}
-                    />
-                    <span>Private</span>
-                  </label>
+                  {canChooseScope ? (
+                    <label className="form-control flex-1 max-w-xs">
+                      <span className="label-text mb-1">Scope</span>
+                      <select
+                        className="select select-bordered"
+                        value={normalizeScope(entry.scope, defaultScope)}
+                        onChange={(event) => {
+                          setHasUnsavedChanges(true)
+                          updateEntry(entry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
+                        }}
+                      >
+                        {availableScopes.map((scope) => {
+                          const option = CONTACT_SCOPE_OPTIONS.find((row) => row.value === scope)
+                          return <option key={scope} value={scope}>{option?.label || scope}</option>
+                        })}
+                      </select>
+                    </label>
+                  ) : <div className="flex-1 max-w-xs" />}
                   <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
                     Delete
                   </button>
@@ -436,6 +476,7 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
                   <div className="text-sm">
                     {entry.phonePrefix || DEFAULT_PHONE_PREFIX} {formatPhoneLocalForPrefix(entry.phonePrefix, entry.phoneNumber)}
                   </div>
+                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(entry.scope, defaultScope))?.label || "Secondary"}</div>
                   {entry.description ? <p className="text-xs text-base-content/60 mt-0.5 truncate">{entry.description}</p> : null}
                 </div>
                 <button
@@ -525,17 +566,21 @@ export default function PhoneForm({ artistID, existingContacts = [], primaryPhon
                 </label>
 
                 <div className="md:col-span-3 flex items-center justify-between gap-3">
-                  <label className="inline-flex items-center gap-2 text-xs cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-xs"
-                      checked={Boolean(entry.isPrivate)}
+                  <label className="form-control flex-1 max-w-xs">
+                    <span className="label-text mb-1">Scope</span>
+                    <select
+                      className="select select-bordered"
+                      value={normalizeScope(entry.scope, defaultScope)}
                       onChange={(event) => {
                         setHasUnsavedChanges(true)
-                        updateEntry(entry.id, (old) => ({ ...old, isPrivate: event.target.checked }))
+                        updateEntry(entry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
                       }}
-                    />
-                    <span>Private</span>
+                    >
+                      {availableScopes.map((scope) => {
+                        const option = CONTACT_SCOPE_OPTIONS.find((row) => row.value === scope)
+                        return <option key={scope} value={scope}>{option?.label || scope}</option>
+                      })}
+                    </select>
                   </label>
                   <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
                     Delete
