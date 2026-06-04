@@ -15,6 +15,10 @@ const TRUSTED_IFRAME_HOSTNAMES = [
 ];
 
 const UNIFORM_CARD_ALLOWED_TAGS = [
+  "h1",
+  "h2",
+  "h3",
+  "div",
   "p",
   "br",
   "strong",
@@ -76,11 +80,23 @@ function ensureSafeAnchorRel(tagName, attribs) {
   };
 }
 
+export function stripHtmlText(value) {
+  return String(value || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function sanitizeCardHtml(html) {
   return sanitizeHtml(String(html || ""), {
     allowedTags: UNIFORM_CARD_ALLOWED_TAGS,
     allowedAttributes: {
       a: ["href", "target", "rel"],
+      h1: ["style"],
+      h2: ["style"],
+      h3: ["style"],
+      div: ["style"],
       p: ["style"],
       span: ["style"],
     },
@@ -89,11 +105,29 @@ export function sanitizeCardHtml(html) {
       a: ensureSafeAnchorRel,
     },
     allowedStyles: {
+      h1: {
+        "text-align": [/^left$/, /^center$/, /^right$/],
+        "font-family": [/^[\w\s\-",']+$/],
+      },
+      h2: {
+        "text-align": [/^left$/, /^center$/, /^right$/],
+        "font-family": [/^[\w\s\-",']+$/],
+      },
+      h3: {
+        "text-align": [/^left$/, /^center$/, /^right$/],
+        "font-family": [/^[\w\s\-",']+$/],
+      },
+      div: {
+        "text-align": [/^left$/, /^center$/, /^right$/],
+        "font-family": [/^[\w\s\-",']+$/],
+      },
       p: {
         "text-align": [/^left$/, /^center$/, /^right$/],
+        "font-family": [/^[\w\s\-",']+$/],
       },
       span: {
         "text-align": [/^left$/, /^center$/, /^right$/],
+        "font-family": [/^[\w\s\-",']+$/],
       },
     },
   });

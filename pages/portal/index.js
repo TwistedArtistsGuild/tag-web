@@ -54,7 +54,7 @@ export default function Portal_Artist() {
 				</Link>
 			</div>
 			<div className="mt-2">
-				<Link href="/portal/user/" className="link link-primary">
+				<Link href="/portal/user" className="link link-primary">
 					User Portal
 				</Link>
 			</div>
@@ -66,6 +66,11 @@ export default function Portal_Artist() {
 			<div className="mt-2">
 				<Link href="/portal/vendor/" className="link link-primary">
           Vendor&apos;s Portal
+				</Link>
+			</div>
+			<div className="mt-2">
+				<Link href="/portal/venue/" className="link link-primary">
+          Venue&apos;s Portal
 				</Link>
 			</div>
 		</div>

@@ -1,11 +1,12 @@
 // pages/api/delete-image.js
 import { BlobServiceClient } from '@azure/storage-blob';
+import getApiURL from '@/components/widgets/GetApiURL';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
 
     try {
-        const { imageUrl } = req.body;
+        const { imageUrl, pictureId } = req.body;
         if (!imageUrl) return res.status(400).json({ message: 'URL is required' });
 
         // Extract blob name from the full URL
@@ -17,7 +18,24 @@ export default async function handler(req, res) {
         const containerClient = blobServiceClient.getContainerClient('tagpictures');
         const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
-        await blockBlobClient.deleteIfExists(); //
+        await blockBlobClient.deleteIfExists();
+
+        const apiUrl = getApiURL();
+        let resolvedPictureId = pictureId;
+
+        if (!resolvedPictureId) {
+            const lookup = await fetch(`${apiUrl}picture/by-url?url=${encodeURIComponent(imageUrl)}`).catch(() => null);
+            if (lookup?.ok) {
+                const found = await lookup.json().catch(() => null);
+                resolvedPictureId = found?.id ?? found?.pictureId ?? null;
+            }
+        }
+
+        if (resolvedPictureId) {
+            await fetch(`${apiUrl}picture/${resolvedPictureId}`, {
+                method: 'DELETE',
+            }).catch(() => null);
+        }
 
         return res.status(200).json({ success: true });
     } catch (error) {

@@ -15,13 +15,13 @@ import { getServerSession } from "next-auth/next"
 
 import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
-import SocialHandlesForm from "@/components/social/contact/social-handles-form"
+import SocialHandlesForm from "@/components/forms/contact/social-handles-form"
 import ArtistCard from "@/components/cards/card_artist"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
-import AddressForm from "@/components/social/contact/address-form"
-import EmailForm from "@/components/social/contact/email-form"
-import PhoneForm from "@/components/social/contact/phone-form"
-import UrlLinksForm from "@/components/social/contact/url-links-form"
+import AddressForm from "@/components/forms/contact/address-form"
+import EmailForm from "@/components/forms/contact/email-form"
+import PhoneForm from "@/components/forms/contact/phone-form"
+import UrlLinksForm from "@/components/forms/contact/url-links-form"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers"
 
@@ -41,8 +41,6 @@ export default function ArtistManageContactsPage({
 	emailContacts = [],
 	phoneContacts = [],
 	addressContacts = [],
-	primaryPhone = null,
-	primaryAddress = null,
 }) {
 	const [activeTab, setActiveTab] = useState("social")
 	const [artistCardData, setArtistCardData] = useState(null)
@@ -116,7 +114,6 @@ export default function ArtistManageContactsPage({
 							<PhoneForm
 								artistID={selectedArtist?.artistID}
 								existingContacts={phoneContacts}
-								primaryPhone={primaryPhone}
 							/>
 						)}
 						{activeTab === "email" && (
@@ -130,7 +127,6 @@ export default function ArtistManageContactsPage({
 							<AddressForm
 								artistID={selectedArtist?.artistID}
 								existingContacts={addressContacts}
-								primaryAddress={primaryAddress}
 							/>
 						)}
 					</div>
@@ -222,14 +218,10 @@ export async function getServerSideProps(context) {
 	let emailContacts = []
 	let phoneContacts = []
 	let addressContacts = []
-	let primaryPhone = null
-	let primaryAddress = null
 	try {
-		const contactsRes = await fetch(`${apiUrl}contact/artist/${selectedArtist.artistID}`)
+		const contactsRes = await fetch(`${apiUrl}contact/artist/${selectedArtist.artistID}?includePrivate=true`)
 		if (contactsRes.ok) {
 			const contactsData = await contactsRes.json()
-			primaryPhone = contactsData?.primaryPhone || null
-			primaryAddress = contactsData?.primaryAddress || null
 			const rows = Array.isArray(contactsData?.contacts) ? contactsData.contacts : []
 			phoneContacts = rows.filter((c) => String(c?.contactType || "").toLowerCase() === "phone")
 			emailContacts = rows.filter((c) => String(c?.contactType || "").toLowerCase() === "email")
@@ -256,8 +248,6 @@ export async function getServerSideProps(context) {
 			emailContacts,
 			phoneContacts,
 			addressContacts,
-			primaryPhone,
-			primaryAddress,
 		},
 	}
 }

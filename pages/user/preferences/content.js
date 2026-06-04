@@ -17,7 +17,7 @@ const DEFAULT_MODE_BY_POLICY = {
     ageGate: "optIn",
     autoHide: "autoHide",
 }
-export default function ContentPreferences() {
+export default function ContentPreferences({ embedded = false }) {
     const { data: session } = useSession()
     const [warningGroups, setWarningGroups] = useState([])
     const [contentPreference, setContentPreference] = useState({})
@@ -104,10 +104,8 @@ export default function ContentPreferences() {
 
     if (loading) return <div className="p-10 text-center">Loading your preferences...</div>
 
-    return (
-        <div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={{ title: "Content Preferences", description: "Manage your content moderation and visibility preferences.", robots: "noindex, nofollow", keywords: "user preferences, content settings", og: { title: "Content Preferences", description: "Manage your content moderation and visibility preferences." } }} canonicalSlug="user/preferences/content" />
-            <div className="max-w-5xl mx-auto space-y-6">
+    const content = (
+        <div className="max-w-5xl mx-auto space-y-6">
                 {/* Header Section */}
                 <div className="card bg-base-100 shadow-lg border border-base-300">
                     <div className="card-body">
@@ -196,7 +194,7 @@ export default function ContentPreferences() {
                                                         <span className="label-text text-xs font-medium">Moderation preference</span>
                                                     </label>
                                         <select
-                                            className="select select-bordered select-sm min-w-[150px]"
+                                            className="select select-bordered select-sm min-w-37.5"
                                             value={contentPreference[item.key]}
                                             onChange={(e) => updatePreference(item.key, e.target.value)}
                                         >
@@ -221,6 +219,16 @@ export default function ContentPreferences() {
                     </div>
                 ))}
             </div>
+    )
+
+    if (embedded) {
+        return content
+    }
+
+    return (
+        <div className="min-h-screen bg-base-200 p-4 md:p-8">
+			<TagSEO metadataProp={{ title: "Content Preferences", description: "Manage your content moderation and visibility preferences.", robots: "noindex, nofollow", keywords: "user preferences, content settings", og: { title: "Content Preferences", description: "Manage your content moderation and visibility preferences." } }} canonicalSlug="user/preferences/content" />
+            {content}
         </div>
     )
 }

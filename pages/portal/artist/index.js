@@ -110,6 +110,15 @@ function MyArtistsCard({ registeredArtists, sessionUser }) {
 										showHeaderGallery={artistCardSize === "large"}
 										showContentGallery={artistCardSize === "large"}
 									/>
+									{artist.isPublished ? (
+										<div className="badge badge-success gap-2">
+											✓ Published
+										</div>
+									) : (
+										<div className="badge badge-warning gap-2">
+											⟳ Registration in Progress
+										</div>
+									)}
 									<div className="flex gap-2 flex-wrap justify-end">
 										<Link href={artist.path ? `/artists/${artist.path}` : "/artists"} className="btn btn-xs btn-ghost">
 											Public Profile
@@ -257,8 +266,46 @@ export async function getServerSideProps(context) {
 						byline: artist?.byline ?? artist?.Byline ?? null,
 						profilePic: artist?.profilePic ?? artist?.ProfilePic ?? null,
 						linkRole: artist?.linkRole ?? artist?.LinkRole ?? null,
+						isPublished: artist?.isPublished ?? artist?.IsPublished ?? false,
 					}))
 					: []
+
+				// Check for artists that should be auto-published
+				for (const artist of registeredArtists) {
+					if (artist.artistID && !artist.isPublished) {
+						try {
+							// Fetch workflow steps
+							const workflowResponse = await fetch(
+								`${apiUrl}workflows/artist/${artist.artistID}?workflowName=default`
+							)
+
+							if (workflowResponse.ok) {
+								const workflowSummary = await workflowResponse.json()
+								const steps = Array.isArray(workflowSummary?.steps) ? workflowSummary.steps : []
+								const requiredSteps = Array.isArray(workflowSummary?.requiredSteps)
+									? workflowSummary.requiredSteps
+									: []
+								const completedSteps = steps.filter((s) => s.isCompleted).map((s) => s.stepKey)
+								const allComplete = requiredSteps.every((step) => completedSteps.includes(step))
+
+								if (allComplete) {
+									// Auto-publish the artist
+									const publishResponse = await fetch(`${apiUrl}artist/${artist.artistID}`, {
+										method: "PUT",
+										headers: { "Content-Type": "application/json" },
+										body: JSON.stringify({ isPublished: true }),
+									})
+
+									if (publishResponse.ok) {
+										artist.isPublished = true
+									}
+								}
+							}
+						} catch (error) {
+							console.error(`Unable to check/publish artist ${artist.artistID}:`, error.message)
+						}
+					}
+				}
 			}
 		} catch (error) {
 			console.error("Unable to load linked artists for artist portal:", error.message)

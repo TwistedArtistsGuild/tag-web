@@ -104,7 +104,7 @@ export function isStoreEntry(entry) {
   )
 }
 
-export function pickContactCardData(contactRows = [], primaryPhone = null, primaryAddress = null) {
+export function pickContactCardData(contactRows = []) {
   const deduped = dedupeLinks(
     contactRows
       .filter((entry) => String(entry?.contactType || "").toLowerCase() === "url")
@@ -152,16 +152,10 @@ export function pickContactCardData(contactRows = [], primaryPhone = null, prima
 
   const contactUrls = deduped.filter((entry) => !resolveSocialKey(entry) && !isStoreEntry(entry))
 
-  const phoneValue = String(
-    primaryPhone?.phoneNumber ||
-      contactRows.find((entry) => String(entry?.contactType || "").toLowerCase() === "phone")?.value ||
-      ""
-  ).trim()
+  const firstPhoneEntry = contactRows.find((entry) => String(entry?.contactType || "").toLowerCase() === "phone")
+  const phoneValue = String(firstPhoneEntry?.value || "").trim()
 
-  const addressSource =
-    primaryAddress ||
-    contactRows.find((entry) => String(entry?.contactType || "").toLowerCase() === "address")?.address ||
-    null
+  const addressSource = contactRows.find((entry) => String(entry?.contactType || "").toLowerCase() === "address")?.address || null
 
   const locationParts = addressSource
     ? [addressSource.country, addressSource.region || addressSource.state, addressSource.city]

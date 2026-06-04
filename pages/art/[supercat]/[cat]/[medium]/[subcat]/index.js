@@ -55,7 +55,7 @@ const Listings = (props) => {
               key={listing.path || listing.listingid || `${listing.title || "listing"}-${index}`}
               className={`${getPanelClass(listing.panelSize)} self-start`}
             >
-              <ListingCard listing={listing} panelSize={listing.panelSize} />
+              <ListingCard listing={listing} panelSize={listing.panelSize} textRenderMode="html" />
             </div>
           ))}
         </div>
