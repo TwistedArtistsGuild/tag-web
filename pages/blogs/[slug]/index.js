@@ -287,7 +287,7 @@ const BlogByslug = props => {
 									<PhotoGallery
 										images={relatedGalleryImages}
 										mode="standalone"
-										navigationMode="manual"
+										navigationMode={relatedGalleryImages.length > 1 ? "hover" : "manual"}
 										imageEffect="landscape"
 										showThumbnails={relatedGalleryImages.length > 1}
 										showContentWarnings={false}
