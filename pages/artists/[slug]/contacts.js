@@ -274,13 +274,11 @@ ContactsPage.getInitialProps = async (context) => {
         const emailEntry = dbContactRows.find((entry) => String(entry?.contactType || "").toLowerCase() === "email")
         email = String(emailEntry?.value || "").trim()
 
-        const primaryPhone = dbContactsData?.primaryPhone || null
         const firstPhone = dbContactRows.find((entry) => String(entry?.contactType || "").toLowerCase() === "phone")
-        phone = String(primaryPhone?.phoneNumber || firstPhone?.value || "").trim()
+        phone = String(firstPhone?.value || "").trim()
 
-        const primaryAddress = dbContactsData?.primaryAddress || null
         const firstAddress = dbContactRows.find((entry) => String(entry?.contactType || "").toLowerCase() === "address")
-        const addressSource = primaryAddress || firstAddress?.address || null
+        const addressSource = firstAddress?.address || null
 
         if (addressSource) {
           const addressParts = [

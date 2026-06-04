@@ -16,10 +16,14 @@ import { useEffect, useMemo, useState } from "react"
 import { useSession, signIn, signOut } from "next-auth/react"
 import Link from "next/link"
 import Image from "next/image"
-import { Compass, LayoutDashboard, LogOut, Repeat2, Settings, ShoppingBag, SlidersHorizontal, User } from "lucide-react"
+import { Compass, LayoutDashboard, LogOut, Repeat2, Settings, ShoppingBag, SlidersHorizontal, User, Users } from "lucide-react"
 
 import ContextSwitcher from "@/components/Header/ContextSwitcher"
 import getApiURL from "@/components/widgets/GetApiURL"
+import { getArtistRegistrationProgress } from "@/utils/onboarding/artistWorkflow"
+import { getUserRegistrationProgress } from "@/utils/onboarding/userWorkflow"
+import { getVendorRegistrationProgress } from "@/utils/onboarding/vendorWorkflow"
+import { getVenueRegistrationProgress } from "@/utils/onboarding/venueWorkflow"
 
 const ROLE_CONTEXT_ORDER = ["moderator", "staff", "admin"]
 const ORDER_BASED_CONTEXT_COLORS = [
@@ -79,7 +83,7 @@ function mapRoleToContext(roleName, sessionUser) {
 
 function resolveFullName(sessionUser, userProfile) {
   const profileFirstName = userProfile?.firstName || userProfile?.FirstName || userProfile?.firstname || ""
-  const profileLastName = userProfile?.lastName || userProfile?.LastName || userProfile?.lastname || ""
+  const profileLastName = userProfile?.famName || userProfile?.FamName || userProfile?.lastName || userProfile?.LastName || userProfile?.lastname || ""
   const profileFullName = `${profileFirstName} ${profileLastName}`.trim()
 
   if (profileFullName) {
@@ -105,6 +109,46 @@ function buildBaseUserContext(sessionUser, userProfile) {
   }
 }
 
+function toPositiveInteger(value) {
+  const parsed = Number(value || 0)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+function normalizeStep(rawStep, fallback = 3, min = 3, max = 7) {
+  const parsed = Number(rawStep || fallback)
+  if (Number.isFinite(parsed) && parsed >= min && parsed <= max) {
+    return parsed
+  }
+
+  return fallback
+}
+
+function getPublishFlag(entity) {
+  return Boolean(entity?.isPublished || entity?.IsPublished)
+}
+
+function buildJoinHrefFromProgress(type, progress) {
+  const slug = String(progress?.slug || "").trim().toLowerCase()
+  const entityId = toPositiveInteger(progress?.entityId)
+
+  if (!slug) {
+    return `/join/${type}`
+  }
+
+  const step = normalizeStep(progress?.currentStep, 3, 3, 7)
+  if (type === "vendor" || type === "venue") {
+    const idSegment = entityId ? `&id=${encodeURIComponent(String(entityId))}` : ""
+    return `/join/${type}/${encodeURIComponent(slug)}?step=${step}${idSegment}`
+  }
+
+  return `/join/${type}/${encodeURIComponent(slug)}?step=${step}`
+}
+
+function formatStepCaption(progress, fallbackStep = 3) {
+  const step = normalizeStep(progress?.currentStep, fallbackStep, 2, 7)
+  return `Continue at step ${step}`
+}
+
 export default function LoginProfile({
   className = "",
   isOpen: controlledIsOpen,
@@ -119,6 +163,7 @@ export default function LoginProfile({
   const [isContextWindowOpen, setIsContextWindowOpen] = useState(false)
   const [artistContexts, setArtistContexts] = useState([])
   const [userProfile, setUserProfile] = useState(null)
+  const [pendingOnboardingItems, setPendingOnboardingItems] = useState([])
   const [internalActiveContextId, setInternalActiveContextId] = useState("user-primary")
   const [contextColorOverrides, setContextColorOverrides] = useState({})
   const [sessionOrderColorMap, setSessionOrderColorMap] = useState({})
@@ -242,6 +287,7 @@ export default function LoginProfile({
     if (!session?.user?.id) {
       setArtistContexts([])
       setUserProfile(null)
+      setPendingOnboardingItems([])
       return
     }
 
@@ -250,9 +296,14 @@ export default function LoginProfile({
     const loadLinkedArtistsAndUser = async () => {
       try {
         const apiUrl = getApiURL()
+        const artistProgress = getArtistRegistrationProgress?.() || null
+        const userProgress = getUserRegistrationProgress?.() || null
+        const vendorProgress = getVendorRegistrationProgress?.() || null
+        const venueProgress = getVenueRegistrationProgress?.() || null
+
         const [artistResponse, userResponse] = await Promise.all([
           fetch(`${apiUrl}linker_usertoartist/byUserID/${session.user.id}`),
-          fetch(`${apiUrl}user/${session.user.id}`),
+          fetch(`${apiUrl}user-details/${session.user.id}/private?viewerUserId=${encodeURIComponent(String(session.user.id))}`),
         ])
 
         const payload = artistResponse.ok ? await artistResponse.json() : []
@@ -260,12 +311,105 @@ export default function LoginProfile({
 
         const contexts = Array.isArray(payload) ? payload.map(mapLinkedArtistToContext) : []
 
+        const pendingRows = []
+        const userIsPublished = getPublishFlag(userPayload)
+        if (!userIsPublished) {
+          pendingRows.push({
+            id: "pending-user",
+            label: "User profile",
+            href: buildJoinHrefFromProgress("user", userProgress),
+            caption: formatStepCaption(userProgress, 3),
+          })
+        }
+
+        if (Array.isArray(payload)) {
+          payload.forEach((artist) => {
+            const isPublished = getPublishFlag(artist)
+            if (isPublished) {
+              return
+            }
+
+            const artistId = toPositiveInteger(artist?.artistID || artist?.ArtistID)
+            const artistSlug = String(artist?.path || artist?.Path || "").trim().toLowerCase()
+            const artistTitle = String(artist?.title || artist?.Title || "Untitled Artist")
+            const joinHref = artistSlug
+              ? `/join/artist/${encodeURIComponent(artistSlug)}?step=3`
+              : "/join/artist"
+
+            pendingRows.push({
+              id: `pending-artist-${artistId || artistSlug || artistTitle}`,
+              label: `Artist: ${artistTitle}`,
+              href: joinHref,
+              caption: "Complete and publish this artist profile",
+            })
+          })
+        }
+
+        const checkEntityDraft = async (type, progress, fetchUrlBuilder, label) => {
+          const entityId = toPositiveInteger(progress?.entityId)
+          if (!entityId) {
+            return
+          }
+
+          try {
+            const response = await fetch(fetchUrlBuilder(entityId))
+            if (!response.ok) {
+              return
+            }
+
+            const entityData = await response.json()
+            if (getPublishFlag(entityData)) {
+              return
+            }
+
+            pendingRows.push({
+              id: `pending-${type}-${entityId}`,
+              label,
+              href: buildJoinHrefFromProgress(type, progress),
+              caption: formatStepCaption(progress, 3),
+            })
+          } catch {
+            // Ignore draft resolution failures.
+          }
+        }
+
+        await Promise.all([
+          checkEntityDraft("vendor", vendorProgress, (id) => `${apiUrl}vendor/byID/${id}`, "Vendor profile"),
+          checkEntityDraft("venue", venueProgress, (id) => `${apiUrl}venue/byID/${id}`, "Venue profile"),
+        ])
+
+        const artistDraftId = toPositiveInteger(artistProgress?.entityId)
+        const artistDraftSlug = String(artistProgress?.slug || "").trim().toLowerCase()
+        const hasLinkedArtistMatch = Array.isArray(payload)
+          && payload.some((artist) => {
+            const artistId = toPositiveInteger(artist?.artistID || artist?.ArtistID)
+            const artistPath = String(artist?.path || artist?.Path || "").trim().toLowerCase()
+            if (artistDraftId && artistId && artistDraftId === artistId) {
+              return true
+            }
+
+            return Boolean(artistDraftSlug && artistPath && artistDraftSlug === artistPath)
+          })
+
+        if (!hasLinkedArtistMatch && (artistDraftId || artistDraftSlug)) {
+          pendingRows.push({
+            id: `pending-artist-draft-${artistDraftId || artistDraftSlug}`,
+            label: "Artist draft",
+            href: buildJoinHrefFromProgress("artist", artistProgress),
+            caption: formatStepCaption(artistProgress, 3),
+          })
+        }
+
         if (isMounted) {
           setArtistContexts(contexts)
           setUserProfile(userPayload)
+          setPendingOnboardingItems(pendingRows)
         }
       } catch (error) {
         console.error("Unable to load linked artists for profile context switcher:", error.message)
+        if (isMounted) {
+          setPendingOnboardingItems([])
+        }
       }
     }
 
@@ -392,6 +536,24 @@ export default function LoginProfile({
                   </div>
                 ) : null}
 
+                {pendingOnboardingItems.length > 0 ? (
+                  <div className="rounded-box border border-warning/40 bg-warning/10 p-2 text-xs text-base-content/80">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-warning">Pending onboarding</span>
+                      <Link
+                        href="/join"
+                        onClick={() => setOpenValue(false)}
+                        className="link link-warning text-[11px] font-semibold"
+                      >
+                        Open Join
+                      </Link>
+                    </div>
+                    <div className="mt-1 text-[11px] text-base-content/70">
+                      {pendingOnboardingItems.length} pending {pendingOnboardingItems.length === 1 ? "profile" : "profiles"} to finish and publish.
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="rounded-box border border-base-300 bg-base-200/60 p-1">
                   <div className="grid grid-cols-2 gap-1">
                     <button
@@ -417,25 +579,31 @@ export default function LoginProfile({
               </div>
             </li>
             <li>
-              <Link href="/user" onClick={() => setOpenValue(false)}>
+              <Link href="/users" onClick={() => setOpenValue(false)}>
+                <Users className="w-4 h-4" />
+                User Directory
+              </Link>
+            </li>
+            <li>
+              <Link href="/portal/user" onClick={() => setOpenValue(false)}>
                 <LayoutDashboard className="w-4 h-4" />
                 My Dashboard
               </Link>
             </li>
             <li>
-              <Link href="/user/profile" onClick={() => setOpenValue(false)}>
+              <Link href="/portal/user/profile" onClick={() => setOpenValue(false)}>
                 <User className="w-4 h-4" />
                 Profile
               </Link>
             </li>
             <li>
-              <Link href="/user/preferences" onClick={() => setOpenValue(false)}>
+              <Link href="/portal/user/preferences" onClick={() => setOpenValue(false)}>
                 <SlidersHorizontal className="w-4 h-4" />
                 Preferences
               </Link>
             </li>
             <li>
-              <Link href="/user/settings" onClick={() => setOpenValue(false)}>
+              <Link href="/portal/user/settings" onClick={() => setOpenValue(false)}>
                 <Settings className="w-4 h-4" />
                 Settings
               </Link>

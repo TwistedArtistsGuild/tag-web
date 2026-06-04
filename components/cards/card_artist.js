@@ -19,6 +19,14 @@ import ImpressionReactions from "@/components/social/ImpressionReactions"
 import { extractContentWarnings } from "@/components/social/ContentTags"
 import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout"
 import { useImpressions, ImpressionTargetType } from "@/hooks/useImpressions"
+import { sanitizeCardHtml } from "@/components/security/sanitize"
+
+const stripHtmlTags = (value) =>
+	String(value || "")
+		.replace(/<[^>]*>/g, " ")
+		.replace(/&nbsp;/gi, " ")
+		.replace(/\s+/g, " ")
+		.trim()
 
 const getArtistLogoSrc = (artist) => artist?.profilePic?.url || "/blank_image.png"
 
@@ -150,6 +158,7 @@ const ArtistCard = ({
 	currentUser: propCurrentUser = null,
 	enableDynamicImpressions = false,
 	showReactions = false,
+	textRenderMode = "strip",
 }) => {
 	const { data: session } = useSession()
 	const currentUser = propCurrentUser || session?.user || null
@@ -173,6 +182,11 @@ const ArtistCard = ({
 	} = useImpressions(artistId, ImpressionTargetType.ARTIST, enableDynamicImpressions && showReactions)
 
 	const totalReactionCount = impressions?.reduce((sum, imp) => sum + (imp.count || 0), 0) || 0
+	const renderHtml = textRenderMode === "html"
+	const artistTitleText = stripHtmlTags(artist?.title) || "Untitled Artist"
+	const artistDescriptionText = stripHtmlTags(artistDescription) || "Creative portfolio and artist highlights."
+	const artistTitleHtml = sanitizeCardHtml(artist?.title || "Untitled Artist")
+	const artistDescriptionHtml = sanitizeCardHtml(artistDescription || "Creative portfolio and artist highlights.")
 
 	const metadataSummary = useMemo(() => {
 		const categories = Array.isArray(artist?.artistCategoryLinks)
@@ -247,14 +261,29 @@ const ArtistCard = ({
 						</div>
 					</div>
 					<div className="min-w-0 flex-1">
-						<h3 className={`${compact ? "text-base" : "text-lg"} font-semibold text-primary leading-tight`}>
-							<Link href={`/artists/${artist?.path || ""}`} className="hover:underline">
-								{artist?.title || "Untitled Artist"}
-							</Link>
-						</h3>
-						<p className={`${compact ? "mt-0.5 text-xs line-clamp-2" : "mt-1 text-sm leading-relaxed"} text-base-content/70`}>
-							{artistDescription}
-						</p>
+						{renderHtml ? (
+							<Link
+								href={`/artists/${artist?.path || ""}`}
+								className={`hover:underline block text-primary leading-tight ${compact ? "[&_h1]:text-base [&_h2]:text-base [&_h3]:text-base" : "[&_h1]:text-lg [&_h2]:text-lg [&_h3]:text-lg"} [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold`}
+								dangerouslySetInnerHTML={{ __html: artistTitleHtml }}
+							/>
+						) : (
+							<h3 className={`${compact ? "text-base" : "text-lg"} font-semibold text-primary leading-tight`}>
+								<Link href={`/artists/${artist?.path || ""}`} className="hover:underline">
+									{artistTitleText}
+								</Link>
+							</h3>
+						)}
+						{renderHtml ? (
+							<div
+								className={`${compact ? "mt-0.5 text-xs line-clamp-2" : "mt-1 text-sm leading-relaxed"} text-base-content/70`}
+								dangerouslySetInnerHTML={{ __html: artistDescriptionHtml }}
+							/>
+						) : (
+							<p className={`${compact ? "mt-0.5 text-xs line-clamp-2" : "mt-1 text-sm leading-relaxed"} text-base-content/70`}>
+								{artistDescriptionText}
+							</p>
+						)}
 					</div>
 				</div>
 

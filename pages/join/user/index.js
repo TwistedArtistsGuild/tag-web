@@ -1,115 +1,245 @@
-import Link from "next/link"
-import { useState } from "react"
+import Link from "next/link";
+import { useState } from "react";
 
-import TagSEO from "@/components/TagSEO"
-import { getMarkdownContent } from "@/components/widgets/markdown"
-import { sanitizeDefaultHtml } from "@/components/security/sanitize"
+import RegisterSlug from "@/components/forms/onboarding/register-slug";
+import JoinPageShell from "@/components/join/common/join-page-shell";
+import getApiURL from "@/components/widgets/GetApiURL";
+import {
+  getUserRegistrationProgress,
+  markUserRegistrationStepComplete,
+  setUserRegistrationProgress,
+} from "@/utils/onboarding/userWorkflow";
 
-function TermsAgreementStep({ termsContent }) {
-  const [hasReachedBottom, setHasReachedBottom] = useState(false)
-  const [agreed, setAgreed] = useState(false)
+const apiUrl = getApiURL();
 
-  const handleScroll = (event) => {
-    const element = event.currentTarget
-    const reachedBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 8
+function getRequestOrigin(req) {
+  const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim();
+  const forwardedHost = String(req?.headers?.["x-forwarded-host"] || "").trim();
+  const host = forwardedHost || String(req?.headers?.host || "").trim();
 
-    if (reachedBottom) {
-      setHasReachedBottom(true)
-    }
+  if (!host) {
+    return null;
   }
 
-  return (
-    <section className="card bg-base-100 shadow border border-base-300">
-      <div className="card-body gap-4">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-xl font-semibold text-base-content">Final Step: Terms of Service Agreement</h2>
-            <p className="text-sm text-base-content/70">
-              Review the current terms below. You must scroll to the bottom before you can agree.
-            </p>
-          </div>
-          <Link href="/about/termsofservice" className="btn btn-sm btn-ghost">Open terms page</Link>
-        </div>
-
-        <div
-          className="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-200/60 p-4 prose prose-sm max-w-none"
-          onScroll={handleScroll}
-        >
-          <div dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(termsContent) }} />
-        </div>
-
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-sm text-base-content/70">
-            {agreed
-              ? "Terms acknowledged for this session."
-              : hasReachedBottom
-                ? "You reached the bottom and can now agree."
-                : "Scroll to the bottom to enable the Agree button."}
-          </div>
-          <div className="flex gap-2 flex-wrap items-center">
-            {agreed && <span className="badge badge-success">Agreed</span>}
-            <a href="mailto:admin@twistedartistsguild.com?subject=Terms%20of%20Service%20Disagreement" className="btn btn-sm btn-outline btn-error">
-              Disagree
-            </a>
-            <button type="button" className="btn btn-sm btn-primary" disabled={!hasReachedBottom} onClick={() => setAgreed(true)}>
-              Agree
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
+  const protocol = forwardedProto || (process.env.NODE_ENV === "development" ? "http" : "https");
+  return `${protocol}://${host}`;
 }
 
-export default function JoinUserIndexPage({ termsContent }) {
+async function getSessionFromRequest(context) {
+  const origin = getRequestOrigin(context?.req);
+  if (!origin) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${origin}/api/auth/session`, {
+      headers: {
+        cookie: context?.req?.headers?.cookie || "",
+      },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+function getWizardStep(rawStep) {
+  const parsed = Number(rawStep || 1);
+  return parsed === 2 ? 2 : 1;
+}
+
+function buildUserJoinHref(step, username, userId) {
+  const normalizedUsername = String(username || "").trim().toLowerCase();
+  if (normalizedUsername) {
+    const idSegment = userId ? `&id=${encodeURIComponent(String(userId))}` : "";
+    return `/join/user/${encodeURIComponent(normalizedUsername)}?step=${step}${idSegment}`;
+  }
+
+  return `/join/user?step=${step}`;
+}
+
+export default function JoinUserIndexPage({ sessionUser, currentStep, userId, routeUsername }) {
+  const initialProgress = typeof window !== "undefined" ? (getUserRegistrationProgress?.() || {}) : {};
+  const [tcAccepted, setTcAccepted] = useState(Boolean(initialProgress?.tcAccepted));
+  const reservedUsername = String(routeUsername || initialProgress?.slug || sessionUser?.username || "").trim().toLowerCase();
+  const routeUserId = Number(userId || 0);
+
+  const getScopedProgress = () => {
+    const progress = getUserRegistrationProgress?.() || {};
+    const progressEntityId = Number(progress?.entityId || 0);
+
+    if (routeUserId <= 0) {
+      return {
+        ...progress,
+        entityId: null,
+      };
+    }
+
+    if (progressEntityId > 0 && progressEntityId !== routeUserId) {
+      return {
+        ...progress,
+        entityId: routeUserId,
+      };
+    }
+
+    return progress;
+  };
+
   const pageMetaData = {
     title: "Join User",
-    description: "User onboarding folder.",
+    description: "User onboarding starts with terms and username reservation.",
     keywords: "join, user, onboarding",
     robots: "noindex, nofollow",
     og: {
       title: "Join User",
-      description: "User onboarding folder.",
+      description: "User onboarding starts with terms and username reservation.",
     },
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-base-200 p-4 md:p-8">
-      <TagSEO metadataProp={pageMetaData} canonicalSlug="join/user" />
-
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="card bg-base-100 shadow-lg border border-base-300">
-          <div className="card-body gap-3">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h1 className="text-3xl font-bold text-base-content">Join as a User</h1>
-              <Link href="/join" className="btn btn-sm btn-ghost">Back to Join</Link>
-            </div>
-            <p className="text-base-content/70">
-              This folder is ready for user onboarding forms. When dynaform pages are added here, they should be listed and embedded at the bottom of this page.
-            </p>
-          </div>
-        </div>
-
+    <JoinPageShell
+      title="Join as a User"
+      description="Start with terms and username reservation, then continue to profile, preferences, and privacy setup in the slug route."
+      canonicalSlug="join/user"
+      metadata={pageMetaData}
+      steps={[
+        {
+          href: "/join/user?step=1",
+          label: "Terms",
+          isActive: currentStep === 1,
+        },
+        {
+          href: buildUserJoinHref(2, reservedUsername, userId),
+          label: "Username",
+          isActive: currentStep === 2,
+        },
+      ]}
+      badge={userId ? `User ID: ${userId}` : null}
+    >
+      {currentStep === 1 ? (
         <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body">
-            <h2 className="text-lg font-semibold text-base-content">Available Forms</h2>
-            <p className="text-sm text-base-content/70">No user dynaform pages are published in this directory yet.</p>
+          <div className="card-body gap-4">
+            <div>
+              <h2 className="card-title">Step 1: Terms and Conditions</h2>
+              <p className="text-sm text-base-content/70">Review and accept terms before reserving your username.</p>
+            </div>
+
+            <div className="rounded-box border border-base-300 bg-base-200/40 p-4 max-h-64 overflow-y-auto text-sm space-y-2">
+              <h3 className="font-semibold">User Registration Terms</h3>
+              <p>By creating a user account, you agree to:</p>
+              <ul className="list-disc list-inside space-y-1 text-base-content/80">
+                <li>Provide accurate registration details.</li>
+                <li>Follow guild conduct and moderation policies.</li>
+                <li>Keep your account credentials secure.</li>
+                <li>Avoid illegal, abusive, or deceptive platform use.</li>
+                <li>Respect intellectual property and privacy rights.</li>
+              </ul>
+            </div>
+
+            <label className="form-control">
+              <div className="label cursor-pointer gap-3">
+                <input
+                  type="checkbox"
+                  className="checkbox"
+                  checked={tcAccepted}
+                  onChange={(event) => setTcAccepted(event.target.checked)}
+                />
+                <span className="label-text">I accept the terms and conditions</span>
+              </div>
+            </label>
+
+            <div className="flex gap-2 justify-end flex-wrap">
+              <Link href="/join" className="btn btn-sm btn-outline">Back to Join</Link>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                disabled={!tcAccepted}
+                onClick={() => {
+                  if (!tcAccepted) {
+                    return;
+                  }
+
+                  setUserRegistrationProgress({ tcAccepted: true });
+                  window.location.href = "/join/user?step=2";
+                }}
+              >
+                Continue to Username
+              </button>
+            </div>
           </div>
         </div>
+      ) : null}
 
-        <TermsAgreementStep termsContent={termsContent} />
-      </div>
-    </div>
-  )
+      {currentStep === 2 ? (
+        <RegisterSlug
+          domain="user"
+          domainLabel="User"
+          apiBaseUrl={apiUrl}
+          reserveEndpoint={`${apiUrl}user-details/reserve-username`}
+          updateEndpoint={(id) => `${apiUrl}user-details/${id}/update-username`}
+          checkEndpoint={(candidateSlug, currentId) => {
+            const currentNumericId = Number(currentId || 0);
+            const canExcludeCurrentUser = routeUserId > 0 && currentNumericId === routeUserId;
+            const excludeQuery = canExcludeCurrentUser ? `?excludeId=${encodeURIComponent(String(currentNumericId))}` : "";
+            return `${apiUrl}user-details/check-username/${encodeURIComponent(candidateSlug)}${excludeQuery}`;
+          }}
+          nextRoute={(id) => {
+            const progress = getUserRegistrationProgress?.() || {};
+            return buildUserJoinHref(2, progress.slug, id);
+          }}
+          sessionUser={sessionUser}
+          initialTitle={reservedUsername}
+          titleFieldLabel="Username"
+          titlePlaceholder="Enter your username"
+          showSlugField={false}
+          extendPayload={({ payload }) => ({
+            payload: {
+              username: payload.slug,
+            },
+          })}
+          progressApi={{
+            getProgress: getScopedProgress,
+            setProgress: setUserRegistrationProgress,
+            markStepComplete: markUserRegistrationStepComplete,
+          }}
+        />
+      ) : null}
+    </JoinPageShell>
+  );
 }
 
-export async function getStaticProps() {
-  const termsContent = await getMarkdownContent("content/tos.md")
+export async function getServerSideProps(context) {
+  const session = await getSessionFromRequest(context);
+  const currentStep = getWizardStep(context.query?.step);
+  const queryUserId = Number(context.query?.id || 0);
+  const sessionUserId = Number(session?.user?.id || 0);
+  const resolvedUserId = queryUserId > 0 ? queryUserId : (sessionUserId > 0 ? sessionUserId : 0);
+
+  let routeUsername = String(context.query?.slug || "").trim().toLowerCase();
+
+  if (!routeUsername && resolvedUserId > 0) {
+    try {
+      const response = await fetch(`${apiUrl}user-details/${resolvedUserId}/private?viewerUserId=${resolvedUserId}`);
+      if (response.ok) {
+        const userData = await response.json();
+        routeUsername = String(userData?.username || userData?.Username || "").trim().toLowerCase();
+      }
+    } catch {
+      // no-op: keep routeUsername empty if API fetch fails
+    }
+  }
 
   return {
     props: {
-      termsContent,
+      sessionUser: session?.user || null,
+      currentStep,
+      userId: resolvedUserId > 0 ? resolvedUserId : null,
+      routeUsername,
     },
-  }
+  };
 }
-

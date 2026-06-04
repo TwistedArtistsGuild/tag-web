@@ -19,6 +19,7 @@ import ImpressionReactions from "@/components/social/ImpressionReactions"
 import { extractContentWarnings } from "@/components/social/ContentTags"
 import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout"
 import { useImpressions, ImpressionTargetType } from "@/hooks/useImpressions"
+import { sanitizeCardHtml, stripHtmlText } from "@/components/security/sanitize"
 
 const getSeededCount = (seed, max, min = 1, salt = "") => {
   const base = `${seed || "listing"}-${salt}`
@@ -133,7 +134,8 @@ const ListingCard = ({
   showGalleryThumbnails = false, 
   hideGallery = false,
   currentUser: propCurrentUser = null,
-  enableDynamicImpressions = true
+  enableDynamicImpressions = true,
+  textRenderMode = "strip"
 }) => {
   const { data: session } = useSession()
   const currentUser = propCurrentUser || session?.user || null
@@ -153,6 +155,11 @@ const ListingCard = ({
   const contentWarnings = useMemo(() => extractContentWarnings(listing), [listing])
   const listingPath = `/artists/${listing?.artist?.path}/listings/${listing?.path}`
   const artistProfilePic = useMemo(() => getArtistProfilePic(listing), [listing])
+  const renderHtml = textRenderMode === "html"
+  const listingTitleText = stripHtmlText(listing?.title) || "Untitled"
+  const listingDescriptionText = stripHtmlText(listing?.description) || "No description available"
+  const listingTitleHtml = sanitizeCardHtml(listing?.title || "Untitled")
+  const listingDescriptionHtml = sanitizeCardHtml(listing?.description || "No description available")
 
   const artistForCard = useMemo(
     () => ({
@@ -192,11 +199,22 @@ const ListingCard = ({
 
         <div className="space-y-2">
           <Link href={listingPath} className="block text-xl font-semibold leading-tight text-primary hover:underline">
-            {listing?.title || "Untitled"}
+            {renderHtml ? (
+              <span dangerouslySetInnerHTML={{ __html: listingTitleHtml }} />
+            ) : (
+              listingTitleText
+            )}
           </Link>
-          <p className="text-sm text-base-content/80 line-clamp-3">
-            {listing?.description || "No description available"}
-          </p>
+          {renderHtml ? (
+            <p
+              className="text-sm text-base-content/80 line-clamp-3"
+              dangerouslySetInnerHTML={{ __html: listingDescriptionHtml }}
+            />
+          ) : (
+            <p className="text-sm text-base-content/80 line-clamp-3">
+              {listingDescriptionText}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -208,7 +226,13 @@ const ListingCard = ({
         </div>
 
         <div className="rounded-box border border-base-300 bg-base-100/70 p-1.5 md:max-w-120">
-          <ArtistCard artist={artistForCard} compact enableDynamicImpressions={true} showReactions={true} />
+          <ArtistCard
+            artist={artistForCard}
+            compact
+            enableDynamicImpressions={true}
+            showReactions={true}
+            textRenderMode={textRenderMode}
+          />
         </div>
 
         <div className="space-y-2">

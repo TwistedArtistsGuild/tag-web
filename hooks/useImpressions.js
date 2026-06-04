@@ -35,7 +35,15 @@ export function useImpressions(targetId, targetType, enabled = true) {
       return
     }
 
-    const cacheKey = `${targetType}-${targetId}`
+    const normalizedTargetId = Number(targetId)
+    if (!Number.isInteger(normalizedTargetId) || normalizedTargetId <= 0) {
+      setError(null)
+      setImpressions([])
+      setLoading(false)
+      return
+    }
+
+    const cacheKey = `${targetType}-${normalizedTargetId}`
     
     // Check cache first (5 second TTL)
     const cached = impressionCache.get(cacheKey)
@@ -74,7 +82,7 @@ export function useImpressions(targetId, targetType, enabled = true) {
       
       // Create promise for this request
       const requestPromise = fetch(
-        `${apiUrl}impression/primary?targetId=${encodeURIComponent(targetId)}&targetType=${targetType}`
+        `${apiUrl}impression/primary?targetId=${encodeURIComponent(normalizedTargetId)}&targetType=${targetType}`
       ).then(async (response) => {
         if (!response.ok) {
           throw new Error(`Failed to fetch impressions: ${response.status}`)
@@ -158,7 +166,12 @@ export function useImpressions(targetId, targetType, enabled = true) {
       const message = result.message || (wasRemoved ? 'Reaction removed' : 'Reaction added')
       
       // Invalidate cache
-      const cacheKey = `${targetType}-${targetId}`
+      const normalizedTargetId = Number(targetId)
+      if (!Number.isInteger(normalizedTargetId) || normalizedTargetId <= 0) {
+        return { success: false, error: 'Invalid target ID' }
+      }
+
+      const cacheKey = `${targetType}-${normalizedTargetId}`
       impressionCache.delete(cacheKey)
       
       await fetchImpressions()

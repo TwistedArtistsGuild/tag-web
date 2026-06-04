@@ -235,6 +235,8 @@ export default function PictureExplorerCard({
 	}
 
 	const handleDelete = async (fileUrl) => {
+		if (!window.confirm("Are you sure you want to delete this image?")) return
+
 		setDeleteLoading(fileUrl)
 		setError("")
 

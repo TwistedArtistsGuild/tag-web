@@ -31,6 +31,14 @@ import { pickContactCardData } from "@/utils/artistContactUtils"
 
 const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false })
 
+function stripHtmlTags(value) {
+  return String(value || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 function mapCreditsByPictureId(rows) {
   if (!Array.isArray(rows)) return {}
   return rows.reduce((acc, row) => {
@@ -82,13 +90,13 @@ const Artist = (props) => {
   }, [props.artist])
 
   const pageMetaData = {
-    title: props.artist.title,
-    description: props.artist.byline,
+    title: stripHtmlTags(props.artist.title),
+    description: stripHtmlTags(props.artist.byline),
     keywords: props.artist.seoTags,
     robots: "index, follow",
-    author: props.artist.title,
+    author: stripHtmlTags(props.artist.title),
     viewport: "width=device-width, initial-scale=1.0",
-    og: { title: props.artist.title, description: props.artist.byline },
+    og: { title: stripHtmlTags(props.artist.title), description: stripHtmlTags(props.artist.byline) },
   }
 
   const listings = (props.listings || []).map((l) => ({
@@ -186,6 +194,7 @@ const Artist = (props) => {
                 <ArtistCard
                   showHeaderGallery={false}
                   showContentGallery={false}
+                  textRenderMode="html"
                   artist={{
                     ...props.artist,
                     profilePic: props.profilePic,
@@ -200,6 +209,7 @@ const Artist = (props) => {
                 <ContactCard
                   displayName={props.artist?.title || "Artist"}
                   compact={true}
+                  textRenderMode="html"
                   socials={props.contactCardData?.socials || []}
                   stores={props.contactCardData?.stores || []}
                   contactInfo={props.contactCardData?.contactInfo || {}}
@@ -254,6 +264,7 @@ const Artist = (props) => {
                     <ListingCardSmall
                       key={listing.listingID || listing.listingid || listing.path}
                       listing={listing}
+                      textRenderMode="html"
                     />
                   ))}
                 </div>
@@ -405,11 +416,7 @@ Artist.getInitialProps = async (context) => {
       if (contactsRes.ok) {
         const contactsData = await contactsRes.json()
         const rows = Array.isArray(contactsData?.contacts) ? contactsData.contacts : []
-        contactCardData = pickContactCardData(
-          rows,
-          contactsData?.primaryPhone || null,
-          contactsData?.primaryAddress || null
-        )
+        contactCardData = pickContactCardData(rows)
       }
     } catch (error) {
       console.error(`Error fetching contacts for artist ${artistID}:`, error)
