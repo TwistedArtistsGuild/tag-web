@@ -13,13 +13,23 @@
 import Link from "next/link"
 import Image from "next/image"
 import ContentTags, { hasExplicitWarning, extractContentWarnings } from "@/components/social/ContentTags"
+import { sanitizeCardHtml, stripHtmlText } from "@/components/security/sanitize"
 
-const ListingCardSmall = ({ listing, artist }) => {
+const ListingCardSmall = ({ listing, artist, textRenderMode = "strip" }) => {
   const contentWarnings = extractContentWarnings(listing)
-    const hideImage = hasExplicitWarning(contentWarnings)
-    if (!listing.artist && artist) {
-      listing.artist = artist
-    }
+  const hideImage = hasExplicitWarning(contentWarnings)
+  if (!listing.artist && artist) {
+    listing.artist = artist
+  }
+
+  const renderHtml = textRenderMode === "html"
+  const titleText = stripHtmlText(listing?.title) || "Untitled"
+  const descriptionText = stripHtmlText(listing?.description) || "No description available"
+  const artistText = stripHtmlText(listing?.artist?.title) || "No artist found"
+  const titleHtml = sanitizeCardHtml(listing?.title || "Untitled")
+  const descriptionHtml = sanitizeCardHtml(listing?.description || "No description available")
+  const artistHtml = sanitizeCardHtml(listing?.artist?.title || "No artist found")
+
   return (
     <div 
       className="card bg-base-100 text-base-content shadow-xl hover:shadow-2xl transition-all duration-300 ease-in-out w-full rounded-box group border border-base-300"
@@ -61,16 +71,33 @@ const ListingCardSmall = ({ listing, artist }) => {
           href={`/artists/${listing?.artist?.path}/listings/${listing?.path}`}
           className="card-title text-xl text-primary hover:underline"
         >
-          {listing?.title || "Untitled"}
+          {renderHtml ? (
+            <span dangerouslySetInnerHTML={{ __html: titleHtml }} />
+          ) : (
+            titleText
+          )}
         </Link>
-        <p className="text-lg text-base-content/90 line-clamp-3">
-          {listing?.description || "No description available"}
-        </p>
+        {renderHtml ? (
+          <p
+            className="text-lg text-base-content/90 line-clamp-3"
+            dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+          />
+        ) : (
+          <p className="text-lg text-base-content/90 line-clamp-3">
+            {descriptionText}
+          </p>
+        )}
         <p className="text-xs text-base-content/80 mt-2">
           Listing created:{" "}
           {listing?.created ? new Date(listing.created).toLocaleDateString("en-US") : "No date available"}
         </p>
-        <p className="text-xs text-base-content/80">Artist: {listing?.artist?.title || "No artist found"}</p>
+        {renderHtml ? (
+          <p className="text-xs text-base-content/80">
+            Artist: <span dangerouslySetInnerHTML={{ __html: artistHtml }} />
+          </p>
+        ) : (
+          <p className="text-xs text-base-content/80">Artist: {artistText}</p>
+        )}
         <p className="text-xs text-base-content/80">
           Category: {listing?.artCategory?.category || "No category found"}
         </p>       

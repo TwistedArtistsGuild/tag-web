@@ -10,6 +10,7 @@
  Open source · low-profit · human-first*/
 
 import Link from "next/link"
+import { sanitizeCardHtml, stripHtmlText } from "@/components/security/sanitize"
 
 /**
  * Default social media platforms and their URLs (for TAG app)
@@ -166,8 +167,20 @@ export default function ContactCard({
   compact = true,
   iconOnly = false,
   contactsHref = "",
+  textRenderMode = "strip",
 }) {
-  const name = displayName || artist?.username || user?.username || "Contact"
+  const rawName = displayName || artist?.username || user?.username || "Contact"
+  const rawSubtitle = subtitle || ""
+  const rawDescription = description || ""
+  const renderHtml = textRenderMode === "html"
+
+  const name = renderHtml ? rawName : stripHtmlText(rawName)
+  const subtitleText = renderHtml ? rawSubtitle : stripHtmlText(rawSubtitle)
+  const descriptionText = renderHtml ? rawDescription : stripHtmlText(rawDescription)
+
+  const nameHtml = sanitizeCardHtml(rawName)
+  const subtitleHtml = sanitizeCardHtml(rawSubtitle)
+  const descriptionHtml = sanitizeCardHtml(rawDescription)
   const storeLinks = stores.length > 0 ? stores : salesPlatforms
 
   if (iconOnly) {
@@ -232,9 +245,34 @@ export default function ContactCard({
       <div className={`card bg-base-100 border border-base-300 p-4 ${className}`}>
         {showIdentity && (
           <div className="pb-3 border-b border-base-300">
-            <h2 className="text-lg font-semibold text-base-content">{name}</h2>
-            {subtitle && <p className="text-sm text-base-content/80 mt-0.5">{subtitle}</p>}
-            {description && <p className="text-sm text-base-content/70 mt-2 leading-relaxed">{description}</p>}
+            {renderHtml ? (
+              <div
+                className="text-lg font-semibold text-base-content [&_h1]:text-lg [&_h2]:text-lg [&_h3]:text-lg"
+                dangerouslySetInnerHTML={{ __html: nameHtml }}
+              />
+            ) : (
+              <h2 className="text-lg font-semibold text-base-content">{name}</h2>
+            )}
+            {subtitleText && (
+              renderHtml ? (
+                <div
+                  className="text-sm text-base-content/80 mt-0.5"
+                  dangerouslySetInnerHTML={{ __html: subtitleHtml }}
+                />
+              ) : (
+                <p className="text-sm text-base-content/80 mt-0.5">{subtitleText}</p>
+              )
+            )}
+            {descriptionText && (
+              renderHtml ? (
+                <div
+                  className="text-sm text-base-content/70 mt-2 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                />
+              ) : (
+                <p className="text-sm text-base-content/70 mt-2 leading-relaxed">{descriptionText}</p>
+              )
+            )}
           </div>
         )}
 
@@ -364,7 +402,14 @@ export default function ContactCard({
   return (
     <div className={`card bg-base-100 border border-base-300 ${padding} ${className}`}>
       {/* Card title */}
-      <div className={`font-semibold text-base-content ${compact ? "text-xs" : "text-sm"} mb-2 truncate`}>{name}</div>
+      {renderHtml ? (
+        <div
+          className={`font-semibold text-base-content ${compact ? "text-xs" : "text-sm"} mb-2 [&_h1]:text-inherit [&_h2]:text-inherit [&_h3]:text-inherit`}
+          dangerouslySetInnerHTML={{ __html: nameHtml }}
+        />
+      ) : (
+        <div className={`font-semibold text-base-content ${compact ? "text-xs" : "text-sm"} mb-2 truncate`}>{name}</div>
+      )}
 
       {/* Location at top - compact single line */}
       {contactInfo.location && (
