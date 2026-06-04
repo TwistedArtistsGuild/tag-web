@@ -442,7 +442,6 @@ function CreditsAdder({ credits, onChange, artists, users, onSave, saving, roleO
       if (!url) return false
       return normalized === url || normalized.includes(url) || url.includes(normalized)
     })
-  }
 
     if (!match) return
 
