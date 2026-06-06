@@ -192,14 +192,14 @@ export default function TreasuryTestPage() {
     }
   }, [apiUrl, pickArtistId])
 
-  useEffect(() => {
+
+  const resetStripePaymentState = () => {
     setStripeClientSecret("")
     setStripePaymentIntentId("")
     setStripePaymentStatus("idle")
     setStripePaymentError("")
     setStripePaymentAmountCents(0)
-  }, [buyer, cart, currency])
-
+  }
   const addToCart = () => {
     if (!pickArtistId || !pickListingId) return
     const artist = artists.find((a) => String(a.artistID) === pickArtistId)
@@ -207,6 +207,7 @@ export default function TreasuryTestPage() {
     if (!artist || !listing) return
     if (cart.find((c) => c.listingId === pickListingId)) return
 
+    resetStripePaymentState()
     setCart((prev) => [
       ...prev,
       {
@@ -221,7 +222,10 @@ export default function TreasuryTestPage() {
     setPickListingId("")
   }
 
-  const removeFromCart = (listingId) => setCart((prev) => prev.filter((c) => c.listingId !== listingId))
+  const removeFromCart = (listingId) => {
+    resetStripePaymentState()
+    setCart((prev) => prev.filter((c) => c.listingId !== listingId))
+  }
 
   const receiptTotals = useMemo(() => {
     const grossCents = cart.reduce((sum, item) => sum + Math.round(Number(item.price) * 100), 0)
@@ -382,7 +386,7 @@ export default function TreasuryTestPage() {
             <h2 className="font-semibold text-lg">1 — Select Buyer</h2>
             <label className="form-control max-w-sm">
               <span className="label-text">User account making the purchase</span>
-              <select className="select select-bordered" value={buyer} onChange={(e) => setBuyer(e.target.value)}>
+              <select className="select select-bordered" value={buyer} onChange={(e) => { resetStripePaymentState(); setBuyer(e.target.value) }}>
                 <option value="">— select user —</option>
                 {users.map((u) => (
                   <option key={u.userID} value={String(u.userID)}>
@@ -573,7 +577,7 @@ export default function TreasuryTestPage() {
               </label>
               <label className="form-control">
                 <span className="label-text">Currency</span>
-                <input className="input input-bordered input-sm w-20" value={currency} onChange={(e) => setCurrency(e.target.value)} />
+                <input className="input input-bordered input-sm w-20" value={currency} onChange={(e) => { resetStripePaymentState(); setCurrency(e.target.value) }} />
               </label>
               <label className="form-control">
                 <span className="label-text">Platform Fee %</span>
@@ -716,3 +720,5 @@ export default function TreasuryTestPage() {
     </div>
   )
 }
+
+
