@@ -57,6 +57,10 @@ export default function TestIndex() {
 				</Link>
 			</div>
 			<div className="mt-2">
+<Link href="/test/treasury_stripe" className="link link-primary">
+  /test/treasury_stripe
+</Link>
+</div><div className="mt-2">
 				<Link href="/test/themeSampler" className="link link-primary">
 				  /test/themeSampler
 				</Link>
@@ -64,3 +68,6 @@ export default function TestIndex() {
 		</div>
 	);
 }
+
+
+
