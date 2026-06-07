@@ -42,7 +42,7 @@ export default function VenuePortalSlugIndex() {
 								</p>
 							</div>
 							<div className="flex gap-2 flex-wrap">
-								<Link href={`/portal/venue/${safeSlug}/edit`} className="btn btn-sm btn-accent">Edit Profile</Link>
+								{safeSlug ? <Link href={`/portal/venue/${safeSlug}/edit`} className="btn btn-sm btn-accent">Edit Profile</Link> : null}
 								<Link href="/portal/venue" className="btn btn-sm btn-ghost">Back to Venue Portal</Link>
 							</div>
 						</div>
