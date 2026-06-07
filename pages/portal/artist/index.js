@@ -166,6 +166,7 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/artist" />
+			<ArtistContextNav />
 
 			<div className="max-w-6xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg border border-base-300">

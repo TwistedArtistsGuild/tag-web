@@ -273,8 +273,7 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user" />
-
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user" />				<UserContextNav />
 			<div className="max-w-5xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg">
 					<div className="card-body flex-row items-center gap-4 flex-wrap">

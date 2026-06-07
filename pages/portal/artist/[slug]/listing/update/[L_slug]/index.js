@@ -16,6 +16,7 @@ import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
 import PictureExplorerCard from "@/components/PictureExplorerCard";
 import TagSEO from "@/components/TagSEO";
+import ArtistContextNav from "@/components/portal/ArtistContextNav";
 
 const api_url = getApiURL();
 const formName = "ListingForm1";
@@ -89,6 +90,7 @@ export default function UpdateListingForm2(props) {
                 }}
                 canonicalSlug="portal/artist/[slug]/listing/update/[L_slug]"
             />
+            <ArtistContextNav />
             {props.listingId ? (
                 <GalleryManager
                     entityType="listing"

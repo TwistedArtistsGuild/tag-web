@@ -26,6 +26,7 @@ function resolveActiveHref(currentPath, items) {
 export default function EntityContextNav({
   title,
   titleContent = null,
+  titleSideContent = null,
   items = [],
   topContent = null,
   showEntitySwitcher = false,
@@ -180,7 +181,10 @@ export default function EntityContextNav({
         <div className="card-body p-4 gap-2">
           {topContent ? <div className="mb-1">{topContent}</div> : null}
           {resolvedTitleContent ? (
-            <div>{resolvedTitleContent}</div>
+            <div className="flex flex-wrap items-center gap-2">
+              {resolvedTitleContent}
+              {titleSideContent}
+            </div>
           ) : (
             <h2 className="text-lg font-semibold text-base-content">{title}</h2>
           )}
