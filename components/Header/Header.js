@@ -22,6 +22,7 @@ import { useLayout } from "@/components/LayoutProvider"
 import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu, Search } from "lucide-react"
 import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
 import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
+import BugReportControl from "@/components/forms/bug-report"
 import { getSeededStockPhotoByCategory } from "@/utils/stockPhotos"
 
 // Available themes
@@ -338,6 +339,8 @@ export default function Header() {
 
           {/* Right: User Controls */}
           <div className="flex items-center space-x-2">
+            <BugReportControl />
+
             {/* Theme Switcher */}
             <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={updateTheme} onToggle={toggleTheme} isOpen={isThemeOpen} />
 
