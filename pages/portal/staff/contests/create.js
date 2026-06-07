@@ -158,27 +158,6 @@ export default function CreateContestForm(props) {
     );
 }
 
-CreateContestForm.getInitialProps = async function () {
-    let metadata = {};
-    try {
-        // Fetching the 'CreateContestForm' metadata we seeded earlier
-        let res = await fetch(`${api_url}formsmetadata/${formName}`);
-
-        if (!res.ok) {
-            res = await fetch(`${api_url}forms_metadata/${formName}`);
-        }
-
-        if (res.ok) {
-            metadata = await res.json();
-        }
-    } catch (error) {
-        console.error("Error fetching contest form meta:", error);
-    }
-    return {
-        metadataProp: metadata
-    };
-};
-
 export async function getServerSideProps(context) {
 	const session = await getServerSession(context.req, context.res, authOptions);
 
@@ -197,5 +176,20 @@ export async function getServerSideProps(context) {
 		};
 	}
 
-	return { props: {} };
+    let metadata = {};
+    try {
+        let res = await fetch(`${api_url}formsmetadata/${formName}`);
+
+        if (!res.ok) {
+            res = await fetch(`${api_url}forms_metadata/${formName}`);
+        }
+
+        if (res.ok) {
+            metadata = await res.json();
+        }
+    } catch (error) {
+        console.error("Error fetching contest form meta:", error);
+    }
+
+    return { props: { metadataProp: metadata } };
 }
