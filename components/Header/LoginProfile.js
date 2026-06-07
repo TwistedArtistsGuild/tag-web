@@ -570,12 +570,6 @@ export default function LoginProfile({
               </div>
             </li>
             <li>
-              <Link href="/users" onClick={() => setOpenValue(false)}>
-                <Users className="w-4 h-4" />
-                User Directory
-              </Link>
-            </li>
-            <li>
               <Link href="/portal/user" onClick={() => setOpenValue(false)}>
                 <LayoutDashboard className="w-4 h-4" />
                 My Dashboard
