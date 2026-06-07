@@ -758,6 +758,16 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
 
 export async function getVendorJoinServerProps(context, routeSlug = null) {
   const session = await getSessionFromRequest(context)
+
+  if (!session?.user?.id) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl || "/join/vendor")}`,
+        permanent: false,
+      },
+    }
+  }
+
   const currentStep = getWizardStep(context.query?.step)
   const normalizedRouteSlug = String(routeSlug || "").trim().toLowerCase()
 

@@ -457,11 +457,9 @@ export async function getServerSideProps(context) {
 
   if (!Number.isFinite(sessionUserId) || sessionUserId <= 0) {
     return {
-      props: {
-        artistProgressRows: [],
-        sessionUserId: null,
-        sessionUser: session?.user || null,
-        userRegistrationComplete: false,
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl || "/join")}`,
+        permanent: false,
       },
     }
   }

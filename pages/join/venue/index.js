@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react"
+import { getServerSession } from "next-auth/next"
 
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import RegisterSlug from "@/components/forms/onboarding/register-slug"
 import JoinPageShell from "@/components/join/common/join-page-shell";
 import TermsAgreementStep from "@/components/join/common/terms-agreement-step";
@@ -141,6 +143,17 @@ export default function JoinVenueIndexPage({ termsContent, currentStep }) {
 }
 
 export async function getServerSideProps(context) {
+  const session = await getServerSession(context.req, context.res, authOptions)
+
+  if (!session?.user?.id) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl || "/join/venue")}`,
+        permanent: false,
+      },
+    }
+  }
+
   const termsContent = await getMarkdownContent("content/tos.md")
   const currentStep = getWizardStep(context.query?.step)
 
