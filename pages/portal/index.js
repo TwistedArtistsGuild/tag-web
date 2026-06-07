@@ -31,42 +31,78 @@ export default function Portal_Artist() {
 		},
 	};
 
-	return (
-		<div className="p-4 bg-base-200">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal" />
-			<h2 className="text-2xl font-bold text-primary">
-        Links to Portal Resources
-			</h2>
+	const portalLinks = [
+		{
+			href: "/portal/user",
+			title: "User Portal",
+			description:
+				"Review account activity, saved preferences, and personal dashboard updates.",
+			badge: "Personal",
+		},
+		{
+			href: "/portal/artist/",
+			title: "Artist Portal",
+			description:
+				"Manage your listings, profile details, and artist-focused tools in one place.",
+			badge: "Creative",
+		},
+		{
+			href: "/portal/staff/",
+			title: "Staff Portal",
+			description:
+				"Access moderation workflows, operational views, and internal support tools.",
+			badge: "Operations",
+		},
+		{
+			href: "/portal/vendor/",
+			title: "Vendor Portal",
+			description:
+				"Track vendor-facing activity, updates, and resource management controls.",
+			badge: "Commerce",
+		},
+		{
+			href: "/portal/venue/",
+			title: "Venue Portal",
+			description:
+				"Coordinate venue information, schedules, and participation-related actions.",
+			badge: "Events",
+		},
+	];
 
-			<div>
-				<Link href="/portal/staff/logviewer" className="link link-primary">
-          Logviewer
-				</Link>
-			</div>
-			<div className="mt-2">
-				<Link href="/portal/dashboard" className="link link-primary">
-					Portal Dashboard
-				</Link>
-			</div>
-			<div className="mt-2">
-				<Link href="/portal/artist/" className="link link-primary">
-					Artist&apos;s Portal
-				</Link>
-			</div>
-			<div className="mt-2">
-				<Link href="/portal/user" className="link link-primary">
-					User Portal
-				</Link>
-			</div>
-			<div className="mt-2">
-				<Link href="/portal/staff/" className="link link-primary">
-          Staff Member&apos;s Portal
-				</Link>
-			</div>
-			<div className="mt-2">
-				<Link href="/portal/vendor/" className="link link-primary">
-          Vendor&apos;s Portal
-				</Link>
+	return (
+		<div className="min-h-screen bg-base-200 px-4 py-6 md:px-8 md:py-10">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal" />
+			<div className="mx-auto max-w-5xl rounded-2xl border border-base-300 bg-base-100 p-6 shadow-lg md:p-8">
+				<h1 className="text-3xl font-black tracking-tight text-primary md:text-4xl">
+					Portal Resource Center
+				</h1>
+				<p className="mt-3 max-w-3xl text-sm leading-relaxed text-base-content/80 md:text-base">
+					Choose the workspace that matches your role. Each area includes tailored
+					tools, dashboards, and workflows to keep your day moving smoothly.
+				</p>
+
+				<div className="mt-6 grid grid-cols-1 gap-4">
+					{portalLinks.map((portalLink) => (
+						<Link
+							key={portalLink.href}
+							href={portalLink.href}
+							className="group rounded-xl border border-base-300 bg-base-100 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+						>
+							<div className="flex items-center justify-between gap-3">
+								<h2 className="text-lg font-bold text-base-content group-hover:text-primary md:text-xl">
+									{portalLink.title}
+								</h2>
+								<span className="badge badge-primary badge-outline">{portalLink.badge}</span>
+							</div>
+							<p className="mt-2 text-sm leading-relaxed text-base-content/75">
+								{portalLink.description}
+							</p>
+							<span className="mt-4 inline-block text-sm font-semibold text-primary transition-transform duration-200 group-hover:translate-x-1">
+								Open portal now
+							</span>
+						</Link>
+					))}
+				</div>
 			</div>
 			<div className="mt-2">
 				<Link href="/portal/venue/" className="link link-primary">

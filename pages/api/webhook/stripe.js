@@ -34,6 +34,7 @@ export default async function handler(req, res) {
 		const buf = await buffer(req)
 		let data
 		let eventType
+		let eventId
 
 		if (webhookSecret) {
 			let event
@@ -48,9 +49,11 @@ export default async function handler(req, res) {
 			}
 			data = event.data
 			eventType = event.type
+			eventId = event.id
 		} else {
 			data = req.body.data
 			eventType = req.body.type
+			eventId = req.body.id || data?.object?.id
 		}
 
 		try {
@@ -111,6 +114,38 @@ export default async function handler(req, res) {
 						customerId: customerId,
 					}),
 				})
+
+				// Prototype ledger posting for Modern Treasury integration
+				try {
+					const amountTotalCents = session?.amount_total || 0
+					const amountTaxCents = session?.total_details?.amount_tax || 0
+					const shippingRevenueCents = session?.total_details?.amount_shipping || 0
+
+					await fetch(`${api_url}treasury/stripe-event`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							stripeEventId: eventId || session.id,
+							stripeEventType: eventType,
+							stripePaymentIntentId: session?.payment_intent || null,
+							orderId: session.id,
+							amountTotalCents: amountTotalCents,
+							platformFeeCents: 0,
+							amountShippingCents: shippingRevenueCents,
+							amountTaxCents: amountTaxCents,
+							stripeFeeCents: 0,
+							shippingCostCents: 0,
+							sellerType: "artist",
+							currency: (session?.currency || "usd").toUpperCase(),
+							description: `Stripe checkout ${session.id}`,
+							dryRun: (process.env.MODERN_TREASURY_DRY_RUN || "true") !== "false",
+						}),
+					})
+				} catch (ledgerError) {
+					console.error("Modern Treasury ledger post failed:", ledgerError?.message || ledgerError)
+				}
 
 				// Send email with user link, product page, etc...
 				try {

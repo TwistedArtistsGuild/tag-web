@@ -12,63 +12,78 @@
 import Link from "next/link"
 import { getServerSession } from "next-auth/next"
 import TagSEO from "@/components/TagSEO"
+import VenueContextNav from "@/components/portal/VenueContextNav"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import getApiURL from "@/components/widgets/GetApiURL"
 
 export default function VenuePortalIndex({ venues }) {
 	const pageMetaData = {
 		title: "Venue Portal",
-		description: "Manage your venues and events.",
-		keywords: "venue, portal, events",
+		description: "Venue workspace and routing hub.",
+		keywords: "venue, portal, events, slug",
 		robots: "noindex, nofollow",
-		og: { title: "Venue Portal", description: "Manage your venues and events." },
+		og: { title: "Venue Portal", description: "Venue workspace and routing hub." },
 	}
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/venue" />
-
-			<div className="mx-auto max-w-5xl space-y-6">
+			<VenueContextNav />
+			<div className="mx-auto max-w-6xl space-y-6">
 				<section className="card bg-base-100 shadow-lg border border-base-300">
 					<div className="card-body gap-3">
 						<div className="flex items-center justify-between gap-3 flex-wrap">
 							<div>
-								<h1 className="text-3xl font-bold text-primary">Venue Portal</h1>
-								<p className="text-base-content/70 mt-2">Manage your venues and events</p>
+								<p className="text-xs uppercase tracking-widest text-base-content/50">Portal Domain</p>
+								<h1 className="text-3xl font-bold text-primary mt-1">Venue Workspace</h1>
 							</div>
-							<Link href="/portal" className="btn btn-sm btn-ghost">Back to Portal</Link>
+
 						</div>
+						<p className="text-base-content/75 max-w-3xl">
+							Access venue-specific slug routes and profile editing from a consistent portal workspace pattern.
+						</p>
 					</div>
 				</section>
-
 				{Array.isArray(venues) && venues.length > 0 ? (
 					<section className="card bg-base-100 shadow border border-base-300">
 						<div className="card-body gap-4">
-							<h2 className="card-title">Your Venues</h2>
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-								{venues.map((venue) => (
-									<div key={venue.id || venue.ID} className="card bg-base-200 border border-base-300">
-										<div className="card-body gap-2">
-											<h3 className="card-title text-lg">{venue.name || venue.Name || venue.slug || "Unnamed Venue"}</h3>
-											<p className="text-sm text-base-content/70">{venue.slug || ""}</p>
-											<div className="card-actions justify-end gap-2 mt-2">
-												<Link
-													href={`/portal/venue/${venue.slug || venue.path || ""}`}
-													className="btn btn-sm btn-primary"
-												>
-													View
-												</Link>
-											</div>
-										</div>
-									</div>
-								))}
+							<h2 className="text-xl font-semibold text-base-content">Linked Venues</h2>
+							<p className="text-sm text-base-content/70">Venue entities attributed to your user account.</p>
+							<div className="overflow-x-auto rounded-xl border border-base-300">
+								<table className="table table-zebra table-sm">
+									<thead>
+										<tr>
+											<th>Venue</th>
+											<th>Slug</th>
+											<th className="text-right">Portal</th>
+										</tr>
+									</thead>
+									<tbody>
+										{venues.map((venue) => {
+											const slug = venue.slug || venue.path || venue.Path || ""
+											return (
+												<tr key={`${venue.id || venue.ID || venue.venueID || slug || venue.name}`}> 
+													<td className="font-medium">{venue.name || venue.Name || slug || "Unnamed Venue"}</td>
+													<td><code>{slug || "(no slug)"}</code></td>
+													<td className="text-right">
+														{slug ? (
+															<Link href={`/portal/venue/${slug}`} className="btn btn-xs btn-primary">Open</Link>
+														) : (
+															<span className="badge badge-ghost badge-sm">n/a</span>
+														)}
+													</td>
+												</tr>
+											)
+										})}
+									</tbody>
+								</table>
 							</div>
 						</div>
 					</section>
 				) : (
 					<section className="card bg-base-100 shadow border border-base-300">
 						<div className="card-body gap-4">
-							<p className="text-base-content/70">You don&apos;t have any venues yet.</p>
+							<p className="text-base-content/70">No linked venues found for this account.</p>
 							<Link href="/join/venue" className="btn btn-primary">
 								Register as a Venue
 							</Link>

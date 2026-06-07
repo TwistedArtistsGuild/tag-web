@@ -216,6 +216,16 @@ export default function JoinUserIndexPage({ sessionUser, currentStep, userId, ro
 export async function getServerSideProps(context) {
   const session = await getSessionFromRequest(context);
   const currentStep = getWizardStep(context.query?.step);
+
+  if (!session?.user?.id) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl || "/join/user")}`,
+        permanent: false,
+      },
+    };
+  }
+
   const queryUserId = Number(context.query?.id || 0);
   const sessionUserId = Number(session?.user?.id || 0);
   const resolvedUserId = queryUserId > 0 ? queryUserId : (sessionUserId > 0 ? sessionUserId : 0);

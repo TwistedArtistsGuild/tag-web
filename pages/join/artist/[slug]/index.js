@@ -1249,6 +1249,16 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
 
 export async function getArtistJoinServerProps(context, routeSlug = null, options = {}) {
   const session = await getSessionFromRequest(context);
+
+  if (!session?.user?.id) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl || "/join/artist")}`,
+        permanent: false,
+      },
+    };
+  }
+
   const strictPreSlugFlow = Boolean(options?.strictPreSlugFlow);
   const currentStep = getWizardStep(context.query?.step);
   let artistId = strictPreSlugFlow ? 0 : Number(context.query?.id || 0);

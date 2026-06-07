@@ -12,9 +12,13 @@
 if (process.env.NODE_ENV === 'development') {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
+const localDevStartedAt = process.env.NODE_ENV === "development" ? new Date().toISOString() : ""
 
 const nextConfig = {
   reactStrictMode: true,
+  env: {
+    NEXT_PUBLIC_LOCAL_DEV_STARTED_AT: process.env.NEXT_PUBLIC_LOCAL_DEV_STARTED_AT || localDevStartedAt,
+  },
   // Suppress hydration warnings in development
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,

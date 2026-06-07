@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
 import TagSEO from "@/components/TagSEO"
+import StaffContextNav from "@/components/portal/StaffContextNav"
 
 export default function GHLTester() {
   const [contacts, setContacts] = useState([])
@@ -313,6 +314,7 @@ export default function GHLTester() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
 			<TagSEO metadataProp={{ title: "GHL Integration Tester", description: "Internal GoHighLevel integration testing workspace.", robots: "noindex, nofollow", keywords: "staff, crm, testing", og: { title: "GHL Integration Tester", description: "Internal GoHighLevel integration testing workspace." } }} canonicalSlug="portal/staff/ghl" />
+      <StaffContextNav />
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">GoHighLevel Integration Tester</h1>
 

@@ -57,6 +57,26 @@ export function LayoutProvider({ children }) {
     }
   }
 
+  function toggleLeftSidebar() {
+    setIsLeftSidebarVisible((prev) => {
+      const next = !prev
+      if (isMobile && next) {
+        setIsRightSidebarVisible(false)
+      }
+      return next
+    })
+  }
+
+  function toggleRightSidebar() {
+    setIsRightSidebarVisible((prev) => {
+      const next = !prev
+      if (isMobile && next) {
+        setIsLeftSidebarVisible(false)
+      }
+      return next
+    })
+  }
+
   const value = {
     isHeaderVisible,
     setIsHeaderVisible,
@@ -68,8 +88,8 @@ export function LayoutProvider({ children }) {
     theme,
     updateTheme,
     toggleHeader: () => setIsHeaderVisible((prev) => !prev),
-    toggleLeftSidebar: () => setIsLeftSidebarVisible((prev) => !prev),
-    toggleRightSidebar: () => setIsRightSidebarVisible((prev) => !prev),
+    toggleLeftSidebar,
+    toggleRightSidebar,
   }
 
   return <LayoutContext.Provider value={value}>{children}</LayoutContext.Provider>

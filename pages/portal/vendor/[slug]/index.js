@@ -51,8 +51,12 @@ export default function VendorPortalSlugIndex() {
 						</div>
 
 						<div className="flex gap-2 flex-wrap">
-							<Link href={`/portal/vendor/${safeSlug}/edit`} className="btn btn-accent btn-sm">Edit Profile</Link>
-							<Link href={`/portal/vendor/${safeSlug}/manage`} className="btn btn-primary btn-sm">Manage Gallery</Link>
+							{safeSlug ? (
+								<>
+									<Link href={`/portal/vendor/${safeSlug}/edit`} className="btn btn-accent btn-sm">Edit Profile</Link>
+									<Link href={`/portal/vendor/${safeSlug}/manage`} className="btn btn-primary btn-sm">Manage Gallery</Link>
+								</>
+							) : null}
 							<Link href="/portal" className="btn btn-outline btn-sm">Back to Portal</Link>
 						</div>
 					</div>

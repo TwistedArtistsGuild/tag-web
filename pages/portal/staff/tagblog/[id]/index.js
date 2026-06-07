@@ -12,6 +12,7 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth/next";
 import TagSEO from "@/components/TagSEO";
+import StaffContextNav from "@/components/portal/StaffContextNav";
 import BlogCreditsEditor from "@/components/blog/BlogCreditsEditor";
 import getApiURL from "@/components/widgets/GetApiURL";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";

@@ -15,6 +15,7 @@ import { getServerSession } from "next-auth/next"
 
 import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
+import ArtistContextNav from "@/components/portal/ArtistContextNav"
 import SocialHandlesForm from "@/components/forms/contact/social-handles-form"
 import ArtistCard from "@/components/cards/card_artist"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
@@ -73,6 +74,7 @@ export default function ArtistManageContactsPage({
 				}}
 				canonicalSlug={`portal/artist/${selectedArtist?.path || ""}/manage-contacts`}
 			/>
+			<ArtistContextNav />
 
 			<div className="max-w-4xl mx-auto space-y-4">
 				<div className="card bg-base-100 border border-base-300 shadow">

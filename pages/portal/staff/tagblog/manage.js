@@ -14,6 +14,7 @@ import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import TagSEO from "@/components/TagSEO";
+import StaffContextNav from "@/components/portal/StaffContextNav";
 import getApiURL from "@/components/widgets/GetApiURL";
 import { sanitizeCardHtml } from "@/components/security/sanitize";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
