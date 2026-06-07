@@ -16,6 +16,7 @@ import getApiURL from "@/components/widgets/GetApiURL"
 import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
+import StaffContextNav from "@/components/portal/StaffContextNav"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
 

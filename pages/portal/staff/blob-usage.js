@@ -12,6 +12,7 @@
 import { useEffect, useState, useMemo } from "react"
 import { getServerSession } from "next-auth/next"
 import TagSEO from "@/components/TagSEO"
+import StaffContextNav from "@/components/portal/StaffContextNav"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
 
@@ -84,6 +85,8 @@ export default function BlobUsageReport() {
 				}}
 				canonicalSlug="portal/staff/blob-usage"
 			/>
+
+			<StaffContextNav />
 
 			<div className="max-w-6xl mx-auto">
 				<div className="flex items-center justify-between mb-6">

@@ -16,6 +16,7 @@ import Link from "next/link"
 import { getServerSession } from "next-auth/next"
 import shortDateOptions from "@/utils/shortdateoptions"
 import TagSEO from "@/components/TagSEO"
+import StaffContextNav from "@/components/portal/StaffContextNav"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
@@ -38,8 +39,7 @@ const Log = props => {
 
 	return (
 		<div className="flex flex-col items-center justify-evenly min-h-screen w-full">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/staff/logviewer" />
-			<div className="w-full max-w-4xl p-4">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/staff/logviewer" />				<StaffContextNav />			<div className="w-full max-w-4xl p-4">
 				<h1 className="text-4xl font-bold mb-8 text-primary">Log viewer</h1>
 
 				<div>

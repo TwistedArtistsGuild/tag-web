@@ -5,6 +5,11 @@
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import getApiURL from "@/components/widgets/GetApiURL";
 import React, { useMemo, useState } from "react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdmin, isStaff } from "@/utils/authHelpers";
+import TagSEO from "@/components/TagSEO";
+import StaffContextNav from "@/components/portal/StaffContextNav";
 
 const api_url = getApiURL();
 
@@ -141,6 +146,8 @@ export default function CreateContestForm(props) {
 
     return (
         <div className="p-4 max-w-5xl mx-auto">
+            <TagSEO metadataProp={{ title: "Create Contest", description: "Create a new art contest.", keywords: "contests, create, staff", robots: "noindex, nofollow", og: { title: "Create Contest", description: "Create a new art contest." } }} canonicalSlug="portal/staff/contests/create" />
+            <StaffContextNav />
             <DynaFormDB
                 request="add"
                 metadataProp={enhancedMetadata}
@@ -171,3 +178,24 @@ CreateContestForm.getInitialProps = async function () {
         metadataProp: metadata
     };
 };
+
+export async function getServerSideProps(context) {
+	const session = await getServerSession(context.req, context.res, authOptions);
+
+	if (!session?.user) {
+		return {
+			redirect: {
+				destination: `/api/auth/signin?callbackUrl=${encodeURIComponent("/portal/staff/contests/create")}`,
+				permanent: false,
+			},
+		};
+	}
+
+	if (!isStaff(session) && !isAdmin(session)) {
+		return {
+			notFound: true,
+		};
+	}
+
+	return { props: {} };
+}

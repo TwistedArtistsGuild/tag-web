@@ -13,6 +13,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { getServerSession } from "next-auth/next"
 
+import ArtistContextNav from "@/components/portal/ArtistContextNav"
 import ArtistCard from "@/components/cards/card_artist"
 import SocialComments from "@/components/social/Comments"
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
@@ -162,43 +163,20 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 		},
 	}
 
-	const artistConceptLinks = [
-		{ href: "/join/artist", title: "Register Artist", description: "Start another artist registration flow if you need a new linked profile.", icon: "🎨" },
-		{ href: "/portal/artist/manage-contacts", title: "Manage Contacts", description: "Use DynaForm to add contact records linked to your artist profile.", icon: "📇" },
-	]
-
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/artist" />
 
-			<div className="max-w-5xl mx-auto space-y-6">
+			<div className="max-w-6xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg border border-base-300">
 					<div className="card-body gap-3">
+						<p className="text-xs uppercase tracking-widest text-base-content/50">Portal Domain</p>
 						<h1 className="text-3xl font-bold text-primary">Artist Portal</h1>
 						<p className="text-base-content/70">
 							Welcome back{sessionUser?.name ? `, ${sessionUser.name}` : ""}. Use this hub to jump into your linked artist workspaces, preview public pages, and enter artist-specific portal tools where listings are created for each artist.
 						</p>
 					</div>
 				</div>
-
-				<div className="card bg-base-100 border border-base-300 shadow">
-					<div className="card-body p-4 gap-3">
-						<SectionHeading>Artist Areas</SectionHeading>
-						<p className="text-sm text-base-content/70">Quick access list for the main artist portal routes. Create listings from inside each linked artist portal.</p>
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-							{artistConceptLinks.map((linkItem) => (
-								<ConceptCard
-									key={linkItem.href}
-									href={linkItem.href}
-									title={linkItem.title}
-									description={linkItem.description}
-									icon={linkItem.icon}
-								/>
-							))}
-						</div>
-					</div>
-				</div>
-
 				<MyArtistsCard registeredArtists={registeredArtists} sessionUser={sessionUser} />
 
 				<div className="card bg-base-100 border border-base-300 shadow">
