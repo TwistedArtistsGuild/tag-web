@@ -33,7 +33,8 @@ const appInsights = new ApplicationInsights({
  */
 export default function App({ Component, pageProps: { session, sidebarProps, ...pageProps } }) {
   const [showDevBanner, setShowDevBanner] = useState(true)
-  const [nowMs, setNowMs] = useState(() => Date.now())
+  // Keep initial render deterministic across server/client to avoid hydration mismatch.
+  const [nowMs, setNowMs] = useState(0)
   const router = useRouter()
 
   // Allow pages to override the default layout if needed
