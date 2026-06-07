@@ -4,6 +4,7 @@ import { useMemo, useState } from "react"
 import { getServerSession } from "next-auth/next"
 
 import CardMyArtists from "@/components/cards/card_myArtists"
+import UserContextNav from "@/components/portal/UserContextNav"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
@@ -202,6 +203,15 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 
 	const roles = apiSnapshot?.roles || []
 	const registeredArtists = apiSnapshot?.registeredArtists || []
+	const registeredVendors = apiSnapshot?.registeredVendors || []
+	const registeredVenues = apiSnapshot?.registeredVenues || []
+	const resolvedUsername = String(
+		apiSnapshot?.user?.username
+			|| apiSnapshot?.user?.Username
+			|| apiSnapshot?.user?.handle
+			|| apiSnapshot?.user?.Handle
+			|| "",
+	).trim()
 
 	const roleLabels = roles.filter((role) => ROLE_META[role]).map((role) => ROLE_META[role].label)
 	const greetingRoles =
@@ -213,13 +223,6 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 
 	const [moduleOrder, setModuleOrder] = useState(DEFAULT_MODULE_ORDER)
 	const [selectedModuleKey, setSelectedModuleKey] = useState(MODULES[0].key)
-
-	const userConceptLinks = [
-		{ href: "/portal/user/profile", title: "Profile", description: "Update your public profile text, image, and creator details.", icon: "👤" },
-		{ href: "/portal/user/preferences", title: "Preferences", description: "Set visual and app behavior preferences like theme and language.", icon: "🎛️" },
-		{ href: "/portal/user/preferences/content", title: "Content Preferences", description: "Choose which warning-tagged content types are hidden by default.", icon: "🧩" },
-		{ href: "/portal/user/settings", title: "Settings", description: "Manage account settings from the hub, including address, card, notifications, and password.", icon: "⚙️" },
-	]
 
 	const visibleModules = useMemo(
 		() => moduleOrder.map((key) => MODULES.find((module) => module.key === key)).filter(Boolean),
@@ -270,8 +273,7 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user" />
-
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user" />				<UserContextNav />
 			<div className="max-w-5xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg">
 					<div className="card-body flex-row items-center gap-4 flex-wrap">
@@ -324,18 +326,77 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 
 				<div className="card bg-base-100 border border-base-300 shadow">
 					<div className="card-body p-4 gap-3">
-						<SectionHeading>User Areas</SectionHeading>
-						<p className="text-sm text-base-content/70">Quick access list for every user concept page.</p>
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-							{userConceptLinks.map((linkItem) => (
-								<ConceptCard
-									key={linkItem.href}
-									href={linkItem.href}
-									title={linkItem.title}
-									description={linkItem.description}
-									icon={linkItem.icon}
-								/>
-							))}
+						<SectionHeading>Linked Vendor & Venue Entities</SectionHeading>
+						<p className="text-sm text-base-content/70">
+							Tables are temporary output for now. Cards can replace these once entity card UX is finalized.
+						</p>
+
+						<div className="space-y-3">
+							<h3 className="font-semibold text-base-content">Linked Vendors</h3>
+							{registeredVendors.length > 0 ? (
+								<div className="overflow-x-auto rounded-xl border border-base-300">
+									<table className="table table-zebra table-sm">
+										<thead>
+											<tr>
+												<th>Vendor</th>
+												<th>Slug</th>
+												<th>Status</th>
+												<th className="text-right">Open</th>
+											</tr>
+										</thead>
+										<tbody>
+											{registeredVendors.map((vendor) => {
+												const slug = vendor.path || vendor.slug || ""
+												return (
+													<tr key={`${vendor.vendorID || slug || vendor.title}`}> 
+														<td className="font-medium">{vendor.title || vendor.name || "Untitled Vendor"}</td>
+														<td><code>{slug || "(no slug)"}</code></td>
+														<td>{vendor.isPublished ? <span className="badge badge-success badge-sm">Published</span> : <span className="badge badge-warning badge-sm">Draft</span>}</td>
+														<td className="text-right">
+															{slug ? <Link href={`/portal/vendor/${slug}`} className="btn btn-xs btn-primary">Open</Link> : <span className="badge badge-ghost badge-sm">n/a</span>}
+														</td>
+													</tr>
+												)
+											})}
+										</tbody>
+									</table>
+								</div>
+							) : (
+								<div className="text-sm text-base-content/60">No linked vendors found.</div>
+							)}
+						</div>
+
+						<div className="space-y-3">
+							<h3 className="font-semibold text-base-content">Linked Venues</h3>
+							{registeredVenues.length > 0 ? (
+								<div className="overflow-x-auto rounded-xl border border-base-300">
+									<table className="table table-zebra table-sm">
+										<thead>
+											<tr>
+												<th>Venue</th>
+												<th>Slug</th>
+												<th className="text-right">Open</th>
+											</tr>
+										</thead>
+										<tbody>
+											{registeredVenues.map((venue) => {
+												const slug = venue.path || venue.slug || ""
+												return (
+													<tr key={`${venue.venueID || slug || venue.title || venue.name}`}> 
+														<td className="font-medium">{venue.title || venue.name || "Untitled Venue"}</td>
+														<td><code>{slug || "(no slug)"}</code></td>
+														<td className="text-right">
+															{slug ? <Link href={`/portal/venue/${slug}`} className="btn btn-xs btn-primary">Open</Link> : <span className="badge badge-ghost badge-sm">n/a</span>}
+														</td>
+													</tr>
+												)
+											})}
+										</tbody>
+									</table>
+								</div>
+							) : (
+								<div className="text-sm text-base-content/60">No linked venues found.</div>
+							)}
 						</div>
 					</div>
 				</div>
@@ -420,6 +481,8 @@ export async function getServerSideProps(context) {
 		privacy: null,
 		settings: null,
 		registeredArtists: [],
+		registeredVendors: [],
+		registeredVenues: [],
 		roles: session.user.roles || [],
 		permissions: session.user.permissions || [],
 	}
@@ -436,12 +499,14 @@ export async function getServerSideProps(context) {
 				return res.json()
 			}
 
-			const [user, preference, privacy, settings, registeredArtists] = await Promise.all([
+			const [user, preference, privacy, settings, registeredArtists, vendorLinksRaw, linkedVenuesRaw] = await Promise.all([
 				fetchJsonOrNull(`${apiUrl}user-details/${userId}/private?viewerUserId=${encodeURIComponent(String(userId))}`),
 				fetchJsonOrNull(`${apiUrl}userpreference/${userId}`),
 				fetchJsonOrNull(`${apiUrl}userprivacy/by-user/${userId}?viewerUserId=${encodeURIComponent(String(userId))}`),
 				fetchJsonOrNull(`${apiUrl}usersettings/${userId}`),
 				fetchJsonOrNull(`${apiUrl}linker_usertoartist/byUserID/${userId}`),
+				fetchJsonOrNull(`${apiUrl}linker_vendortouser`),
+				fetchJsonOrNull(`${apiUrl}linker_usertovenue/byUserID/${userId}`),
 			])
 
 			apiSnapshot.user = user
@@ -490,6 +555,46 @@ export async function getServerSideProps(context) {
 			)
 
 			apiSnapshot.registeredArtists = artistProfiles
+
+			const vendorLinks = Array.isArray(vendorLinksRaw) ? vendorLinksRaw : []
+			const linkedVendorIds = Array.from(
+				new Set(
+					vendorLinks
+						.filter((row) => Number(row?.userID || row?.UserID || row?.userId || row?.UserId || 0) === Number(userId))
+						.map((row) => Number(row?.vendorID || row?.VendorID || row?.vendorId || row?.VendorId || 0))
+						.filter((value) => Number.isFinite(value) && value > 0),
+				),
+			)
+
+			const vendorProfiles = await Promise.all(
+				linkedVendorIds.map(async (vendorId) => {
+					const vendorData = await fetchJsonOrNull(`${apiUrl}vendor/byID/${vendorId}`)
+					if (!vendorData) {
+						return null
+					}
+
+					return {
+						vendorID: vendorData?.vendorID ?? vendorData?.VendorID ?? vendorId,
+						title: vendorData?.title ?? vendorData?.Title ?? vendorData?.name ?? vendorData?.Name ?? null,
+						path: vendorData?.path ?? vendorData?.Path ?? null,
+						slug: vendorData?.slug ?? vendorData?.Slug ?? null,
+						isPublished: Boolean(vendorData?.isPublished ?? vendorData?.IsPublished),
+					}
+				}),
+			)
+
+			apiSnapshot.registeredVendors = vendorProfiles.filter(Boolean)
+
+			const linkedVenues = Array.isArray(linkedVenuesRaw)
+				? linkedVenuesRaw.map((venue) => ({
+					venueID: venue?.venueID ?? venue?.VenueID ?? venue?.id ?? venue?.ID ?? null,
+					title: venue?.title ?? venue?.Title ?? venue?.name ?? venue?.Name ?? null,
+					path: venue?.path ?? venue?.Path ?? null,
+					slug: venue?.slug ?? venue?.Slug ?? null,
+				}))
+				: []
+
+			apiSnapshot.registeredVenues = linkedVenues
 		} catch (error) {
 			console.error("Unable to load user API snapshot:", error.message)
 		}

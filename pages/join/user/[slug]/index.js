@@ -758,6 +758,16 @@ export default function JoinUserSlugPage({
 
 export async function getUserJoinServerProps(context, routeSlug = null) {
   const session = await getSessionFromRequest(context);
+
+  if (!session?.user?.id) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl || "/join/user")}`,
+        permanent: false,
+      },
+    };
+  }
+
   const currentStep = getWizardStep(context.query?.step);
   const viewerUserId = Number(session?.user?.id || 0);
 

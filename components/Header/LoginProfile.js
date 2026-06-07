@@ -527,15 +527,6 @@ export default function LoginProfile({
                   </button>
                 </div>
 
-                {activeContext ? (
-                  <div
-                    className="rounded-box border border-base-300 bg-base-200/60 px-2 py-1 text-xs text-base-content/75"
-                    style={activeContext.color ? { borderLeft: `3px solid ${activeContext.color}`, backgroundColor: `${activeContext.color}12` } : undefined}
-                  >
-                    Active context: <span className="font-semibold">{activeContext.label}</span>{activeContext.subtitle ? <span className="text-base-content/60"> ({activeContext.subtitle})</span> : null}
-                  </div>
-                ) : null}
-
                 {pendingOnboardingItems.length > 0 ? (
                   <div className="rounded-box border border-warning/40 bg-warning/10 p-2 text-xs text-base-content/80">
                     <div className="flex items-center justify-between gap-2">
@@ -577,12 +568,6 @@ export default function LoginProfile({
                   </div>
                 </div>
               </div>
-            </li>
-            <li>
-              <Link href="/users" onClick={() => setOpenValue(false)}>
-                <Users className="w-4 h-4" />
-                User Directory
-              </Link>
             </li>
             <li>
               <Link href="/portal/user" onClick={() => setOpenValue(false)}>

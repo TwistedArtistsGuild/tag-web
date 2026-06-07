@@ -17,6 +17,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
 import TagSEO from "@/components/TagSEO";
+import ArtistContextNav from "@/components/portal/ArtistContextNav";
 
 const api_url = getApiURL();
 const formName = "ListingForm1";
@@ -64,6 +65,7 @@ export default function CreateListingForm1(props) {
                 }}
                 canonicalSlug="portal/artist/[slug]/listing/create"
             />
+            <ArtistContextNav />
             <DynaFormDB request="add" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={null} />
         </div>
     );

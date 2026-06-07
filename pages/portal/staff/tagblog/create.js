@@ -18,6 +18,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
 import TagSEO from "@/components/TagSEO";
+import StaffContextNav from "@/components/portal/StaffContextNav";
 
 const api_url = getApiURL();
 const formName = "BlogForm1";

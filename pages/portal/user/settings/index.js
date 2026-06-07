@@ -13,6 +13,7 @@
 import { signOut } from "next-auth/react"
 import { usePrivate } from "@/hooks/usePrivate"
 import TagSEO from "@/components/TagSEO"
+import UserContextNav from "@/components/portal/UserContextNav"
 import Link from "next/link"
 
 export default function Settings() {
@@ -56,8 +57,7 @@ export default function Settings() {
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user/settings" />
-			<div className="max-w-5xl mx-auto space-y-6">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user/settings" />				<UserContextNav />			<div className="max-w-5xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg border border-base-300">
 					<div className="card-body">
 						<div className="flex items-center justify-between gap-3 flex-wrap">

@@ -11,7 +11,7 @@
 
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import Image from "next/image"
@@ -19,9 +19,10 @@ import { useSession } from "next-auth/react" // Using useSession for authenticat
 import LoginProfile from "@/components/Header/LoginProfile"
 import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
 import { useLayout } from "@/components/LayoutProvider"
-import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu, Search } from "lucide-react"
+import { Bell, MessageSquare, ChevronUp, ChevronDown, Search } from "lucide-react"
 import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
 import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
+import BugReportControl from "@/components/forms/bug-report"
 import { getSeededStockPhotoByCategory } from "@/utils/stockPhotos"
 
 // Available themes
@@ -49,7 +50,7 @@ const themes = [
 
 export default function Header() {
   const { data: session } = useSession() // Use session for user data
-  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar, isLeftSidebarVisible, theme, updateTheme } = useLayout()
+  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, isLeftSidebarVisible, theme, updateTheme } = useLayout()
   const router = useRouter()
   const [active, setActive] = useState("") // State for active navigation link
   const [isNotificationsDropdownOpen, setIsNotificationsDropdownOpen] = useState(false)
@@ -64,6 +65,19 @@ export default function Header() {
     availableContexts: [],
   })
   const [activeContextId, setActiveContextId] = useState(null)
+
+  const mobileNavOptions = useMemo(
+    () => [
+      { value: "/", label: "Homepage" },
+      { value: "/art/", label: "Bloomscroll" },
+      { value: "/artists", label: "Artists" },
+      { value: "/events", label: "Events" },
+      { value: "/blogs", label: "Blog" },
+      { value: "/news", label: "News" },
+      { value: "/contests/", label: "Contests" },
+    ],
+    [],
+  )
 
   const notificationsIconRef = useRef(null)
   const messagesIconRef = useRef(null)
@@ -179,6 +193,15 @@ export default function Header() {
   }, [activeContextId, contextSnapshot])
 
   const headerClass = getHeaderClassName()
+  const mobileNavValue = useMemo(() => {
+    const currentPath = String(router.asPath || router.pathname || "").split("?")[0].toLowerCase()
+    const match = mobileNavOptions.find((option) => {
+      const optionPath = option.value.toLowerCase()
+      return currentPath === optionPath || currentPath.startsWith(`${optionPath.replace(/\/$/, "")}/`)
+    })
+
+    return match?.value || ""
+  }, [mobileNavOptions, router.asPath, router.pathname])
 
   // Height of the header for popup offset
   const headerHeight = 88
@@ -251,11 +274,6 @@ export default function Header() {
         <div className={headerClass}>
           {/* Left: Logo and Brand */}
           <div className="flex items-center space-x-4">
-            {isMobile && (
-              <button className="btn btn-ghost btn-circle" onClick={toggleLeftSidebar} aria-label="Toggle left sidebar">
-                <Menu className="w-6 h-6" />
-              </button>
-            )}
             <Link
               href="/"
               className="flex items-center space-x-2 px-2 py-1 rounded-md backdrop-blur-sm bg-base-100/18 border border-base-content/10 hover:bg-base-100/24 transition-all"
@@ -271,6 +289,28 @@ export default function Header() {
                 Twisted Artists Guild
               </span>
             </Link>
+            {isMobile && (
+              <select
+                className="select select-sm select-bordered max-w-42"
+                value={mobileNavValue}
+                aria-label="Main navigation"
+                onChange={(event) => {
+                  const nextPath = event.target.value
+                  if (nextPath && nextPath !== mobileNavValue) {
+                    router.push(nextPath)
+                  }
+                }}
+              >
+                <option value="" disabled>
+                  Navigate
+                </option>
+                {mobileNavOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Center: Main Navigation - Desktop */}
@@ -338,6 +378,8 @@ export default function Header() {
 
           {/* Right: User Controls */}
           <div className="flex items-center space-x-2">
+            <BugReportControl />
+
             {/* Theme Switcher */}
             <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={updateTheme} onToggle={toggleTheme} isOpen={isThemeOpen} />
 
@@ -384,13 +426,6 @@ export default function Header() {
               onActiveContextChange={setActiveContextId}
               onContextSnapshotChange={handleContextSnapshotChange}
             />
-
-            {/* Mobile Right Sidebar Toggle Button */}
-            {isMobile && (
-              <button type="button" className="btn btn-ghost btn-sm lg:hidden" onClick={toggleRightSidebar}>
-                <Menu className="w-5 h-5" />
-              </button>
-            )}
           </div>
           {/* tag-theme visual treatment is handled with CSS pseudo-elements */}
         </div>

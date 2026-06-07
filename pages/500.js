@@ -12,11 +12,12 @@
 import Link from "next/link"
 
 import TagSEO from "@/components/TagSEO"
+import BugReportControl from "@/components/forms/bug-report"
 
 
 export default function Custom404() {
 	return (
-      <section className="relative bg-base-100 text-base-content h-screen w-full flex flex-col justify-center gap-8 items-center p-10">
+	<section className="relative bg-base-100 text-base-content min-h-screen w-full flex flex-col justify-center gap-8 items-center p-10">
       <TagSEO metadataProp={{ title: "Server Error", description: "An internal server error occurred on Platform.", keywords: "artists, art community, marketplace", robots: "noindex, nofollow", og: { title: "Server Error", description: "An internal server error occurred on Platform." } }} canonicalSlug="500" />
 			<p className="text-xl md:text-2xl font-medium">Something went wrong</p>
 
@@ -35,6 +36,14 @@ export default function Custom404() {
 				</svg>
 				Home
 			</Link>
+
+			<div className="w-full max-w-3xl">
+				<BugReportControl
+					isEmbedded
+					defaultShortDescription="500 server error"
+					defaultExpectedBehavior="I expected this action to complete without a server error."
+				/>
+			</div>
 		</section>
 	)
 }

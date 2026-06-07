@@ -30,8 +30,10 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          NEXT_PUBLIC_TAG_API_URL: ${{ secrets['NEXT_PUBLIC_TAG_API_URL'] }}
-          NEXT_PUBLIC_APPINSIGHTS: ${{ secrets['NEXT_PUBLIC_APPINSIGHTS'] }}
+          NEXT_PUBLIC_TAG_API_URL: ${{ secrets.NEXT_PUBLIC_TAG_API_URL }}
+          NEXT_PUBLIC_APPINSIGHTS: ${{ secrets.NEXT_PUBLIC_APPINSIGHTS }}
+          NEXT_PUBLIC_BUILD_NUMBER: ${{ github.run_number }}.${{ github.run_attempt }}
+          NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA: ${{ github.sha }}
 
       - name: Create deployment package
         run: |

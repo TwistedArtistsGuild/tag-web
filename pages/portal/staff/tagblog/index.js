@@ -13,6 +13,7 @@ import React, { useMemo } from "react";
 import { getServerSession } from "next-auth/next";
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import TagSEO from "@/components/TagSEO";
+import StaffContextNav from "@/components/portal/StaffContextNav";
 import getApiURL from "@/components/widgets/GetApiURL";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
@@ -75,8 +76,7 @@ export default function StaffTagBlogSuggestion(props) {
 
 	return (
 		<div className="p-4 space-y-4 bg-base-200">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/staff/tagblog" />
-
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/staff/tagblog" />				<StaffContextNav />
 			<div className="rounded-xl border border-warning/30 bg-base-100 p-4 shadow-sm">
 				<h1 className="text-2xl font-bold text-base-content">Blog Post Suggestion Form</h1>
 				<p className="mt-2 text-sm text-base-content/75">

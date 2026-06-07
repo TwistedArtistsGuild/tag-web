@@ -16,6 +16,7 @@ import { useEffect, useState } from "react"
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import TagSEO from "@/components/TagSEO"
+import ArtistContextNav from "@/components/portal/ArtistContextNav"
 import getApiURL from "@/components/widgets/GetApiURL"
 import RegisterSlug from "@/components/forms/onboarding/register-slug"
 import AddressForm from "@/components/forms/contact/address-form"
@@ -146,6 +147,7 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
   return (
     <div className="min-h-screen bg-base-200 p-4 md:p-8">
       <TagSEO metadataProp={pageMetaData} canonicalSlug={`portal/artist/${artistData?.path || "edit"}`} />
+      <ArtistContextNav />
 
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="card bg-base-100 shadow border border-base-300">

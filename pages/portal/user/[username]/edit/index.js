@@ -15,6 +15,7 @@ import Link from "next/link"
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import RegisterSlug from "@/components/forms/onboarding/register-slug"
+import UserContextNav from "@/components/portal/UserContextNav"
 import AddressForm from "@/components/forms/contact/address-form"
 import EmailForm from "@/components/forms/contact/email-form"
 import PhoneForm from "@/components/forms/contact/phone-form"
@@ -184,6 +185,7 @@ export default function UserEditPage({ userId, userData }) {
   return (
     <>
       <TagSEO title={`Edit ${userData?.username || "User"} - Portal`} description={`Edit profile`} />
+      <UserContextNav />
 
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold mb-8">Edit Your Profile</h1>

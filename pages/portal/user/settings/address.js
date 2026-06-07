@@ -9,6 +9,7 @@
 
  Open source · low-profit · human-first*/
 import TagSEO from "@/components/TagSEO"
+import UserContextNav from "@/components/portal/UserContextNav"
 import Link from "next/link"
 import { useState } from "react"
 
@@ -34,8 +35,7 @@ export default function AddressSettings() {
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user/settings/address" />
-			<div className="max-w-5xl mx-auto space-y-6">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user/settings/address" />				<UserContextNav />			<div className="max-w-5xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg border border-base-300">
 					<div className="card-body">
 						<div className="flex items-center justify-between gap-3 flex-wrap">
