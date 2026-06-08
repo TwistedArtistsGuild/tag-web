@@ -18,6 +18,7 @@ import { AppWrapper } from "@/components/Context"
 import TagSEO from "@/components/TagSEO"
 import { useEffect, useState } from "react"
 import { ApplicationInsights } from "@microsoft/applicationinsights-web"
+import { MessagingRealtimeProvider } from '@/components/messaging/MessagingRealtimeProvider'
 
 // Flag to prevent multiple initializations across hot reloads
 let appInsightsInitialized = false
@@ -87,33 +88,35 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
 
   return (
     <SessionProvider session={session}>
-      {/* Your original development banner */}
-      {showDevBanner && (
-        <div className="bg-warning text-warning-content text-center py-1 text-xs font-bold sticky top-0 z-50 flex justify-center items-center">
-          <div className="grow">
-            ⚠️ WEBSITE PROTOTYPE - PROOF OF CONCEPT - NOT FOR PRODUCTION USE - DATA IS LIKELY FAKED AND/OR MAY BE RESET
-            WITHOUT NOTICE ⚠️
+      <MessagingRealtimeProvider>
+        {/* Your original development banner */}
+        {showDevBanner && (
+          <div className="bg-warning text-warning-content text-center py-1 text-xs font-bold sticky top-0 z-50 flex justify-center items-center">
+            <div className="grow">
+              ⚠️ WEBSITE PROTOTYPE - PROOF OF CONCEPT - NOT FOR PRODUCTION USE - DATA IS LIKELY FAKED AND/OR MAY BE RESET
+              WITHOUT NOTICE ⚠️
+            </div>
+            <button
+              onClick={closeBanner}
+              className="px-2 hover:bg-warning-content hover:bg-opacity-20 rounded transition-colors"
+              title="Close this notification (will reappear on navigation)"
+              aria-label="Close development environment notification"
+            >
+              ✕
+            </button>
           </div>
-          <button
-            onClick={closeBanner}
-            className="px-2 hover:bg-warning-content hover:bg-opacity-20 rounded transition-colors"
-            title="Close this notification (will reappear on navigation)"
-            aria-label="Close development environment notification"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+        )}
 
-      {/* Enhanced Layout with your original structure */}
-      {getLayout(
-        <AppWrapper>
-          <EnhancedLayout sidebarProps={sidebarProps}>
-            <TagSEO metadataProp={fallbackSeo} canonicalSlug={canonicalSlug} />
-            <Component {...pageProps} />
-          </EnhancedLayout>
-        </AppWrapper>,
-      )}
+        {/* Enhanced Layout with your original structure */}
+        {getLayout(
+          <AppWrapper>
+            <EnhancedLayout sidebarProps={sidebarProps}>
+              <TagSEO metadataProp={fallbackSeo} canonicalSlug={canonicalSlug} />
+              <Component {...pageProps} />
+            </EnhancedLayout>
+          </AppWrapper>,
+        )}
+      </MessagingRealtimeProvider>
     </SessionProvider>
   )
 }
