@@ -33,7 +33,9 @@ const appInsights = new ApplicationInsights({
  * Enhanced App Component - keeps your original structure but adds collapsible layout
  */
 export default function App({ Component, pageProps: { session, sidebarProps, ...pageProps } }) {
-  const [dismissedBannerPath, setDismissedBannerPath] = useState(null)
+  const [showDevBanner, setShowDevBanner] = useState(true)
+  // Keep initial render deterministic across server/client to avoid hydration mismatch.
+  const [nowMs, setNowMs] = useState(0)
   const router = useRouter()
 
   // Allow pages to override the default layout if needed
@@ -66,11 +68,26 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
     }
   }, [Component])
 
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now())
+    }, 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   const closeBanner = () => {
-    setDismissedBannerPath(router.asPath)
+    setShowDevBanner(false)
   }
 
-  const showDevBanner = dismissedBannerPath !== router.asPath
+  const buildNumber = process.env.NEXT_PUBLIC_BUILD_NUMBER || process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || "local"
+  const localDevStartedAt = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_LOCAL_DEV_STARTED_AT : ""
+  const localDevStartedMs = localDevStartedAt ? Date.parse(localDevStartedAt) : NaN
+  const localUptimeMs = Number.isFinite(localDevStartedMs) ? Math.max(0, nowMs - localDevStartedMs) : 0
+  const uptimeHours = Math.floor(localUptimeMs / 3600000)
+  const uptimeMinutes = Math.floor((localUptimeMs % 3600000) / 60000)
+  const uptimeSeconds = Math.floor((localUptimeMs % 60000) / 1000)
+  const localUptime = `${String(uptimeHours).padStart(2, "0")}:${String(uptimeMinutes).padStart(2, "0")}:${String(uptimeSeconds).padStart(2, "0")}`
 
   const canonicalSlug = (router.asPath || "/").split("?")[0].split("#")[0].replace(/^\//, "")
   const fallbackTitle = canonicalSlug

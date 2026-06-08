@@ -258,6 +258,15 @@ export async function getServerSideProps(context) {
   const session = await getSessionFromRequest(context);
   const currentStep = getWizardStep(context.query?.step);
 
+  if (!session?.user?.id) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl || "/join/artist")}`,
+        permanent: false,
+      },
+    };
+  }
+
   return {
     props: {
       sessionUser: session?.user || null,

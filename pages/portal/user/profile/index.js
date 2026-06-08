@@ -16,6 +16,7 @@ import Image from "next/image"
 import apiClient from "@/libs/api"
 import { usePrivate } from "@/hooks/usePrivate"
 import TagSEO from "@/components/TagSEO"
+import UserContextNav from "@/components/portal/UserContextNav"
 import UploadPictureForm1 from "@/components/widgets/uploadPic"
 import Link from "next/link"
 
@@ -72,8 +73,7 @@ export default function Dashboard() {
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user/profile" />
-			<div className="max-w-5xl mx-auto space-y-6">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/user/profile" />				<UserContextNav />			<div className="max-w-5xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg border border-base-300">
 					<div className="card-body">
 						<div className="flex items-center justify-between gap-3 flex-wrap">

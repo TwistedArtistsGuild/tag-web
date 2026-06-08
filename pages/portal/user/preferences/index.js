@@ -15,6 +15,7 @@ import { signOut } from "next-auth/react"
 import apiClient from "@/libs/api"
 import { usePrivate } from "@/hooks/usePrivate"
 import TagSEO from "@/components/TagSEO"
+import UserContextNav from "@/components/portal/UserContextNav"
 import Link from "next/link"
 
 export default function Preferences() {
@@ -65,8 +66,7 @@ export default function Preferences() {
 
 	return (
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
-			<TagSEO metadataProp={{ title: "User Preferences", description: "Manage account and app preferences.", robots: "noindex, nofollow", keywords: "user preferences, account settings", og: { title: "User Preferences", description: "Manage account and app preferences." } }} canonicalSlug="portal/user/preferences" />
-			<div className="max-w-5xl mx-auto space-y-6">
+			<TagSEO metadataProp={{ title: "User Preferences", description: "Manage account and app preferences.", robots: "noindex, nofollow", keywords: "user preferences, account settings", og: { title: "User Preferences", description: "Manage account and app preferences." } }} canonicalSlug="portal/user/preferences" />				<UserContextNav />			<div className="max-w-5xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow-lg border border-base-300">
 					<div className="card-body">
 						<div className="flex items-center justify-between gap-3 flex-wrap">

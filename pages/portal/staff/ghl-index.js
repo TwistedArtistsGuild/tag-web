@@ -12,6 +12,7 @@ import {
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
 import TagSEO from "@/components/TagSEO"
+import StaffContextNav from "@/components/portal/StaffContextNav"
 
 export default function GHLIndexPage() {
   const [contacts, setContacts] = useState([])
@@ -228,6 +229,7 @@ export default function GHLIndexPage() {
   return (
     <div className="min-h-screen bg-gray-100 p-6">
 			<TagSEO metadataProp={{ title: "GHL CRM Dashboard", description: "Internal GoHighLevel CRM dashboard.", robots: "noindex, nofollow", keywords: "staff, crm, dashboard", og: { title: "GHL CRM Dashboard", description: "Internal GoHighLevel CRM dashboard." } }} canonicalSlug="portal/staff/ghl-index" />
+      <StaffContextNav />
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">GoHighLevel CRM Index</h1>
 

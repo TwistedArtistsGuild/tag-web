@@ -77,7 +77,6 @@ const SocialComments = ({
     readOnly = false,
     managedExternally = false // NEW: Set to true when comments are managed by parent (API-driven)
 }) => {
-    console.log("User", currentUser);
     // State management for comments
     const [comments, setComments] = useState(() => buildCommentsState(initialComments));
     const [isLoading] = useState(false);

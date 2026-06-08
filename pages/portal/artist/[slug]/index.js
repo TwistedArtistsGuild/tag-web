@@ -15,6 +15,7 @@ import { useState } from "react"
 import dynamic from "next/dynamic"
 
 import TagSEO from "@/components/TagSEO"
+import ArtistContextNav from "@/components/portal/ArtistContextNav"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin } from "@/utils/authHelpers"
@@ -293,6 +294,7 @@ export default function ArtistSlugPortalPage({ slug, artistProfile, listings, cu
   return (
     <div className="min-h-screen bg-base-200 p-4 md:p-8">
       <TagSEO metadataProp={pageMetaData} canonicalSlug={`portal/artist/${slug}`} />
+      <ArtistContextNav />
 
       <div className="max-w-6xl mx-auto space-y-6">
         <section className="card bg-base-100 shadow-lg border border-base-300">
