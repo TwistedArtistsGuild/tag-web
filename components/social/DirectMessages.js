@@ -10,1261 +10,785 @@
  Open source · low-profit · human-first
 
  🎯 ORCHESTRATION: Full messaging display & management component.
-    Loads conversations from database, manages state, uses TT_DirectMessages editor card.
-    Uses: @/components/tiptap/TT_DirectMessages for editor UI
+    Loads conversations from database, manages state, uses API hooks.
+    Supports both API mode and Demo mode.
     Exports: DirectMessages (default)
 */
 
-import { useMemo, useRef, useState } from "react";
-import { IoSend, IoTimeOutline, IoCheckmarkSharp, IoCheckmarkDoneSharp } from "react-icons/io5";
+import { useMemo, useRef, useState, useEffect, useCallback } from "react";
+import { IoSend, IoTimeOutline, IoCheckmarkSharp, IoCheckmarkDoneSharp, IoTrashOutline, IoCreateOutline, IoAttachOutline, IoCloseCircle } from "react-icons/io5";
 import { sanitizeDefaultHtml } from "@/components/security/sanitize";
+import { useSession } from 'next-auth/react';
+import { useMessagingRealtime } from '@/components/messaging/MessagingRealtimeProvider';
 
 // Import components
 import Image from "next/image";
 import { useRealtimeMessages, useTypingIndicator, useSocialRealtime } from './SocialRealtimeContext';
 import TiptapEditor from "@/components/tiptap/tiptap-editor";
-
-// Mock demo data for conversations
-const MOCK_CONVERSATIONS = [
-    {
-        id: "conv-1",
-        name: "Art Exhibition Planning",
-        isGroup: true,
-        isOnline: true,
-        lastMessage: "Let's finalize the lineup by Friday!",
-        lastMessageTime: "10:42 AM",
-        unreadCount: 2,
-        participants: [
-            {
-                id: "artist-1",
-                username: "EmmaWaters",
-                displayName: "Emma Waters",
-                avatarUrl: "https://i.pravatar.cc/150?img=32",
-                isOnline: true,
-                role: "Curator"
-            },
-            {
-                id: "artist-2",
-                username: "DavidChen",
-                displayName: "David Chen",
-                avatarUrl: "https://i.pravatar.cc/150?img=11",
-                isOnline: false,
-                role: "Sculptor"
-            },
-            {
-                id: "artist-3",
-                username: "SophiaRodriguez",
-                displayName: "Sophia Rodriguez",
-                avatarUrl: "https://i.pravatar.cc/150?img=24",
-                isOnline: true,
-                role: "Painter"
-            }
-        ]
-    },
-    {
-        id: "conv-2",
-        name: null, // 1:1 conversation
-        isGroup: false,
-        isOnline: true,
-        lastMessage: "I'm interested in your latest piece",
-        lastMessageTime: "Yesterday",
-        unreadCount: 0,
-        participants: [
-            {
-                id: "client-1",
-                username: "JamesCollector",
-                displayName: "James Wilson",
-                avatarUrl: "https://i.pravatar.cc/150?img=53",
-                isOnline: true,
-                role: "Art Collector"
-            }
-        ]
-    },
-    {
-        id: "conv-3",
-        name: null, // 1:1 conversation
-        isGroup: false,
-        isOnline: false,
-        lastMessage: "Could we discuss commission details?",
-        lastMessageTime: "Aug 24",
-        unreadCount: 1,
-        participants: [
-            {
-                id: "client-2",
-                username: "MiaTaylor",
-                displayName: "Mia Taylor",
-                avatarUrl: "https://i.pravatar.cc/150?img=47",
-                isOnline: false,
-                role: "Gallery Owner"
-            }
-        ]
-    }
-];
-
-// Mock messages for each conversation
-const MOCK_MESSAGES = {
-    "conv-1": [
-        {
-            id: "msg1-1",
-            content: "<p>Hi everyone! I wanted to discuss the upcoming Fall Exhibition. We need to finalize the artist lineup and space allocations.</p>",
-            senderId: "artist-1",
-            senderName: "Emma Waters",
-            senderAvatar: "https://i.pravatar.cc/150?img=32",
-            timestamp: "2023-08-20T10:30:00Z",
-            status: "read"
-        },
-        {
-            id: "msg1-2",
-            content: "<p>I've prepared three large sculptures for the central hall. Can I get the dimensions of the pedestals again?</p>",
-            senderId: "artist-2",
-            senderName: "David Chen",
-            senderAvatar: "https://i.pravatar.cc/150?img=11",
-            timestamp: "2023-08-20T10:35:00Z",
-            status: "read"
-        },
-        {
-            id: "msg1-3",
-            content: "<p>For sure, David. The pedestals are 120cm x 120cm with a height of 90cm. We can adjust if needed though.</p>",
-            senderId: "artist-1",
-            senderName: "Emma Waters",
-            senderAvatar: "https://i.pravatar.cc/150?img=32",
-            timestamp: "2023-08-20T10:40:00Z",
-            status: "read"
-        },
-        {
-            id: "msg1-4",
-            content: "<p>I was thinking of displaying my new series along the east wall. It's a sequence of 7 paintings that tell a story when viewed in order.</p>",
-            senderId: "artist-3",
-            senderName: "Sophia Rodriguez",
-            senderAvatar: "https://i.pravatar.cc/150?img=24",
-            timestamp: "2023-08-20T10:41:00Z",
-            status: "read"
-        },
-        {
-            id: "msg1-5",
-            content: "<p>That sounds perfect, Sophia! The east wall gets beautiful morning light which would complement your color palette.</p><p>Let's all meet at the gallery on Wednesday to mark spaces and plan the flow.</p>",
-            senderId: "artist-1",
-            senderName: "Emma Waters",
-            senderAvatar: "https://i.pravatar.cc/150?img=32",
-            timestamp: "2023-08-20T10:42:00Z",
-            status: "read"
-        }
-    ],
-    "conv-2": [
-        {
-            id: "msg2-1",
-            content: "<p>Hello! I saw your 'Urban Echoes' series at the downtown gallery last week and was completely captivated.</p>",
-            senderId: "client-1",
-            senderName: "James Wilson",
-            senderAvatar: "https://i.pravatar.cc/150?img=53",
-            timestamp: "2023-08-23T14:22:00Z",
-            status: "read"
-        },
-        {
-            id: "msg2-2",
-            content: "<p>Thank you, James! I'm glad you connected with the work. It's a series I've been developing for almost two years.</p>",
-            senderId: "current-user",
-            senderName: "You",
-            senderAvatar: "https://i.pravatar.cc/150?img=37",
-            timestamp: "2023-08-23T14:30:00Z",
-            status: "read"
-        },
-        {
-            id: "msg2-3",
-            content: "<p>The depth and texture really stood out to me. Is 'Midnight Crossing' still available for purchase?</p>",
-            senderId: "client-1",
-            senderName: "James Wilson",
-            senderAvatar: "https://i.pravatar.cc/150?img=53",
-            timestamp: "2023-08-23T15:05:00Z",
-            status: "read"
-        },
-        {
-            id: "msg2-4",
-            content: "<p>Yes, it is! It's currently priced at $3,200. Would you like to see some additional photos of the piece in different lighting?</p>",
-            senderId: "current-user",
-            senderName: "You",
-            senderAvatar: "https://i.pravatar.cc/150?img=37",
-            timestamp: "2023-08-23T15:17:00Z",
-            status: "read"
-        },
-        {
-            id: "msg2-5",
-            content: "<p>That would be great. I'm seriously considering it for my office. The colors would work perfectly with the space.</p>",
-            senderId: "client-1",
-            senderName: "James Wilson",
-            senderAvatar: "https://i.pravatar.cc/150?img=53",
-            timestamp: "2023-08-24T09:30:00Z",
-            status: "read"
-        },
-        {
-            id: "msg2-6",
-            content: "<p>Perfect! Here are some additional photos showing the piece in different lighting conditions.</p><p><img src='https://picsum.photos/id/1015/500/300' alt='Artwork in morning light' /></p><p><img src='https://picsum.photos/id/1019/500/300' alt='Artwork in evening light' /></p>",
-            senderId: "current-user",
-            senderName: "You",
-            senderAvatar: "https://i.pravatar.cc/150?img=37",
-            timestamp: "2023-08-24T10:45:00Z",
-            status: "read"
-        },
-        {
-            id: "msg2-7",
-            content: "<p>I'm interested in your latest piece. Can we arrange a private viewing?</p>",
-            senderId: "client-1",
-            senderName: "James Wilson",
-            senderAvatar: "https://i.pravatar.cc/150?img=53",
-            timestamp: "2023-08-24T11:10:00Z",
-            status: "read"
-        }
-    ],
-    "conv-3": [
-        {
-            id: "msg3-1",
-            content: "<p>Hi there! I'm Mia from Horizon Gallery. We've been following your work for some time and would love to discuss a potential exhibition.</p>",
-            senderId: "client-2",
-            senderName: "Mia Taylor",
-            senderAvatar: "https://i.pravatar.cc/150?img=47",
-            timestamp: "2023-08-15T11:20:00Z",
-            status: "read"
-        },
-        {
-            id: "msg3-2",
-            content: "<p>Hello Mia! I'm honored you're interested in my work. I'd love to hear more about the exhibition opportunity.</p>",
-            senderId: "current-user",
-            senderName: "You",
-            senderAvatar: "https://i.pravatar.cc/150?img=37",
-            timestamp: "2023-08-15T13:45:00Z",
-            status: "read"
-        },
-        {
-            id: "msg3-3",
-            content: "<p>Wonderful! We're planning a 'New Perspectives' show in October featuring emerging artists who push boundaries. We'd like to feature 4-6 of your pieces.</p><p>Our gallery space: <img src='https://picsum.photos/id/1048/500/300' alt='Gallery space photo' /></p>",
-            senderId: "client-2",
-            senderName: "Mia Taylor",
-            senderAvatar: "https://i.pravatar.cc/150?img=47",
-            timestamp: "2023-08-16T09:15:00Z",
-            status: "read"
-        },
-        {
-            id: "msg3-4",
-            content: "<p>The space looks beautiful! I'm definitely interested. Would you be looking for existing works, or would you be open to new pieces created specifically for the exhibition?</p>",
-            senderId: "current-user",
-            senderName: "You",
-            senderAvatar: "https://i.pravatar.cc/150?img=37",
-            timestamp: "2023-08-16T10:20:00Z",
-            status: "read"
-        },
-        {
-            id: "msg3-5",
-            content: "<p>We'd be thrilled to feature new works created for the exhibition! That would align perfectly with our theme. We could also include 1-2 of your existing pieces that represent your artistic journey.</p>",
-            senderId: "client-2",
-            senderName: "Mia Taylor",
-            senderAvatar: "https://i.pravatar.cc/150?img=47",
-            timestamp: "2023-08-16T11:05:00Z",
-            status: "read"
-        },
-        {
-            id: "msg3-6",
-            content: "<p>That sounds like an exciting opportunity. I've been experimenting with some new techniques that would be perfect for this show.</p>",
-            senderId: "current-user",
-            senderName: "You",
-            senderAvatar: "https://i.pravatar.cc/150?img=37",
-            timestamp: "2023-08-16T14:30:00Z",
-            status: "read"
-        },
-        {
-            id: "msg3-7",
-            content: "<p>Could we discuss commission details? We typically offer a 70/30 split on sales, with the gallery handling all marketing, installation, and sales processing.</p>",
-            senderId: "client-2",
-            senderName: "Mia Taylor",
-            senderAvatar: "https://i.pravatar.cc/150?img=47",
-            timestamp: "2023-08-24T15:45:00Z",
-            status: "delivered"
-        }
-    ]
-};
-
-// Mock current user data
-const MOCK_CURRENT_USER = {
-    id: "current-user",
-    username: "ArtistUser",
-    displayName: "Morgan Reed",
-    avatarUrl: "https://i.pravatar.cc/150?img=37",
-    isAdmin: false
-};
+import { useConversations } from '@/hooks/useConversations';
+import { useMessages } from '@/hooks/useMessages';
+import { useMessageActions } from '@/hooks/useMessageActions';
+import { useImpressions, ImpressionTargetType } from '@/hooks/useImpressions';
+import ImpressionReactions from './ImpressionReactions';
 
 /**
  * DirectMessages - A chat component for 1:1 and group conversations with rich text support
  * 
  * @param {Object} props
- * @param {Array} props.messages - Array of message objects to display
- * @param {Function} props.onSendMessage - Callback when a new message is sent
- * @param {Object} props.currentUser - Current user information
- * @param {Object} props.conversation - Conversation object with participants
- * @param {boolean} props.compact - Whether to show in compact mode (for notification panels)
- * @param {boolean} props.allowMedia - Whether to allow image/video embedding (default: true)
- * @param {boolean} props.readOnly - Whether the messages are read-only (default: false)
- * @param {string} props.theme - Optional theme variant ('light' or 'dark', default is 'light')
+ * @param {boolean} props.apiMode - Use API mode (true) or Demo mode (false)
+ * @param {boolean} props.compact - Whether to show in compact mode
+ * @param {boolean} props.allowMedia - Whether to allow image/video embedding
+ * @param {boolean} props.readOnly - Whether the messages are read-only
  * @param {number} props.maxHeight - Optional max height for the messages container
- * @param {boolean} props.demoMode - Whether to use demo data (default: false)
- * @param {Object} props.demoUserOverride - Optional identity override used for demo mode sender context
- * @param {React.ReactNode} props.composerContextControl - Optional compact context switch control shown in composer
- * @param {string} props.panelColor - Optional context color used for subpanel shading
+ * @param {string} props.initialConversationId - Optional initial conversation to display
  */
 const DirectMessages = ({
-    messages = [],
-    onSendMessage = () => {},
-    currentUser = null,
-    conversation = null,
+    apiMode = true,
     compact = false,
     allowMedia = true,
     readOnly = false,
     maxHeight = compact ? 300 : 600,
-    demoMode = false,
-    demoUserOverride = null,
-    composerContextControl = null,
-    panelColor = null
+    initialConversationId = null,
+    currentUserId = null
 }) => {
-    // State management for messages and composition
-    const [messageList, setMessageList] = useState(() => messages || []);
+    const { data: session } = useSession();
+    const currentUser = session?.user || { id: currentUserId };
+    
+    // State management
     const [newMessageContent, setNewMessageContent] = useState("");
-    const [isLoading] = useState(false);
+    const [activeConversationId, setActiveConversationId] = useState(initialConversationId);
+    const [showConversationList, setShowConversationList] = useState(!initialConversationId);
+    const [selectedFiles, setSelectedFiles] = useState([]);
+    const [uploadingFiles, setUploadingFiles] = useState(false);
+    const [editingMessageId, setEditingMessageId] = useState(null);
+    const [editingContent, setEditingContent] = useState("");
+    const [typingUsers, setTypingUsers] = useState([]); // ADD THIS
     const [clientTheme] = useState(() => {
-        if (typeof window === 'undefined') {
-            return 'tag-theme';
-        }
-
+        if (typeof window === 'undefined') return 'tag-theme';
         return localStorage.getItem("theme") || "tag-theme";
     });
     
-    // Demo mode states
-    const [demoConversations, setDemoConversations] = useState(MOCK_CONVERSATIONS);
-    const [demoMessages, setDemoMessages] = useState(MOCK_MESSAGES);
-    const [activeConversation, setActiveConversation] = useState(null);
-    const [showConversationList, setShowConversationList] = useState(true);
-    const demoUser = useMemo(() => {
-        if (!demoUserOverride) {
-            return MOCK_CURRENT_USER;
-        }
-
-        return {
-            ...MOCK_CURRENT_USER,
-            ...demoUserOverride,
-            displayName: demoUserOverride.displayName || demoUserOverride.label || MOCK_CURRENT_USER.displayName,
-            username: demoUserOverride.username || MOCK_CURRENT_USER.username,
-            avatarUrl: demoUserOverride.avatarUrl || MOCK_CURRENT_USER.avatarUrl,
-        };
-    }, [demoUserOverride]);
+    // Ref for auto-scrolling
+    const messagesEndRefInternal = useRef(null);
+    const messagesContainerRef = useRef(null); // ADD THIS
+    const fileInputRef = useRef(null);
+    const typingTimeoutRef = useRef(null);
     
-    // Ref for auto-scrolling to latest messages
-    const messagesEndRef = useRef(null);
-    
-    // Real-time functionality
+    // Real-time functionality from context
     const { emit, isConnected } = useSocialRealtime();
-    const [typingUsers, setTypingUsers] = useState([]);
-    const activeContextColor = panelColor || (demoMode ? demoUser?.color : currentUser?.color) || "#3B82F6";
-    const subPanelStyle = useMemo(() => ({
-        borderColor: `${activeContextColor}70`,
-        backgroundColor: `${activeContextColor}1A`,
-        backgroundImage: `linear-gradient(180deg, ${activeContextColor}24 0%, ${activeContextColor}14 100%)`,
-        boxShadow: `inset 0 0 0 1px ${activeContextColor}2E`,
-    }), [activeContextColor]);
-    const messageAreaStyle = useMemo(() => ({
-        backgroundColor: `${activeContextColor}12`,
-    }), [activeContextColor]);
+    const { joinConversation: contextJoinConversation, leaveConversation: contextLeaveConversation, sendTypingIndicator: contextSendTyping } = useMessagingRealtime();
     
-    // Handle real-time message updates
-    const handleRealtimeMessage = (update) => {
-        if (update.type === 'message_received') {
-            const newMessage = update.data;
+    // Use hooks to fetch data (DirectMessages manages its own data)
+    const {
+        conversations: apiConversations,
+        loading: conversationsLoading,
+        markAsRead,
+        refetch: refetchConversations
+    } = useConversations(currentUser?.id, apiMode && !!currentUser);
+    
+    const {
+        messages: apiMessages,
+        loading: messagesLoading,
+        hasMore,
+        loadMore,
+        addMessage: addMessageToState,
+        updateMessage: updateMessageInState,
+        removeMessage: removeMessageFromState,
+        refetch: refetchMessages
+    } = useMessages(activeConversationId, apiMode && !!activeConversationId);
+    
+    // Find active conversation
+    const activeConversation = apiConversations.find(c => c.id === activeConversationId);
+    
+    const {
+        sendMessage,
+        editMessage,
+        deleteMessage,
+        uploadFile
+    } = useMessageActions(activeConversationId, currentUser?.id, activeConversation);
+    
+    console.log('📊 DirectMessages State:', {
+        activeConversationId,
+        messagesCount: apiMessages?.length || 0,
+        conversationsCount: apiConversations?.length || 0,
+        messagesLoading
+    });
+    
+    // Listen for SignalR events from context
+    useEffect(() => {
+        const handleMessage = (event) => {
+            const update = event.detail;
+            console.log('📨 SignalR message event received:', update);
             
-            // Only add if not from current user (to avoid duplicates from optimistic updates)
-            if (newMessage.senderId !== currentUser?.id) {
-                if (demoMode) {
-                    setDemoMessages(prev => ({
-                        ...prev,
-                        [newMessage.conversationId]: [
-                            ...(prev[newMessage.conversationId] || []),
-                            {
-                                id: newMessage.id,
-                                content: newMessage.content,
-                                senderId: newMessage.senderId,
-                                senderName: newMessage.senderDisplayName,
-                                senderAvatar: newMessage.avatarUrl,
-                                timestamp: newMessage.timestamp,
-                                status: 'delivered'
-                            }
-                        ]
-                    }));
+            if (update.type === 'message_received' && update.data.conversationId?.toString() === activeConversationId?.toString()) {
+                const messageData = update.data;
+                
+                // Extract sender info with fallbacks
+                const senderId = messageData.senderId || messageData.fromUserId;
+                let senderName = messageData.senderDisplayName;
+                let senderAvatar = messageData.avatarUrl;
+                
+                // If it's the current user's message, use their info
+                if (senderId?.toString() === currentUser?.id?.toString()) {
+                    senderName = currentUser?.name || currentUser?.username || 'You';
+                    senderAvatar = currentUser?.image || currentUser?.profilePic?.URL || '/images/default-avatar.png';
                 } else {
-                    setMessageList(prev => [...prev, newMessage]);
+                    // For other users, try to find their info from conversation participants
+                    if (activeConversation?.participants) {
+                        const participant = activeConversation.participants.find(p => 
+                            p.id?.toString() === senderId?.toString() || 
+                            p.userId?.toString() === senderId?.toString()
+                        );
+                        if (participant) {
+                            senderName = participant.displayName || participant.username || senderName || 'Unknown';
+                            senderAvatar = participant.avatarUrl || senderAvatar || '/images/default-avatar.png';
+                        }
+                    }
+                    
+                    // Final fallbacks
+                    senderName = senderName || 'Unknown User';
+                    senderAvatar = senderAvatar || '/images/default-avatar.png';
                 }
+                
+                const newMessage = {
+                    id: messageData.id || messageData.messageId,
+                    content: messageData.content || messageData.body,
+                    senderId: senderId,
+                    senderName: senderName,
+                    senderAvatar: senderAvatar,
+                    timestamp: messageData.timestamp || messageData.createdAt || new Date().toISOString(),
+                    status: 'delivered',
+                    attachments: messageData.attachments || []
+                };
+                
+                console.log('✅ Adding message with sender info:', {
+                    id: newMessage.id,
+                    senderId: newMessage.senderId,
+                    senderName: newMessage.senderName,
+                    senderAvatar: newMessage.senderAvatar
+                });
+                
+                addMessageToState(newMessage);
                 scrollToBottom();
+            } else if (update.type === 'message_updated') {
+                updateMessageInState(update.data.id, {
+                    content: update.data.content,
+                    isEdited: true
+                });
+            } else if (update.type === 'message_deleted') {
+                removeMessageFromState(update.data.id);
             }
+        };
+
+        const handleTyping = (event) => {
+            const data = event.detail;
+            if (data.conversationId?.toString() === activeConversationId?.toString() && data.userId !== currentUser?.id) {
+                if (data.isTyping) {
+                    setTypingUsers(prev => [...new Set([...prev, data.username])]);
+                } else {
+                    setTypingUsers(prev => prev.filter(u => u !== data.username));
+                }
+            }
+        };
+
+        window.addEventListener('signalr:message', handleMessage);
+        window.addEventListener('signalr:typing', handleTyping);
+
+        return () => {
+            window.removeEventListener('signalr:message', handleMessage);
+            window.removeEventListener('signalr:typing', handleTyping);
+        };
+    }, [activeConversationId, currentUser, activeConversation, addMessageToState, updateMessageInState, removeMessageFromState]);
+
+    // Join/leave conversation
+    useEffect(() => {
+        if (activeConversationId && isConnected) {
+            console.log('📥 Joining conversation:', activeConversationId);
+            contextJoinConversation(activeConversationId);
+            
+            return () => {
+                console.log('📤 Leaving conversation:', activeConversationId);
+                contextLeaveConversation(activeConversationId);
+            };
         }
-    };
-    
-    // Handle typing indicators
-    const handleTypingUpdate = (typingData) => {
-        setTypingUsers(prev => {
-            if (typingData.isTyping) {
-                return [...prev.filter(user => user.userId !== typingData.userId), typingData];
-            } else {
-                return prev.filter(user => user.userId !== typingData.userId);
-            }
-        });
-    };
-    
-    // Subscribe to real-time updates
-    useRealtimeMessages(activeConversation?.id || conversation?.id, handleRealtimeMessage);
-    useTypingIndicator(activeConversation?.id || conversation?.id, handleTypingUpdate);
-    
-    // Scroll to the end of messages when new ones arrive
-    const scrollToBottom = () => {
+    }, [activeConversationId, isConnected, contextJoinConversation, contextLeaveConversation]);
+
+    // Scroll to bottom
+    const scrollToBottom = useCallback(() => {
         setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-        }, 100); // Small delay to ensure DOM is updated
-    };
+            if (messagesContainerRef.current) {
+                // Scroll the container, not the page
+                messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+            }
+        }, 100);
+    }, []);
     
-    // Format timestamp to human-readable format
+    // Scroll on new messages
+    useEffect(() => {
+        if (apiMessages?.length > 0) {
+            scrollToBottom();
+        }
+    }, [apiMessages, scrollToBottom]);
+    
+    // Handle typing
+    const handleTyping = useCallback((content) => {
+        setNewMessageContent(content);
+        
+        if (isConnected && activeConversationId) {
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+            
+            contextSendTyping(activeConversationId, true);
+            
+            typingTimeoutRef.current = setTimeout(() => {
+                contextSendTyping(activeConversationId, false);
+            }, 2000);
+        }
+    }, [isConnected, activeConversationId, contextSendTyping]);
+    
+    // Format timestamp
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
         const now = new Date();
         
-        // Check if the message is from today
         if (date.toDateString() === now.toDateString()) {
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
         
-        // Check if the message is from yesterday
         const yesterday = new Date(now);
         yesterday.setDate(now.getDate() - 1);
         if (date.toDateString() === yesterday.toDateString()) {
             return `Yesterday at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
         }
         
-        // Format for older messages
-        return date.toLocaleDateString([], { 
-            month: 'short', 
-            day: 'numeric' 
-        }) + ' at ' + date.toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric' }) + 
+               ' at ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
     
-    /**
-     * Handle sending a new message
-     */
-    const handleSendMessage = () => {
-        // Don't send empty messages (just HTML tags with no content)
+    // Handle file selection
+    const handleFileSelect = (e) => {
+        const files = Array.from(e.target.files || []);
+        setSelectedFiles(prev => [...prev, ...files]);
+    };
+    
+    // Remove selected file
+    const handleRemoveFile = (index) => {
+        setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+    
+    // Handle sending message
+    const handleSendMessage = async () => {
         const textOnly = newMessageContent.replace(/<[^>]*>/g, '').trim();
-        if (!textOnly || readOnly) return;
+        if ((!textOnly && selectedFiles.length === 0) || readOnly) return;
         
-        // Sanitize content to prevent XSS attacks
-        const sanitizedContent = sanitizeDefaultHtml(newMessageContent);
+        const messageContentToSend = newMessageContent;
+        const filesToSend = [...selectedFiles];
         
-        // User to use for the message
-        const userToUse = demoMode ? demoUser : currentUser;
-        if (!userToUse) return;
-
-        // Clear the editor first to prevent state conflicts
-        const messageContentToSend = sanitizedContent;
+        // Clear inputs
         setNewMessageContent("");
+        setSelectedFiles([]);
         
-        // Create new message object
-        const newMessage = {
-            id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique temporary ID
-            content: messageContentToSend,
-            senderId: userToUse.id,
-            senderName: userToUse.displayName || userToUse.username,
-            senderAvatar: userToUse.avatarUrl || "/images/default-avatar.png",
-            timestamp: new Date().toISOString(),
-            status: "sending" // Initial status (will be updated by server)
-        };
-        
-        if (demoMode && activeConversation) {
-            // Add message to the demo conversation using functional update
-            setDemoMessages(prevMessages => {
-                const currentMessages = prevMessages[activeConversation.id] || [];
-                return {
-                    ...prevMessages,
-                    [activeConversation.id]: [...currentMessages, newMessage]
-                };
-            });
-            
-            // Update last message in conversation list
-            setDemoConversations(prevConversations => 
-                prevConversations.map(conv => {
-                    if (conv.id === activeConversation.id) {
-                        return {
-                            ...conv,
-                            lastMessage: messageContentToSend.replace(/<[^>]*>/g, '').trim().substring(0, 50) + (messageContentToSend.length > 50 ? '...' : ''),
-                            lastMessageTime: 'Just now',
-                            unreadCount: 0
-                        };
-                    }
-                    return conv;
-                })
-            );
-            
-            // Simulate status changes with functional updates to prevent conflicts
-            setTimeout(() => {
-                setDemoMessages(prevMessages => ({
-                    ...prevMessages,
-                    [activeConversation.id]: prevMessages[activeConversation.id].map(msg => 
-                        msg.id === newMessage.id ? {...msg, status: "sent"} : msg
-                    )
-                }));
-                
-                // Simulate delivered after another delay
-                setTimeout(() => {
-                    setDemoMessages(prevMessages => ({
-                        ...prevMessages,
-                        [activeConversation.id]: prevMessages[activeConversation.id].map(msg => 
-                            msg.id === newMessage.id ? {...msg, status: "delivered"} : msg
-                        )
-                    }));
-                    
-                    // Simulate read after another delay
-                    setTimeout(() => {
-                        setDemoMessages(prevMessages => ({
-                            ...prevMessages,
-                            [activeConversation.id]: prevMessages[activeConversation.id].map(msg => 
-                                msg.id === newMessage.id ? {...msg, status: "read"} : msg
-                            )
-                        }));
-                    }, 2000);
-                }, 1000);
-            }, 500);
-        } else {
-            // Generate a real ID for the message
-            const realMessageId = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            newMessage.id = realMessageId;
-            newMessage.status = "sent";
-            
-            // Update local state optimistically for real mode
-            setMessageList(prevMessages => [...prevMessages, newMessage]);
-            
-            // Emit real-time update
-            if (isConnected) {
-                emit('messages', {
-                    type: 'message_received',
-                    data: {
-                        ...newMessage,
-                        conversationId: conversation?.id,
-                        senderDisplayName: newMessage.senderName,
-                        avatarUrl: newMessage.senderAvatar
-                    }
-                });
-            }
-            
-            // Send to parent component/API
-            onSendMessage(newMessage, conversation?.id);
+        // Stop typing indicator
+        if (isConnected && activeConversationId) {
+            contextSendTyping(activeConversationId, false);
         }
         
-        // Scroll to bottom after a short delay to ensure DOM updates
-        setTimeout(() => scrollToBottom(), 100);
+        if (apiMode) {
+            // Optimistically add message
+            const tempMessage = {
+                id: `temp-${Date.now()}`,
+                content: messageContentToSend,
+                senderId: currentUser?.id,
+                senderName: currentUser?.name || 'You',
+                senderAvatar: currentUser?.image || '/images/default-avatar.png',
+                timestamp: new Date().toISOString(),
+                status: 'sending'
+            };
+            addMessageToState(tempMessage);
+            
+            setUploadingFiles(true);
+            const result = await sendMessage(messageContentToSend, filesToSend);
+            setUploadingFiles(false);
+            
+            if (result.success) {
+                // Remove temp message and let SignalR add the real one
+                removeMessageFromState(tempMessage.id);
+                scrollToBottom();
+                refetchConversations();
+            } else {
+                console.error('Failed to send message:', result.error);
+                alert(`Failed to send message: ${result.error}`);
+                removeMessageFromState(tempMessage.id);
+                // Restore content
+                setNewMessageContent(messageContentToSend);
+                setSelectedFiles(filesToSend);
+            }
+        }
     };
     
-    // Select a conversation in demo mode
-    const handleSelectConversation = (conv) => {
-        setActiveConversation(conv);
-        setShowConversationList(false);
+    // Handle message edit
+    const handleEditMessage = async (messageId) => {
+        const message = apiMessages.find(m => m.id === messageId);
+        if (!message) return;
         
-        // Mark conversation as read
-        const updatedConversations = demoConversations.map(c => 
-            c.id === conv.id ? {...c, unreadCount: 0} : c
-        );
-        setDemoConversations(updatedConversations);
+        setEditingMessageId(messageId);
+        setEditingContent(message.content);
     };
     
-    // Go back to conversation list in demo mode
+    // Save edited message
+    const handleSaveEdit = async (messageId) => {
+        const result = await editMessage(messageId, editingContent);
+        
+        if (result.success) {
+            // Call parent callback
+            // onMessageUpdated(messageId, {
+            //     content: editingContent,
+            //     isEdited: true
+            // });
+            
+            setEditingMessageId(null);
+            setEditingContent("");
+        } else {
+            console.error('Failed to edit message:', result.error);
+            alert(`Failed to edit message: ${result.error}`);
+        }
+    };
+    
+    // Cancel edit
+    const handleCancelEdit = () => {
+        setEditingMessageId(null);
+        setEditingContent("");
+    };
+    
+    // Handle message delete
+    const handleDeleteMessage = async (messageId) => {
+        if (!confirm('Delete this message?')) return;
+        
+        const result = await deleteMessage(messageId);
+        
+        if (result.success) {
+            // Call the callback from parent component
+            // onMessageDeleted(messageId);
+        } else {
+            console.error('Failed to delete message:', result.error);
+            alert(`Failed to delete message: ${result.error}`);
+        }
+    };
+    
+    // Handle conversation selection
+    const handleSelectConversation = (conv) => {
+        setActiveConversationId(conv.id);
+        setShowConversationList(false);
+        markAsRead(conv.id);
+    };
+    
+    // Back to conversation list
     const handleBackToList = () => {
-        setActiveConversation(null);
+        setActiveConversationId(null);
         setShowConversationList(true);
     };
     
-    // Handle typing indicators
-    const handleTyping = (content) => {
-        setNewMessageContent(content);
+    // Group messages by sender for UI
+    const groupMessagesBySender = useCallback((messages) => {
+        if (!messages || messages.length === 0) return [];
         
-        // Emit typing indicator
-        if (isConnected && (currentUser || demoUser)) {
-            const user = demoMode ? demoUser : currentUser;
-            emit('typing', {
-                type: 'user_typing',
-                data: {
-                    userId: user.id,
-                    username: user.username || user.displayName,
-                    conversationId: activeConversation?.id || conversation?.id,
-                    isTyping: content.trim().length > 0
-                }
-            });
-        }
-    };
-    
-    // Group messages by sender for nicer UI
-    const groupMessagesBySender = (messagesToGroup) => {
-        const grouped = [];
+        const groups = [];
+        let currentGroup = null;
         
-        messagesToGroup.forEach((message, index) => {
-            // Start a new group if this is the first message or the sender changed
-            if (index === 0 || message.senderId !== messagesToGroup[index - 1].senderId) {
-                grouped.push({
+        // Messages should already be sorted oldest->newest
+        messages.forEach((message) => {
+            if (!currentGroup || currentGroup.senderId !== message.senderId) {
+                currentGroup = {
                     senderId: message.senderId,
                     senderName: message.senderName,
                     senderAvatar: message.senderAvatar,
-                    messages: [message]
-                });
-            } else {
-                // Add to the last group
-                grouped[grouped.length - 1].messages.push(message);
+                    messages: []
+                };
+                groups.push(currentGroup);
             }
+            currentGroup.messages.push(message);
         });
         
-        return grouped;
-    };
+        return groups;
+    }, []);
     
-    // Handle keyboard shortcuts
-    const handleKeyDown = (e) => {
-        // Send message on Shift+Enter
-        if (e.key === 'Enter' && e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
+    // Sort and group messages for display
+    const groupedMessages = useMemo(() => {
+        if (!apiMessages || apiMessages.length === 0) {
+            console.log('⚠️ No messages to display');
+            return [];
         }
+        
+        // CRITICAL: Sort messages OLDEST first (newest at bottom)
+        const sortedMessages = [...apiMessages].sort((a, b) => {
+            const timeA = new Date(a.timestamp || a.createdAt).getTime();
+            const timeB = new Date(b.timestamp || b.createdAt).getTime();
+            return timeA - timeB; // Ascending: oldest → newest
+        });
+        
+        console.log('✅ Sorted messages:', sortedMessages.length, 'messages');
+        
+        // Group by sender
+        return groupMessagesBySender(sortedMessages);
+    }, [apiMessages, groupMessagesBySender]);
+    
+    console.log('📊 Grouped messages:', groupedMessages.length, 'groups');
+    
+    // Message Bubble Component
+    const MessageBubble = ({ message, isOwnMessage }) => {
+        const {
+            impressions,
+            loading: impressionsLoading,
+            toggleReaction
+        } = useImpressions(message.id, ImpressionTargetType.MESSAGE, !message.id?.toString().startsWith('temp-'));
+        
+        const isEditing = editingMessageId === message.id;
+        
+        return (
+            <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-2`}>
+                <div className={`max-w-[70%] ${isOwnMessage ? 'bg-primary text-primary-content' : 'bg-base-300 text-base-content'} rounded-lg p-3`}>
+                    {isEditing ? (
+                        <div>
+                            <TiptapEditor
+                                value={editingContent}
+                                onChange={setEditingContent}
+                                className="bg-base-100 mb-2"
+                                preset="minimal"
+                            />
+                            <div className="flex gap-2 justify-end">
+                                <button 
+                                    className="btn btn-xs btn-ghost" 
+                                    onClick={handleCancelEdit}
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    className="btn btn-xs btn-primary" 
+                                    onClick={() => handleSaveEdit(message.id)}
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <div 
+                                className="prose max-w-none"
+                                dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(message.content) }}
+                            />
+                            
+                            {/* File attachments */}
+                            {message.attachments && message.attachments.length > 0 && (
+                                <div className="mt-2 space-y-1">
+                                    {message.attachments.map((file, idx) => (
+                                        <a 
+                                            key={idx}
+                                            href={file.fileUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-xs underline"
+                                        >
+                                            <IoAttachOutline />
+                                            {file.fileName}
+                                        </a>
+                                    ))}
+                                </div>
+                            )}
+                            
+                            <div className="flex items-center justify-between mt-2 text-xs opacity-70">
+                                <span>{formatTimestamp(message.timestamp)}</span>
+                                {isOwnMessage && (
+                                    <div className="flex items-center gap-1">
+                                        {message.status === 'read' && <IoCheckmarkDoneSharp className="text-success" />}
+                                        {message.status === 'delivered' && <IoCheckmarkSharp />}
+                                        {message.status === 'sent' && <IoCheckmarkSharp className="opacity-50" />}
+                                        {message.status === 'sending' && <IoTimeOutline />}
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {message.isEdited && (
+                                <span className="text-xs opacity-60">(edited)</span>
+                            )}
+                        </>
+                    )}
+                    
+                    {/* Impressions */}
+                    {!isEditing && !impressionsLoading && impressions && impressions.length > 0 && (
+                        <div className="mt-2">
+                            <ImpressionReactions
+                                impressions={impressions}
+                                currentUser={currentUser}
+                                onToggle={toggleReaction}
+                                readOnly={readOnly}
+                                size="sm"
+                                showDetails={false}
+                                targetId={message.id}
+                                targetType="message"
+                            />
+                        </div>
+                    )}
+                    
+                    {/* Actions */}
+                    {!isEditing && isOwnMessage && !readOnly && (
+                        <div className="flex gap-2 mt-2">
+                            <button 
+                                className="btn btn-xs btn-ghost"
+                                onClick={() => handleEditMessage(message.id)}
+                            >
+                                <IoCreateOutline />
+                            </button>
+                            <button 
+                                className="btn btn-xs btn-ghost text-error"
+                                onClick={() => handleDeleteMessage(message.id)}
+                            >
+                                <IoTrashOutline />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
     };
     
-    // Show loading state
-    if (isLoading) {
+    // Loading state
+    if (messagesLoading) {
         return <div className="p-4 animate-pulse">Loading messages...</div>;
     }
     
-    // Demo Mode: Show conversation list
-    if (demoMode && showConversationList) {
+    // Show conversation list
+    if (showConversationList || !activeConversationId) {
         return (
-            <div 
-                className={`direct-messages ${compact ? 'dm-compact' : 'dm-full'} flex flex-col h-full`} 
-                data-theme={clientTheme}
-            >
+            <div className={`direct-messages ${compact ? 'dm-compact' : 'dm-full'} flex flex-col h-full`} data-theme={clientTheme}>
                 {/* Conversation list header */}
-                <div className="conversation-header sticky top-0 z-10 p-3 bg-base-200 border-b border-base-300 flex items-center" style={subPanelStyle}>
+                <div className="p-3 bg-base-200 border-b border-base-300 flex items-center">
                     <h3 className="font-bold text-lg flex-1">Messages</h3>
-                    <span className="badge badge-sm">Demo Mode</span>
+                    {apiMode && <span className="badge badge-sm badge-success">Live</span>}
                 </div>
                 
                 {/* Search box */}
-                <div className="p-2 border-b border-base-300" style={subPanelStyle}>
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search conversations..."
-                            className="input input-sm input-bordered w-full pr-8"
-                        />
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute right-3 top-1/2 transform -translate-y-1/2 text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
+                <div className="p-2 border-b border-base-300">
+                    <input
+                        type="text"
+                        placeholder="Search conversations..."
+                        className="input input-sm input-bordered w-full"
+                    />
                 </div>
                 
                 {/* Conversation list */}
-                <div className="grow overflow-y-auto rounded-box" style={messageAreaStyle}>
-                    {demoConversations.map((conv) => (
-                        <div 
-                            key={conv.id}
-                            className={`p-3 border-b border-base-200 hover:bg-base-200/60 cursor-pointer transition-colors ${conv.unreadCount > 0 ? 'bg-primary/10' : ''}`}
-                            onClick={() => handleSelectConversation(conv)}
-                        >
-                            <div className="flex items-center">
-                                {/* Avatar */}
-                                <div className="avatar mr-3">
-                                    {conv.isGroup ? (
-                                        <div className="avatar-group -space-x-2">
-                                            {conv.participants.slice(0, 2).map((participant) => (
-                                                <div key={participant.id} className="avatar w-8 h-8">
-                                                    <div className="rounded-full">
-                                                        <Image
-                                                            src={participant.avatarUrl || "/images/default-avatar.png"}
-                                                            alt={participant.displayName || participant.username}
-                                                            width={32}
-                                                            height={32}
-                                                            className="object-cover"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
+                <div className="grow overflow-y-auto">
+                    {apiConversations.length === 0 ? (
+                        <div className="p-8 text-center text-base-content/60">
+                            <p>No conversations yet</p>
+                        </div>
+                    ) : (
+                        apiConversations.map((conv) => (
+                            <div 
+                                key={conv.id}
+                                className={`p-3 border-b border-base-200 hover:bg-base-200/60 cursor-pointer transition-colors ${conv.unreadCount > 0 ? 'bg-primary/10' : ''}`}
+                                onClick={() => handleSelectConversation(conv)}
+                            >
+                                <div className="flex items-center">
+                                    <div className="avatar mr-3">
                                         <div className="w-10 h-10 rounded-full relative">
                                             <Image
-                                                src={conv.participants[0]?.avatarUrl || "/images/default-avatar.png"}
-                                                alt={conv.participants[0]?.displayName || conv.participants[0]?.username}
+                                                src={conv.participants?.[0]?.avatarUrl || "/images/default-avatar.png"}
+                                                alt={conv.participants?.[0]?.displayName || "User"}
                                                 width={40}
                                                 height={40}
                                                 className="rounded-full object-cover"
                                             />
-                                            <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-base-100 ${conv.participants[0]?.isOnline ? 'bg-success' : 'bg-base-300'}`}></div>
+                                            {conv.participants?.[0]?.isOnline && (
+                                                <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-base-100 bg-success"></div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-baseline">
+                                            <h4 className="font-medium truncate">
+                                                {conv.isGroup ? conv.name : (conv.participants?.[0]?.displayName || 'Unknown')}
+                                            </h4>
+                                            <span className="text-xs text-base-content/70 whitespace-nowrap ml-2">
+                                                {conv.lastMessageTime}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-base-content/70 truncate">{conv.lastMessage}</p>
+                                    </div>
+                                    
+                                    {conv.unreadCount > 0 && (
+                                        <div className="ml-2">
+                                            <div className="badge badge-sm badge-primary">{conv.unreadCount}</div>
                                         </div>
                                     )}
                                 </div>
-                                
-                                {/* Conversation details */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex justify-between items-baseline">
-                                        <h4 className="font-medium truncate">
-                                            {conv.isGroup ? conv.name : (conv.participants[0]?.displayName || conv.participants[0]?.username)}
-                                        </h4>
-                                        <span className="text-xs text-base-content/70 whitespace-nowrap ml-2">{conv.lastMessageTime}</span>
-                                    </div>
-                                    <p className="text-sm text-base-content/70 truncate">{conv.lastMessage}</p>
-                                </div>
-                                
-                                {/* Unread indicator */}
-                                {conv.unreadCount > 0 && (
-                                    <div className="ml-2">
-                                        <div className="badge badge-sm badge-primary">{conv.unreadCount}</div>
-                                    </div>
-                                )}
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
+            </div>
+        );
+    }
+    
+    // Show active conversation
+    return (
+        <div className={`direct-messages ${compact ? 'dm-compact' : 'dm-full'} flex flex-col h-full`} data-theme={clientTheme}>
+            {/* Conversation header */}
+            <div className="p-3 bg-base-200 border-b border-base-300 flex items-center">
+                <button 
+                    onClick={handleBackToList}
+                    className="btn btn-ghost btn-sm btn-circle mr-2"
+                >
+                    ←
+                </button>
                 
-                {/* User info footer */}
-                <div className="border-t border-base-300 p-3" style={subPanelStyle}>
-                    <div className="flex items-center">
-                        <div className="avatar mr-3">
+                {activeConversation && (
+                    <>
+                        <div className="avatar mr-2">
                             <div className="w-8 h-8 rounded-full">
                                 <Image
-                                    src={demoUser.avatarUrl || "/images/default-avatar.png"}
-                                    alt={demoUser.displayName || demoUser.username}
+                                    src={activeConversation.participants?.[0]?.avatarUrl || "/images/default-avatar.png"}
+                                    alt={activeConversation.participants?.[0]?.displayName || "User"}
                                     width={32}
                                     height={32}
                                     className="object-cover"
                                 />
                             </div>
                         </div>
-                        <div className="flex-1">
-                            <p className="font-medium text-sm">{demoUser.displayName}</p>
-                            <p className="text-xs text-base-content/70">@{demoUser.username}</p>
+                        <div>
+                            <h4 className="font-medium">
+                                {activeConversation.isGroup ? activeConversation.name : activeConversation.participants?.[0]?.displayName}
+                            </h4>
+                            {activeConversation.participants?.[0]?.isOnline && (
+                                <span className="text-xs text-success">Online</span>
+                            )}
                         </div>
-                    </div>
-                </div>
+                    </>
+                )}
             </div>
-        );
-    }
-    
-    // Demo Mode: Show active conversation
-    if (demoMode && activeConversation) {
-        const currentConversationMessages = demoMessages[activeConversation.id] || [];
-        const groupedMessages = groupMessagesBySender(currentConversationMessages);
-        
-        return (
+            
+            {/* Messages container */}
             <div 
-                className={`direct-messages ${compact ? 'dm-compact' : 'dm-full'} flex flex-col h-full`} 
-                data-theme={clientTheme}
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto p-4"
             >
-                {/* Conversation header */}
-                <div className="conversation-header sticky top-0 z-10 p-3 bg-base-200 border-b border-base-300 flex items-center" style={subPanelStyle}>
-                    <button 
-                        onClick={handleBackToList}
-                        className="btn btn-ghost btn-sm btn-circle mr-2"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </button>
-                    
-                    {/* Group conversation */}
-                    {activeConversation.isGroup ? (
-                        <>
-                            <div className="avatar-group -space-x-2 mr-2">
-                                {activeConversation.participants.slice(0, 3).map((participant) => (
-                                    <div key={participant.id} className="avatar">
-                                        <div className="w-8 h-8 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                                            <Image
-                                                src={participant.avatarUrl || "/images/default-avatar.png"}
-                                                alt={participant.displayName || participant.username}
-                                                width={32}
-                                                height={32}
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                                {activeConversation.participants.length > 3 && (
-                                    <div className="avatar placeholder">
-                                        <div className="w-8 h-8 rounded-full bg-neutral text-neutral-content ring ring-primary ring-offset-base-100 ring-offset-2">
-                                            <span>+{activeConversation.participants.length - 3}</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <div>
-                                <h3 className="font-bold">{activeConversation.name}</h3>
-                                <p className="text-xs text-base-content/70">
-                                    {activeConversation.participants.length} participants
-                                </p>
-                            </div>
-                        </>
-                    ) : (
-                        /* 1:1 conversation */
-                        <>
-                            <div className="avatar mr-3">
-                                <div className="w-10 h-10 rounded-full relative">
-                                    <Image
-                                        src={activeConversation.participants[0]?.avatarUrl || "/images/default-avatar.png"}
-                                        alt={activeConversation.participants[0]?.displayName || activeConversation.participants[0]?.username}
-                                        width={40}
-                                        height={40}
-                                        className="rounded-full object-cover"
-                                    />
-                                    <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-base-100 ${activeConversation.participants[0]?.isOnline ? 'bg-success' : 'bg-base-300'}`}></div>
-                                </div>
-                            </div>
-                            <div>
-                                <h3 className="font-bold">{activeConversation.participants[0]?.displayName || activeConversation.participants[0]?.username}</h3>
-                                <div className="flex items-center">
-                                    <div className={`w-2 h-2 rounded-full ${activeConversation.isOnline ? 'bg-success' : 'bg-gray-400'} mr-2`}></div>
-                                    <p className="text-xs text-base-content/70">
-                                        {activeConversation.isOnline ? "Online" : "Offline"}
-                                    </p>
-                                </div>
-                            </div>
-                        </>
-                    )}
-                    
-                    {/* Additional actions */}
-                    <div className="ml-auto flex items-center">
-                        <span className="badge badge-sm mr-2">Demo</span>
-                        <button className="btn btn-ghost btn-sm btn-circle">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                            </svg>
-                        </button>
+                {groupedMessages.length === 0 ? (
+                    <div className="text-center text-base-content/60 py-8">
+                        <p>No messages yet. Start the conversation!</p>
                     </div>
-                </div>
-                
-                {/* Messages area */}
-                <div 
-                    className="grow overflow-y-auto p-3 space-y-4" 
-                    style={{ maxHeight: `${maxHeight}px`, ...messageAreaStyle }}
-                >
-                    {groupedMessages.length === 0 && (
-                        <div className="text-center py-8 text-base-content/70">
-                            <div className="mb-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                            </div>
-                            <p className="font-semibold">No messages yet</p>
-                            <p className="text-sm">Start the conversation!</p>
-                        </div>
-                    )}
-                    
-                    {groupedMessages.map((group, groupIndex) => {
-                        const isCurrentUser = demoUser?.id === group.senderId;
-                        
-                        return (
-                            <div 
-                                key={`${group.senderId}-${groupIndex}`}
-                                className={`message-group flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-                            >
-                                {/* Avatar for the other user */}
-                                {!isCurrentUser && !compact && (
-                                    <div className="avatar self-end mb-2 mr-2">
-                                        <div className="w-8 h-8 rounded-full">
-                                            <Image
-                                                src={group.senderAvatar || "/images/default-avatar.png"}
-                                                alt={group.senderName}
-                                                width={32}
-                                                height={32}
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+                ) : (
+                    <>
+                        {/* Message List */}
+                        <div className="space-y-4">
+                            {groupedMessages.map((group, groupIdx) => {
+                                // FIXED: Use loose equality to handle string/number mismatch
+                                const isOwnMessage = group.senderId?.toString() === currentUser?.id?.toString();
                                 
-                                {/* Message bubbles */}
-                                <div className={`message-bubbles max-w-[75%] ${isCurrentUser ? 'items-end' : 'items-start'}`}>
-                                    {/* Sender name - only show for others in group chats or non-compact mode */}
-                                    {(!isCurrentUser && (!compact || activeConversation?.isGroup)) && (
-                                        <div className="px-1 mb-1 text-sm font-semibold">
-                                            {group.senderName}
-                                        </div>
-                                    )}
-                                    
-                                    {/* Message bubbles */}
-                                    <div className="space-y-1">
-                                        {group.messages.map((message, msgIndex) => (
-                                            <div 
-                                                key={message.id} 
-                                                className={`message flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}
-                                            >
-                                                <div 
-                                                    className={`py-2 px-3 rounded-lg shadow-sm max-w-full
-                                                        ${isCurrentUser 
-                                                                ? 'text-primary-content border border-transparent' 
-                                                            : 'bg-base-200 text-base-content'
-                                                        }
-                                                        ${msgIndex === 0 
-                                                            ? isCurrentUser ? 'rounded-tr-xl' : 'rounded-tl-xl' 
-                                                            : ''
-                                                        }
-                                                        ${msgIndex === group.messages.length - 1 
-                                                            ? isCurrentUser ? 'rounded-br-xl' : 'rounded-bl-xl' 
-                                                            : ''
-                                                        }
-                                                    `}
-                                                    style={isCurrentUser ? { backgroundColor: activeContextColor, borderColor: `${activeContextColor}AA` } : undefined}
-                                                >
-                                                    <div 
-                                                        dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(message.content) }}
-                                                        className="prose prose-sm max-w-none wrap-break-word"
-                                                    />
-                                                </div>
-                                                
-                                                {/* Time and status - only show for the last message in a group */}
-                                                {msgIndex === group.messages.length - 1 && (
-                                                    <div className={`text-xs mt-1 flex items-center gap-1 text-base-content/60
-                                                        ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-                                                    >
-                                                        <time dateTime={message.timestamp}>
-                                                            {formatTimestamp(message.timestamp)}
-                                                        </time>
-                                                        
-                                                        {/* Message status indicators - only for current user */}
-                                                        {isCurrentUser && (
-                                                            <span className="ml-1">
-                                                                {message.status === 'sending' && (
-                                                                    <IoTimeOutline className="h-3 w-3" />
-                                                                )}
-                                                                {message.status === 'sent' && (
-                                                                    <IoCheckmarkSharp className="h-3 w-3" />
-                                                                )}
-                                                                {message.status === 'delivered' && (
-                                                                    <IoCheckmarkSharp className="h-3 w-3" />
-                                                                )}
-                                                                {message.status === 'read' && (
-                                                                    <IoCheckmarkDoneSharp className="h-3 w-3 text-info" />
-                                                                )}
-                                                            </span>
-                                                        )}
+                                return (
+                                    <div key={groupIdx} className="space-y-1">
+                                        {/* Sender info - show once per group */}
+                                        {!isOwnMessage && (
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <div className="avatar">
+                                                    <div className="w-6 h-6 rounded-full">
+                                                        <Image
+                                                            src={group.senderAvatar || "/images/default-avatar.png"}
+                                                            alt={group.senderName}
+                                                            width={24}
+                                                            height={24}
+                                                            className="object-cover"
+                                                        />
                                                     </div>
-                                                )}
+                                                </div>
+                                                <span className="text-sm font-medium">{group.senderName}</span>
                                             </div>
+                                        )}
+                                        
+                                        {group.messages.map((message) => (
+                                            <MessageBubble
+                                                key={message.id}
+                                                message={message}
+                                                isOwnMessage={isOwnMessage}
+                                            />
                                         ))}
                                     </div>
+                                );
+                            })}
+                        
+                            {/* Typing Indicator */}
+                            {typingUsers && typingUsers.length > 0 && (
+                                <div className="text-sm text-base-content/70 italic px-4 py-2">
+                                    {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
                                 </div>
-                                
-                                {/* Avatar for current user - only in full mode */}
-                                {isCurrentUser && !compact && (
-                                    <div className="avatar self-end mb-2 ml-2">
-                                        <div className="w-8 h-8 rounded-full">
-                                            <Image
-                                                src={demoUser?.avatarUrl || "/images/default-avatar.png"}
-                                                alt={demoUser?.displayName || "You"}
-                                                width={32}
-                                                height={32}
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                    
-                    {/* Typing Indicators */}
-                    {typingUsers.length > 0 && (
-                        <div className="typing-indicator p-3 text-sm text-base-content/70">
-                            <div className="flex items-center gap-2">
-                                <div className="flex gap-1">
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                                </div>
-                                <span>
-                                    {typingUsers.length === 1 
-                                        ? `${typingUsers[0].username} is typing...`
-                                        : `${typingUsers.length} people are typing...`
-                                    }
-                                </span>
-                            </div>
+                            )}
+                        
+                            {/* Scroll Anchor - Keep for reference but we use scrollTop now */}
+                            <div ref={messagesEndRefInternal} style={{ height: '1px' }} />
                         </div>
-                    )}
-                    
-                    {/* Scroll anchor */}
-                    <div ref={messagesEndRef} />
-                </div>
-                
-                {/* Message composer */}
-                <div className="message-composer bg-base-200 p-3 border-t border-base-300" style={subPanelStyle}>
-                    <div className="flex flex-col">
-                        <TiptapEditor
-                            value={newMessageContent}
-                            onChange={handleTyping}
-                            placeholder="Write your message..."
-                            className="bg-base-100"
-                            minHeight={80}
-                            preset={allowMedia ? "medium" : "minimal"}
-                            onKeyDown={handleKeyDown}
-                        />
-                        <div className="flex items-center justify-between gap-2 mt-2">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                                {composerContextControl ? <div className="shrink-0">{composerContextControl}</div> : null}
-                                <div className="text-xs text-base-content/70 truncate">
-                                    Press Shift+Enter to send
-                                </div>
-                            </div>
-                            <button 
-                                className="btn btn-primary btn-sm shrink-0"
-                                onClick={handleSendMessage}
-                                disabled={!newMessageContent.replace(/<[^>]*>/g, '').trim()}
-                                style={{ backgroundColor: activeContextColor, borderColor: activeContextColor }}
-                            >
-                                <IoSend className="h-5 w-5" />
-                                Send
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                    </>
+                )}
             </div>
-        );
-    }
-    
-    // Regular mode - use the provided messages
-    const groupedMessages = groupMessagesBySender(messageList);
-    
-    return (
-        <div 
-            className={`direct-messages ${compact ? 'dm-compact' : 'dm-full'} flex flex-col`} 
-            data-theme={clientTheme}
-        >
-            {/* Conversation header - only show in full mode */}
-            {!compact && conversation && (
-                <div className="conversation-header sticky top-0 z-10 p-3 bg-base-200 border-b border-base-300 flex items-center" style={subPanelStyle}>
-                    {/* Group conversation */}
-                    {conversation.isGroup ? (
-                        <>
-                            <div className="avatar-group -space-x-2">
-                                {conversation.participants.slice(0, 3).map((participant) => (
-                                    <div key={participant.id} className="avatar">
-                                        <div className="w-8 h-8 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                                            <Image
-                                                src={participant.avatarUrl || "/images/default-avatar.png"}
-                                                alt={participant.displayName || participant.username}
-                                                width={32}
-                                                height={32}
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                                {conversation.participants.length > 3 && (
-                                    <div className="avatar placeholder">
-                                        <div className="w-8 h-8 rounded-full bg-neutral text-neutral-content ring ring-primary ring-offset-base-100 ring-offset-2">
-                                            <span>+{conversation.participants.length - 3}</span>
-                                        </div>
-                                    </div>
-                                )}
+            
+            {/* File preview */}
+            {selectedFiles.length > 0 && (
+                <div className="px-4 py-2 bg-base-200 border-t border-base-300">
+                    <div className="flex flex-wrap gap-2">
+                        {selectedFiles.map((file, idx) => (
+                            <div key={idx} className="badge badge-lg gap-2">
+                                <span className="truncate max-w-[150px]">{file.name}</span>
+                                <button 
+                                    onClick={() => handleRemoveFile(idx)}
+                                    className="btn btn-ghost btn-xs btn-circle"
+                                >
+                                    <IoCloseCircle />
+                                </button>
                             </div>
-                            <div className="ml-3">
-                                <h3 className="font-bold">{conversation.name}</h3>
-                                <p className="text-xs text-base-content/70">
-                                    {conversation.participants.length} participants
-                                </p>
-                            </div>
-                        </>
-                    ) : (
-                        /* 1:1 conversation - show the other participant */
-                        <>
-                            <div className="avatar">
-                                <div className="w-10 h-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                                    {conversation.participants[0]?.avatarUrl && (
-                                        <Image
-                                            src={conversation.participants[0].avatarUrl}
-                                            alt={conversation.participants[0].displayName || conversation.participants[0].username}
-                                            width={40}
-                                            height={40}
-                                            className="object-cover"
-                                        />
-                                    )}
-                                </div>
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="font-bold">{conversation.participants[0]?.displayName || conversation.participants[0]?.username}</h3>
-                                <div className="flex items-center">
-                                    <div className={`w-2 h-2 rounded-full ${conversation.isOnline ? 'bg-success' : 'bg-gray-400'} mr-2`}></div>
-                                    <p className="text-xs text-base-content/70">
-                                        {conversation.isOnline ? "Online" : "Offline"}
-                                    </p>
-                                </div>
-                            </div>
-                        </>
-                    )}
+                        ))}
+                    </div>
                 </div>
             )}
             
-            {/* Messages area */}
-            <div 
-                className="grow overflow-y-auto p-3 space-y-4" 
-                style={{ maxHeight: `${maxHeight}px`, ...messageAreaStyle }}
-            >
-                {groupedMessages.length === 0 && (
-                    <div className="text-center py-8 text-base-content/70">
-                        <div className="mb-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-base-content/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                        </div>
-                        <p className="font-semibold">No messages yet</p>
-                        <p className="text-sm">Start the conversation!</p>
-                    </div>
-                )}
-                
-                {groupedMessages.map((group, groupIndex) => {
-                    const isCurrentUser = currentUser?.id === group.senderId;
-                    
-                    return (
-                        <div 
-                            key={`${group.senderId}-${groupIndex}`}
-                            className={`message-group flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-                        >
-                            {/* Avatar for the other user */}
-                            {!isCurrentUser && !compact && (
-                                <div className="avatar self-end mb-2 mr-2">
-                                    <div className="w-8 h-8 rounded-full">
-                                        <Image
-                                            src={group.senderAvatar || "/images/default-avatar.png"}
-                                            alt={group.senderName}
-                                            width={32}
-                                            height={32}
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                            
-                            {/* Message bubbles */}
-                            <div className={`message-bubbles max-w-[75%] ${isCurrentUser ? 'items-end' : 'items-start'}`}>
-                                {/* Sender name - only show for others in group chats or non-compact mode */}
-                                {(!isCurrentUser && (!compact || conversation?.isGroup)) && (
-                                    <div className="px-1 mb-1 text-sm font-semibold">
-                                        {group.senderName}
-                                    </div>
-                                )}
-                                
-                                {/* Message bubbles */}
-                                <div className="space-y-1">
-                                    {group.messages.map((message, msgIndex) => (
-                                        <div 
-                                            key={message.id} 
-                                            className={`message flex flex-col ${isCurrentUser ? 'items-end' : 'items-start'}`}
-                                        >
-                                            <div 
-                                                className={`py-2 px-3 rounded-lg shadow-sm max-w-full
-                                                    ${isCurrentUser 
-                                                        ? 'text-primary-content border border-transparent' 
-                                                        : 'bg-base-200 text-base-content'
-                                                    }
-                                                    ${msgIndex === 0 
-                                                        ? isCurrentUser ? 'rounded-tr-xl' : 'rounded-tl-xl' 
-                                                        : ''
-                                                    }
-                                                    ${msgIndex === group.messages.length - 1 
-                                                        ? isCurrentUser ? 'rounded-br-xl' : 'rounded-bl-xl' 
-                                                        : ''
-                                                    }
-                                                `}
-                                                style={isCurrentUser ? { backgroundColor: activeContextColor, borderColor: `${activeContextColor}AA` } : undefined}
-                                            >
-                                                <div 
-                                                    dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(message.content) }}
-                                                    className="prose prose-sm max-w-none wrap-break-word"
-                                                />
-                                            </div>
-                                            
-                                            {/* Time and status - only show for the last message in a group */}
-                                            {msgIndex === group.messages.length - 1 && (
-                                                <div className={`text-xs mt-1 flex items-center gap-1 text-base-content/60
-                                                    ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-                                                >
-                                                    <time dateTime={message.timestamp}>
-                                                        {formatTimestamp(message.timestamp)}
-                                                    </time>
-                                                    
-                                                    {/* Message status indicators - only for current user */}
-                                                    {isCurrentUser && (
-                                                        <span className="ml-1">
-                                                            {message.status === 'sending' && (
-                                                                <IoTimeOutline className="h-3 w-3" />
-                                                            )}
-                                                            {message.status === 'sent' && (
-                                                                <IoCheckmarkSharp className="h-3 w-3" />
-                                                            )}
-                                                            {message.status === 'read' && (
-                                                                <IoCheckmarkDoneSharp className="h-3 w-3 text-info" />
-                                                            )}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            
-                            {/* Avatar for current user - only in full mode */}
-                            {isCurrentUser && !compact && (
-                                <div className="avatar self-end mb-2 ml-2">
-                                    <div className="w-8 h-8 rounded-full">
-                                        <Image
-                                            src={currentUser?.avatarUrl || "/images/default-avatar.png"}
-                                            alt={currentUser?.displayName || "You"}
-                                            width={32}
-                                            height={32}
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-                
-                {/* Scroll anchor */}
-                <div ref={messagesEndRef} />
-            </div>
-            
-            {/* Message composer - only if not read-only and user is logged in */}
-            {!readOnly && (currentUser || demoMode) && (
-                <div className="message-composer bg-base-200 p-3 border-t border-base-300" style={subPanelStyle}>
-                    <div className="flex flex-col">
-                        <TiptapEditor
-                            value={newMessageContent}
-                            onChange={handleTyping}
-                            placeholder="Write your message..."
-                            className="bg-base-100"
-                            minHeight={80}
-                            preset={allowMedia ? "medium" : "minimal"}
-                            onKeyDown={handleKeyDown}
+            {/* Message composer */}
+            {!readOnly && (
+                <div className="p-4 border-t border-base-300 bg-base-200">
+                    <div className="flex gap-2">
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            multiple
+                            onChange={handleFileSelect}
+                            className="hidden"
                         />
-                        <div className="flex items-center justify-between gap-2 mt-2">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                                {composerContextControl ? <div className="shrink-0">{composerContextControl}</div> : null}
-                                <div className="text-xs text-base-content/70 truncate">
-                                    Press Shift+Enter to send
-                                </div>
-                            </div>
-                            <button 
-                                className="btn btn-primary btn-sm shrink-0"
-                                onClick={handleSendMessage}
-                                disabled={!newMessageContent.replace(/<[^>]*>/g, '').trim()}
-                                style={{ backgroundColor: activeContextColor, borderColor: activeContextColor }}
-                            >
-                                <IoSend className="h-5 w-5" />
-                                Send
-                            </button>
+                        <button 
+                            className="btn btn-sm btn-circle btn-ghost"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingFiles}
+                        >
+                            <IoAttachOutline className="text-lg" />
+                        </button>
+                        
+                        <div className="flex-1">
+                            <TiptapEditor
+                                value={newMessageContent}
+                                onChange={handleTyping}
+                                placeholder="Type a message..."
+                                className="bg-base-100"
+                                preset={allowMedia ? "medium" : "minimal"}
+                            />
                         </div>
+                        
+                        <button 
+                            className="btn btn-sm btn-circle btn-primary"
+                            onClick={handleSendMessage}
+                            disabled={uploadingFiles || (!newMessageContent.trim() && selectedFiles.length === 0)}
+                        >
+                            {uploadingFiles ? (
+                                <span className="loading loading-spinner loading-xs"></span>
+                            ) : (
+                                <IoSend />
+                            )}
+                        </button>
                     </div>
                 </div>
             )}
@@ -1273,4 +797,3 @@ const DirectMessages = ({
 };
 
 export default DirectMessages;
-

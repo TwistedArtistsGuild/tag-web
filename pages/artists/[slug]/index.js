@@ -28,6 +28,7 @@ import ArtistEventsSection from "@/components/artist/ArtistEventsSection"
 import { isArtist, isStaff, isAdmin } from "@/utils/authHelpers"
 import { sanitizeDefaultHtml } from "@/components/security/sanitize"
 import { pickContactCardData } from "@/utils/artistContactUtils"
+import SendMessageButton from '@/components/messaging/SendMessageButton'
 
 const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false })
 
@@ -86,7 +87,8 @@ const Artist = (props) => {
   }, [setPageSections])
 
   useEffect(() => {
-    if (!props.artist) console.warn("Artist data failed to load.")
+      if (!props.artist) console.warn("Artist data failed to load.")
+      else console.log("Artist data loaded successfully:", props.artist)
   }, [props.artist])
 
   const pageMetaData = {
@@ -216,6 +218,27 @@ const Artist = (props) => {
                   contactsHref={`/artists/${props.slug}/contacts`}
                 />
               </div>
+            </div>
+
+            {/* Artist Actions */}
+            <div className="flex flex-wrap gap-3 mt-6">
+              {canUpdate && (
+                <Link href={`/artists/${props.slug}/update`} className="btn btn-primary">
+                  Update Artist Page
+                </Link>
+              )}
+              
+              {/* Send Message Button */}
+              {session?.user && session.user.id !== props.artist.userId && (
+                <SendMessageButton
+                  recipient={{
+                    id: props.artist.userId || props.artist.userID,
+                    name: props.artist.title,
+                    image: props.profilePic?.url || '/images/default-avatar.png'
+                  }}
+                  className="btn-outline"
+                />
+              )}
             </div>
 
             {/* Gallery */}
