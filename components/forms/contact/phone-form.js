@@ -190,6 +190,9 @@ export default function PhoneForm({
   defaultScope = "secondary",
   availableScopes = ["private", "primary", "secondary"],
   requirePrimaryPhone = false,
+  singleEntryOnly = false,
+  scopeLabelMap = {},
+  hideDeleteAction = false,
 }) {
   const apiUrl = getApiURL()
   const resolvedContext = String(context || "artist").trim().toLowerCase() || "artist"
@@ -204,10 +207,16 @@ export default function PhoneForm({
   const [resultMessage, setResultMessage] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
 
+  const getScopeLabel = (scope) => {
+    const normalized = normalizeScope(scope, defaultScope)
+    return scopeLabelMap?.[normalized] || CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalized)?.label || "Secondary"
+  }
+
   useEffect(() => {
-    setEntries(makeInitialEntries(existingContacts, defaultScope))
+    const nextEntries = makeInitialEntries(existingContacts, defaultScope)
+    setEntries(singleEntryOnly ? nextEntries.slice(0, 1) : nextEntries)
     setHasUnsavedChanges(false)
-  }, [defaultScope, existingContacts])
+  }, [defaultScope, existingContacts, singleEntryOnly])
 
   useEffect(() => {
     let ignore = false
@@ -234,6 +243,10 @@ export default function PhoneForm({
   }
 
   const addEntry = () => {
+    if (singleEntryOnly) {
+      return
+    }
+
     setEntries((prev) => ([
       ...prev,
       { id: `phone-${Date.now()}`, phonePrefix: DEFAULT_PHONE_PREFIX, phoneNumber: "", label: "Mobile", description: "", scope: normalizeScope(defaultScope), mode: "edit" },
@@ -263,7 +276,8 @@ export default function PhoneForm({
       return
     }
 
-    const entriesToSubmit = entries
+    const candidateEntries = singleEntryOnly ? entries.slice(0, 1) : entries
+    const entriesToSubmit = candidateEntries
       .map((entry) => {
         const phoneValue = composePhoneNumber(entry.phonePrefix, entry.phoneNumber)
         if (!phoneValue) return null
@@ -343,7 +357,7 @@ export default function PhoneForm({
                   <div className="text-sm">
                     {entry.phonePrefix || DEFAULT_PHONE_PREFIX} {formatPhoneLocalForPrefix(entry.phonePrefix, entry.phoneNumber)}
                   </div>
-                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(entry.scope, defaultScope))?.label || "Secondary"}</div>
+                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {getScopeLabel(entry.scope)}</div>
                   {entry.description ? <p className="text-xs text-base-content/60 mt-0.5 truncate">{entry.description}</p> : null}
                 </div>
                 <button
@@ -356,9 +370,11 @@ export default function PhoneForm({
                 >
                   Edit
                 </button>
-                <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                  Delete
-                </button>
+                {!hideDeleteAction ? (
+                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                    Delete
+                  </button>
+                ) : null}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -445,29 +461,30 @@ export default function PhoneForm({
                           updateEntry(entry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
                         }}
                       >
-                        {availableScopes.map((scope) => {
-                          const option = CONTACT_SCOPE_OPTIONS.find((row) => row.value === scope)
-                          return <option key={scope} value={scope}>{option?.label || scope}</option>
-                        })}
+                        {availableScopes.map((scope) => (
+                          <option key={scope} value={scope}>{getScopeLabel(scope)}</option>
+                        ))}
                       </select>
                     </label>
                   ) : <div className="flex-1 max-w-xs" />}
-                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                    Delete
-                  </button>
+                  {!hideDeleteAction ? (
+                    <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               </div>
             )}
           </div>
         ))}
 
-        {entries.length > 1 ? (
+        {!singleEntryOnly && entries.length > 1 ? (
           <div className="rounded-box border border-base-300 bg-base-200/40 p-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-base-content/70">Secondary Details</div>
           </div>
         ) : null}
 
-        {entries.slice(1).map((entry) => (
+        {!singleEntryOnly ? entries.slice(1).map((entry) => (
           <div key={entry.id} className="rounded-box border border-base-300 bg-base-100 p-4">
             {entry.mode === "display" ? (
               <div className="flex items-center gap-3">
@@ -476,7 +493,7 @@ export default function PhoneForm({
                   <div className="text-sm">
                     {entry.phonePrefix || DEFAULT_PHONE_PREFIX} {formatPhoneLocalForPrefix(entry.phonePrefix, entry.phoneNumber)}
                   </div>
-                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(entry.scope, defaultScope))?.label || "Secondary"}</div>
+                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {getScopeLabel(entry.scope)}</div>
                   {entry.description ? <p className="text-xs text-base-content/60 mt-0.5 truncate">{entry.description}</p> : null}
                 </div>
                 <button
@@ -489,9 +506,11 @@ export default function PhoneForm({
                 >
                   Edit
                 </button>
-                <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                  Delete
-                </button>
+                {!hideDeleteAction ? (
+                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                    Delete
+                  </button>
+                ) : null}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -576,23 +595,24 @@ export default function PhoneForm({
                         updateEntry(entry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
                       }}
                     >
-                      {availableScopes.map((scope) => {
-                        const option = CONTACT_SCOPE_OPTIONS.find((row) => row.value === scope)
-                        return <option key={scope} value={scope}>{option?.label || scope}</option>
-                      })}
+                        {availableScopes.map((scope) => (
+                          <option key={scope} value={scope}>{getScopeLabel(scope)}</option>
+                        ))}
                     </select>
                   </label>
-                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                    Delete
-                  </button>
+                  {!hideDeleteAction ? (
+                    <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               </div>
             )}
           </div>
-        ))}
+        )) : null}
       </div>
 
-      <button type="button" className="btn btn-outline btn-sm" onClick={addEntry}>Add Phone</button>
+      {!singleEntryOnly ? <button type="button" className="btn btn-outline btn-sm" onClick={addEntry}>Add Phone</button> : null}
 
       <div className="flex items-center gap-3">
         <button type="submit" className="btn btn-primary" disabled={isSubmitting}>

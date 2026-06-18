@@ -80,6 +80,9 @@ export default function EmailForm({
   onSaved,
   defaultScope = "secondary",
   availableScopes = ["private", "primary", "secondary"],
+  singleEntryOnly = false,
+  scopeLabelMap = {},
+  hideDeleteAction = false,
 }) {
   const apiUrl = getApiURL()
   const [labelOptions, setLabelOptions] = useState([])
@@ -91,10 +94,16 @@ export default function EmailForm({
   const [resultMessage, setResultMessage] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
 
+  const getScopeLabel = (scope) => {
+    const normalized = normalizeScope(scope, defaultScope)
+    return scopeLabelMap?.[normalized] || CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalized)?.label || "Secondary"
+  }
+
   useEffect(() => {
-    setEntries(makeInitialEntries(existingContacts, defaultScope))
+    const nextEntries = makeInitialEntries(existingContacts, defaultScope)
+    setEntries(singleEntryOnly ? nextEntries.slice(0, 1) : nextEntries)
     setHasUnsavedChanges(false)
-  }, [defaultScope, existingContacts])
+  }, [defaultScope, existingContacts, singleEntryOnly])
 
   useEffect(() => {
     let ignore = false
@@ -121,6 +130,10 @@ export default function EmailForm({
   }
 
   const addEntry = () => {
+    if (singleEntryOnly) {
+      return
+    }
+
     setEntries((prev) => ([
       ...prev,
       { id: `email-${Date.now()}`, email: "", label: "booking", description: "", scope: normalizeScope(defaultScope), mode: "edit" },
@@ -143,7 +156,8 @@ export default function EmailForm({
       return
     }
 
-    const payloadEntries = entries
+    const candidateEntries = singleEntryOnly ? entries.slice(0, 1) : entries
+    const payloadEntries = candidateEntries
       .map((entry, index) => {
         const email = String(entry.email || "").trim()
         if (!email) return null
@@ -199,7 +213,7 @@ export default function EmailForm({
   const canChooseScope = availableScopes.length > 1
   const headingContext = context === "user" ? "User" : "Artist"
   const primaryEntry = entries[0] || null
-  const secondaryEntries = entries.slice(1)
+  const secondaryEntries = singleEntryOnly ? [] : entries.slice(1)
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
@@ -220,7 +234,7 @@ export default function EmailForm({
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-primary">{primaryEntry.label || "Email"}</div>
                   <div className="text-sm break-all">{primaryEntry.email}</div>
-                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(primaryEntry.scope, defaultScope))?.label || "Secondary"}</div>
+                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {getScopeLabel(primaryEntry.scope)}</div>
                   {primaryEntry.description ? <p className="text-xs text-base-content/60 mt-0.5 truncate">{primaryEntry.description}</p> : null}
                 </div>
                 <button
@@ -233,9 +247,11 @@ export default function EmailForm({
                 >
                   Edit
                 </button>
-                <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(primaryEntry.id)}>
-                  Delete
-                </button>
+                {!hideDeleteAction ? (
+                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(primaryEntry.id)}>
+                    Delete
+                  </button>
+                ) : null}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -294,15 +310,16 @@ export default function EmailForm({
                         updateEntry(primaryEntry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
                       }}
                     >
-                      {availableScopes.map((scope) => {
-                        const option = CONTACT_SCOPE_OPTIONS.find((entry) => entry.value === scope)
-                        return <option key={scope} value={scope}>{option?.label || scope}</option>
-                      })}
+                        {availableScopes.map((scope) => (
+                          <option key={scope} value={scope}>{getScopeLabel(scope)}</option>
+                        ))}
                     </select>
                   </label>
-                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(primaryEntry.id)}>
-                    Delete
-                  </button>
+                  {!hideDeleteAction ? (
+                    <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(primaryEntry.id)}>
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               </div>
             )}
@@ -322,7 +339,7 @@ export default function EmailForm({
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-primary">{entry.label || "Email"}</div>
                   <div className="text-sm break-all">{entry.email}</div>
-                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(entry.scope, defaultScope))?.label || "Secondary"}</div>
+                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {getScopeLabel(entry.scope)}</div>
                   {entry.description ? <p className="text-xs text-base-content/60 mt-0.5 truncate">{entry.description}</p> : null}
                 </div>
                 <button
@@ -335,9 +352,11 @@ export default function EmailForm({
                 >
                   Edit
                 </button>
-                <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                  Delete
-                </button>
+                {!hideDeleteAction ? (
+                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                    Delete
+                  </button>
+                ) : null}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -397,16 +416,17 @@ export default function EmailForm({
                           updateEntry(entry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
                         }}
                       >
-                        {availableScopes.map((scope) => {
-                          const option = CONTACT_SCOPE_OPTIONS.find((row) => row.value === scope)
-                          return <option key={scope} value={scope}>{option?.label || scope}</option>
-                        })}
+                        {availableScopes.map((scope) => (
+                          <option key={scope} value={scope}>{getScopeLabel(scope)}</option>
+                        ))}
                       </select>
                     </label>
                   ) : <div className="flex-1" />}
-                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                    Delete
-                  </button>
+                  {!hideDeleteAction ? (
+                    <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               </div>
             )}
@@ -414,7 +434,7 @@ export default function EmailForm({
         ))}
       </div>
 
-      <button type="button" className="btn btn-outline btn-sm" onClick={addEntry}>Add Email</button>
+      {!singleEntryOnly ? <button type="button" className="btn btn-outline btn-sm" onClick={addEntry}>Add Email</button> : null}
 
       <div className="flex items-center gap-3">
         <button type="submit" className="btn btn-primary" disabled={isSubmitting}>

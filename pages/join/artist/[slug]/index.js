@@ -7,6 +7,12 @@ import getApiURL from "@/components/widgets/GetApiURL";
 import GalleryManager from "@/components/gallery/GalleryManager";
 import TTTitleLine from "@/components/tiptap/TT_TitleLine";
 import TTArticle from "@/components/tiptap/TT_Article";
+import ProfileForm from "@/components/forms/onboarding/artists/ProfileForm";
+import BusinessDetailsForm from "@/components/forms/onboarding/artists/BusinessDetailsForm";
+import PrivateContactsForm from "@/components/forms/onboarding/artists/PrivateContactsForm";
+import MediaUploadForm from "@/components/forms/onboarding/MediaUploadForm";
+import PublicContactsForm from "@/components/forms/onboarding/artists/PublicContactsForm";
+import ReviewAndPublishForm from "@/components/forms/onboarding/ReviewAndPublishForm";
 import {
   getArtistRegistrationProgress,
   setArtistRegistrationProgress,
@@ -437,7 +443,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
   }, [resolvedArtistId]);
 
   useEffect(() => {
-    if (activeStep !== 4 && activeStep !== 6) {
+    if (activeStep !== 5 && activeStep !== 7) {
       return;
     }
 
@@ -531,7 +537,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
               <Link href="/join" className="btn btn-sm btn-ghost">Back to Join</Link>
             </div>
             <p className="text-base-content/70">
-              Artist post-slug setup: Step 3 complete profile and business details, Step 4 add business contact information, Step 5 set profile and gallery media, Step 6 configure public contacts, then Step 7 review and publish.
+              Artist post-slug setup: Step 3 complete profile, Step 4 add business details, Step 5 add business contact information, Step 6 set profile and gallery media, Step 7 configure public contacts, then Step 8 review and publish.
             </p>
           </div>
         </div>
@@ -543,15 +549,18 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
                  Profile
               </Link>
               <Link href={buildArtistJoinHref(4, resolvedArtistSlug)} className={`btn btn-sm ${activeStep === 4 ? "btn-primary" : (showMissingIndicators && !stepCompletionMap[4]) ? "btn-warning btn-outline animate-pulse" : "btn-outline"}`}>
-                 Business Contacts
+                 Business Details
               </Link>
               <Link href={buildArtistJoinHref(5, resolvedArtistSlug)} className={`btn btn-sm ${activeStep === 5 ? "btn-primary" : (showMissingIndicators && !stepCompletionMap[5]) ? "btn-warning btn-outline animate-pulse" : "btn-outline"}`}>
-                 Profile Media Editor
+                 Business Contacts
               </Link>
               <Link href={buildArtistJoinHref(6, resolvedArtistSlug)} className={`btn btn-sm ${activeStep === 6 ? "btn-primary" : (showMissingIndicators && !stepCompletionMap[6]) ? "btn-warning btn-outline animate-pulse" : "btn-outline"}`}>
-                 Public Contacts
+                 Profile Media
               </Link>
               <Link href={buildArtistJoinHref(7, resolvedArtistSlug)} className={`btn btn-sm ${activeStep === 7 ? "btn-primary" : (showMissingIndicators && !stepCompletionMap[7]) ? "btn-warning btn-outline animate-pulse" : "btn-outline"}`}>
+                 Public Contacts
+              </Link>
+              <Link href={buildArtistJoinHref(8, resolvedArtistSlug)} className={`btn btn-sm ${activeStep === 8 ? "btn-primary" : (showMissingIndicators && !stepCompletionMap[8]) ? "btn-warning btn-outline animate-pulse" : "btn-outline"}`}>
                  Review &amp; Publish
               </Link>
               {resolvedArtistId && <span className="badge badge-info">Artist ID: {resolvedArtistId}</span>}
@@ -579,668 +588,267 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
         </div>
 
         {activeStep === 3 && resolvedArtistId && (
-          <div className="card bg-base-100 shadow border border-base-300">
-            <div className="card-body gap-4">
-              <div>
-                <h2 className="card-title">Step 3: Profile</h2>
-                <p className="text-sm text-base-content/70">Complete profile and business details in one form.</p>
-              </div>
+          <ProfileForm
+            profileTitle={profileTitle}
+            profileByline={profileByline}
+            profileBiography={profileBiography}
+            profileStatement={profileStatement}
+            profileSeoTags={profileSeoTags}
+            isSaving={isSavingProfileForm}
+            error={profileFormError}
+            onTitleChange={setProfileTitle}
+            onBylineChange={setProfileByline}
+            onBiographyChange={setProfileBiography}
+            onStatementChange={setProfileStatement}
+            onSeoTagsChange={setProfileSeoTags}
+            onSave={async () => {
+              if (!resolvedArtistId) {
+                return;
+              }
 
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4 space-y-4">
-                <h3 className="font-semibold text-base-content">Profile Details</h3>
+              const titleText = extractPlainText(profileTitle);
+              if (!titleText) {
+                setProfileFormError("Title is required.");
+                return;
+              }
 
-                <div className="form-control w-full">
-                  <div className="label">
-                    <span className="label-text">Title (H1)</span>
-                  </div>
-                  <TTTitleLine
-                    value={profileTitle}
-                    onChange={setProfileTitle}
-                    headingLevel={1}
-                    placeholder="Artist or group title"
-                  />
-                </div>
+              const seoValidation = validateSeoTags(profileSeoTags);
+              if (!seoValidation.isValid) {
+                setProfileFormError(seoValidation.message);
+                return;
+              }
 
-                <div className="form-control w-full">
-                  <div className="label">
-                    <span className="label-text">Byline (H2)</span>
-                  </div>
-                  <TTTitleLine
-                    value={profileByline}
-                    onChange={setProfileByline}
-                    headingLevel={2}
-                    placeholder="Short byline"
-                  />
-                </div>
+              setProfileFormError("");
+              setIsSavingProfileForm(true);
 
-                <div className="form-control w-full">
-                  <div className="label">
-                    <span className="label-text">Biography</span>
-                  </div>
-                  <TTArticle
-                    value={profileBiography}
-                    onChange={setProfileBiography}
-                    actionPreset="none"
-                    minHeight={220}
-                  />
-                </div>
+              try {
+                const response = await fetch(`${apiUrl}artist/byID/${resolvedArtistId}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    title: profileTitle,
+                    byline: profileByline.trim() || null,
+                    biography: profileBiography.trim() || null,
+                    statement: profileStatement.trim() || null,
+                    seoTags: seoValidation.normalized || null,
+                  }),
+                });
 
-                <div className="form-control w-full">
-                  <div className="label">
-                    <span className="label-text">Statement</span>
-                  </div>
-                  <TTArticle
-                    value={profileStatement}
-                    onChange={setProfileStatement}
-                    actionPreset="none"
-                    minHeight={240}
-                  />
-                </div>
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  setProfileFormError(errorText || `Unable to save profile (${response.status}).`);
+                  return;
+                }
 
-                <label className="form-control w-full">
-                  <div className="label">
-                    <span className="label-text">SEO Tags</span>
-                  </div>
-                  <input
-                    type="text"
-                    className="input input-bordered w-full"
-                    value={profileSeoTags}
-                    onChange={(event) => setProfileSeoTags(event.target.value)}
-                    placeholder="abstract art, mixed media, surrealism"
-                  />
-                  <div className="label">
-                    <span className="label-text-alt">Use commas to separate tags.</span>
-                  </div>
-                </label>
-              </div>
-
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4 space-y-4">
-                <div>
-                  <h3 className="font-semibold text-base-content">Business Details</h3>
-                  <p className="text-sm text-base-content/70">Complete your business details as part of profile setup.</p>
-                </div>
-
-                <label className="form-control w-full">
-                  <div className="label flex-col items-start gap-0.5">
-                    <span className="label-text font-semibold">Formally Incorporated?</span>
-                    <span className="label-text-alt text-base-content/60">Formally incorporated companies are given priority access to premium and exact-match slugs.</span>
-                  </div>
-                  <select
-                    className="select select-bordered w-full"
-                    value={incorporationStatus}
-                    onChange={(event) => setIncorporationStatus(event.target.value)}
-                  >
-                    {incorporationOptions.map((option) => (
-                      <option key={option.value || "empty"} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <label className="form-control w-full">
-                    <div className="label">
-                      <span className="label-text">City</span>
-                    </div>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full"
-                      value={city}
-                      onChange={(event) => setCity(event.target.value)}
-                      placeholder="City"
-                    />
-                  </label>
-
-                  <label className="form-control w-full">
-                    <div className="label">
-                      <span className="label-text">State or Region</span>
-                    </div>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full"
-                      value={stateOrProvince}
-                      onChange={(event) => setStateOrProvince(event.target.value)}
-                      placeholder="State or Region"
-                    />
-                  </label>
-
-                  <label className="form-control w-full">
-                    <div className="label">
-                      <span className="label-text">Zip / Postal Code</span>
-                    </div>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full"
-                      value={zipCode}
-                      onChange={(event) => setZipCode(event.target.value)}
-                      placeholder="Zip / Postal Code"
-                    />
-                  </label>
-
-                  <label className="form-control w-full">
-                    <div className="label">
-                      <span className="label-text">Country</span>
-                    </div>
-                    <input
-                      type="text"
-                      className="input input-bordered w-full"
-                      value={country}
-                      onChange={(event) => setCountry(event.target.value)}
-                      placeholder="Country"
-                    />
-                  </label>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <label className="form-control w-full">
-                    <div className="label">
-                      <span className="label-text">Business Entity Type</span>
-                    </div>
-                    <select
-                      className="select select-bordered w-full"
-                      value={businessEntityType}
-                      onChange={(event) => setBusinessEntityType(event.target.value)}
-                    >
-                      {businessEntityOptions.map((option) => (
-                        <option key={option.value || "empty"} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  {incorporationStatus === "true" && (
-                    <label className="form-control w-full">
-                      <div className="label">
-                        <span className="label-text">Year Incorporated</span>
-                      </div>
-                      <input
-                        type="number"
-                        min="1800"
-                        max={new Date().getFullYear()}
-                        step="1"
-                        className="input input-bordered w-full"
-                        placeholder={`e.g. ${new Date().getFullYear() - 5}`}
-                        value={incorporatedYear}
-                        onChange={(event) => setIncorporatedYear(event.target.value)}
-                      />
-                      <div className="label">
-                        <span className="label-text-alt">Optional — four-digit year your entity was formally incorporated.</span>
-                      </div>
-                    </label>
-                  )}
-                </div>
-              </div>
-
-              {profileFormError ? (
-                <div className="alert alert-error">
-                  <span>{profileFormError}</span>
-                </div>
-              ) : null}
-
-              <div className="mt-4 flex gap-2 justify-between flex-wrap">
-                <Link href="/join/artist?step=2" className="btn btn-sm btn-outline">Back to Slug Step</Link>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-primary"
-                  disabled={isSavingProfileForm}
-                  onClick={async () => {
-                    if (!resolvedArtistId) {
-                      return;
-                    }
-
-                    const titleText = extractPlainText(profileTitle);
-                    if (!titleText) {
-                      setProfileFormError("Title is required.");
-                      return;
-                    }
-
-                    const trimmedCountry = country.trim();
-                    const trimmedCity = city.trim();
-                    const trimmedStateOrProvince = stateOrProvince.trim();
-                    const trimmedZipCode = zipCode.trim();
-
-                    if (!incorporationStatus) {
-                      setProfileFormError("Incorporation status is required.");
-                      return;
-                    }
-
-                    if (!trimmedCity) {
-                      setProfileFormError("City is required.");
-                      return;
-                    }
-
-                    if (!trimmedCountry) {
-                      setProfileFormError("Country is required.");
-                      return;
-                    }
-
-                    if (!trimmedStateOrProvince) {
-                      setProfileFormError("State or province is required.");
-                      return;
-                    }
-
-                    if (!trimmedZipCode) {
-                      setProfileFormError("Zip or postal code is required.");
-                      return;
-                    }
-
-                    if (!businessEntityType) {
-                      setProfileFormError("Business entity type is required.");
-                      return;
-                    }
-
-                    const isIncorporated = incorporationStatus === "true";
-                    const parsedYear = incorporatedYear ? Number(incorporatedYear) : null;
-                    const validYear = parsedYear && parsedYear >= 1800 && parsedYear <= new Date().getFullYear() ? parsedYear : null;
-
-                    if (isIncorporated && incorporatedYear && !validYear) {
-                      setProfileFormError("Incorporated year must be a valid 4-digit year.");
-                      return;
-                    }
-
-                    const seoValidation = validateSeoTags(profileSeoTags);
-                    if (!seoValidation.isValid) {
-                      setProfileFormError(seoValidation.message);
-                      return;
-                    }
-
-                    setProfileFormError("");
-                    setIsSavingProfileForm(true);
-
-                    setArtistRegistrationProgress({
-                      title: titleText,
-                      city: trimmedCity,
-                      country: trimmedCountry,
-                      stateOrProvince: trimmedStateOrProvince,
-                      zipCode: trimmedZipCode,
-                      businessEntityType,
-                      incorporationStatus,
-                      incorporatedYear: incorporatedYear || "",
-                    });
-
-                    try {
-                      const response = await fetch(`${apiUrl}artist/byID/${resolvedArtistId}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          title: profileTitle,
-                          byline: profileByline.trim() || null,
-                          biography: profileBiography.trim() || null,
-                          statement: profileStatement.trim() || null,
-                          seoTags: seoValidation.normalized || null,
-                          city: trimmedCity,
-                          country: trimmedCountry,
-                          stateOrProvince: trimmedStateOrProvince,
-                          zipCode: trimmedZipCode,
-                          businessEntityType,
-                          isFormallyIncorporated: isIncorporated,
-                          incorporatedYear: isIncorporated ? validYear : null,
-                        }),
-                      });
-
-                      if (!response.ok) {
-                        const errorText = await response.text();
-                        setProfileFormError(errorText || `Unable to save profile (${response.status}).`);
-                        return;
-                      }
-
-                      await completeStepAndContinue(ARTIST_REGISTRATION_STEPS.PROFILE_INFO, 4);
-                    } catch (error) {
-                      setProfileFormError(error.message || "Unable to save profile details.");
-                    } finally {
-                      setIsSavingProfileForm(false);
-                    }
-                  }}
-                >
-                  {isSavingProfileForm ? "Saving..." : "Continue to Business Contact Info"}
-                </button>
-              </div>
-            </div>
-          </div>
+                window.location.href = buildArtistJoinHref(4, resolvedArtistSlug);
+              } catch (error) {
+                setProfileFormError(error.message || "Unable to save profile details.");
+              } finally {
+                setIsSavingProfileForm(false);
+              }
+            }}
+            backHref="/join/artist?step=2"
+          />
         )}
 
         {activeStep === 4 && resolvedArtistId && (
-          <SocialRealtimeProvider>
-            <div className="card bg-base-100 shadow border border-base-300">
-              <div className="card-body gap-4">
-                <div>
-                  <h2 className="card-title">Step 4: Primary Business Contact Info <span className="badge badge-sm badge-info">Guild Only</span></h2>
-                  <p className="text-sm text-base-content/70">Enter your business contact details for guild records and operations. Use the scope selector on any entry to mark it as <strong>Private</strong> or <strong>Primary</strong>. Nothing saved here is treated as primary unless you explicitly choose Primary.</p>
-                </div>
+          <BusinessDetailsForm
+            city={city}
+            stateOrProvince={stateOrProvince}
+            zipCode={zipCode}
+            country={country}
+            businessEntityType={businessEntityType}
+            incorporationStatus={incorporationStatus}
+            incorporatedYear={incorporatedYear}
+            isSaving={isSavingProfileForm}
+            error={profileFormError}
+            onCityChange={setCity}
+            onStateChange={setStateOrProvince}
+            onZipChange={setZipCode}
+            onCountryChange={setCountry}
+            onEntityTypeChange={setBusinessEntityType}
+            onIncorporationStatusChange={setIncorporationStatus}
+            onIncorporatedYearChange={setIncorporatedYear}
+            onSave={async () => {
+              if (!resolvedArtistId) {
+                return;
+              }
 
-                {loadingContacts ? (
-                  <div className="flex items-center gap-2 text-sm text-base-content/60">
-                    <span className="loading loading-spinner loading-sm" />
-                    Loading existing contacts...
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                      <h3 className="font-semibold text-base-content mb-1">Business Address</h3>
-                      <p className="text-xs text-base-content/60 mb-4">Required. Use Private for guild-only storage or Primary for the direct linked contact.</p>
-                      <AddressForm
-                        artistID={resolvedArtistId}
-                        existingContacts={businessAddressContacts}
-                        defaultScope="private"
-                        availableScopes={["private", "primary"]}
-                        requireFullAddressFields
-                        defaultLabel="work"
-                        onSaved={refreshArtistContacts}
-                      />
-                    </div>
+              const trimmedCountry = country.trim();
+              const trimmedCity = city.trim();
+              const trimmedStateOrProvince = stateOrProvince.trim();
+              const trimmedZipCode = zipCode.trim();
 
-                    <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                      <h3 className="font-semibold text-base-content mb-1">Business Phone</h3>
-                      <p className="text-xs text-base-content/60 mb-4">Required. Use Private for guild-only storage or Primary for the direct linked contact.</p>
-                      <PhoneForm
-                        artistID={resolvedArtistId}
-                        existingContacts={businessPhoneContacts}
-                        defaultScope="private"
-                        availableScopes={["private", "primary"]}
-                        requirePrimaryPhone
-                        onSaved={refreshArtistContacts}
-                      />
-                    </div>
+              if (!incorporationStatus) {
+                setProfileFormError("Incorporation status is required.");
+                return;
+              }
 
-                    <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                      <h3 className="font-semibold text-base-content mb-1">Business Email</h3>
-                      <p className="text-sm text-base-content/70 mb-4">Use Private for guild-only storage or Primary for the direct linked guild outreach address.</p>
-                      <EmailForm
-                        context="artist"
-                        entityID={resolvedArtistId}
-                        existingContacts={businessEmailContacts}
-                        onSaved={refreshArtistContacts}
-                        defaultScope="private"
-                        availableScopes={["private", "primary"]}
-                      />
-                    </div>
+              if (!trimmedCity) {
+                setProfileFormError("City is required.");
+                return;
+              }
 
-                    <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                      <h3 className="font-semibold text-base-content mb-1">Business Website URL</h3>
-                      <p className="text-xs text-base-content/60 mb-1">Optional but recommended</p>
-                      <p className="text-sm text-base-content/70 mb-4">Use Private for guild-only storage or Primary if this should be the direct linked website contact.</p>
-                      <UrlLinksForm
-                        artistID={resolvedArtistId}
-                        existingContacts={businessUrlContacts}
-                        onSaved={refreshArtistContacts}
-                        defaultScope="private"
-                        availableScopes={["private", "primary"]}
-                      />
-                    </div>
-                  </div>
-                )}
+              if (!trimmedCountry) {
+                setProfileFormError("Country is required.");
+                return;
+              }
 
-                {privateContactRequirementError ? (
-                  <div className="alert alert-error">
-                    <span>{privateContactRequirementError}</span>
-                  </div>
-                ) : null}
+              if (!trimmedStateOrProvince) {
+                setProfileFormError("State or province is required.");
+                return;
+              }
 
-                <div className="flex gap-2 justify-between flex-wrap pt-2">
-                  <Link href={buildArtistJoinHref(3, resolvedArtistSlug)} className="btn btn-sm btn-outline">Back to Profile</Link>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-primary"
-                    onClick={() => {
-                      const hasBusinessAddress = businessAddressContacts.length > 0;
-                      const hasBusinessPhone = businessPhoneContacts.length > 0;
-                      const hasBusinessEmail = businessEmailContacts.length > 0;
+              if (!trimmedZipCode) {
+                setProfileFormError("Zip or postal code is required.");
+                return;
+              }
 
-                      if (!hasBusinessAddress || !hasBusinessPhone || !hasBusinessEmail) {
-                        setPrivateContactRequirementError("Before continuing, save at least one business physical address, one business phone number, and one business email.");
-                        return;
-                      }
+              if (!businessEntityType) {
+                setProfileFormError("Business entity type is required.");
+                return;
+              }
 
-                      setPrivateContactRequirementError("");
-                      completeStepAndContinue(ARTIST_REGISTRATION_STEPS.PRIVATE_CONTACTS, 5);
-                    }}
-                  >
-                    Continue to Profile Media Editor
-                  </button>
-                </div>
-              </div>
-            </div>
-          </SocialRealtimeProvider>
+              const isIncorporated = incorporationStatus === "true";
+              const parsedYear = incorporatedYear ? Number(incorporatedYear) : null;
+              const validYear = parsedYear && parsedYear >= 1800 && parsedYear <= new Date().getFullYear() ? parsedYear : null;
+
+              if (isIncorporated && incorporatedYear && !validYear) {
+                setProfileFormError("Incorporated year must be a valid 4-digit year.");
+                return;
+              }
+
+              setProfileFormError("");
+              setIsSavingProfileForm(true);
+
+              setArtistRegistrationProgress({
+                title: extractPlainText(profileTitle),
+                city: trimmedCity,
+                country: trimmedCountry,
+                stateOrProvince: trimmedStateOrProvince,
+                zipCode: trimmedZipCode,
+                businessEntityType,
+                incorporationStatus,
+                incorporatedYear: incorporatedYear || "",
+              });
+
+              try {
+                const response = await fetch(`${apiUrl}artist/byID/${resolvedArtistId}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    city: trimmedCity,
+                    country: trimmedCountry,
+                    stateOrProvince: trimmedStateOrProvince,
+                    zipCode: trimmedZipCode,
+                    businessEntityType,
+                    isFormallyIncorporated: isIncorporated,
+                    incorporatedYear: isIncorporated ? validYear : null,
+                  }),
+                });
+
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  setProfileFormError(errorText || `Unable to save business details (${response.status}).`);
+                  return;
+                }
+
+                window.location.href = buildArtistJoinHref(5, resolvedArtistSlug);
+              } catch (error) {
+                setProfileFormError(error.message || "Unable to save business details.");
+              } finally {
+                setIsSavingProfileForm(false);
+              }
+            }}
+            backHref={buildArtistJoinHref(3, resolvedArtistSlug)}
+          />
         )}
 
         {activeStep === 5 && resolvedArtistId && (
-          <div className="card bg-base-100 shadow border border-base-300">
-            <div className="card-body gap-4">
-              <div>
-                <h2 className="card-title">Step 5: Profile Media Editor</h2>
-                <p className="text-sm text-base-content/70">Manage media in standardized folders. Anything in the folder root is active; anything moved into a timestamped subfolder is archived.</p>
-              </div>
+          <PrivateContactsForm
+            artistID={resolvedArtistId}
+            businessAddressContacts={businessAddressContacts}
+            businessPhoneContacts={businessPhoneContacts}
+            businessEmailContacts={businessEmailContacts}
+            businessUrlContacts={businessUrlContacts}
+            loading={loadingContacts}
+            error={privateContactRequirementError}
+            onRefresh={refreshArtistContacts}
+            onContinue={() => {
+              const hasRequiredPrimaryAddress = businessAddressContacts.some((contact) => {
+                const city = String(contact?.address?.city || contact?.city || "").trim();
+                const stateOrRegion = String(contact?.address?.region || contact?.address?.state || contact?.state || contact?.region || "").trim();
+                const country = String(contact?.address?.country || contact?.country || "").trim();
+                return Boolean(city && stateOrRegion && country);
+              });
 
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                <div className="rounded-box border border-base-300 bg-base-200/40 p-4 space-y-3">
-                  <h3 className="font-semibold text-base-content">Active Profile Photo</h3>
-                  {activeProfileFile ? (
-                    <>
-                      <div className="relative h-48 rounded-box overflow-hidden bg-base-100 border border-base-300">
-                        <Image src={activeProfileFile.url} alt="Active profile" fill className="object-contain" sizes="(max-width: 768px) 100vw, 50vw" />
-                      </div>
-                      <div className="text-xs text-base-content/70">Current root file: {activeProfileFile.name}</div>
-                    </>
-                  ) : (
-                    <div className="text-sm text-base-content/60">No active profile photo found in the profile folder root.</div>
-                  )}
-                </div>
+              if (!hasRequiredPrimaryAddress) {
+                setPrivateContactRequirementError("Before continuing, save a primary address with city, state/region, and country.");
+                return;
+              }
 
-                <div className="rounded-box border border-base-300 bg-base-200/40 p-4 space-y-3">
-                  <h3 className="font-semibold text-base-content">Active Cover Photo</h3>
-                  {activeCoverFile ? (
-                    <>
-                      <div className="relative h-48 rounded-box overflow-hidden bg-base-100 border border-base-300">
-                        <Image src={activeCoverFile.url} alt="Active cover" fill className="object-contain" sizes="(max-width: 768px) 100vw, 50vw" />
-                      </div>
-                      <div className="text-xs text-base-content/70">Current root file: {activeCoverFile.name}</div>
-                    </>
-                  ) : (
-                    <div className="text-sm text-base-content/60">No active cover photo found in the cover folder root.</div>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                <GalleryManager
-                  entityType="artist"
-                  entityId={resolvedArtistId}
-                  entityLabel={`Artist: ${resolvedArtistId}`}
-                  currentUser={sessionUser}
-                  folderKind="profile"
-                  title="Profile Photo Manager"
-                  allowVideo={false}
-                  basePrefix={profilePrefix}
-                  onFilesChanged={setProfileFiles}
-                />
-
-                <GalleryManager
-                  entityType="artist"
-                  entityId={resolvedArtistId}
-                  entityLabel={`Artist: ${resolvedArtistId}`}
-                  currentUser={sessionUser}
-                  folderKind="cover"
-                  title="Cover Photo Manager"
-                  allowVideo={false}
-                  basePrefix={coverPrefix}
-                  onFilesChanged={setCoverFiles}
-                />
-              </div>
-
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                <h3 className="font-semibold text-base-content mb-2">Gallery Media Tools</h3>
-                <p className="text-sm text-base-content/70 mb-3">Root files in the gallery folder are active gallery entries. Archive older gallery media with the archive button.</p>
-                <GalleryManager
-                  entityType="artist"
-                  entityId={resolvedArtistId}
-                  entityLabel={`Artist: ${resolvedArtistId}`}
-                  currentUser={sessionUser}
-                  folderKind="gallery"
-                  title="Gallery Media Manager"
-                  basePrefix={galleryPrefix}
-                />
-              </div>
-
-              {mediaFeedback.message && (
-                <div className={`alert ${mediaFeedback.type === "error" ? "alert-error" : "alert-success"}`}>
-                  <span>{mediaFeedback.message}</span>
-                </div>
-              )}
-
-              <div className="flex gap-2 justify-between flex-wrap">
-                <Link href={buildArtistJoinHref(4, resolvedArtistSlug)} className="btn btn-sm btn-outline">Back to Business Contact Info</Link>
-                <div className="flex gap-2">
-                  <button type="button" className="btn btn-sm btn-primary" onClick={saveMediaSelection} disabled={isSavingMedia}>
-                    {isSavingMedia ? "Saving..." : "Sync Active Profile + Cover"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-success"
-                    onClick={() => completeStepAndContinue(ARTIST_REGISTRATION_STEPS.MEDIA_SETUP, 6)}
-                  >
-                    Continue to Public Contacts
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+              setPrivateContactRequirementError("");
+              completeStepAndContinue(ARTIST_REGISTRATION_STEPS.PRIVATE_CONTACTS, 6);
+            }}
+            backHref={buildArtistJoinHref(4, resolvedArtistSlug)}
+          />
         )}
 
         {activeStep === 6 && resolvedArtistId && (
-          <SocialRealtimeProvider>
-            <div className="card bg-base-100 shadow border border-base-300">
-              <div className="card-body gap-4">
-                <div>
-                  <h2 className="card-title">Step 6: Public Contacts</h2>
-                  <p className="text-sm text-base-content/70">These contacts will be visible on your public artist profile. ⚠️ Do NOT publish personal phone numbers or home studio addresses unless you welcome drop-in business. Use city/state only for sensitive locations, or add those details in Step 4 (Business Contact Info) instead.</p>
-                </div>
-
-                {loadingContacts ? (
-                  <div className="flex items-center gap-2 text-sm text-base-content/60">
-                    <span className="loading loading-spinner loading-sm" />
-                    Loading existing contacts...
-                  </div>
-                ) : (
-                  <>
-                    <div role="tablist" className="tabs tabs-bordered">
-                      {PUBLIC_CONTACT_TABS.map((tab) => (
-                        <button
-                          key={tab.key}
-                          role="tab"
-                          type="button"
-                          className={`tab${contactsTab === tab.key ? " tab-active" : ""}`}
-                          onClick={() => setContactsTab(tab.key)}
-                        >
-                          {tab.label}
-                        </button>
-                      ))}
-                    </div>
-
-                    {contactsTab === "public-address" && (
-                      <AddressForm
-                        artistID={resolvedArtistId}
-                        existingContacts={publicAddressContacts}
-                        defaultScope="secondary"
-                        availableScopes={["secondary"]}
-                        defaultLabel="office"
-                        requireCityStateCountry
-                        onSaved={refreshArtistContacts}
-                      />
-                    )}
-                    {contactsTab === "public-email" && (
-                      <EmailForm
-                        context="artist"
-                        entityID={resolvedArtistId}
-                        existingContacts={publicEmailContacts}
-                        defaultScope="secondary"
-                        availableScopes={["secondary"]}
-                        onSaved={refreshArtistContacts}
-                      />
-                    )}
-                    {contactsTab === "public-phone" && (
-                      <PhoneForm
-                        artistID={resolvedArtistId}
-                        existingContacts={publicPhoneContacts}
-                        defaultScope="secondary"
-                        availableScopes={["secondary"]}
-                        onSaved={refreshArtistContacts}
-                      />
-                    )}
-                    {contactsTab === "public-social" && (
-                      <SocialHandlesForm
-                        artistID={resolvedArtistId}
-                        existingContacts={publicSocialContacts}
-                        defaultScope="secondary"
-                        availableScopes={["secondary"]}
-                        onSaved={refreshArtistContacts}
-                      />
-                    )}
-                    {contactsTab === "public-urls" && (
-                      <UrlLinksForm
-                        artistID={resolvedArtistId}
-                        existingContacts={publicUrlContacts}
-                        defaultScope="secondary"
-                        availableScopes={["secondary"]}
-                        onSaved={refreshArtistContacts}
-                      />
-                    )}
-                  </>
-                )}
-
-                <div className="flex gap-2 justify-between flex-wrap pt-2">
-                  <Link href={buildArtistJoinHref(5, resolvedArtistSlug)} className="btn btn-sm btn-outline">Back to Profile Media Editor</Link>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-success"
-                    onClick={() => completeStepAndContinue(ARTIST_REGISTRATION_STEPS.PUBLIC_CONTACTS, 7)}
-                  >
-                    Continue to Review
-                  </button>
-                </div>
-              </div>
-            </div>
-          </SocialRealtimeProvider>
+          <MediaUploadForm
+            artistID={resolvedArtistId}
+            artistLabel={`Artist: ${resolvedArtistId}`}
+            sessionUser={sessionUser}
+            activeProfileFile={activeProfileFile}
+            activeCoverFile={activeCoverFile}
+            galleryPrefix={galleryPrefix}
+            profilePrefix={profilePrefix}
+            coverPrefix={coverPrefix}
+            mediaFeedback={mediaFeedback}
+            isSaving={isSavingMedia}
+            onSaveMediaSelection={saveMediaSelection}
+            onContinue={() => completeStepAndContinue(ARTIST_REGISTRATION_STEPS.MEDIA_SETUP, 7)}
+            backHref={buildArtistJoinHref(5, resolvedArtistSlug)}
+          />
         )}
 
         {activeStep === 7 && resolvedArtistId && (
-          <div className="card bg-base-100 shadow border border-base-300">
-            <div className="card-body gap-4">
-              <div>
-                <h2 className="card-title">Step 7: Review &amp; Publish</h2>
-                <p className="text-sm text-base-content/70">Review your setup and publish when ready. Publishing removes this registration from your join-in-progress list and makes your profile visible on the site.</p>
-              </div>
+          <PublicContactsForm
+            artistID={resolvedArtistId}
+            contactsTab={contactsTab}
+            onTabChange={setContactsTab}
+            publicAddressContacts={publicAddressContacts}
+            publicEmailContacts={publicEmailContacts}
+            publicPhoneContacts={publicPhoneContacts}
+            publicSocialContacts={publicSocialContacts}
+            publicUrlContacts={publicUrlContacts}
+            loading={loadingContacts}
+            onRefresh={refreshArtistContacts}
+            onContinue={() => completeStepAndContinue(ARTIST_REGISTRATION_STEPS.PUBLIC_CONTACTS, 8)}
+            backHref={buildArtistJoinHref(6, resolvedArtistSlug)}
+          />
+        )}
 
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4 space-y-2 text-sm">
-                <div><span className="font-semibold">Title:</span> {extractPlainText(profileTitle) || "Missing"}</div>
-                <div><span className="font-semibold">Slug:</span> {resolvedArtistSlug || "Missing"}</div>
-                <div><span className="font-semibold">Business address on file:</span> {businessAddressContacts.length > 0 ? "Yes ✓" : "No"}</div>
-                <div><span className="font-semibold">Business phone on file:</span> {businessPhoneContacts.length > 0 ? "Yes ✓" : "No"}</div>
-                <div><span className="font-semibold">Business email on file:</span> {businessEmailContacts.length > 0 ? "Yes ✓" : "No"}</div>
-                <div><span className="font-semibold">Public contact count:</span> {publicAddressContacts.length + publicEmailContacts.length + publicPhoneContacts.length + publicSocialContacts.length + publicUrlContacts.length}</div>
-                <div><span className="font-semibold">Workflow progress:</span> {postSlugPercentComplete}%</div>
-              </div>
-
-              {publishFeedback ? (
-                <div className="alert alert-error">
-                  <span>{publishFeedback}</span>
-                </div>
-              ) : null}
-
-              <div className="flex gap-2 justify-between flex-wrap pt-2">
-                <Link href={buildArtistJoinHref(6, resolvedArtistSlug)} className="btn btn-sm btn-outline">Back to Public Contacts</Link>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-success"
-                  onClick={publishArtistProfile}
-                  disabled={isPublishingProfile || Boolean(stepCompletionMap[7])}
-                >
-                  {isPublishingProfile ? "Publishing..." : stepCompletionMap[7] ? "Published" : "Publish Artist Profile"}
-                </button>
-              </div>
-            </div>
-          </div>
+        {activeStep === 8 && resolvedArtistId && (
+          <ReviewAndPublishForm
+            profileTitle={profileTitle}
+            artistSlug={resolvedArtistSlug}
+            businessAddressContacts={businessAddressContacts}
+            businessPhoneContacts={businessPhoneContacts}
+            businessEmailContacts={businessEmailContacts}
+            publicAddressContacts={publicAddressContacts}
+            publicEmailContacts={publicEmailContacts}
+            publicPhoneContacts={publicPhoneContacts}
+            publicSocialContacts={publicSocialContacts}
+            publicUrlContacts={publicUrlContacts}
+            postSlugPercentComplete={postSlugPercentComplete}
+            isPublishing={isPublishingProfile}
+            publishFeedback={publishFeedback}
+            isPublished={stepCompletionMap[8]}
+            onPublish={publishArtistProfile}
+            backHref={buildArtistJoinHref(7, resolvedArtistSlug)}
+            extractPlainText={extractPlainText}
+          />
         )}
       </div>
     </div>
