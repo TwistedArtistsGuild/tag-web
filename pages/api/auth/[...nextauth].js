@@ -13,6 +13,9 @@ import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import EmailProvider from "next-auth/providers/email"
 import AzureADProvider from "next-auth/providers/azure-ad"
+import RedditProvider from "next-auth/providers/reddit"
+import InstagramProvider from "next-auth/providers/instagram"
+import LinkedInProvider from "next-auth/providers/linkedin"
 import PostgresAdapter from "@auth/pg-adapter"
 import { Pool } from "pg"
 import config from "@/config"
@@ -41,7 +44,6 @@ export const authOptions = {
 			tenantId: process.env.AZURE_AD_TENANT_ID,
 		}),
 		GoogleProvider({
-			// Follow the "Login with Google" tutorial to get your credentials
 			clientId: process.env.GOOGLE_ID,
 			clientSecret: process.env.GOOGLE_SECRET,
 			async profile(profile) {
@@ -54,7 +56,37 @@ export const authOptions = {
 				}
 			},
 		}),
-		// Follow the "Login with Email" tutorial to set up your email server
+        RedditProvider({
+            clientId: process.env.REDDIT_CLIENT_ID,
+            clientSecret: process.env.REDDIT_CLIENT_SECRET,
+            authorization: {
+                params: {
+                    duration: 'permanent',
+                },
+            },
+        }),
+        InstagramProvider({
+            clientId: process.env.INSTAGRAM_CLIENT_ID,
+            clientSecret: process.env.INSTAGRAM_CLIENT_SECRET,
+        }),
+        LinkedInProvider({
+            clientId: process.env.LINKEDIN_CLIENT_ID,
+            clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+            authorization: {
+                params: { scope: 'openid profile email' },
+            },
+            issuer: 'https://www.linkedin.com',
+            jwks_endpoint: 'https://www.linkedin.com/oauth/openid/jwks',
+            profile(profile) {
+                return {
+                    id: profile.sub,
+                    name: profile.name,
+                    email: profile.email,
+                    image: profile.picture,
+                    createdAt: new Date(),
+                }
+            },
+        }),
 		EmailProvider({
 			server: process.env.EMAIL_SERVER,
 			from: config.mailgun.fromNoReply,
@@ -63,14 +95,10 @@ export const authOptions = {
 	adapter: PostgresAdapter(pool),
 	callbacks: {
 		//JWT callback runs when the token is created or updated
-		jwt: async ({ token, user }) => {
-			// user is only available on the first sign-in
-			//console.log("JWT callback called. User:", user, "Token before:", token);
+		jwt: async ({ token, user, account }) => {
 			const userId = user?.id || token.sub;
 			if (userId && !token.permissions) {
 				try {
-					//console.log("Attempting to fetch permissions for ID:", userId);
-					// Query your unified PostgreSQL database for permissions
 					const { rows } = await pool.query(
 						`SELECT 
 							r.name as role_name, 
@@ -80,15 +108,11 @@ export const authOptions = {
 						 JOIN role_permissions rp ON r.id = rp.role_id
 						 JOIN permissions p ON rp.permission_id = p.id
 						 WHERE ur.user_id = $1`,
-						[user.id]
+						[userId]
 					);
 
-					// Extract unique role names
 					token.roles = [...new Set(rows.map(row => row.role_name))];
-
-					// Extract unique permission names
 					token.permissions = [...new Set(rows.map(row => row.permission_name))];
-                    //console.log("Permissions fetched for user:", token.permissions);
 				} catch (error) {
 					console.error("Error fetching user permissions:", error.message);
 					token.permissions = [];
@@ -96,13 +120,9 @@ export const authOptions = {
 			}
 			return token;
 		},
-		//Session callback makes data available to the client/frontend
 		session: async ({ session, token }) => {
-            //console.log("Session callback called. Token:", token, "Session before:", session);
 			if (session?.user) {
 				session.user.id = token.sub
-
-				// Transfer permissions/roles from the token to the session
 				session.user.roles = token.roles || [];
 				session.user.permissions = token.permissions || [];
 			}
@@ -114,11 +134,8 @@ export const authOptions = {
 	},
 	theme: {
 		brandColor: config.colors.main,
-		// Add you own logo below. Recommended size is rectangle (i.e. 200x50px) and show your logo + name.
-		// It will be used in the login flow to display your logo. If you don't add it, it will look faded.
 		logo: "/logoAndName.png",
 	},
-	callbackUrl: `${config.domainName}${config.callbackUrl}`,
 }
 
 export default NextAuth(authOptions)
