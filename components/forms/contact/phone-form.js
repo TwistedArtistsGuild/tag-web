@@ -302,7 +302,8 @@ export default function PhoneForm({
           phoneDescription: entry.description.trim() || null,
           description: entry.description.trim() || null,
           scope: normalizeScope(entry.scope, defaultScope),
-          displayOrder: index,
+          setAsPrimary: singleEntryOnly,
+          displayOrder: singleEntryOnly ? 1 : index,
         }
       })
 

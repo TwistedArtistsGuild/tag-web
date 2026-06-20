@@ -98,6 +98,15 @@ function resolvePlatformKey(contact) {
   return ""
 }
 
+function normalizeScope(value, fallback = "secondary") {
+  const normalized = String(value || fallback).trim().toLowerCase() || fallback
+  if (normalized === "private" || normalized === "primary" || normalized === "secondary") {
+    return normalized
+  }
+
+  return fallback
+}
+
 function makeInitialEntries(existingContacts = []) {
   const sortedContacts = [...existingContacts].sort((a, b) => {
     const aOrder = Number(a?.displayOrder)
@@ -373,7 +382,8 @@ export default function SocialHandlesForm({ context = "artist", entityID, artist
           value: finalUrl,
           handle: entry.handle.trim().replace(/^@/, "") || null,
           description: entry.description.trim() || null,
-          scope: String(entry.scope || defaultScope).trim().toLowerCase() || defaultScope,
+          scope: normalizeScope(entry.scope, defaultScope),
+          setAsPrimary: false,
           displayOrder: index,
         }
       })

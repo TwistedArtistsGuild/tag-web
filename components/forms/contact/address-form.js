@@ -351,7 +351,8 @@ export default function AddressForm({
           country: countryValue || null,
           operationHours: entry.operationHours.trim() || null,
           scope: normalizeScope(entry.scope, defaultScope),
-          displayOrder: index,
+          setAsPrimary: singleEntryOnly,
+          displayOrder: singleEntryOnly ? 1 : index,
         }
       })
       .filter(Boolean)

@@ -505,7 +505,8 @@ export default function UrlLinksForm({
           value: finalUrl,
           description: entry.description.trim() || null,
           scope: normalizeScope(entry.scope, defaultScope),
-          displayOrder: index,
+          setAsPrimary: singleEntryOnly,
+          displayOrder: singleEntryOnly ? 1 : index,
         }
       })
       .filter(Boolean)
