@@ -180,6 +180,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
   const [isSavingProfileForm, setIsSavingProfileForm] = useState(false);
   const [profileFiles, setProfileFiles] = useState([]);
   const [coverFiles, setCoverFiles] = useState([]);
+  const [blobBackedMediaRoot, setBlobBackedMediaRoot] = useState("");
   const [mediaFeedback, setMediaFeedback] = useState({ type: "", message: "" });
   const [isSavingMedia, setIsSavingMedia] = useState(false);
 
@@ -361,17 +362,182 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
     }, {});
   }, [pictures]);
 
+  const pictureById = useMemo(() => {
+    const safePictures = Array.isArray(pictures) ? pictures : [];
+    return safePictures.reduce((acc, picture) => {
+      const id = Number(picture?.pictureID || picture?.PictureID || 0);
+      if (id > 0) {
+        acc[id] = picture;
+      }
+      return acc;
+    }, {});
+  }, [pictures]);
+
+  const knownArtistMediaUrls = useMemo(() => {
+    const canonicalRoot = resolvedArtistId ? `platformpics/artists/${resolvedArtistId}/` : "";
+    const legacyRoot = resolvedArtistId ? `platformpics/artistcontent/${resolvedArtistId}/` : "";
+
+    const urlCandidates = [
+      artistData?.profilePicURL,
+      artistData?.ProfilePicURL,
+      artistData?.coverPicURL,
+      artistData?.CoverPicURL,
+      artistData?.profilePictureURL,
+      artistData?.ProfilePictureURL,
+      artistData?.coverPictureURL,
+      artistData?.CoverPictureURL,
+      artistData?.profilePic,
+      artistData?.ProfilePic,
+      artistData?.coverPic,
+      artistData?.CoverPic,
+    ];
+
+    const selectedProfilePicId = Number(artistData?.profilePicID || artistData?.ProfilePicID || 0);
+    const selectedCoverPicId = Number(artistData?.coverPicID || artistData?.CoverPicID || 0);
+
+    if (selectedProfilePicId > 0) {
+      const selectedProfilePic = pictureById[selectedProfilePicId];
+      urlCandidates.push(selectedProfilePic?.url, selectedProfilePic?.URL);
+    }
+
+    if (selectedCoverPicId > 0) {
+      const selectedCoverPic = pictureById[selectedCoverPicId];
+      urlCandidates.push(selectedCoverPic?.url, selectedCoverPic?.URL);
+    }
+
+    const safePictures = Array.isArray(pictures) ? pictures : [];
+    safePictures.forEach((picture) => {
+      const normalizedUrl = String(picture?.url || picture?.URL || "").trim().toLowerCase();
+      if (!normalizedUrl) {
+        return;
+      }
+
+      if ((canonicalRoot && normalizedUrl.includes(canonicalRoot)) || (legacyRoot && normalizedUrl.includes(legacyRoot))) {
+        urlCandidates.push(normalizedUrl);
+      }
+    });
+
+    return [...new Set(
+      urlCandidates
+        .map((value) => String(value || "").trim().toLowerCase())
+        .filter(Boolean)
+    )];
+  }, [
+    artistData?.CoverPic,
+    artistData?.CoverPicURL,
+    artistData?.CoverPictureURL,
+    artistData?.CoverPicID,
+    artistData?.ProfilePic,
+    artistData?.ProfilePicURL,
+    artistData?.ProfilePictureURL,
+    artistData?.ProfilePicID,
+    artistData?.coverPic,
+    artistData?.coverPicURL,
+    artistData?.coverPictureURL,
+    artistData?.coverPicID,
+    artistData?.profilePic,
+    artistData?.profilePicURL,
+    artistData?.profilePictureURL,
+    artistData?.profilePicID,
+    pictures,
+    resolvedArtistId,
+    pictureById,
+  ]);
+
   const artistMediaRoot = useMemo(() => {
     if (!resolvedArtistId) {
       return "";
     }
 
-    return `platformpics/artists/${resolvedArtistId}/`;
-  }, [resolvedArtistId]);
+    if (blobBackedMediaRoot) {
+      return blobBackedMediaRoot;
+    }
 
-  const galleryPrefix = useMemo(() => (artistMediaRoot ? `${artistMediaRoot}gallery/` : ""), [artistMediaRoot]);
-  const profilePrefix = useMemo(() => (artistMediaRoot ? `${artistMediaRoot}profile/` : ""), [artistMediaRoot]);
-  const coverPrefix = useMemo(() => (artistMediaRoot ? `${artistMediaRoot}cover/` : ""), [artistMediaRoot]);
+    const canonicalRoot = `platformpics/artists/${resolvedArtistId}/`;
+    const legacyRoot = `platformpics/artistcontent/${resolvedArtistId}/`;
+    const canonicalMatches = knownArtistMediaUrls.filter((url) => url.includes(canonicalRoot)).length;
+    const legacyMatches = knownArtistMediaUrls.filter((url) => url.includes(legacyRoot)).length;
+    const usesLegacyRoot = legacyMatches > canonicalMatches;
+
+    return usesLegacyRoot ? legacyRoot : canonicalRoot;
+  }, [blobBackedMediaRoot, knownArtistMediaUrls, resolvedArtistId]);
+
+  useEffect(() => {
+    if (!resolvedArtistId || activeStep !== 6) {
+      return;
+    }
+
+    const canonicalRoot = `platformpics/artists/${resolvedArtistId}/`;
+    const legacyRoot = `platformpics/artistcontent/${resolvedArtistId}/`;
+    let isCancelled = false;
+
+    const inspectRoot = async (prefix) => {
+      try {
+        const response = await fetch(`/api/image/list?container=tagpictures&startPrefix=${encodeURIComponent(prefix)}&prefix=${encodeURIComponent(prefix)}`);
+        if (!response.ok) {
+          return { hasContent: false, score: 0 };
+        }
+
+        const data = await response.json();
+        const files = Array.isArray(data?.files) ? data.files : [];
+        const directories = Array.isArray(data?.directories) ? data.directories : [];
+        const score = files.length + (directories.length * 2);
+        return { hasContent: score > 0, score };
+      } catch {
+        return { hasContent: false, score: 0 };
+      }
+    };
+
+    const detectBlobBackedRoot = async () => {
+      const [canonical, legacy] = await Promise.all([
+        inspectRoot(canonicalRoot),
+        inspectRoot(legacyRoot),
+      ]);
+
+      if (isCancelled) {
+        return;
+      }
+
+      if (canonical.hasContent && !legacy.hasContent) {
+        setBlobBackedMediaRoot(canonicalRoot);
+        return;
+      }
+
+      if (legacy.hasContent && !canonical.hasContent) {
+        setBlobBackedMediaRoot(legacyRoot);
+        return;
+      }
+
+      if (canonical.hasContent && legacy.hasContent) {
+        setBlobBackedMediaRoot(canonical.score >= legacy.score ? canonicalRoot : legacyRoot);
+        return;
+      }
+
+      // If neither root currently has content, default to canonical.
+      setBlobBackedMediaRoot(canonicalRoot);
+    };
+
+    detectBlobBackedRoot();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeStep, resolvedArtistId]);
+
+  const galleryPrefix = useMemo(() => {
+    if (!artistMediaRoot) return "";
+    return `${artistMediaRoot}gallery/`;
+  }, [artistMediaRoot]);
+
+  const profilePrefix = useMemo(() => {
+    if (!artistMediaRoot) return "";
+    return `${artistMediaRoot}profile/`;
+  }, [artistMediaRoot]);
+
+  const coverPrefix = useMemo(() => {
+    if (!artistMediaRoot) return "";
+    return `${artistMediaRoot}cover/`;
+  }, [artistMediaRoot]);
 
   const getMostRecentActiveFile = (files) => {
     const safeFiles = Array.isArray(files) ? files : [];
@@ -389,24 +555,95 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
   const activeProfileFile = useMemo(() => getMostRecentActiveFile(profileFiles), [profileFiles]);
   const activeCoverFile = useMemo(() => getMostRecentActiveFile(coverFiles), [coverFiles]);
 
-  const activeProfilePictureId = useMemo(() => {
-    if (!activeProfileFile?.url) {
+  const selectedProfileFile = useMemo(() => {
+    const profilePicId = Number(artistData?.profilePicID || artistData?.ProfilePicID || 0);
+    if (!profilePicId) {
       return null;
     }
 
-    const picture = pictureByUrl[String(activeProfileFile.url).trim().toLowerCase()];
-    return picture?.pictureID || picture?.PictureID || activeProfileFile?.persistedPictureId || null;
-  }, [activeProfileFile, pictureByUrl]);
+    const picture = pictureById[profilePicId];
+    const url = String(picture?.url || picture?.URL || "").trim();
+    if (!url) {
+      return null;
+    }
+
+    return {
+      name: url.split("/").pop() || `picture-${profilePicId}`,
+      url,
+      persistedPictureId: profilePicId,
+      source: "selected",
+    };
+  }, [artistData?.ProfilePicID, artistData?.profilePicID, pictureById]);
+
+  const selectedCoverFile = useMemo(() => {
+    const coverPicId = Number(artistData?.coverPicID || artistData?.CoverPicID || 0);
+    if (!coverPicId) {
+      return null;
+    }
+
+    const picture = pictureById[coverPicId];
+    const url = String(picture?.url || picture?.URL || "").trim();
+    if (!url) {
+      return null;
+    }
+
+    return {
+      name: url.split("/").pop() || `picture-${coverPicId}`,
+      url,
+      persistedPictureId: coverPicId,
+      source: "selected",
+    };
+  }, [artistData?.CoverPicID, artistData?.coverPicID, pictureById]);
+
+  const resolvedActiveProfileFile = activeProfileFile || selectedProfileFile;
+  const resolvedActiveCoverFile = activeCoverFile || selectedCoverFile;
+
+  const activeProfilePictureId = useMemo(() => {
+    if (!resolvedActiveProfileFile?.url) {
+      return null;
+    }
+
+    const picture = pictureByUrl[String(resolvedActiveProfileFile.url).trim().toLowerCase()];
+    return picture?.pictureID || picture?.PictureID || resolvedActiveProfileFile?.persistedPictureId || null;
+  }, [pictureByUrl, resolvedActiveProfileFile]);
 
   const activeCoverPictureId = useMemo(() => {
-    if (!activeCoverFile?.url) {
+    if (!resolvedActiveCoverFile?.url) {
       return null;
     }
 
-    const picture = pictureByUrl[String(activeCoverFile.url).trim().toLowerCase()];
-    return picture?.pictureID || picture?.PictureID || activeCoverFile?.persistedPictureId || null;
-  }, [activeCoverFile, pictureByUrl]);
+    const picture = pictureByUrl[String(resolvedActiveCoverFile.url).trim().toLowerCase()];
+    return picture?.pictureID || picture?.PictureID || resolvedActiveCoverFile?.persistedPictureId || null;
+  }, [pictureByUrl, resolvedActiveCoverFile]);
 
+  const refreshMediaFolderFiles = useCallback(async (prefix, setFiles) => {
+    if (!prefix) {
+      setFiles([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/image/list?container=tagpictures&startPrefix=${encodeURIComponent(prefix)}&prefix=${encodeURIComponent(prefix)}`);
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      const nextFiles = Array.isArray(data?.files) ? data.files : [];
+      setFiles(nextFiles);
+    } catch {
+      // no-op
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!resolvedArtistId || activeStep !== 6) {
+      return;
+    }
+
+    refreshMediaFolderFiles(profilePrefix, setProfileFiles);
+    refreshMediaFolderFiles(coverPrefix, setCoverFiles);
+  }, [activeStep, coverPrefix, profilePrefix, refreshMediaFolderFiles, resolvedArtistId]);
 
   const refreshArtistContacts = useCallback(async () => {
     if (!resolvedArtistId) {
@@ -799,16 +1036,20 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
             artistID={resolvedArtistId}
             artistLabel={`Artist: ${resolvedArtistId}`}
             sessionUser={sessionUser}
-            activeProfileFile={activeProfileFile}
-            activeCoverFile={activeCoverFile}
+            activeProfileFile={resolvedActiveProfileFile}
+            activeCoverFile={resolvedActiveCoverFile}
+            artistMediaRoot={artistMediaRoot}
             galleryPrefix={galleryPrefix}
             profilePrefix={profilePrefix}
             coverPrefix={coverPrefix}
             mediaFeedback={mediaFeedback}
             isSaving={isSavingMedia}
             onSaveMediaSelection={saveMediaSelection}
+            onProfileFilesChanged={setProfileFiles}
+            onCoverFilesChanged={setCoverFiles}
             onContinue={() => completeStepAndContinue(ARTIST_REGISTRATION_STEPS.MEDIA_SETUP, 7)}
             backHref={buildArtistJoinHref(5, resolvedArtistSlug)}
+            galleryItems={Array.isArray(artistData?.gallery?.galleryItems) ? artistData.gallery.galleryItems : []}
           />
         )}
 

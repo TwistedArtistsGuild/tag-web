@@ -12,7 +12,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { SearchIcon } from "lucide-react"
 
@@ -106,15 +106,16 @@ const Artist = (props) => {
     artist: { ...(l.artist || {}), path: l.artist?.path || props.slug },
   }))
 
-  const galleryItems =
+  const galleryItems = useMemo(() => (
     props.artist?.gallery?.galleryItems ||
     props.artist?.gallery?.GalleryItems ||
     props.artist?.gallery?.items ||
     props.artist?.relatedGallery?.galleryItems ||
     props.artist?.relatedGallery?.GalleryItems ||
     []
+  ), [props.artist])
 
-  const relatedGalleryImages = galleryItems
+  const relatedGalleryImages = useMemo(() => galleryItems
     .map((item, index) => {
       const pictureUrl = item?.picture?.url || item?.picture?.URL
       const pictureThumbUrl = item?.picture?.thumbnailURL || item?.picture?.thumbnailUrl || item?.picture?.ThumbnailURL || pictureUrl
@@ -164,7 +165,7 @@ const Artist = (props) => {
 
       return null
     })
-    .filter(Boolean)
+    .filter(Boolean), [galleryItems, props.pictureCreditsById])
 
   const hasGalleryItemsButNoMedia = galleryItems.length > 0 && relatedGalleryImages.length === 0
 
