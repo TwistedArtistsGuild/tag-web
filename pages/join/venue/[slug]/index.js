@@ -1,24 +1,13 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
-import AddressForm from "@/components/forms/contact/address-form"
-import EmailForm from "@/components/forms/contact/email-form"
-import PhoneForm from "@/components/forms/contact/phone-form"
-import SocialHandlesForm from "@/components/forms/contact/social-handles-form"
-import UrlLinksForm from "@/components/forms/contact/url-links-form"
-import GalleryManager from "@/components/gallery/GalleryManager"
+import OrganizationPrimaryContactsStep from "@/components/forms/onboarding/organizations/OrganizationPrimaryContactsStep"
+import OrganizationPublicContactsStep from "@/components/forms/onboarding/organizations/OrganizationPublicContactsStep"
+import OrganizationMediaStep from "@/components/forms/onboarding/organizations/OrganizationMediaStep"
 import JoinPageShell from "@/components/join/common/join-page-shell"
 import getApiURL from "@/components/widgets/GetApiURL"
 
 const apiUrl = getApiURL()
-
-const PUBLIC_CONTACT_TABS = [
-  { key: "public-address", label: "Public Address" },
-  { key: "public-email", label: "Public Email" },
-  { key: "public-phone", label: "Public Phone" },
-  { key: "public-social", label: "Public Social" },
-  { key: "public-urls", label: "Public URLs" },
-]
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -356,263 +345,57 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
       ) : null}
 
       {resolvedVenueId && currentStep === 4 ? (
-        <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body gap-4">
-            <div>
-              <h2 className="card-title">Step 4: Primary Business Contact Info <span className="badge badge-sm badge-info">Guild Only</span></h2>
-              <p className="text-sm text-base-content/70">Enter business contact details for operations. Use <strong>Private</strong> or <strong>Primary</strong> scope based on whether it should be linked as the primary contact.</p>
-            </div>
-
-            {loadingContacts ? (
-              <div className="flex items-center gap-2 text-sm text-base-content/60">
-                <span className="loading loading-spinner loading-sm" />
-                Loading existing contacts...
-              </div>
-            ) : null}
-
-            <div className="space-y-6">
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                <h3 className="font-semibold text-base-content mb-1">Business Address</h3>
-                <AddressForm
-                  context="venue"
-                  entityID={resolvedVenueId}
-                  existingContacts={businessAddressContacts}
-                  defaultScope="private"
-                  availableScopes={["private", "primary"]}
-                  requireFullAddressFields
-                  defaultLabel="work"
-                  onSaved={refreshVenueContacts}
-                />
-              </div>
-
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                <h3 className="font-semibold text-base-content mb-1">Business Email</h3>
-                <EmailForm
-                  context="venue"
-                  entityID={resolvedVenueId}
-                  existingContacts={businessEmailContacts}
-                  defaultScope="private"
-                  availableScopes={["private", "primary"]}
-                  onSaved={refreshVenueContacts}
-                />
-              </div>
-
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                <h3 className="font-semibold text-base-content mb-1">Business Phone</h3>
-                <PhoneForm
-                  context="venue"
-                  entityID={resolvedVenueId}
-                  existingContacts={businessPhoneContacts}
-                  defaultScope="private"
-                  availableScopes={["private", "primary"]}
-                  requirePrimaryPhone
-                  onSaved={refreshVenueContacts}
-                />
-              </div>
-
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                <h3 className="font-semibold text-base-content mb-1">Business Website URLs</h3>
-                <UrlLinksForm
-                  context="venue"
-                  entityID={resolvedVenueId}
-                  existingContacts={businessUrlContacts}
-                  defaultScope="private"
-                  availableScopes={["private", "primary"]}
-                  onSaved={refreshVenueContacts}
-                />
-              </div>
-            </div>
-
-            {contactError ? (
-              <div className="alert alert-error"><span>{contactError}</span></div>
-            ) : null}
-
-            <div className="flex gap-2 justify-between flex-wrap">
-              <Link href={buildVenueJoinHref(3, resolvedSlug, resolvedVenueId)} className="btn btn-sm btn-outline">Back to Venue Profile</Link>
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={() => {
-                  if (!hasRequiredContactTypes) {
-                    setContactError("Save at least one primary address, email, and phone before continuing.")
-                    return
-                  }
-
-                  setContactError("")
-                  window.location.href = buildVenueJoinHref(5, resolvedSlug, resolvedVenueId)
-                }}
-              >
-                Continue to Media and Gallery
-              </button>
-            </div>
-          </div>
-        </div>
+        <OrganizationPrimaryContactsStep
+          context="venue"
+          entityId={resolvedVenueId}
+          loadingContacts={loadingContacts}
+          addressContacts={businessAddressContacts}
+          emailContacts={businessEmailContacts}
+          phoneContacts={businessPhoneContacts}
+          urlContacts={businessUrlContacts}
+          refreshContacts={refreshVenueContacts}
+          hasRequiredContactTypes={hasRequiredContactTypes}
+          contactError={contactError}
+          setContactError={setContactError}
+          backHref={buildVenueJoinHref(3, resolvedSlug, resolvedVenueId)}
+          backLabel="Back to Venue Profile"
+          continueHref={buildVenueJoinHref(5, resolvedSlug, resolvedVenueId)}
+        />
       ) : null}
 
       {resolvedVenueId && currentStep === 5 ? (
-        <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body gap-4">
-            <div>
-              <h2 className="card-title">Step 5: Media and Gallery</h2>
-              <p className="text-sm text-base-content/70">Uploader/content manager parity with artist, rooted at /platformpics/venuecontent/{'{'}ID{'}'}.</p>
-            </div>
-
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <GalleryManager
-                entityType="venue"
-                entityId={resolvedVenueId}
-                entityLabel={`Venue: ${resolvedSlug || resolvedVenueId}`}
-                currentUser={sessionUser}
-                folderKind="profile"
-                title="Venue Profile Picture"
-                allowVideo={false}
-                basePrefix={venueProfilePrefix}
-                onFilesChanged={setProfileFiles}
-              />
-
-              <GalleryManager
-                entityType="venue"
-                entityId={resolvedVenueId}
-                entityLabel={`Venue: ${resolvedSlug || resolvedVenueId}`}
-                currentUser={sessionUser}
-                folderKind="cover"
-                title="Venue Cover Picture"
-                allowVideo={false}
-                basePrefix={venueCoverPrefix}
-                onFilesChanged={setCoverFiles}
-              />
-            </div>
-
-            <GalleryManager
-              entityType="venue"
-              entityId={resolvedVenueId}
-              entityLabel={`Venue: ${resolvedSlug || resolvedVenueId}`}
-              currentUser={sessionUser}
-              folderKind="gallery"
-              title="Venue Gallery"
-              allowVideo
-              basePrefix={venueGalleryPrefix}
-              onFilesChanged={setGalleryFiles}
-            />
-
-            <div className="flex gap-2 justify-between flex-wrap">
-              <Link href={buildVenueJoinHref(4, resolvedSlug, resolvedVenueId)} className="btn btn-sm btn-outline">Back to Primary Contacts</Link>
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={() => {
-                  window.location.href = buildVenueJoinHref(6, resolvedSlug, resolvedVenueId)
-                }}
-              >
-                Continue to Public Contacts
-              </button>
-            </div>
-          </div>
-        </div>
+        <OrganizationMediaStep
+          context="venue"
+          entityId={resolvedVenueId}
+          entitySlug={resolvedSlug}
+          sessionUser={sessionUser}
+          profilePrefix={venueProfilePrefix}
+          coverPrefix={venueCoverPrefix}
+          galleryPrefix={venueGalleryPrefix}
+          setProfileFiles={setProfileFiles}
+          setCoverFiles={setCoverFiles}
+          setGalleryFiles={setGalleryFiles}
+          backHref={buildVenueJoinHref(4, resolvedSlug, resolvedVenueId)}
+          continueHref={buildVenueJoinHref(6, resolvedSlug, resolvedVenueId)}
+        />
       ) : null}
 
       {resolvedVenueId && currentStep === 6 ? (
-        <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body gap-4">
-            <div>
-              <h2 className="card-title">Step 6: Public Contacts</h2>
-              <p className="text-sm text-base-content/70">These contacts are public-facing. Keep private operations details in Step 4.</p>
-            </div>
-
-            {loadingContacts ? (
-              <div className="flex items-center gap-2 text-sm text-base-content/60">
-                <span className="loading loading-spinner loading-sm" />
-                Loading existing contacts...
-              </div>
-            ) : (
-              <>
-                <div role="tablist" className="tabs tabs-bordered">
-                  {PUBLIC_CONTACT_TABS.map((tab) => (
-                    <button
-                      key={tab.key}
-                      role="tab"
-                      type="button"
-                      className={`tab${contactsTab === tab.key ? " tab-active" : ""}`}
-                      onClick={() => setContactsTab(tab.key)}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-
-                {contactsTab === "public-address" ? (
-                  <AddressForm
-                    context="venue"
-                    entityID={resolvedVenueId}
-                    existingContacts={publicAddressContacts}
-                    defaultScope="secondary"
-                    availableScopes={["secondary"]}
-                    defaultLabel="office"
-                    requireCityStateCountry
-                    onSaved={refreshVenueContacts}
-                  />
-                ) : null}
-
-                {contactsTab === "public-email" ? (
-                  <EmailForm
-                    context="venue"
-                    entityID={resolvedVenueId}
-                    existingContacts={publicEmailContacts}
-                    defaultScope="secondary"
-                    availableScopes={["secondary"]}
-                    onSaved={refreshVenueContacts}
-                  />
-                ) : null}
-
-                {contactsTab === "public-phone" ? (
-                  <PhoneForm
-                    context="venue"
-                    entityID={resolvedVenueId}
-                    existingContacts={publicPhoneContacts}
-                    defaultScope="secondary"
-                    availableScopes={["secondary"]}
-                    onSaved={refreshVenueContacts}
-                  />
-                ) : null}
-
-                {contactsTab === "public-social" ? (
-                  <SocialHandlesForm
-                    context="venue"
-                    entityID={resolvedVenueId}
-                    existingContacts={publicSocialContacts}
-                    defaultScope="secondary"
-                    availableScopes={["secondary"]}
-                    onSaved={refreshVenueContacts}
-                  />
-                ) : null}
-
-                {contactsTab === "public-urls" ? (
-                  <UrlLinksForm
-                    context="venue"
-                    entityID={resolvedVenueId}
-                    existingContacts={publicUrlContacts}
-                    defaultScope="secondary"
-                    availableScopes={["secondary"]}
-                    onSaved={refreshVenueContacts}
-                  />
-                ) : null}
-              </>
-            )}
-
-            <div className="flex gap-2 justify-between flex-wrap">
-              <Link href={buildVenueJoinHref(5, resolvedSlug, resolvedVenueId)} className="btn btn-sm btn-outline">Back to Media</Link>
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={() => {
-                  window.location.href = buildVenueJoinHref(7, resolvedSlug, resolvedVenueId)
-                }}
-              >
-                Continue to Review
-              </button>
-            </div>
-          </div>
-        </div>
+        <OrganizationPublicContactsStep
+          context="venue"
+          entityId={resolvedVenueId}
+          loadingContacts={loadingContacts}
+          contactsTab={contactsTab}
+          setContactsTab={setContactsTab}
+          publicAddressContacts={publicAddressContacts}
+          publicEmailContacts={publicEmailContacts}
+          publicPhoneContacts={publicPhoneContacts}
+          publicSocialContacts={publicSocialContacts}
+          publicUrlContacts={publicUrlContacts}
+          refreshContacts={refreshVenueContacts}
+          backHref={buildVenueJoinHref(5, resolvedSlug, resolvedVenueId)}
+          continueHref={buildVenueJoinHref(7, resolvedSlug, resolvedVenueId)}
+        />
       ) : null}
 
       {resolvedVenueId && currentStep === 7 ? (

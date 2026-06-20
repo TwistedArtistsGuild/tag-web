@@ -1,13 +1,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import AddressForm from "@/components/forms/contact/address-form";
-import EmailForm from "@/components/forms/contact/email-form";
-import GalleryManager from "@/components/gallery/GalleryManager";
 import JoinPageShell from "@/components/join/common/join-page-shell";
-import PhoneForm from "@/components/forms/contact/phone-form";
-import SocialHandlesForm from "@/components/forms/contact/social-handles-form";
-import UrlLinksForm from "@/components/forms/contact/url-links-form";
+import UserPrivateContactsStep from "@/components/forms/onboarding/users/UserPrivateContactsStep";
+import UserProfileMediaStep from "@/components/forms/onboarding/users/UserProfileMediaStep";
 import UserCoreFields from "@/components/join/workflows/user/user-core-fields";
 import UserPrivacyFields from "@/components/join/workflows/user/user-privacy-fields";
 import getApiURL from "@/components/widgets/GetApiURL";
@@ -518,110 +514,21 @@ export default function JoinUserSlugPage({
       ) : null}
 
       {!missingBaseData && currentStep === 3 ? (
-        <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body gap-4">
-            <div>
-              <h2 className="card-title">Step 3: Private Contact Details <span className="badge badge-sm badge-info">Private Only</span></h2>
-              <p className="text-sm text-base-content/70">Add the contact details you want kept on file for your user account. Everything saved here stays private and is never shown on your public profile.</p>
-            </div>
-
-            {loadingContacts ? (
-              <div className="flex items-center gap-2 text-sm text-base-content/60">
-                <span className="loading loading-spinner loading-sm" />
-                Loading existing contacts...
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                  <h3 className="font-semibold text-base-content mb-1">Private Address</h3>
-                  <p className="text-xs text-base-content/60 mb-4">Optional. Store a mailing address here for account support, billing, or internal records.</p>
-                  <AddressForm
-                    context="user"
-                    entityID={resolvedUserId}
-                    existingContacts={addressContacts}
-                    defaultScope="private"
-                    availableScopes={["private"]}
-                    defaultLabel="home"
-                    onSaved={refreshUserContacts}
-                  />
-                </div>
-
-                <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                  <h3 className="font-semibold text-base-content mb-1">Private Email</h3>
-                  <p className="text-sm text-base-content/70 mb-4">Recommended. Add an email address staff can use for account support, follow-up, or membership communication.</p>
-                  <EmailForm
-                    context="user"
-                    entityID={resolvedUserId}
-                    existingContacts={emailContacts}
-                    defaultScope="private"
-                    availableScopes={["private"]}
-                    onSaved={refreshUserContacts}
-                  />
-                </div>
-
-                <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                  <h3 className="font-semibold text-base-content mb-1">Private Phone</h3>
-                  <p className="text-xs text-base-content/60 mb-4">Optional. Keep a direct phone number on file for account verification or support follow-up.</p>
-                  <PhoneForm
-                    context="user"
-                    entityID={resolvedUserId}
-                    existingContacts={phoneContacts}
-                    defaultScope="private"
-                    availableScopes={["private"]}
-                    onSaved={refreshUserContacts}
-                  />
-                </div>
-
-                <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                  <h3 className="font-semibold text-base-content mb-1">Private Social Handles</h3>
-                  <p className="text-sm text-base-content/70 mb-4">Optional. Save social links here if TAG staff may need them to verify or support your account.</p>
-                  <SocialHandlesForm
-                    context="user"
-                    entityID={resolvedUserId}
-                    existingContacts={socialContacts}
-                    defaultScope="private"
-                    availableScopes={["private"]}
-                    onSaved={refreshUserContacts}
-                  />
-                </div>
-
-                <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                  <h3 className="font-semibold text-base-content mb-1">Private Website URL</h3>
-                  <p className="text-xs text-base-content/60 mb-1">Optional but helpful</p>
-                  <p className="text-sm text-base-content/70 mb-4">Store websites that help guild staff verify your identity or account details without exposing them publicly from this step.</p>
-                  <UrlLinksForm
-                    context="user"
-                    entityID={resolvedUserId}
-                    existingContacts={urlContacts}
-                    defaultScope="private"
-                    availableScopes={["private"]}
-                    onSaved={refreshUserContacts}
-                  />
-                </div>
-              </div>
-            )}
-
-            {contactError ? (
-              <div className="alert alert-error">
-                <span>{contactError}</span>
-              </div>
-            ) : null}
-
-            <div className="flex gap-2 justify-between flex-wrap">
-              <Link href={buildUserJoinHref(2, resolvedUsername, resolvedUserId)} className="btn btn-sm btn-outline">Back to Profile</Link>
-              <button type="button" className="btn btn-sm btn-primary" onClick={() => {
-                if (totalUserContacts <= 0) {
-                  setContactError("Save at least one contact method before continuing.");
-                  return;
-                }
-                setContactError("");
-                window.location.href = buildUserJoinHref(4, resolvedUsername, resolvedUserId);
-              }}>
-                Continue to Privacy
-              </button>
-            </div>
-          </div>
-        </div>
+        <UserPrivateContactsStep
+          userId={resolvedUserId}
+          loadingContacts={loadingContacts}
+          addressContacts={addressContacts}
+          emailContacts={emailContacts}
+          phoneContacts={phoneContacts}
+          socialContacts={socialContacts}
+          urlContacts={urlContacts}
+          refreshContacts={refreshUserContacts}
+          contactError={contactError}
+          setContactError={setContactError}
+          totalContacts={totalUserContacts}
+          backHref={buildUserJoinHref(2, resolvedUsername, resolvedUserId)}
+          continueHref={buildUserJoinHref(4, resolvedUsername, resolvedUserId)}
+        />
       ) : null}
 
       {!missingBaseData && currentStep === 4 ? (
@@ -651,45 +558,14 @@ export default function JoinUserSlugPage({
       ) : null}
 
       {!missingBaseData && currentStep === 5 ? (
-        <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body gap-4">
-            <div>
-              <h2 className="card-title">Step 5: Profile Media Editor</h2>
-              <p className="text-sm text-base-content/70">Upload and manage media for your user account, then choose which images should serve as your profile and cover photos.</p>
-            </div>
-
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <GalleryManager
-                entityType="user"
-                entityId={resolvedUserId}
-                entityLabel={`User: ${resolvedUserId}`}
-                currentUser={sessionUser}
-                folderKind="profile"
-                title="Profile Picture Uploader"
-                allowVideo={false}
-                basePrefix={userProfilePrefix}
-              />
-
-              <GalleryManager
-                entityType="user"
-                entityId={resolvedUserId}
-                entityLabel={`User: ${resolvedUserId}`}
-                currentUser={sessionUser}
-                folderKind="cover"
-                title="Cover Picture Uploader"
-                allowVideo={false}
-                basePrefix={userCoverPrefix}
-              />
-            </div>
-
-            <div className="flex gap-2 justify-between flex-wrap">
-              <Link href={buildUserJoinHref(4, resolvedUsername, resolvedUserId)} className="btn btn-sm btn-outline">Back to Privacy</Link>
-              <button type="button" className="btn btn-sm btn-primary" onClick={() => { window.location.href = buildUserJoinHref(6, resolvedUsername, resolvedUserId); }}>
-                Continue to Content Preferences
-              </button>
-            </div>
-          </div>
-        </div>
+        <UserProfileMediaStep
+          sessionUser={sessionUser}
+          userId={resolvedUserId}
+          userProfilePrefix={userProfilePrefix}
+          userCoverPrefix={userCoverPrefix}
+          backHref={buildUserJoinHref(4, resolvedUsername, resolvedUserId)}
+          continueHref={buildUserJoinHref(6, resolvedUsername, resolvedUserId)}
+        />
       ) : null}
 
       {!missingBaseData && currentStep === 6 ? (
