@@ -1,0 +1,69 @@
+import DynaFormDB from "@/components/widgets/DynaFormDB";
+import getApiURL from "@/components/widgets/GetApiURL";
+import React, { useMemo } from "react";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { isAdmin, isStaff, hasPermission } from "@/utils/authHelpers";
+import { PERMISSIONS } from "@/utils/permissions";
+import TagSEO from "@/components/TagSEO";
+import StaffContextNav from "@/components/portal/StaffContextNav";
+
+const api_url = getApiURL();
+const formName = "CreateMotionForm"; // Make sure to configure this form in the DB metadata editor
+
+export default function CreateMotionForm(props) {
+    const { sessionUser } = props;
+
+    // We enhance data similar to blogs but inject the user explicitly
+    const enhancedMetadata = useMemo(() => {
+        const base = props.metadataProp || { APIURLpostfix: "motions", RequestType: "add" };
+        const resolvedApiUrl = `${api_url}motions`;
+
+        return {
+            ...base,
+            FromURL: "/portal/staff/motions/create",
+            redirectURL: "/portal/staff/motions",
+            APIURL: resolvedApiUrl,
+            entityId: "new"
+        };
+    }, [props.metadataProp]);
+
+    // FIX: Wrap the prefilledData in useMemo so it doesn't trigger Form resets
+    const prefilledData = useMemo(() => {
+        return { 
+            proposedById: sessionUser?.id ? parseInt(sessionUser.id) : 0 
+        };
+    }, [sessionUser?.id]);
+
+    return (
+        <div className="p-4 pt-12 bg-base-200 min-h-screen">
+            <TagSEO metadataProp={{ title: "Propose Motion" }} canonicalSlug="portal/staff/motions/create" />
+            
+            <StaffContextNav />
+            
+            <div className="max-w-4xl mx-auto mt-8 bg-base-100 p-8 rounded-box shadow border border-base-300">
+                <h1 className="text-3xl font-bold text-primary mb-6">Create New Motion</h1>
+                <DynaFormDB request="add" metadataProp={enhancedMetadata} formData={prefilledData} />
+            </div>
+        </div>
+    );
+}
+
+export async function getServerSideProps(context) {
+    const session = await getServerSession(context.req, context.res, authOptions);
+    if (!session?.user) return { redirect: { destination: `/api/auth/signin`, permanent: false } };
+    if (!isStaff(session) && !isAdmin(session)) return { notFound: true };
+
+    if (!hasPermission(session, PERMISSIONS.MOTION.CREATE)) {
+        return { notFound: true }; // Hide create page if they don't have CREATE permissions
+    }
+
+    let metadata = {};
+    try {
+        let res = await fetch(`${api_url}formsmetadata/${formName}`);
+        if (!res.ok) res = await fetch(`${api_url}forms_metadata/${formName}`);
+        if (res.ok) metadata = await res.json();
+    } catch (e) { }
+
+    return { props: { metadataProp: metadata, sessionUser: session.user } };
+}
