@@ -104,6 +104,11 @@ export default function Portal_Artist() {
 					))}
 				</div>
 			</div>
+			<div className="mt-2">
+				<Link href="/portal/venue/" className="link link-primary">
+          Venue&apos;s Portal
+				</Link>
+			</div>
 		</div>
 	);
 }
