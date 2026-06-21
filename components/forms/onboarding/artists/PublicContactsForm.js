@@ -27,6 +27,7 @@ export default function PublicContactsForm({
   onRefresh,
   onContinue,
   backHref,
+  backLabel = "Back to Profile Media Editor",
 }) {
   return (
     <SocialRealtimeProvider>
@@ -35,6 +36,10 @@ export default function PublicContactsForm({
           <div>
             <h2 className="card-title">Public Contacts</h2>
             <p className="text-sm text-base-content/70">These contacts will be visible on your public artist profile. ⚠️ Do NOT publish personal phone numbers or home studio addresses unless you welcome drop-in business. Use city/state only for sensitive locations, or add those details in Business Contact Info instead.</p>
+          </div>
+
+          <div className="alert alert-warning text-sm">
+            <span>Active bug: business and public contact save is currently unstable. Engineering is actively fixing this.</span>
           </div>
 
           {loading ? (
@@ -110,7 +115,7 @@ export default function PublicContactsForm({
           )}
 
           <div className="flex gap-2 justify-between flex-wrap pt-2">
-            <Link href={backHref} className="btn btn-sm btn-outline">Back to Profile Media Editor</Link>
+            <Link href={backHref} className="btn btn-sm btn-outline">{backLabel}</Link>
             <button
               type="button"
               className="btn btn-sm btn-success"

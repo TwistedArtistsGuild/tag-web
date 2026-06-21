@@ -107,6 +107,18 @@ function normalizeScope(value, fallback = "secondary") {
   return fallback
 }
 
+function scopeFromContact(contact, fallback = "secondary") {
+  const rawIsPrivate = contact?.isPrivate
+  if (rawIsPrivate === true || String(rawIsPrivate || "").trim().toLowerCase() === "true") {
+    return "private"
+  }
+  if (rawIsPrivate === false || String(rawIsPrivate || "").trim().toLowerCase() === "false") {
+    return "secondary"
+  }
+
+  return normalizeScope(contact?.scope, fallback)
+}
+
 function makeInitialEntries(existingContacts = []) {
   const sortedContacts = [...existingContacts].sort((a, b) => {
     const aOrder = Number(a?.displayOrder)
@@ -152,7 +164,7 @@ function makeInitialEntries(existingContacts = []) {
       urlValue: String(saved?.value || "").trim(),
       label: String(saved?.label || socialPlatforms[platformKey]?.label || "").trim(),
       description: String(saved?.description || "").trim(),
-      scope: String(saved?.scope || "secondary").trim().toLowerCase() || "secondary",
+      scope: scopeFromContact(saved, "secondary"),
       previewStatus: "idle",
       previewTitle: "",
       previewHint: "",
@@ -382,8 +394,7 @@ export default function SocialHandlesForm({ context = "artist", entityID, artist
           value: finalUrl,
           handle: entry.handle.trim().replace(/^@/, "") || null,
           description: entry.description.trim() || null,
-          scope: normalizeScope(entry.scope, defaultScope),
-          setAsPrimary: false,
+          isPrivate: normalizeScope(entry.scope, defaultScope) === "private",
           displayOrder: index,
         }
       })

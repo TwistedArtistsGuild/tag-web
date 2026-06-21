@@ -212,10 +212,8 @@ export default function JoinUserSlugPage({
 
       const data = await response.json();
       const rows = Array.isArray(data?.contacts) ? data.contacts : [];
-      const visibleRows = rows.filter((contact) => {
-        const scope = String(contact?.scope || "").trim().toLowerCase();
-        return scope === "private";
-      });
+      const isPrivateRow = (contact) => contact?.isPrivate === true || String(contact?.isPrivate || "").trim().toLowerCase() === "true";
+      const visibleRows = rows.filter((contact) => isPrivateRow(contact));
 
       setAddressContacts(visibleRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "address"));
       setEmailContacts(visibleRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "email"));
@@ -606,6 +604,28 @@ export default function JoinUserSlugPage({
               <div><span className="font-semibold">Hide profile from public:</span> {privacyForm.hideProfileFromPublic ? "Yes" : "No"}</div>
               <div><span className="font-semibold">Has settings row:</span> {userSettings ? "Yes" : "No"}</div>
               <div><span className="font-semibold">Published:</span> {userForm.isPublished ? "Yes" : "No"}</div>
+            </div>
+
+            <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
+              <h3 className="font-semibold mb-2">Step Completion</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                {[2, 3, 4, 5, 6].map((step) => {
+                  const labels = {
+                    2: "Profile",
+                    3: "Contacts",
+                    4: "Privacy",
+                    5: "Profile Media",
+                    6: "Content",
+                  };
+                  const done = Boolean(stepCompletionMap[step]);
+                  return (
+                    <div key={step} className="flex items-center justify-between rounded border border-base-300 px-2 py-1">
+                      <span>{labels[step]}</span>
+                      <span className={`badge badge-xs ${done ? "badge-success" : "badge-neutral"}`}>{done ? "Done" : "Pending"}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             {publishError ? (

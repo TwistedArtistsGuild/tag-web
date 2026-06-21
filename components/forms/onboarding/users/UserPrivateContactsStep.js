@@ -27,6 +27,10 @@ export default function UserPrivateContactsStep({
       title="Step 3: Private Contact Details"
       description="Add the contact details you want kept on file for your user account. Everything saved here stays private and is never shown on your public profile."
     >
+      <div className="alert alert-warning text-sm">
+        <span>Active bug: business and public contact save is currently unstable. Engineering is actively fixing this.</span>
+      </div>
+
       {loadingContacts ? (
         <div className="flex items-center gap-2 text-sm text-base-content/60">
           <span className="loading loading-spinner loading-sm" />

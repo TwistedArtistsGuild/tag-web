@@ -20,6 +20,8 @@ export default function MediaUploadForm({
   onCoverFilesChanged,
   onContinue,
   backHref,
+  backLabel = "Back to Business Contact Info",
+  continueLabel = "Continue to Public Contacts",
   galleryItems = [],
 }) {
   const [activeManager, setActiveManager] = useState("");
@@ -178,7 +180,7 @@ export default function MediaUploadForm({
         )}
 
         <div className="flex gap-2 justify-between flex-wrap">
-          <Link href={backHref} className="btn btn-sm btn-outline">Back to Business Contact Info</Link>
+          <Link href={backHref} className="btn btn-sm btn-outline">{backLabel}</Link>
           <div className="flex gap-2">
             <button type="button" className="btn btn-sm btn-primary" onClick={onSaveMediaSelection} disabled={isSaving}>
               {isSaving ? "Saving..." : "Sync Active Profile + Cover"}
@@ -188,7 +190,7 @@ export default function MediaUploadForm({
               className="btn btn-sm btn-success"
               onClick={onContinue}
             >
-              Continue to Public Contacts
+              {continueLabel}
             </button>
           </div>
         </div>

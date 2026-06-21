@@ -28,11 +28,23 @@ function normalizeScope(value, fallback = "secondary") {
   return fallback
 }
 
+function scopeFromContact(contact, fallback = "secondary") {
+  const rawIsPrivate = contact?.isPrivate
+  if (rawIsPrivate === true || String(rawIsPrivate || "").trim().toLowerCase() === "true") {
+    return "private"
+  }
+  if (rawIsPrivate === false || String(rawIsPrivate || "").trim().toLowerCase() === "false") {
+    return "secondary"
+  }
+
+  return normalizeScope(contact?.scope, fallback)
+}
+
 function sortByScopeAndOrder(entries = []) {
   const rank = { primary: 0, private: 1, secondary: 2 }
   return [...entries].sort((a, b) => {
-    const aScope = rank[normalizeScope(a?.scope)] ?? 9
-    const bScope = rank[normalizeScope(b?.scope)] ?? 9
+    const aScope = rank[scopeFromContact(a)] ?? 9
+    const bScope = rank[scopeFromContact(b)] ?? 9
     if (aScope !== bScope) return aScope - bScope
     return Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0)
   })
@@ -56,7 +68,7 @@ function makeInitialEntries(existingContacts = [], defaultScope = "secondary", d
       zipCode: String(contact?.address?.postalCode || "").trim(),
       country: rawCountry,
       operationHours: String(contact?.address?.hours || "").trim(),
-      scope: normalizeScope(contact?.scope, defaultScope),
+      scope: scopeFromContact(contact, defaultScope),
       mode: contact?.address?.line1 ? "display" : "edit",
     }
   })
@@ -329,8 +341,8 @@ export default function AddressForm({
         const countryValue = String(entry.country || "").trim()
         const regionValue = String(entry.region || entry.state || "").trim()
         const rawLine1 = String(entry.line1 || "").trim()
-        const addressLine1 = isPrimaryCityStateRequired && !requireFullAddressFields
-          ? `${city}, ${regionValue}`
+        const addressLine1 = (isPrimaryCityStateRequired || requireCityStateCountry) && !requireFullAddressFields
+          ? (rawLine1 || [city, regionValue, countryValue].filter(Boolean).join(", "))
           : rawLine1
 
         if (!addressLine1) return null
@@ -350,9 +362,8 @@ export default function AddressForm({
           zipCode: entry.zipCode.trim() || null,
           country: countryValue || null,
           operationHours: entry.operationHours.trim() || null,
-          scope: normalizeScope(entry.scope, defaultScope),
-          setAsPrimary: singleEntryOnly,
-          displayOrder: singleEntryOnly ? 1 : index,
+          isPrivate: normalizeScope(entry.scope, defaultScope) === "private",
+          displayOrder: singleEntryOnly ? 0 : index,
         }
       })
       .filter(Boolean)
@@ -372,8 +383,12 @@ export default function AddressForm({
           body: JSON.stringify(payload),
         })
         if (!response.ok) {
-          const err = await response.json().catch(() => ({}))
-          throw new Error(err?.message || "Unable to save address contacts")
+          const errJson = await response.json().catch(() => null)
+          const errText = typeof errJson === "string"
+            ? errJson
+            : (errJson?.message || errJson?.error || "")
+          const statusText = response.status ? ` (${response.status})` : ""
+          throw new Error(errText || `Unable to save address contacts${statusText}`)
         }
       }
 

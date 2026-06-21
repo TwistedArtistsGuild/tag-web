@@ -15,11 +15,19 @@ export default function ReviewAndPublishForm({
   isPublishing,
   publishFeedback,
   isPublished,
+  stepCompletionMap,
   onPublish,
   backHref,
   extractPlainText,
 }) {
   const totalPublicContacts = publicAddressContacts.length + publicEmailContacts.length + publicPhoneContacts.length + publicSocialContacts.length + publicUrlContacts.length;
+  const checklist = [
+    { key: 3, label: "Profile" },
+    { key: 4, label: "Business Details" },
+    { key: 5, label: "Profile Media" },
+    { key: 6, label: "Business Contacts" },
+    { key: 7, label: "Public Contacts" },
+  ];
 
   return (
     <div className="card bg-base-100 shadow border border-base-300">
@@ -37,6 +45,21 @@ export default function ReviewAndPublishForm({
           <div><span className="font-semibold">Business email on file:</span> {businessEmailContacts.length > 0 ? "Yes ✓" : "No"}</div>
           <div><span className="font-semibold">Public contact count:</span> {totalPublicContacts}</div>
           <div><span className="font-semibold">Workflow progress:</span> {postSlugPercentComplete}%</div>
+        </div>
+
+        <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
+          <h3 className="font-semibold mb-2">Step Completion</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+            {checklist.map((item) => {
+              const done = Boolean(stepCompletionMap?.[item.key]);
+              return (
+                <div key={item.key} className="flex items-center justify-between rounded border border-base-300 px-2 py-1">
+                  <span>{item.label}</span>
+                  <span className={`badge badge-xs ${done ? "badge-success" : "badge-neutral"}`}>{done ? "Done" : "Pending"}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {publishFeedback ? (

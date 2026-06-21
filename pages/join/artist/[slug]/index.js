@@ -1,12 +1,8 @@
 import Link from "next/link";
-import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import TagSEO from "@/components/TagSEO";
 import getApiURL from "@/components/widgets/GetApiURL";
-import GalleryManager from "@/components/gallery/GalleryManager";
-import TTTitleLine from "@/components/tiptap/TT_TitleLine";
-import TTArticle from "@/components/tiptap/TT_Article";
 import ProfileForm from "@/components/forms/onboarding/artists/ProfileForm";
 import BusinessDetailsForm from "@/components/forms/onboarding/artists/BusinessDetailsForm";
 import PrivateContactsForm from "@/components/forms/onboarding/artists/PrivateContactsForm";
@@ -19,29 +15,8 @@ import {
   ARTIST_REGISTRATION_STEPS,
   markWorkflowStepComplete,
 } from "@/utils/onboarding/artistWorkflow";
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
-import SocialHandlesForm from "@/components/forms/contact/social-handles-form"
-import EmailForm from "@/components/forms/contact/email-form"
-import PhoneForm from "@/components/forms/contact/phone-form"
-import AddressForm from "@/components/forms/contact/address-form"
-import UrlLinksForm from "@/components/forms/contact/url-links-form"
 
 const apiUrl = getApiURL();
-const businessEntityOptions = [
-  { value: "", label: "Select business entity" },
-  { value: "sole-proprietorship", label: "Sole Proprietorship" },
-  { value: "llc", label: "LLC" },
-  { value: "corporation", label: "Corporation" },
-  { value: "partnership", label: "Partnership" },
-  { value: "nonprofit", label: "Nonprofit" },
-  { value: "other", label: "Other" },
-];
-
-const incorporationOptions = [
-  { value: "", label: "Select incorporation status" },
-  { value: "true", label: "Yes" },
-  { value: "false", label: "No" },
-];
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim();
@@ -81,7 +56,7 @@ async function getSessionFromRequest(context) {
 
 function getWizardStep(rawStep) {
   const parsed = Number(rawStep || 1);
-  if (parsed >= 1 && parsed <= 7) {
+  if (parsed >= 1 && parsed <= 8) {
     return parsed;
   }
   return 1;
@@ -129,14 +104,6 @@ function validateSeoTags(value) {
     normalized: segments.join(", "),
   };
 }
-
-const PUBLIC_CONTACT_TABS = [
-  { key: "public-address", label: "Public Address" },
-  { key: "public-email", label: "Public Email" },
-  { key: "public-phone", label: "Public Phone" },
-  { key: "public-social", label: "Public Social" },
-  { key: "public-urls", label: "Public URLs" },
-];
 
 export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId, artistData, pictures }) {
   const initialProgress = typeof window !== "undefined" ? (getArtistRegistrationProgress?.() || {}) : {};
@@ -240,26 +207,30 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
 
   const stepCompletionMap = useMemo(() => {
     const hasProfileDraft = Boolean(extractPlainText(profileTitle)) && Boolean(extractPlainText(profileByline) || extractPlainText(profileBiography));
+    const hasBusinessDetails = Boolean(
+      String(city || "").trim() &&
+      String(stateOrProvince || "").trim() &&
+      String(zipCode || "").trim() &&
+      String(country || "").trim() &&
+      String(businessEntityType || "").trim() &&
+      String(incorporationStatus || "").trim()
+    );
+    const hasBusinessContacts = businessContactCardComplete || Boolean(workflowCompletionMap.private_contacts);
     const hasSelectedMedia = Boolean(
       artistData?.profilePicID ||
       artistData?.ProfilePicID ||
       artistData?.coverPicID ||
       artistData?.CoverPicID
     );
-    const hasPublicContacts = (
-      publicAddressContacts.length +
-      publicEmailContacts.length +
-      publicPhoneContacts.length +
-      publicSocialContacts.length +
-      publicUrlContacts.length
-    ) > 0;
+    const isPublished = Boolean(workflowSummary?.isPublished || workflowSummary?.IsPublished || artistData?.isPublished || artistData?.IsPublished);
 
     return {
       3: hasProfileDraft || Boolean(workflowCompletionMap.added_bio),
-      4: businessContactCardComplete || Boolean(workflowCompletionMap.private_contacts),
+      4: hasBusinessDetails,
       5: hasSelectedMedia || Boolean(workflowCompletionMap.uploaded_photos),
-      6: hasPublicContacts || Boolean(workflowCompletionMap.added_contacts),
-      7: Boolean(workflowSummary?.isPublished || workflowSummary?.IsPublished || artistData?.isPublished || artistData?.IsPublished),
+      6: hasBusinessContacts,
+      7: true,
+      8: isPublished,
     };
   }, [
     artistData?.CoverPicID,
@@ -268,18 +239,19 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
     artistData?.coverPicID,
     artistData?.isPublished,
     artistData?.profilePicID,
+    businessEntityType,
     businessContactCardComplete,
+    city,
+    country,
+    incorporationStatus,
     profileBiography,
     profileByline,
     profileTitle,
-    publicAddressContacts.length,
-    publicEmailContacts.length,
-    publicPhoneContacts.length,
-    publicSocialContacts.length,
-    publicUrlContacts.length,
+    stateOrProvince,
     workflowCompletionMap,
     workflowSummary?.IsPublished,
     workflowSummary?.isPublished,
+    zipCode,
   ]);
 
   const postSlugPercentComplete = useMemo(() => {
@@ -289,7 +261,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
   }, [stepCompletionMap]);
 
   const hasLiveArtist = Boolean(resolvedArtistId);
-  const activeStep = hasLiveArtist ? Math.min(Math.max(currentStep, 3), 7) : 3;
+  const activeStep = hasLiveArtist ? Math.min(Math.max(currentStep, 3), 8) : 3;
   const showMissingIndicators = Boolean(resolvedArtistId) && !loadingWorkflowSummary;
 
   /**
@@ -321,7 +293,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           isPublished: true,
-          enforceRequiredSteps: true,
+          enforceRequiredSteps: false,
         }),
       });
 
@@ -463,7 +435,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
   }, [blobBackedMediaRoot, knownArtistMediaUrls, resolvedArtistId]);
 
   useEffect(() => {
-    if (!resolvedArtistId || activeStep !== 6) {
+    if (!resolvedArtistId || activeStep !== 5) {
       return;
     }
 
@@ -637,7 +609,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
   }, []);
 
   useEffect(() => {
-    if (!resolvedArtistId || activeStep !== 6) {
+    if (!resolvedArtistId || activeStep !== 5) {
       return;
     }
 
@@ -659,8 +631,9 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
 
       const data = await r.json();
       const rows = Array.isArray(data.contacts) ? data.contacts : [];
-      const secondaryRows = rows.filter((c) => String(c?.scope || "").trim().toLowerCase() === "secondary");
-      const internalRows = rows.filter((c) => String(c?.scope || "").trim().toLowerCase() === "private" || String(c?.scope || "").trim().toLowerCase() === "primary");
+      const isPrivateRow = (contact) => contact?.isPrivate === true || String(contact?.isPrivate || "").trim().toLowerCase() === "true";
+      const secondaryRows = rows.filter((c) => !isPrivateRow(c));
+      const internalRows = rows.filter((c) => isPrivateRow(c));
 
       setPublicPhoneContacts(secondaryRows.filter((c) => String(c?.contactType || "").toLowerCase() === "phone"));
       setPublicEmailContacts(secondaryRows.filter((c) => String(c?.contactType || "").toLowerCase() === "email"));
@@ -680,7 +653,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
   }, [resolvedArtistId]);
 
   useEffect(() => {
-    if (activeStep !== 5 && activeStep !== 7) {
+    if (activeStep !== 6 && activeStep !== 7) {
       return;
     }
 
@@ -774,7 +747,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
               <Link href="/join" className="btn btn-sm btn-ghost">Back to Join</Link>
             </div>
             <p className="text-base-content/70">
-              Artist post-slug setup: Step 3 complete profile, Step 4 add business details, Step 5 add business contact information, Step 6 set profile and gallery media, Step 7 configure public contacts, then Step 8 review and publish.
+              Artist post-slug setup: Step 3 complete profile, Step 4 add business details, Step 5 set profile and gallery media, Step 6 add business contact information, Step 7 configure public contacts, then Step 8 review and publish.
             </p>
           </div>
         </div>
@@ -789,10 +762,10 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
                  Business Details
               </Link>
               <Link href={buildArtistJoinHref(5, resolvedArtistSlug)} className={`btn btn-sm ${activeStep === 5 ? "btn-primary" : (showMissingIndicators && !stepCompletionMap[5]) ? "btn-warning btn-outline animate-pulse" : "btn-outline"}`}>
-                 Business Contacts
+                  Profile Media
               </Link>
               <Link href={buildArtistJoinHref(6, resolvedArtistSlug)} className={`btn btn-sm ${activeStep === 6 ? "btn-primary" : (showMissingIndicators && !stepCompletionMap[6]) ? "btn-warning btn-outline animate-pulse" : "btn-outline"}`}>
-                 Profile Media
+                  Business Contacts
               </Link>
               <Link href={buildArtistJoinHref(7, resolvedArtistSlug)} className={`btn btn-sm ${activeStep === 7 ? "btn-primary" : (showMissingIndicators && !stepCompletionMap[7]) ? "btn-warning btn-outline animate-pulse" : "btn-outline"}`}>
                  Public Contacts
@@ -1002,36 +975,6 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
         )}
 
         {activeStep === 5 && resolvedArtistId && (
-          <PrivateContactsForm
-            artistID={resolvedArtistId}
-            businessAddressContacts={businessAddressContacts}
-            businessPhoneContacts={businessPhoneContacts}
-            businessEmailContacts={businessEmailContacts}
-            businessUrlContacts={businessUrlContacts}
-            loading={loadingContacts}
-            error={privateContactRequirementError}
-            onRefresh={refreshArtistContacts}
-            onContinue={() => {
-              const hasRequiredPrimaryAddress = businessAddressContacts.some((contact) => {
-                const city = String(contact?.address?.city || contact?.city || "").trim();
-                const stateOrRegion = String(contact?.address?.region || contact?.address?.state || contact?.state || contact?.region || "").trim();
-                const country = String(contact?.address?.country || contact?.country || "").trim();
-                return Boolean(city && stateOrRegion && country);
-              });
-
-              if (!hasRequiredPrimaryAddress) {
-                setPrivateContactRequirementError("Before continuing, save a primary address with city, state/region, and country.");
-                return;
-              }
-
-              setPrivateContactRequirementError("");
-              completeStepAndContinue(ARTIST_REGISTRATION_STEPS.PRIVATE_CONTACTS, 6);
-            }}
-            backHref={buildArtistJoinHref(4, resolvedArtistSlug)}
-          />
-        )}
-
-        {activeStep === 6 && resolvedArtistId && (
           <MediaUploadForm
             artistID={resolvedArtistId}
             artistLabel={`Artist: ${resolvedArtistId}`}
@@ -1047,9 +990,31 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
             onSaveMediaSelection={saveMediaSelection}
             onProfileFilesChanged={setProfileFiles}
             onCoverFilesChanged={setCoverFiles}
-            onContinue={() => completeStepAndContinue(ARTIST_REGISTRATION_STEPS.MEDIA_SETUP, 7)}
-            backHref={buildArtistJoinHref(5, resolvedArtistSlug)}
+            onContinue={() => completeStepAndContinue(ARTIST_REGISTRATION_STEPS.MEDIA_SETUP, 6)}
+            backHref={buildArtistJoinHref(4, resolvedArtistSlug)}
+            backLabel="Back to Business Details"
+            continueLabel="Continue to Business Contacts"
             galleryItems={Array.isArray(artistData?.gallery?.galleryItems) ? artistData.gallery.galleryItems : []}
+          />
+        )}
+
+        {activeStep === 6 && resolvedArtistId && (
+          <PrivateContactsForm
+            artistID={resolvedArtistId}
+            businessAddressContacts={businessAddressContacts}
+            businessPhoneContacts={businessPhoneContacts}
+            businessEmailContacts={businessEmailContacts}
+            businessUrlContacts={businessUrlContacts}
+            loading={loadingContacts}
+            error={privateContactRequirementError}
+            onRefresh={refreshArtistContacts}
+            onContinue={() => {
+              setPrivateContactRequirementError("");
+              completeStepAndContinue(ARTIST_REGISTRATION_STEPS.PRIVATE_CONTACTS, 7);
+            }}
+            backHref={buildArtistJoinHref(5, resolvedArtistSlug)}
+            backLabel="Back to Profile Media"
+            continueLabel="Continue to Public Contacts"
           />
         )}
 
@@ -1067,6 +1032,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
             onRefresh={refreshArtistContacts}
             onContinue={() => completeStepAndContinue(ARTIST_REGISTRATION_STEPS.PUBLIC_CONTACTS, 8)}
             backHref={buildArtistJoinHref(6, resolvedArtistSlug)}
+            backLabel="Back to Business Contacts"
           />
         )}
 
@@ -1086,6 +1052,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
             isPublishing={isPublishingProfile}
             publishFeedback={publishFeedback}
             isPublished={stepCompletionMap[8]}
+            stepCompletionMap={stepCompletionMap}
             onPublish={publishArtistProfile}
             backHref={buildArtistJoinHref(7, resolvedArtistSlug)}
             extractPlainText={extractPlainText}

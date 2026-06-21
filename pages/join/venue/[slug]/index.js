@@ -122,11 +122,11 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
 
   const stepCompletionMap = useMemo(() => ({
     3: Boolean(venueForm.name),
-    4: hasRequiredContactTypes,
-    5: hasMedia,
-    6: totalPublicContacts > 0,
+    4: hasMedia,
+    5: true,
+    6: true,
     7: Boolean(venueForm.isPublished),
-  }), [hasMedia, hasRequiredContactTypes, totalPublicContacts, venueForm.isPublished, venueForm.name])
+  }), [hasMedia, venueForm.isPublished, venueForm.name])
 
   const progressPercent = useMemo(() => {
     const steps = [3, 4, 5, 6, 7]
@@ -136,12 +136,12 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
 
   const pageMetaData = {
     title: "Join Venue",
-    description: "Venue onboarding workflow with profile details, primary contacts, and media setup.",
+    description: "Venue onboarding workflow with profile details, media, primary contacts, and publishing.",
     keywords: "join, venue, onboarding",
     robots: "noindex, nofollow",
     og: {
       title: "Join Venue",
-      description: "Venue onboarding workflow with profile details, primary contacts, and media setup.",
+      description: "Venue onboarding workflow with profile details, media, primary contacts, and publishing.",
     },
   }
 
@@ -159,11 +159,9 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
 
       const data = await response.json()
       const rows = Array.isArray(data?.contacts) ? data.contacts : []
-      const businessRows = rows.filter((contact) => {
-        const scope = String(contact?.scope || "").trim().toLowerCase()
-        return scope === "private" || scope === "primary"
-      })
-      const publicRows = rows.filter((contact) => String(contact?.scope || "").trim().toLowerCase() === "secondary")
+      const isPrivateRow = (contact) => contact?.isPrivate === true || String(contact?.isPrivate || "").trim().toLowerCase() === "true"
+      const businessRows = rows.filter((contact) => isPrivateRow(contact))
+      const publicRows = rows.filter((contact) => !isPrivateRow(contact))
 
       setBusinessAddressContacts(businessRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "address"))
       setBusinessEmailContacts(businessRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "email"))
@@ -182,7 +180,7 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
   }
 
   useEffect(() => {
-    if ((currentStep !== 4 && currentStep !== 6) || !resolvedVenueId) {
+    if ((currentStep !== 5 && currentStep !== 6) || !resolvedVenueId) {
       return
     }
 
@@ -220,7 +218,7 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
   return (
     <JoinPageShell
       title="Join as a Venue"
-      description="Copying the artist workflow pattern: profile details, primary contacts, media, then review and publish."
+      description="Copying the artist workflow pattern: profile details, media, primary contacts, then review and publish."
       canonicalSlug="join/venue"
       metadata={pageMetaData}
       steps={[
@@ -232,13 +230,13 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
         },
         {
           href: buildVenueJoinHref(4, resolvedSlug, resolvedVenueId),
-          label: "Primary Contacts",
+          label: "Media and Gallery",
           isActive: currentStep === 4,
           isWarning: currentStep !== 4 && !stepCompletionMap[4],
         },
         {
           href: buildVenueJoinHref(5, resolvedSlug, resolvedVenueId),
-          label: "Media and Gallery",
+          label: "Primary Contacts",
           isActive: currentStep === 5,
           isWarning: currentStep !== 5 && !stepCompletionMap[5],
         },
@@ -337,7 +335,7 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
                   }
                 }}
               >
-                {isSaving ? "Saving..." : "Continue to Primary Contacts"}
+                {isSaving ? "Saving..." : "Continue to Media and Gallery"}
               </button>
             </div>
           </div>
@@ -345,6 +343,25 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
       ) : null}
 
       {resolvedVenueId && currentStep === 4 ? (
+        <OrganizationMediaStep
+          context="venue"
+          entityId={resolvedVenueId}
+          entitySlug={resolvedSlug}
+          sessionUser={sessionUser}
+          profilePrefix={venueProfilePrefix}
+          coverPrefix={venueCoverPrefix}
+          galleryPrefix={venueGalleryPrefix}
+          setProfileFiles={setProfileFiles}
+          setCoverFiles={setCoverFiles}
+          setGalleryFiles={setGalleryFiles}
+          backHref={buildVenueJoinHref(3, resolvedSlug, resolvedVenueId)}
+          backLabel="Back to Venue Profile"
+          continueHref={buildVenueJoinHref(5, resolvedSlug, resolvedVenueId)}
+          continueLabel="Continue to Primary Contacts"
+        />
+      ) : null}
+
+      {resolvedVenueId && currentStep === 5 ? (
         <OrganizationPrimaryContactsStep
           context="venue"
           entityId={resolvedVenueId}
@@ -357,25 +374,8 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
           hasRequiredContactTypes={hasRequiredContactTypes}
           contactError={contactError}
           setContactError={setContactError}
-          backHref={buildVenueJoinHref(3, resolvedSlug, resolvedVenueId)}
-          backLabel="Back to Venue Profile"
-          continueHref={buildVenueJoinHref(5, resolvedSlug, resolvedVenueId)}
-        />
-      ) : null}
-
-      {resolvedVenueId && currentStep === 5 ? (
-        <OrganizationMediaStep
-          context="venue"
-          entityId={resolvedVenueId}
-          entitySlug={resolvedSlug}
-          sessionUser={sessionUser}
-          profilePrefix={venueProfilePrefix}
-          coverPrefix={venueCoverPrefix}
-          galleryPrefix={venueGalleryPrefix}
-          setProfileFiles={setProfileFiles}
-          setCoverFiles={setCoverFiles}
-          setGalleryFiles={setGalleryFiles}
           backHref={buildVenueJoinHref(4, resolvedSlug, resolvedVenueId)}
+          backLabel="Back to Media"
           continueHref={buildVenueJoinHref(6, resolvedSlug, resolvedVenueId)}
         />
       ) : null}
@@ -414,6 +414,27 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
               <div><span className="font-semibold">Cover files:</span> {coverFiles.length}</div>
               <div><span className="font-semibold">Gallery files:</span> {galleryFiles.length}</div>
               <div><span className="font-semibold">Published:</span> {venueForm.isPublished ? "Yes" : "No"}</div>
+            </div>
+
+            <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
+              <h3 className="font-semibold mb-2">Step Completion</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                {[3, 4, 5, 6].map((step) => {
+                  const labels = {
+                    3: "Venue Profile",
+                    4: "Media and Gallery",
+                    5: "Primary Contacts",
+                    6: "Public Contacts",
+                  }
+                  const done = Boolean(stepCompletionMap[step])
+                  return (
+                    <div key={step} className="flex items-center justify-between rounded border border-base-300 px-2 py-1">
+                      <span>{labels[step]}</span>
+                      <span className={`badge badge-xs ${done ? "badge-success" : "badge-neutral"}`}>{done ? "Done" : "Pending"}</span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
             {publishError ? (

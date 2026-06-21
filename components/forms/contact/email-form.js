@@ -28,11 +28,23 @@ function normalizeScope(value, fallback = "secondary") {
   return fallback
 }
 
+function scopeFromContact(contact, fallback = "secondary") {
+  const rawIsPrivate = contact?.isPrivate
+  if (rawIsPrivate === true || String(rawIsPrivate || "").trim().toLowerCase() === "true") {
+    return "private"
+  }
+  if (rawIsPrivate === false || String(rawIsPrivate || "").trim().toLowerCase() === "false") {
+    return "secondary"
+  }
+
+  return normalizeScope(contact?.scope, fallback)
+}
+
 function sortByScopeAndOrder(entries = []) {
   const rank = { primary: 0, private: 1, secondary: 2 }
   return [...entries].sort((a, b) => {
-    const aScope = rank[normalizeScope(a?.scope)] ?? 9
-    const bScope = rank[normalizeScope(b?.scope)] ?? 9
+    const aScope = rank[scopeFromContact(a)] ?? 9
+    const bScope = rank[scopeFromContact(b)] ?? 9
     if (aScope !== bScope) return aScope - bScope
     return Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0)
   })
@@ -61,7 +73,7 @@ function makeInitialEntries(existingContacts = [], defaultScope = "secondary") {
       email: String(contact?.value || "").trim(),
       label: String(contact?.label || "booking").trim() || "booking",
       description: String(contact?.description || "").trim(),
-      scope: normalizeScope(contact?.scope, defaultScope),
+      scope: scopeFromContact(contact, defaultScope),
       mode: contact?.value ? "display" : "edit",
     }))
   )
@@ -86,6 +98,23 @@ export default function EmailForm({
 }) {
   const apiUrl = getApiURL()
   const [labelOptions, setLabelOptions] = useState([])
+  const selectableLabels = labelOptions.length > 0
+    ? labelOptions.map((option) => option.label)
+    : FALLBACK_LABELS
+
+  const normalizedSelectableLabels = useMemo(
+    () => new Set(selectableLabels.map((label) => String(label || "").trim().toLowerCase()).filter(Boolean)),
+    [selectableLabels]
+  )
+
+  const resolveLabelForSubmit = (rawLabel) => {
+    const trimmed = String(rawLabel || "").trim()
+    if (!trimmed) {
+      return null
+    }
+
+    return normalizedSelectableLabels.has(trimmed.toLowerCase()) ? trimmed : null
+  }
   const initialEntries = useMemo(() => makeInitialEntries(existingContacts, defaultScope), [defaultScope, existingContacts])
 
   const [entries, setEntries] = useState(initialEntries)
@@ -166,13 +195,12 @@ export default function EmailForm({
           context,
           entityID,
           contactType: "email",
-          label: entry.label.trim() || "booking",
+          label: resolveLabelForSubmit(entry.label),
           category: "email",
           value: email,
           description: entry.description.trim() || null,
-          scope: normalizeScope(entry.scope, defaultScope),
-          setAsPrimary: singleEntryOnly,
-          displayOrder: singleEntryOnly ? 1 : index,
+          isPrivate: normalizeScope(entry.scope, defaultScope) === "private",
+          displayOrder: singleEntryOnly ? 0 : index,
         }
       })
       .filter(Boolean)
@@ -206,10 +234,6 @@ export default function EmailForm({
       setIsSubmitting(false)
     }
   }
-
-  const selectableLabels = labelOptions.length > 0
-    ? labelOptions.map((option) => option.label)
-    : FALLBACK_LABELS
 
   const canChooseScope = availableScopes.length > 1
   const headingContext = context === "user" ? "User" : "Artist"

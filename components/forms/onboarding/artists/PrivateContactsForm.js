@@ -3,7 +3,6 @@ import { useEffect, useRef } from "react";
 import AddressForm from "@/components/forms/contact/address-form";
 import PhoneForm from "@/components/forms/contact/phone-form";
 import EmailForm from "@/components/forms/contact/email-form";
-import UrlLinksForm from "@/components/forms/contact/url-links-form";
 import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 
 const primaryScopeLabels = {
@@ -16,12 +15,13 @@ export default function PrivateContactsForm({
   businessAddressContacts,
   businessPhoneContacts,
   businessEmailContacts,
-  businessUrlContacts,
   loading,
   error,
   onRefresh,
   onContinue,
   backHref,
+  backLabel = "Back to Profile",
+  continueLabel = "Continue to Profile Media",
 }) {
   const errorRef = useRef(null);
 
@@ -47,6 +47,10 @@ export default function PrivateContactsForm({
             </p>
           </div>
 
+          <div className="alert alert-warning text-sm">
+            <span>Active bug: business and public contact save is currently unstable. Engineering is actively fixing this.</span>
+          </div>
+
           {loading ? (
             <div className="flex items-center gap-2 text-sm text-base-content/60">
               <span className="loading loading-spinner loading-sm" />
@@ -61,7 +65,7 @@ export default function PrivateContactsForm({
                   artistID={artistID}
                   existingContacts={businessAddressContacts}
                   defaultScope="private"
-                  availableScopes={["private", "primary"]}
+                   availableScopes={["private"]}
                   scopeLabelMap={primaryScopeLabels}
                   singleEntryOnly
                   hideDeleteAction
@@ -78,7 +82,7 @@ export default function PrivateContactsForm({
                   artistID={artistID}
                   existingContacts={businessPhoneContacts}
                   defaultScope="private"
-                  availableScopes={["private", "primary"]}
+                   availableScopes={["private"]}
                   scopeLabelMap={primaryScopeLabels}
                   singleEntryOnly
                   hideDeleteAction
@@ -95,23 +99,7 @@ export default function PrivateContactsForm({
                   existingContacts={businessEmailContacts}
                   onSaved={onRefresh}
                   defaultScope="private"
-                  availableScopes={["private", "primary"]}
-                  scopeLabelMap={primaryScopeLabels}
-                  singleEntryOnly
-                  hideDeleteAction
-                />
-              </div>
-
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                <h3 className="font-semibold text-base-content mb-1">Primary Website</h3>
-                <p className="text-xs text-base-content/60 mb-1">Optional</p>
-                <p className="text-sm text-base-content/70 mb-4">Use this for your main website. Public Primary will show this URL on your public contact forms.</p>
-                <UrlLinksForm
-                  artistID={artistID}
-                  existingContacts={businessUrlContacts}
-                  onSaved={onRefresh}
-                  defaultScope="private"
-                  availableScopes={["private", "primary"]}
+                   availableScopes={["private"]}
                   scopeLabelMap={primaryScopeLabels}
                   singleEntryOnly
                   hideDeleteAction
@@ -127,13 +115,13 @@ export default function PrivateContactsForm({
           ) : null}
 
           <div className="flex gap-2 justify-between flex-wrap pt-2">
-            <Link href={backHref} className="btn btn-sm btn-outline">Back to Profile</Link>
+            <Link href={backHref} className="btn btn-sm btn-outline">{backLabel}</Link>
             <button
               type="button"
               className="btn btn-sm btn-primary"
               onClick={onContinue}
             >
-              Continue to Profile Media
+              {continueLabel}
             </button>
           </div>
         </div>

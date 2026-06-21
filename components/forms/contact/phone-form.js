@@ -47,11 +47,23 @@ function normalizeScope(value, fallback = "secondary") {
   return fallback
 }
 
+function scopeFromContact(contact, fallback = "secondary") {
+  const rawIsPrivate = contact?.isPrivate
+  if (rawIsPrivate === true || String(rawIsPrivate || "").trim().toLowerCase() === "true") {
+    return "private"
+  }
+  if (rawIsPrivate === false || String(rawIsPrivate || "").trim().toLowerCase() === "false") {
+    return "secondary"
+  }
+
+  return normalizeScope(contact?.scope, fallback)
+}
+
 function sortByScopeAndOrder(entries = []) {
   const rank = { primary: 0, private: 1, secondary: 2 }
   return [...entries].sort((a, b) => {
-    const aScope = rank[normalizeScope(a?.scope)] ?? 9
-    const bScope = rank[normalizeScope(b?.scope)] ?? 9
+    const aScope = rank[scopeFromContact(a)] ?? 9
+    const bScope = rank[scopeFromContact(b)] ?? 9
     if (aScope !== bScope) return aScope - bScope
     return Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0)
   })
@@ -170,7 +182,7 @@ function makeInitialEntries(existingContacts = [], defaultScope = "secondary") {
     id: `phone-${index}`,
     label: String(contact?.phoneLabel || contact?.label || "Mobile").trim(),
     description: String(contact?.description || "").trim(),
-    scope: normalizeScope(contact?.scope, defaultScope),
+    scope: scopeFromContact(contact, defaultScope),
     mode: contact?.value ? "display" : "edit",
   })))
 
@@ -206,6 +218,23 @@ export default function PhoneForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [resultMessage, setResultMessage] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
+  const selectableLabels = labelOptions.length > 0
+    ? labelOptions.map((option) => option.label)
+    : ["Mobile", "Main", "Work"]
+
+  const normalizedSelectableLabels = useMemo(
+    () => new Set(selectableLabels.map((label) => String(label || "").trim().toLowerCase()).filter(Boolean)),
+    [selectableLabels]
+  )
+
+  const resolveLabelForSubmit = (rawLabel) => {
+    const trimmed = String(rawLabel || "").trim()
+    if (!trimmed) {
+      return null
+    }
+
+    return normalizedSelectableLabels.has(trimmed.toLowerCase()) ? trimmed : null
+  }
 
   const getScopeLabel = (scope) => {
     const normalized = normalizeScope(scope, defaultScope)
@@ -295,15 +324,14 @@ export default function PhoneForm({
           context: resolvedContext,
           entityID: resolvedEntityId,
           contactType: "phone",
-          label: entry.label.trim() || "Mobile",
+          label: resolveLabelForSubmit(entry.label),
           category: "phone",
           value: phoneValue,
           phoneNumber: phoneValue,
           phoneDescription: entry.description.trim() || null,
           description: entry.description.trim() || null,
-          scope: normalizeScope(entry.scope, defaultScope),
-          setAsPrimary: singleEntryOnly,
-          displayOrder: singleEntryOnly ? 1 : index,
+          isPrivate: normalizeScope(entry.scope, defaultScope) === "private",
+          displayOrder: singleEntryOnly ? 0 : index,
         }
       })
 

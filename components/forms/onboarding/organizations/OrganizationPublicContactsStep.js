@@ -34,6 +34,10 @@ export default function OrganizationPublicContactsStep({
       title="Step 6: Public Contacts"
       description="These contacts are public-facing. Keep private operations details in Step 4."
     >
+      <div className="alert alert-warning text-sm">
+        <span>Active bug: business and public contact save is currently unstable. Engineering is actively fixing this.</span>
+      </div>
+
       {loadingContacts ? (
         <div className="flex items-center gap-2 text-sm text-base-content/60">
           <span className="loading loading-spinner loading-sm" />

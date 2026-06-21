@@ -1,7 +1,6 @@
 import AddressForm from "@/components/forms/contact/address-form"
 import EmailForm from "@/components/forms/contact/email-form"
 import PhoneForm from "@/components/forms/contact/phone-form"
-import UrlLinksForm from "@/components/forms/contact/url-links-form"
 import ContactSectionBlock from "@/components/forms/onboarding/common/ContactSectionBlock"
 import OnboardingStepActions from "@/components/forms/onboarding/common/OnboardingStepActions"
 import OnboardingStepCard from "@/components/forms/onboarding/common/OnboardingStepCard"
@@ -13,21 +12,23 @@ export default function OrganizationPrimaryContactsStep({
   addressContacts,
   emailContacts,
   phoneContacts,
-  urlContacts,
   refreshContacts,
-  hasRequiredContactTypes,
   contactError,
   setContactError,
   backHref,
   backLabel,
   continueHref,
+  continueLabel = "Continue to Public Contacts",
 }) {
   return (
     <OnboardingStepCard
-      title="Step 4: Primary Business Contact Info"
-      description="Enter your business contact details for guild records and operations. Use the scope selector on any entry to mark it as Private or Primary."
+      title="Primary Business Contact Info"
+      description="Enter business contact details for guild records and operations."
     >
       <div className="badge badge-sm badge-info w-fit">Guild Only</div>
+      <div className="alert alert-warning text-sm">
+        <span>Active bug: business and public contact save is currently unstable. Engineering is actively fixing this.</span>
+      </div>
 
       {loadingContacts ? (
         <div className="flex items-center gap-2 text-sm text-base-content/60">
@@ -43,7 +44,7 @@ export default function OrganizationPrimaryContactsStep({
             entityID={entityId}
             existingContacts={addressContacts}
             defaultScope="private"
-            availableScopes={["private", "primary"]}
+            availableScopes={["private"]}
             requireFullAddressFields
             defaultLabel="work"
             onSaved={refreshContacts}
@@ -56,7 +57,7 @@ export default function OrganizationPrimaryContactsStep({
             entityID={entityId}
             existingContacts={emailContacts}
             defaultScope="private"
-            availableScopes={["private", "primary"]}
+            availableScopes={["private"]}
             onSaved={refreshContacts}
           />
         </ContactSectionBlock>
@@ -67,19 +68,8 @@ export default function OrganizationPrimaryContactsStep({
             entityID={entityId}
             existingContacts={phoneContacts}
             defaultScope="private"
-            availableScopes={["private", "primary"]}
+            availableScopes={["private"]}
             requirePrimaryPhone
-            onSaved={refreshContacts}
-          />
-        </ContactSectionBlock>
-
-        <ContactSectionBlock title="Business Website URLs">
-          <UrlLinksForm
-            context={context}
-            entityID={entityId}
-            existingContacts={urlContacts}
-            defaultScope="private"
-            availableScopes={["private", "primary"]}
             onSaved={refreshContacts}
           />
         </ContactSectionBlock>
@@ -92,13 +82,8 @@ export default function OrganizationPrimaryContactsStep({
       <OnboardingStepActions
         backHref={backHref}
         backLabel={backLabel}
-        continueLabel="Continue to Media and Gallery"
+        continueLabel={continueLabel}
         onContinue={() => {
-          if (!hasRequiredContactTypes) {
-            setContactError("Save at least one primary address, email, and phone before continuing.")
-            return
-          }
-
           setContactError("")
           window.location.href = continueHref
         }}

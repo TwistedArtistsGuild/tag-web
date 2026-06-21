@@ -155,11 +155,11 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
 
   const stepCompletionMap = useMemo(() => ({
     3: Boolean(vendorForm.companyName && vendorForm.contractExpires),
-    4: hasRequiredContactTypes,
-    5: hasMedia,
-    6: totalPublicContacts > 0,
+    4: hasMedia,
+    5: true,
+    6: true,
     7: Boolean(vendorForm.isPublished),
-  }), [hasMedia, hasRequiredContactTypes, totalPublicContacts, vendorForm.companyName, vendorForm.contractExpires, vendorForm.isPublished])
+  }), [hasMedia, vendorForm.companyName, vendorForm.contractExpires, vendorForm.isPublished])
 
   const progressPercent = useMemo(() => {
     const steps = [3, 4, 5, 6, 7]
@@ -169,12 +169,12 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
 
   const pageMetaData = {
     title: "Join Vendor",
-    description: "Vendor onboarding workflow with profile details, primary contacts, and media setup.",
+    description: "Vendor onboarding workflow with profile details, media, primary contacts, and publishing.",
     keywords: "join, vendor, onboarding",
     robots: "noindex, nofollow",
     og: {
       title: "Join Vendor",
-      description: "Vendor onboarding workflow with profile details, primary contacts, and media setup.",
+      description: "Vendor onboarding workflow with profile details, media, primary contacts, and publishing.",
     },
   }
 
@@ -192,11 +192,9 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
 
       const data = await response.json()
       const rows = Array.isArray(data?.contacts) ? data.contacts : []
-      const businessRows = rows.filter((contact) => {
-        const scope = String(contact?.scope || "").trim().toLowerCase()
-        return scope === "private" || scope === "primary"
-      })
-      const publicRows = rows.filter((contact) => String(contact?.scope || "").trim().toLowerCase() === "secondary")
+      const isPrivateRow = (contact) => contact?.isPrivate === true || String(contact?.isPrivate || "").trim().toLowerCase() === "true"
+      const businessRows = rows.filter((contact) => isPrivateRow(contact))
+      const publicRows = rows.filter((contact) => !isPrivateRow(contact))
 
       setBusinessAddressContacts(businessRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "address"))
       setBusinessEmailContacts(businessRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "email"))
@@ -215,7 +213,7 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
   }
 
   useEffect(() => {
-    if ((currentStep !== 4 && currentStep !== 6) || !resolvedVendorId) {
+    if ((currentStep !== 5 && currentStep !== 6) || !resolvedVendorId) {
       return
     }
 
@@ -259,7 +257,7 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
   return (
     <JoinPageShell
       title="Join as a Vendor"
-      description="Copying the artist workflow pattern: profile details, primary contacts, media, then review and publish."
+      description="Copying the artist workflow pattern: profile details, media, primary contacts, then review and publish."
       canonicalSlug="join/vendor"
       metadata={pageMetaData}
       steps={[
@@ -271,13 +269,13 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
         },
         {
           href: buildVendorJoinHref(4, resolvedSlug, resolvedVendorId),
-          label: "Primary Contacts",
+          label: "Media and Gallery",
           isActive: currentStep === 4,
           isWarning: currentStep !== 4 && !stepCompletionMap[4],
         },
         {
           href: buildVendorJoinHref(5, resolvedSlug, resolvedVendorId),
-          label: "Media and Gallery",
+          label: "Primary Contacts",
           isActive: currentStep === 5,
           isWarning: currentStep !== 5 && !stepCompletionMap[5],
         },
@@ -419,7 +417,7 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
                   }
                 }}
               >
-                {isSavingStep3 ? "Saving..." : "Continue to Primary Contacts"}
+                {isSavingStep3 ? "Saving..." : "Continue to Media and Gallery"}
               </button>
             </div>
           </div>
@@ -427,6 +425,25 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
       ) : null}
 
       {resolvedVendorId && currentStep === 4 ? (
+        <OrganizationMediaStep
+          context="vendor"
+          entityId={resolvedVendorId}
+          entitySlug={resolvedSlug}
+          sessionUser={sessionUser}
+          profilePrefix={vendorProfilePrefix}
+          coverPrefix={vendorCoverPrefix}
+          galleryPrefix={vendorGalleryPrefix}
+          setProfileFiles={setProfileFiles}
+          setCoverFiles={setCoverFiles}
+          setGalleryFiles={setGalleryFiles}
+          backHref={buildVendorJoinHref(3, resolvedSlug, resolvedVendorId)}
+          backLabel="Back to Business Details"
+          continueHref={buildVendorJoinHref(5, resolvedSlug, resolvedVendorId)}
+          continueLabel="Continue to Primary Contacts"
+        />
+      ) : null}
+
+      {resolvedVendorId && currentStep === 5 ? (
         <OrganizationPrimaryContactsStep
           context="vendor"
           entityId={resolvedVendorId}
@@ -439,25 +456,8 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
           hasRequiredContactTypes={hasRequiredContactTypes}
           contactError={contactError}
           setContactError={setContactError}
-          backHref={buildVendorJoinHref(3, resolvedSlug, resolvedVendorId)}
-          backLabel="Back to Business Details"
-          continueHref={buildVendorJoinHref(5, resolvedSlug, resolvedVendorId)}
-        />
-      ) : null}
-
-      {resolvedVendorId && currentStep === 5 ? (
-        <OrganizationMediaStep
-          context="vendor"
-          entityId={resolvedVendorId}
-          entitySlug={resolvedSlug}
-          sessionUser={sessionUser}
-          profilePrefix={vendorProfilePrefix}
-          coverPrefix={vendorCoverPrefix}
-          galleryPrefix={vendorGalleryPrefix}
-          setProfileFiles={setProfileFiles}
-          setCoverFiles={setCoverFiles}
-          setGalleryFiles={setGalleryFiles}
           backHref={buildVendorJoinHref(4, resolvedSlug, resolvedVendorId)}
+          backLabel="Back to Media"
           continueHref={buildVendorJoinHref(6, resolvedSlug, resolvedVendorId)}
         />
       ) : null}
@@ -497,6 +497,27 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
               <div><span className="font-semibold">Cover files:</span> {coverFiles.length}</div>
               <div><span className="font-semibold">Gallery files:</span> {galleryFiles.length}</div>
               <div><span className="font-semibold">Published:</span> {vendorForm.isPublished ? "Yes" : "No"}</div>
+            </div>
+
+            <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
+              <h3 className="font-semibold mb-2">Step Completion</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                {[3, 4, 5, 6].map((step) => {
+                  const labels = {
+                    3: "Primary Business Details",
+                    4: "Media and Gallery",
+                    5: "Primary Contacts",
+                    6: "Public Contacts",
+                  }
+                  const done = Boolean(stepCompletionMap[step])
+                  return (
+                    <div key={step} className="flex items-center justify-between rounded border border-base-300 px-2 py-1">
+                      <span>{labels[step]}</span>
+                      <span className={`badge badge-xs ${done ? "badge-success" : "badge-neutral"}`}>{done ? "Done" : "Pending"}</span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
             {publishError ? (

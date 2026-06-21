@@ -14,7 +14,9 @@ export default function OrganizationMediaStep({
   setCoverFiles,
   setGalleryFiles,
   backHref,
+  backLabel = "Back to Primary Contacts",
   continueHref,
+  continueLabel = "Continue to Public Contacts",
 }) {
   const entityLabel = `${context}: ${entitySlug || entityId}`
   const titlePrefix = `${context.charAt(0).toUpperCase()}${context.slice(1)}`
@@ -64,8 +66,8 @@ export default function OrganizationMediaStep({
 
       <OnboardingStepActions
         backHref={backHref}
-        backLabel="Back to Primary Contacts"
-        continueLabel="Continue to Public Contacts"
+        backLabel={backLabel}
+        continueLabel={continueLabel}
         onContinue={() => {
           window.location.href = continueHref
         }}
