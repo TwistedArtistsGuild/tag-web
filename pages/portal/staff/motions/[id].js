@@ -55,9 +55,65 @@ export default function MotionDetails(props) {
             body: JSON.stringify({ userId, voteValue })
         });
         if (res.ok) fetchMotion();
-        else alert(await res.text());
+        else {
+            const errorText = await res.text();
+            alert(errorText || "Voting closed or failed.");
+        }
         setSubmitting(false);
     };
+
+    // Calculate expiration Date if seconded based on categorical string
+    let expirationDate = null;
+    let isExpired = false;
+    
+    if (motion?.secondedOn && motion?.duration) {
+        expirationDate = new Date(motion.secondedOn);
+        
+        const dur = motion.duration.toLowerCase();
+        
+        if (dur.includes('week')) {
+            expirationDate.setDate(expirationDate.getDate() + 7);
+        } else if (dur.includes('month')) {
+            expirationDate.setDate(expirationDate.getDate() + 30);
+        } else if (dur.includes('quarter')) {
+            expirationDate.setDate(expirationDate.getDate() + 90);
+        } else if (dur.includes('year')) {
+            expirationDate.setDate(expirationDate.getDate() + 365);
+        } else {
+            expirationDate.setDate(expirationDate.getDate() + 7); // Default
+        }
+        
+        if (new Date() > expirationDate) {
+            isExpired = true;
+        }
+    }
+    
+    // CALCULATE CONSENT LEVEL
+    let consentLevel = "None";
+    let yesVotes = 0;
+    let totalVotes = 0;
+    let yesPercentage = 0;
+
+    if (motion && motion.votes) {
+        yesVotes = motion.votes.filter(v => v.voteValue === "Yes").length;
+        totalVotes = motion.votes.length;
+
+        if (totalVotes > 0) {
+            yesPercentage = (yesVotes / totalVotes) * 100;
+
+            if (yesPercentage === 100) {
+                consentLevel = "Unanimous";
+            } else if (yesPercentage >= 70) {
+                consentLevel = "Board Consent";
+            } else if (yesPercentage >= 50) {
+                consentLevel = "Majority";
+            } else if (yesPercentage >= 30) {
+                consentLevel = "Minority";
+            } else {
+                consentLevel = "Failed";
+            }
+        }
+    }
 
     if (loading) return <div className="p-10 pt-20 text-center"><span className="loading loading-spinner loading-lg"></span></div>;
     if (!motion) return <div className="p-10 pt-20 text-center text-error">Motion not found.</div>;
@@ -93,10 +149,29 @@ export default function MotionDetails(props) {
                         <div className="grid grid-cols-2 gap-4 text-sm bg-base-200 p-4 rounded-box">
                             <div><strong>Proposed By:</strong> {motion.proposedBy?.name}</div>
                             <div><strong>Proposed On:</strong> {new Date(motion.proposedOn).toLocaleDateString()}</div>
+                            
                             {motion.secondedBy && (
                                 <>
+                                    <div className="col-span-2 border-t border-base-300 my-2 pt-2"></div>
                                     <div><strong>Seconded By:</strong> {motion.secondedBy?.name}</div>
-                                    <div><strong>Status:</strong> {motion.status}</div>
+                                    <div><strong>Seconded On:</strong> {new Date(motion.secondedOn).toLocaleDateString()}</div>
+                                    
+                                    <div>
+                                        <strong>Status:</strong> 
+                                        <span className={`ml-2 badge badge-sm ${motion.status === 'Closed' ? 'badge-error' : 'badge-success'}`}>
+                                            {motion.status}
+                                        </span>
+                                    </div>
+                                    
+                                    {expirationDate && (
+                                        <div>
+                                            <strong>Voting Closes:</strong> 
+                                            <span className={`ml-2 ${isExpired ? 'text-error line-through' : 'font-semibold font-mono'}`}>
+                                                {expirationDate.toLocaleDateString()}
+                                            </span>
+                                            {isExpired && <span className="ml-2 text-error font-bold">(EXPIRED)</span>}
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>
@@ -111,7 +186,7 @@ export default function MotionDetails(props) {
                         )}
 
                         {/* VOTING LOGIC Check Permission */}
-                        {motion.status === "Seconded" && !hasVoted && canVote && (
+                        {motion.status === "Seconded" && !hasVoted && canVote && !isExpired && (
                             <div className="mt-8 bg-primary/10 p-6 rounded-box text-center">
                                 <h3 className="text-2xl font-bold mb-4">Cast Your Vote</h3>
                                 <div className="flex gap-4 justify-center">
@@ -122,7 +197,13 @@ export default function MotionDetails(props) {
                             </div>
                         )}
 
-                        {hasVoted && (
+                        {motion.status === "Closed" && (
+                            <div className="mt-8 bg-base-300 p-4 rounded-box text-center text-base-content/70 font-semibold">
+                                Voting has closed for this motion.
+                            </div>
+                        )}
+
+                        {hasVoted && !isExpired && (
                             <div className="mt-8 bg-success/20 p-4 rounded-box">
                                 <p className="font-bold text-success text-center">You have successfully voted on this motion.</p>
                             </div>
@@ -130,15 +211,44 @@ export default function MotionDetails(props) {
                     </div>
                 </div>
 
-                {/* Vote Tally */}
-                {motion.status === "Seconded" && (
+                {/* Vote Tally with Consent Level */}
+                {(motion.status === "Seconded" || motion.status === "Closed") && (
                     <div className="card bg-base-100 shadow border border-base-300">
                         <div className="card-body">
-                            <h3 className="card-title">Live Vote Tally</h3>
-                            <div className="flex gap-8">
-                                <div className="text-success font-bold">Yes: {motion.votes?.filter(v => v.voteValue === "Yes").length || 0}</div>
-                                <div className="text-error font-bold">No: {motion.votes?.filter(v => v.voteValue === "No").length || 0}</div>
-                                <div className="font-bold">Abstain: {motion.votes?.filter(v => v.voteValue === "Abstain").length || 0}</div>
+                            <h3 className="card-title justify-between">
+                                Live Vote Tally
+                                {totalVotes > 0 && (
+                                    <span className={`badge ${
+                                        consentLevel === "Unanimous" ? "badge-success" : 
+                                        consentLevel === "Board Consent" ? "badge-primary" : 
+                                        consentLevel === "Majority" ? "badge-info" :
+                                        consentLevel === "Minority" ? "badge-warning" : "badge-error"
+                                    }`}>
+                                        Consent Level: {consentLevel}
+                                    </span>
+                                )}
+                            </h3>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+                                <div className="stat place-items-center bg-base-200 rounded-box py-4">
+                                    <div className="stat-title">Yes</div>
+                                    <div className="stat-value text-success">{yesVotes}</div>
+                                </div>
+                                <div className="stat place-items-center bg-base-200 rounded-box py-4">
+                                    <div className="stat-title">No</div>
+                                    <div className="stat-value text-error">
+                                        {motion.votes?.filter(v => v.voteValue === "No").length || 0}
+                                    </div>
+                                </div>
+                                <div className="stat place-items-center bg-base-200 rounded-box py-4">
+                                    <div className="stat-title">Abstain</div>
+                                    <div className="stat-value">
+                                        {motion.votes?.filter(v => v.voteValue === "Abstain").length || 0}
+                                    </div>
+                                </div>
+                                <div className="stat place-items-center bg-base-300 rounded-box py-4">
+                                    <div className="stat-title">Approval Rate</div>
+                                    <div className="stat-value text-primary">{yesPercentage.toFixed(0)}%</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -160,7 +270,7 @@ export async function getServerSideProps(context) {
     }
 
     if (!hasPermission(session, PERMISSIONS.MOTION.VIEW)) {
-        return { notFound: true }; // Hide page if they can't even view motions
+        return { notFound: true }; 
     }
     
     const canSecond = hasPermission(session, PERMISSIONS.MOTION.SECOND);
