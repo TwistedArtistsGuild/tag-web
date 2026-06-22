@@ -1,27 +1,13 @@
-/* This file is part of the Twisted Artists Guild project.
-
- Copyright (C) 2025 Twisted Artists Guild
-
- Licensed under the GNU General Public License v3.0
- (https://www.gnu.org/licenses/gpl-3.0.en.html).
-
- This software comes with NO WARRANTY; see the license for details.
-
- Open source · low-profit · human-first*/
-
-import { useState, useEffect } from "react"
-import { getServerSession } from "next-auth/next"
 import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
+import { getServerSession } from "next-auth/next"
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import OrganizationMediaStep from "@/components/forms/onboarding/organizations/OrganizationMediaStep"
+import OrganizationPrimaryContactsStep from "@/components/forms/onboarding/organizations/OrganizationPrimaryContactsStep"
+import OrganizationPublicContactsStep from "@/components/forms/onboarding/organizations/OrganizationPublicContactsStep"
+import JoinPageShell from "@/components/join/common/join-page-shell"
 import RegisterSlug from "@/components/forms/onboarding/register-slug"
-import AddressForm from "@/components/forms/contact/address-form"
-import EmailForm from "@/components/forms/contact/email-form"
-import PhoneForm from "@/components/forms/contact/phone-form"
-import SocialHandlesForm from "@/components/forms/contact/social-handles-form"
-import UrlLinksForm from "@/components/forms/contact/url-links-form"
-import GalleryManager from "@/components/gallery/GalleryManager"
-import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 
 const apiUrl = getApiURL()
@@ -62,6 +48,377 @@ async function getSessionFromRequest(context) {
   }
 }
 
+function getPortalStep(rawStep) {
+  const parsed = Number(rawStep || 1)
+  if (parsed >= 1 && parsed <= 5) {
+    return parsed
+  }
+
+  return 1
+}
+
+function buildVenuePortalHref(step, slug, id) {
+  const normalizedSlug = String(slug || "").trim().toLowerCase()
+  if (normalizedSlug) {
+    const idSegment = id ? `&id=${encodeURIComponent(String(id))}` : ""
+    return `/portal/venue/${encodeURIComponent(normalizedSlug)}/edit?step=${step}${idSegment}`
+  }
+
+  return "/portal/venue"
+}
+
+function mapVenue(venueData) {
+  return {
+    venueID: Number(venueData?.venueID || venueData?.VenueID || 0),
+    name: String(venueData?.name || venueData?.Name || ""),
+    addressID: Number(venueData?.addressID || venueData?.AddressID || 0),
+    externalLinkID: Number(venueData?.externalLinkID || venueData?.ExternalLinkID || 0),
+    phoneContactID: Number(venueData?.phoneContactID || venueData?.PhoneContactID || 0),
+    isModerationBlocked: Boolean(venueData?.isModerationBlocked || venueData?.IsModerationBlocked),
+  }
+}
+
+export default function PortalVenueEditPage({ currentStep, venueData, routeSlug, venueId, sessionUser }) {
+  const [venueForm, setVenueForm] = useState(mapVenue(venueData || {}))
+  const [formError, setFormError] = useState("")
+  const [contactError, setContactError] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+  const [loadingContacts, setLoadingContacts] = useState(false)
+  const [contactsTab, setContactsTab] = useState("public-address")
+
+  const [businessAddressContacts, setBusinessAddressContacts] = useState([])
+  const [businessEmailContacts, setBusinessEmailContacts] = useState([])
+  const [businessPhoneContacts, setBusinessPhoneContacts] = useState([])
+  const [businessUrlContacts, setBusinessUrlContacts] = useState([])
+  const [publicAddressContacts, setPublicAddressContacts] = useState([])
+  const [publicEmailContacts, setPublicEmailContacts] = useState([])
+  const [publicPhoneContacts, setPublicPhoneContacts] = useState([])
+  const [publicSocialContacts, setPublicSocialContacts] = useState([])
+  const [publicUrlContacts, setPublicUrlContacts] = useState([])
+
+  const [profileFiles, setProfileFiles] = useState([])
+  const [coverFiles, setCoverFiles] = useState([])
+  const [galleryFiles, setGalleryFiles] = useState([])
+
+  const resolvedVenueId = Number(venueId || venueForm.venueID || 0)
+  const resolvedSlug = String(routeSlug || "").trim().toLowerCase()
+  const venueRootPrefix = useMemo(() => (
+    resolvedVenueId > 0 ? `platformpics/venuecontent/${resolvedVenueId}/` : ""
+  ), [resolvedVenueId])
+  const venueProfilePrefix = useMemo(() => (
+    venueRootPrefix ? `${venueRootPrefix}profile/` : ""
+  ), [venueRootPrefix])
+  const venueCoverPrefix = useMemo(() => (
+    venueRootPrefix ? `${venueRootPrefix}cover/` : ""
+  ), [venueRootPrefix])
+  const venueGalleryPrefix = useMemo(() => (
+    venueRootPrefix ? `${venueRootPrefix}gallery/` : ""
+  ), [venueRootPrefix])
+
+  const hasMedia = profileFiles.length > 0 || coverFiles.length > 0 || galleryFiles.length > 0
+  const stepCompletionMap = useMemo(() => ({
+    1: Boolean(resolvedSlug),
+    2: Boolean(venueForm.name),
+    3: hasMedia,
+    4: true,
+    5: true,
+  }), [hasMedia, resolvedSlug, venueForm.name])
+
+  const progressPercent = useMemo(() => {
+    const steps = [1, 2, 3, 4, 5]
+    const completeCount = steps.filter((step) => Boolean(stepCompletionMap[step])).length
+    return Math.round((completeCount / steps.length) * 100)
+  }, [stepCompletionMap])
+
+  const pageMetaData = {
+    title: "Edit Venue",
+    description: "Portal venue edit workflow using shared onboarding modules.",
+    keywords: "portal, venue, edit",
+    robots: "noindex, nofollow",
+    og: {
+      title: "Edit Venue",
+      description: "Portal venue edit workflow using shared onboarding modules.",
+    },
+  }
+
+  const refreshVenueContacts = async () => {
+    if (!resolvedVenueId) {
+      return
+    }
+
+    setLoadingContacts(true)
+    try {
+      const response = await fetch(`${apiUrl}contact/venue/${resolvedVenueId}?includePrivate=true`)
+      if (!response.ok) {
+        return
+      }
+
+      const data = await response.json()
+      const rows = Array.isArray(data?.contacts) ? data.contacts : []
+      const isPrivateRow = (contact) => contact?.isPrivate === true || String(contact?.isPrivate || "").trim().toLowerCase() === "true"
+      const businessRows = rows.filter((contact) => isPrivateRow(contact))
+      const publicRows = rows.filter((contact) => !isPrivateRow(contact))
+
+      setBusinessAddressContacts(businessRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "address"))
+      setBusinessEmailContacts(businessRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "email"))
+      setBusinessPhoneContacts(businessRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "phone"))
+      setBusinessUrlContacts(businessRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "url" && String(contact?.category || "").toLowerCase() === "website"))
+      setPublicAddressContacts(publicRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "address"))
+      setPublicEmailContacts(publicRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "email"))
+      setPublicPhoneContacts(publicRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "phone"))
+      setPublicUrlContacts(publicRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "url" && String(contact?.category || "").toLowerCase() === "website"))
+      setPublicSocialContacts(publicRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "url" && String(contact?.category || "").toLowerCase() !== "website"))
+    } catch {
+      // no-op
+    } finally {
+      setLoadingContacts(false)
+    }
+  }
+
+  useEffect(() => {
+    if ((currentStep !== 4 && currentStep !== 5) || !resolvedVenueId) {
+      return
+    }
+
+    refreshVenueContacts()
+  }, [currentStep, resolvedVenueId])
+
+  const persistVenue = async (payload, setError) => {
+    const response = await fetch(`${apiUrl}venue/${resolvedVenueId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const message = await response.text()
+      setError(message || `Unable to save venue (${response.status}).`)
+      return false
+    }
+
+    return true
+  }
+
+  const basePayload = {
+    venueID: resolvedVenueId,
+    name: String(venueForm.name || "").trim(),
+    addressID: venueForm.addressID,
+    externalLinkID: venueForm.externalLinkID,
+    phoneContactID: venueForm.phoneContactID,
+    isModerationBlocked: Boolean(venueForm.isModerationBlocked),
+  }
+
+  return (
+    <JoinPageShell
+      title="Edit Venue"
+      description="Use the same modular workflow as join to keep portal editing consistent."
+      canonicalSlug="portal/venue/edit"
+      metadata={pageMetaData}
+      backHref={resolvedSlug ? `/portal/venue/${encodeURIComponent(resolvedSlug)}` : "/portal/venue"}
+      backLabel="Back to Venue"
+      steps={[
+        {
+          href: buildVenuePortalHref(1, resolvedSlug, resolvedVenueId),
+          label: "Slug",
+          isActive: currentStep === 1,
+          isWarning: currentStep !== 1 && !stepCompletionMap[1],
+        },
+        {
+          href: buildVenuePortalHref(2, resolvedSlug, resolvedVenueId),
+          label: "Venue Profile",
+          isActive: currentStep === 2,
+          isWarning: currentStep !== 2 && !stepCompletionMap[2],
+        },
+        {
+          href: buildVenuePortalHref(3, resolvedSlug, resolvedVenueId),
+          label: "Media and Gallery",
+          isActive: currentStep === 3,
+          isWarning: currentStep !== 3 && !stepCompletionMap[3],
+        },
+        {
+          href: buildVenuePortalHref(4, resolvedSlug, resolvedVenueId),
+          label: "Primary Contacts",
+          isActive: currentStep === 4,
+          isWarning: currentStep !== 4 && !stepCompletionMap[4],
+        },
+        {
+          href: buildVenuePortalHref(5, resolvedSlug, resolvedVenueId),
+          label: "Public Contacts",
+          isActive: currentStep === 5,
+          isWarning: currentStep !== 5 && !stepCompletionMap[5],
+        },
+      ]}
+      badge={resolvedVenueId ? `Venue ID: ${resolvedVenueId}` : null}
+      progress={progressPercent}
+    >
+      {!resolvedVenueId ? (
+        <div className="alert alert-warning">
+          <span>Missing venue ID. Open this page from a specific venue profile.</span>
+        </div>
+      ) : null}
+
+      {resolvedVenueId && currentStep === 1 ? (
+        <div className="card bg-base-100 shadow border border-base-300">
+          <div className="card-body gap-4">
+            <div>
+              <h2 className="card-title">Step 1: Update Venue Slug</h2>
+              <p className="text-sm text-base-content/70">Update the venue slug using the same reservation component used in join.</p>
+            </div>
+
+            <RegisterSlug
+              domain="venue"
+              domainLabel="Venue"
+              reserveEndpoint={`${apiUrl}venue/reserve-slug`}
+              updateEndpoint={(id) => `${apiUrl}venue/${id}/update-slug`}
+              checkEndpoint={(candidateSlug) => `${apiUrl}venue/check-slug/${encodeURIComponent(candidateSlug)}?excludeId=${encodeURIComponent(String(resolvedVenueId))}`}
+              currentSlug={resolvedSlug}
+              entityId={resolvedVenueId}
+              progressApi={{
+                getProgress: () => ({ slug: resolvedSlug, entityId: resolvedVenueId }),
+                setProgress: () => {},
+                markStepComplete: () => {},
+              }}
+              titleFieldLabel="Venue Display Name"
+              titlePlaceholder="Enter venue name"
+              slugDescription="Venue slug creates a dedicated venue profile URL."
+            />
+
+            <div className="flex gap-2 justify-end">
+              <Link href={buildVenuePortalHref(2, resolvedSlug, resolvedVenueId)} className="btn btn-sm btn-primary">Continue to Venue Profile</Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {resolvedVenueId && currentStep === 2 ? (
+        <div className="card bg-base-100 shadow border border-base-300">
+          <div className="card-body gap-4">
+            <div>
+              <h2 className="card-title">Step 2: Venue Profile</h2>
+              <p className="text-sm text-base-content/70">Venue name and moderation status. FK-linked contact/media rows are managed separately.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <label className="form-control w-full md:col-span-2">
+                <div className="label"><span className="label-text">Venue Name</span></div>
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  value={venueForm.name}
+                  onChange={(event) => setVenueForm((prev) => ({ ...prev, name: event.target.value }))}
+                />
+              </label>
+
+              <label className="form-control w-full">
+                <div className="label"><span className="label-text">Moderation Blocked</span></div>
+                <select
+                  className="select select-bordered w-full"
+                  value={venueForm.isModerationBlocked ? "true" : "false"}
+                  onChange={(event) => setVenueForm((prev) => ({ ...prev, isModerationBlocked: event.target.value === "true" }))}
+                >
+                  <option value="false">No</option>
+                  <option value="true">Yes</option>
+                </select>
+              </label>
+            </div>
+
+            {formError ? (
+              <div className="alert alert-error"><span>{formError}</span></div>
+            ) : null}
+
+            <div className="flex gap-2 justify-between flex-wrap">
+              <Link href={buildVenuePortalHref(1, resolvedSlug, resolvedVenueId)} className="btn btn-sm btn-outline">Back to Slug</Link>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                disabled={isSaving}
+                onClick={async () => {
+                  if (!venueForm.name.trim()) {
+                    setFormError("Venue name is required.")
+                    return
+                  }
+
+                  setFormError("")
+                  setIsSaving(true)
+
+                  try {
+                    const saved = await persistVenue(basePayload, setFormError)
+                    if (saved) {
+                      window.location.href = buildVenuePortalHref(3, resolvedSlug, resolvedVenueId)
+                    }
+                  } finally {
+                    setIsSaving(false)
+                  }
+                }}
+              >
+                {isSaving ? "Saving..." : "Continue to Media and Gallery"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {resolvedVenueId && currentStep === 3 ? (
+        <OrganizationMediaStep
+          context="venue"
+          entityId={resolvedVenueId}
+          entitySlug={resolvedSlug}
+          sessionUser={sessionUser}
+          profilePrefix={venueProfilePrefix}
+          coverPrefix={venueCoverPrefix}
+          galleryPrefix={venueGalleryPrefix}
+          setProfileFiles={setProfileFiles}
+          setCoverFiles={setCoverFiles}
+          setGalleryFiles={setGalleryFiles}
+          backHref={buildVenuePortalHref(2, resolvedSlug, resolvedVenueId)}
+          backLabel="Back to Venue Profile"
+          continueHref={buildVenuePortalHref(4, resolvedSlug, resolvedVenueId)}
+          continueLabel="Continue to Primary Contacts"
+        />
+      ) : null}
+
+      {resolvedVenueId && currentStep === 4 ? (
+        <OrganizationPrimaryContactsStep
+          context="venue"
+          entityId={resolvedVenueId}
+          loadingContacts={loadingContacts}
+          addressContacts={businessAddressContacts}
+          emailContacts={businessEmailContacts}
+          phoneContacts={businessPhoneContacts}
+          refreshContacts={refreshVenueContacts}
+          contactError={contactError}
+          setContactError={setContactError}
+          backHref={buildVenuePortalHref(3, resolvedSlug, resolvedVenueId)}
+          backLabel="Back to Media"
+          continueHref={buildVenuePortalHref(5, resolvedSlug, resolvedVenueId)}
+        />
+      ) : null}
+
+      {resolvedVenueId && currentStep === 5 ? (
+        <OrganizationPublicContactsStep
+          context="venue"
+          entityId={resolvedVenueId}
+          loadingContacts={loadingContacts}
+          contactsTab={contactsTab}
+          setContactsTab={setContactsTab}
+          publicAddressContacts={publicAddressContacts}
+          publicEmailContacts={publicEmailContacts}
+          publicPhoneContacts={publicPhoneContacts}
+          publicSocialContacts={publicSocialContacts}
+          publicUrlContacts={publicUrlContacts}
+          refreshContacts={refreshVenueContacts}
+          backHref={buildVenuePortalHref(4, resolvedSlug, resolvedVenueId)}
+          backLabel="Back to Primary Contacts"
+          continueHref={resolvedSlug ? `/portal/venue/${encodeURIComponent(resolvedSlug)}` : "/portal/venue"}
+          continueLabel="Done - Back to Venue"
+        />
+      ) : null}
+    </JoinPageShell>
+  )
+}
+
 export async function getServerSideProps(context) {
   const session = await getServerSession(context.req, context.res, authOptions)
   const sessionUser = await getSessionFromRequest(context)
@@ -74,7 +431,7 @@ export async function getServerSideProps(context) {
 
   const { slug } = context.params
   const normalizedSlug = String(slug || "").trim().toLowerCase()
-  const apiUrl = getApiURL()
+  const currentStep = getPortalStep(context.query?.step)
 
   try {
     const venueResponse = await fetch(`${apiUrl}venue/by-slug/${encodeURIComponent(normalizedSlug)}`)
@@ -86,343 +443,15 @@ export async function getServerSideProps(context) {
     }
 
     return {
-      props: { venueId, venueData: venueData || {} },
+      props: {
+        currentStep,
+        sessionUser: sessionUser?.user || null,
+        venueId,
+        venueData: venueData || {},
+        routeSlug: normalizedSlug,
+      },
     }
   } catch {
     return { notFound: true }
   }
-}
-
-const steps = [
-  { num: 1, label: "Update Slug", key: "slug" },
-  { num: 2, label: "Profile", key: "profile" },
-  { num: 3, label: "Business Contacts", key: "business-contacts" },
-  { num: 4, label: "Media", key: "media" },
-  { num: 5, label: "Public Contacts", key: "public-contacts" },
-]
-
-export default function VenueEditPage({ venueId, venueData }) {
-  const [currentStep, setCurrentStep] = useState(1)
-  const [profileData, setProfileData] = useState({})
-  const [businessAddressContacts, setBusinessAddressContacts] = useState([])
-  const [businessEmailContacts, setBusinessEmailContacts] = useState([])
-  const [businessPhoneContacts, setBusinessPhoneContacts] = useState([])
-  const [businessSocialContacts, setBusinessSocialContacts] = useState([])
-  const [businessUrlContacts, setBusinessUrlContacts] = useState([])
-  const [publicAddressContacts, setPublicAddressContacts] = useState([])
-  const [publicEmailContacts, setPublicEmailContacts] = useState([])
-  const [publicPhoneContacts, setPublicPhoneContacts] = useState([])
-  const [publicSocialContacts, setPublicSocialContacts] = useState([])
-  const [publicUrlContacts, setPublicUrlContacts] = useState([])
-  const [businessContactsTab, setBusinessContactsTab] = useState("address")
-  const [publicContactsTab, setPublicContactsTab] = useState("address")
-  const [isLoading, setIsLoading] = useState(false)
-
-  useEffect(() => {
-    if (!venueId) return
-
-    const loadContacts = async () => {
-      setIsLoading(true)
-      try {
-        const res = await fetch(`${apiUrl}contact/venue/${venueId}?includePrivate=true`)
-        if (res.ok) {
-          const data = await res.json()
-          const rows = Array.isArray(data?.contacts) ? data.contacts : []
-          const businessRows = rows.filter((c) => ["private", "primary"].includes(String(c?.scope || "").toLowerCase()))
-          const publicRows = rows.filter((c) => String(c?.scope || "").toLowerCase() === "secondary")
-
-          setBusinessAddressContacts(businessRows.filter((c) => String(c?.contactType || "").toLowerCase() === "address"))
-          setBusinessEmailContacts(businessRows.filter((c) => String(c?.contactType || "").toLowerCase() === "email"))
-          setBusinessPhoneContacts(businessRows.filter((c) => String(c?.contactType || "").toLowerCase() === "phone"))
-          setBusinessSocialContacts(businessRows.filter((c) => String(c?.contactType || "").toLowerCase() === "social"))
-          setBusinessUrlContacts(businessRows.filter((c) => String(c?.contactType || "").toLowerCase() === "url"))
-
-          setPublicAddressContacts(publicRows.filter((c) => String(c?.contactType || "").toLowerCase() === "address"))
-          setPublicEmailContacts(publicRows.filter((c) => String(c?.contactType || "").toLowerCase() === "email"))
-          setPublicPhoneContacts(publicRows.filter((c) => String(c?.contactType || "").toLowerCase() === "phone"))
-          setPublicSocialContacts(publicRows.filter((c) => String(c?.contactType || "").toLowerCase() === "social"))
-          setPublicUrlContacts(publicRows.filter((c) => String(c?.contactType || "").toLowerCase() === "url"))
-        }
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadContacts()
-  }, [venueId])
-
-  const handleStepChange = (step) => {
-    setCurrentStep(step)
-  }
-
-  const handleProfileChange = (field, value) => {
-    setProfileData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    )
-  }
-
-  return (
-    <>
-      <TagSEO title={`Edit ${venueData?.path || "Venue"} - Portal`} description={`Edit profile`} />
-
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8">Edit Your Venue Profile</h1>
-
-        {/* Step Indicator */}
-        <div className="flex justify-between mb-8">
-          {steps.map((step) => (
-            <button
-              key={step.key}
-              onClick={() => handleStepChange(step.num)}
-              className={`flex-1 py-2 px-4 text-center rounded transition ${
-                currentStep === step.num
-                  ? "bg-primary text-primary-content font-bold"
-                  : currentStep > step.num
-                    ? "bg-success text-success-content"
-                    : "bg-base-200 text-base-content"
-              }`}
-            >
-              {step.num}. {step.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Step 1: Update Slug */}
-        {currentStep === 1 && venueId && (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Update Slug</h2>
-              <RegisterSlug
-                domain="venue"
-                reserveEndpoint={`${apiUrl}venue/reserve-slug`}
-                updateEndpoint={(id) => `${apiUrl}venue/${id}/update-slug`}
-                checkEndpoint={(candidateSlug) =>
-                  `${apiUrl}venue/check-slug/${candidateSlug}?excludeId=${venueId}`
-                }
-                currentSlug={venueData?.path}
-                entityId={venueId}
-                progressApi={{
-                  getProgress: () => ({ slug, venueId }),
-                  setProgress: () => {},
-                  markStepComplete: () => {},
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Profile */}
-        {currentStep === 2 && (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Profile Information</h2>
-
-              <label className="form-control">
-                <div className="label">
-                  <span className="label-text">Tagline</span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Your tagline"
-                  className="input input-bordered"
-                  value={profileData.tagline}
-                  onChange={(e) => handleProfileChange("tagline", e.target.value)}
-                />
-              </label>
-
-              <label className="form-control">
-                <div className="label">
-                  <span className="label-text">Bio</span>
-                </div>
-                <textarea
-                  className="textarea textarea-bordered"
-                  placeholder="Your bio"
-                  value={profileData.bio}
-                  onChange={(e) => handleProfileChange("bio", e.target.value)}
-                ></textarea>
-              </label>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Business Contacts */}
-        {currentStep === 3 && venueId && (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Business Contacts</h2>
-
-              <div className="tabs tabs-bordered">
-                {[
-                  { key: "address", label: "Address" },
-                  { key: "email", label: "Email" },
-                  { key: "phone", label: "Phone" },
-                  { key: "social", label: "Social" },
-                  { key: "url", label: "URL" },
-                ].map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setBusinessContactsTab(tab.key)}
-                    className={`tab ${businessContactsTab === tab.key ? "tab-active" : ""}`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {businessContactsTab === "address" && (
-                <AddressForm
-                  contacts={businessAddressContacts}
-                  onUpdate={setBusinessAddressContacts}
-                  entityId={venueId}
-                  scope="private"
-                />
-              )}
-              {businessContactsTab === "email" && (
-                <EmailForm
-                  contacts={businessEmailContacts}
-                  onUpdate={setBusinessEmailContacts}
-                  entityId={venueId}
-                  scope="private"
-                />
-              )}
-              {businessContactsTab === "phone" && (
-                <PhoneForm
-                  contacts={businessPhoneContacts}
-                  onUpdate={setBusinessPhoneContacts}
-                  entityId={venueId}
-                  scope="private"
-                />
-              )}
-              {businessContactsTab === "social" && (
-                <SocialHandlesForm
-                  contacts={businessSocialContacts}
-                  onUpdate={setBusinessSocialContacts}
-                  entityId={venueId}
-                  scope="private"
-                />
-              )}
-              {businessContactsTab === "url" && (
-                <UrlLinksForm
-                  contacts={businessUrlContacts}
-                  onUpdate={setBusinessUrlContacts}
-                  entityId={venueId}
-                  scope="private"
-                />
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Media */}
-        {currentStep === 4 && venueId && (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Profile Media</h2>
-              <GalleryManager
-                entityType="venue"
-                entityId={venueId}
-                storagePrefix={`platformpics/venuecontent/${venueId}/`}
-                allowMultiple={true}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Step 5: Public Contacts */}
-        {currentStep === 5 && venueId && (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Public Contacts</h2>
-
-              <div className="tabs tabs-bordered">
-                {[
-                  { key: "address", label: "Address" },
-                  { key: "email", label: "Email" },
-                  { key: "phone", label: "Phone" },
-                  { key: "social", label: "Social" },
-                  { key: "url", label: "URL" },
-                ].map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setPublicContactsTab(tab.key)}
-                    className={`tab ${publicContactsTab === tab.key ? "tab-active" : ""}`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {publicContactsTab === "address" && (
-                <AddressForm
-                  contacts={publicAddressContacts}
-                  onUpdate={setPublicAddressContacts}
-                  entityId={venueId}
-                  scope="secondary"
-                />
-              )}
-              {publicContactsTab === "email" && (
-                <EmailForm
-                  contacts={publicEmailContacts}
-                  onUpdate={setPublicEmailContacts}
-                  entityId={venueId}
-                  scope="secondary"
-                />
-              )}
-              {publicContactsTab === "phone" && (
-                <PhoneForm
-                  contacts={publicPhoneContacts}
-                  onUpdate={setPublicPhoneContacts}
-                  entityId={venueId}
-                  scope="secondary"
-                />
-              )}
-              {publicContactsTab === "social" && (
-                <SocialHandlesForm
-                  contacts={publicSocialContacts}
-                  onUpdate={setPublicSocialContacts}
-                  entityId={venueId}
-                  scope="secondary"
-                />
-              )}
-              {publicContactsTab === "url" && (
-                <UrlLinksForm
-                  contacts={publicUrlContacts}
-                  onUpdate={setPublicUrlContacts}
-                  entityId={venueId}
-                  scope="secondary"
-                />
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={() => handleStepChange(Math.max(1, currentStep - 1))}
-            disabled={currentStep === 1}
-            className="btn btn-outline"
-          >
-            Back
-          </button>
-
-          {currentStep === steps.length ? (
-            <Link href={`/portal/venue/${venueData?.path}`} className="btn btn-primary">
-              Done - Back to Profile
-            </Link>
-          ) : (
-            <button onClick={() => handleStepChange(currentStep + 1)} className="btn btn-primary">
-              Next
-            </button>
-          )}
-        </div>
-      </div>
-    </>
-  )
 }

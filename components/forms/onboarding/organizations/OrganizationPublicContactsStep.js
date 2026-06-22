@@ -27,7 +27,9 @@ export default function OrganizationPublicContactsStep({
   publicUrlContacts,
   refreshContacts,
   backHref,
+  backLabel = "Back to Media",
   continueHref,
+  continueLabel = "Continue to Review",
 }) {
   return (
     <OnboardingStepCard
@@ -120,8 +122,8 @@ export default function OrganizationPublicContactsStep({
 
       <OnboardingStepActions
         backHref={backHref}
-        backLabel="Back to Media"
-        continueLabel="Continue to Review"
+        backLabel={backLabel}
+        continueLabel={continueLabel}
         onContinue={() => {
           window.location.href = continueHref
         }}
