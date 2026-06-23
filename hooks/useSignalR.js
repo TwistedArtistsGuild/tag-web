@@ -170,10 +170,17 @@ export function useSignalR(userId, handlers = {}) {
         setIsConnected(false)
       })
 
-      connection.onreconnected((connectionId) => {
+      connection.onreconnected(async (connectionId) => {
         console.log('✅ SignalR reconnected:', connectionId)
         setConnectionState('Connected')
         setIsConnected(true)
+
+        try {
+          await connection.invoke('RegisterUser', userId)
+          console.log(`🔁 Re-registered SignalR user group: ${userId}`)
+        } catch (err) {
+          console.error('Failed to re-register SignalR user after reconnect:', err)
+        }
 
         // Rejoin all active conversations
         handlersRef.current.onReconnected?.()
