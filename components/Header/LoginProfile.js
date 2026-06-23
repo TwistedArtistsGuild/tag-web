@@ -545,6 +545,24 @@ export default function LoginProfile({
                   </div>
                 ) : null}
 
+                {pendingOnboardingItems.length > 0 ? (
+                  <div className="rounded-box border border-warning/40 bg-warning/10 p-2 text-xs text-base-content/80">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-warning">Pending onboarding</span>
+                      <Link
+                        href="/join"
+                        onClick={() => setOpenValue(false)}
+                        className="link link-warning text-[11px] font-semibold"
+                      >
+                        Open Join
+                      </Link>
+                    </div>
+                    <div className="mt-1 text-[11px] text-base-content/70">
+                      {pendingOnboardingItems.length} pending {pendingOnboardingItems.length === 1 ? "profile" : "profiles"} to finish and publish.
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="rounded-box border border-base-300 bg-base-200/60 p-1">
                   <div className="grid grid-cols-2 gap-1">
                     <button
