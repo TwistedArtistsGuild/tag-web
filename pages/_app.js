@@ -145,10 +145,8 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return
-    const timer = window.setInterval(() => {
-      setNowMs(Date.now())
-    }, 1000)
-    return () => window.clearInterval(timer)
+    // Capture a single timestamp for banner diagnostics without forcing global periodic re-renders.
+    setNowMs(Date.now())
   }, [])
 
   useEffect(() => {
