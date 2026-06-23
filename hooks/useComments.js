@@ -265,8 +265,11 @@ export function useComments(targetId, targetType, enabled = true) {
  * Target type constants for clarity
  */
 export const CommentTargetType = {
-  LISTING: 1,
-  ARTIST: 2,
+  ARTIST: 1,
+  LISTING: 2,
+  BLOG: 3,
+  NEWS: 4,
+  USER: 5,
+  // Backward-compatible alias used by older call sites.
   POST: 3,
-  BLOG: 4
 }
