@@ -22,6 +22,9 @@ import { MessagingRealtimeProvider } from '@/components/messaging/MessagingRealt
 
 // Flag to prevent multiple initializations across hot reloads
 let appInsightsInitialized = false
+const DEV_BANNER_DISMISS_KEY = "tag_dev_banner_dismiss_until"
+const DEV_BANNER_RESHOW_MS = 5 * 60 * 1000
+const SCROLL_ROOT_SELECTORS = [".site-main", "main", "#__next"]
 
 const appInsights = new ApplicationInsights({
   config: {
@@ -34,6 +37,7 @@ const appInsights = new ApplicationInsights({
  */
 export default function App({ Component, pageProps: { session, sidebarProps, ...pageProps } }) {
   const [showDevBanner, setShowDevBanner] = useState(true)
+  const [bannerReady, setBannerReady] = useState(false)
   // Keep initial render deterministic across server/client to avoid hydration mismatch.
   const [nowMs, setNowMs] = useState(0)
   const router = useRouter()
@@ -69,6 +73,77 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
   }, [Component])
 
   useEffect(() => {
+    if (!router?.events || typeof window === "undefined") {
+      return
+    }
+
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual"
+    }
+
+    const getSectionIdFromUrl = (rawUrl) => {
+      const targetUrl = new URL(String(rawUrl || router.asPath || "/"), window.location.origin)
+      const hashTarget = decodeURIComponent(String(targetUrl.hash || "").replace(/^#/, "")).trim()
+      const queryTarget = decodeURIComponent(String(targetUrl.searchParams.get("section") || "")).trim()
+      return hashTarget || queryTarget
+    }
+
+    const scrollAllRootsToTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+
+      SCROLL_ROOT_SELECTORS.forEach((selector) => {
+        const node = document.querySelector(selector)
+        if (node && typeof node.scrollTo === "function") {
+          node.scrollTo({ top: 0, left: 0, behavior: "auto" })
+        } else if (node) {
+          node.scrollTop = 0
+          node.scrollLeft = 0
+        }
+      })
+    }
+
+    const scrollToSection = (sectionId) => {
+      const target = document.getElementById(sectionId)
+      if (!target) {
+        return false
+      }
+
+      target.scrollIntoView({ behavior: "auto", block: "start" })
+      return true
+    }
+
+    const applyNavigationScroll = (url) => {
+      const sectionId = getSectionIdFromUrl(url)
+
+      if (!sectionId) {
+        scrollAllRootsToTop()
+        window.requestAnimationFrame(scrollAllRootsToTop)
+        return
+      }
+
+      if (scrollToSection(sectionId)) {
+        return
+      }
+
+      window.requestAnimationFrame(() => {
+        if (!scrollToSection(sectionId)) {
+          scrollAllRootsToTop()
+        }
+      })
+    }
+
+    router.events.on("routeChangeComplete", applyNavigationScroll)
+    router.events.on("hashChangeComplete", applyNavigationScroll)
+
+    return () => {
+      router.events.off("routeChangeComplete", applyNavigationScroll)
+      router.events.off("hashChangeComplete", applyNavigationScroll)
+    }
+  }, [router])
+
+  useEffect(() => {
     if (process.env.NODE_ENV !== "development") return
     const timer = window.setInterval(() => {
       setNowMs(Date.now())
@@ -76,7 +151,40 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
     return () => window.clearInterval(timer)
   }, [])
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const now = Date.now()
+    const dismissUntilMs = Number(window.localStorage.getItem(DEV_BANNER_DISMISS_KEY) || "0")
+    const shouldShowBanner = !Number.isFinite(dismissUntilMs) || dismissUntilMs <= now
+
+    const initTimer = window.setTimeout(() => {
+      setShowDevBanner(shouldShowBanner)
+      setBannerReady(true)
+    }, 0)
+
+    if (shouldShowBanner) {
+      return () => window.clearTimeout(initTimer)
+    }
+
+    const waitMs = Math.max(0, dismissUntilMs - now)
+    const restoreTimer = window.setTimeout(() => {
+      window.localStorage.removeItem(DEV_BANNER_DISMISS_KEY)
+      setShowDevBanner(true)
+    }, waitMs)
+
+    return () => {
+      window.clearTimeout(initTimer)
+      window.clearTimeout(restoreTimer)
+    }
+  }, [])
+
   const closeBanner = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(DEV_BANNER_DISMISS_KEY, String(Date.now() + DEV_BANNER_RESHOW_MS))
+    }
     setShowDevBanner(false)
   }
 
@@ -88,6 +196,10 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
   const uptimeMinutes = Math.floor((localUptimeMs % 3600000) / 60000)
   const uptimeSeconds = Math.floor((localUptimeMs % 60000) / 1000)
   const localUptime = `${String(uptimeHours).padStart(2, "0")}:${String(uptimeMinutes).padStart(2, "0")}:${String(uptimeSeconds).padStart(2, "0")}`
+  const environmentDetail = process.env.NODE_ENV === "development"
+    ? `Dev uptime ${localUptime}`
+    : `Build ${String(buildNumber || "local").slice(0, 12)}`
+  const bannerMessage = `Early access notice: this platform is actively being refined and some features may change without notice. ${environmentDetail}.`
 
   const canonicalSlug = (router.asPath || "/").split("?")[0].split("#")[0].replace(/^\//, "")
   const fallbackTitle = canonicalSlug
@@ -107,16 +219,15 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
     <SessionProvider session={session}>
       <MessagingRealtimeProvider>
         {/* Your original development banner */}
-        {showDevBanner && (
+        {bannerReady && showDevBanner && (
           <div className="bg-warning text-warning-content text-center py-1 text-xs font-bold sticky top-0 z-50 flex justify-center items-center">
             <div className="grow">
-              ⚠️ WEBSITE PROTOTYPE - PROOF OF CONCEPT - NOT FOR PRODUCTION USE - DATA IS LIKELY FAKED AND/OR MAY BE RESET
-              WITHOUT NOTICE ⚠️
+              {bannerMessage}
             </div>
             <button
               onClick={closeBanner}
               className="px-2 hover:bg-warning-content hover:bg-opacity-20 rounded transition-colors"
-              title="Close this notification (will reappear on navigation)"
+              title="Close this notification (returns in 5 minutes)"
               aria-label="Close development environment notification"
             >
               ✕

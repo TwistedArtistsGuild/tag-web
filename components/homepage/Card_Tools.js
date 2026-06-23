@@ -11,20 +11,35 @@
 
 const CardTools = () => {
   return (
-    <div className="card bg-base-100 shadow-lg rounded-box p-8 md:p-10">
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-base-content mb-6">Art deserves better tools.</h2>
-      <div className="space-y-5">
-        <p className="text-lg text-base-content/90 leading-relaxed">
-          Our vision is to bring artists and their adoring public together through an ad-free social platform
-          dedicated to art in all its forms.
+    <div className="card bg-base-100 shadow-xl border border-base-300 rounded-box p-8 md:p-10">
+      <h2 className="text-3xl sm:text-4xl font-extrabold text-base-content mb-4">Artists deserve better resources.</h2>
+
+      <div className="space-y-5 text-base-content/90">
+        <p className="text-lg leading-relaxed max-w-3xl">
+          We are building a practical business toolkit that helps artists run sustainable creative careers.
         </p>
-        <p className="text-lg text-base-content/90 leading-relaxed">
-          Twisted Artists Guild exists to remove friction after creating: sharing, selling, shipping, and getting paid
-          without forcing artists to become experts in marketing, accounting, or tech just to survive.
+
+        <div className="rounded-box bg-base-200/50 border border-base-300 p-5">
+          <ul className="list-disc ml-5 leading-relaxed columns-1 md:columns-2 gap-10">
+            <li className="break-inside-avoid mb-2">Payments and POS</li>
+            <li className="break-inside-avoid mb-2">Cost, margin, and pricing tools</li>
+            <li className="break-inside-avoid mb-2">Mileage and expense tracking</li>
+            <li className="break-inside-avoid mb-2">Budgeting, inventory, timesheets, and payroll</li>
+            <li className="break-inside-avoid mb-2">Invoices, deposits, receipts, and contracts</li>
+            <li className="break-inside-avoid mb-2">Project and event management workflows</li>
+            <li className="break-inside-avoid mb-2">CRM, marketing campaign tools, and performance dashboards</li>
+          </ul>
+        </div>
+
+        <p className="text-lg font-semibold text-primary">And more to come!</p>
+
+        <p className="text-base leading-relaxed text-base-content/80">
+          We want to hear from artists in our community about your biggest needs from our software developers,
+          so we can prioritize what matters most.
         </p>
+
         <p className="text-sm text-base-content/70">
-          We apologize for any ads hosted by embedded YouTube videos and are working towards a full ad-free
-          experience.
+          Community feedback will directly shape our roadmap.
         </p>
       </div>
     </div>

@@ -14,9 +14,9 @@
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
 import FakeListingsSection from "@/components/art/FakeListingsSection"
+import BloomscrollVineRail from "@/components/art/bloomscroll-vine-rail"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { getPanelClass } from "@/components/cards/sizes/panel-layout"
 
 /**
@@ -73,125 +73,6 @@ const generateFakeListings = () => {
       profilePic: {
         url: "https://picsum.photos/seed/dragon/400/300",
         alttext: "Bronze dragon sculpture",
-      },
-      featured: true,
-      loves: getRandomCount(), // Added social counters
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-7",
-      title: "Marble Abstract Form",
-      description: "Elegant white marble sculpture featuring flowing abstract forms. Height: 18 inches.",
-      price: 899.99,
-      path: "marble-abstract",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Chisel & Stone",
-        path: "chisel-stone",
-      },
-      artCategory: {
-        category: "Sculpture",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/marble/400/300",
-        alttext: "Marble abstract sculpture",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-8",
-      title: "Recycled Metal Wildlife",
-      description:
-        "Eco-friendly sculpture made from reclaimed metal parts. This majestic eagle has a wingspan of 24 inches.",
-      price: 450.0,
-      path: "recycled-eagle",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Scrap Metal Visionaries",
-        path: "scrap-visionaries",
-      },
-      artCategory: {
-        category: "Sculpture",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/metal/400/300",
-        alttext: "Recycled metal eagle sculpture",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-
-    // Painting Category
-    {
-      listingid: "fake-2",
-      title: "Abstract Sunset Painting",
-      description: 'Vibrant acrylic painting on canvas showcasing a dreamlike sunset over water. Measures 24" x 36".',
-      price: 450.0,
-      path: "abstract-sunset",
-      created: new Date().toISOString(),
-      artist: {
-        title: "ColorScape Arts",
-        path: "colorscape",
-      },
-      artCategory: {
-        category: "Painting",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/sunset/400/300",
-        alttext: "Abstract sunset painting",
-      },
-      featured: true,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-9",
-      title: "Impressionist Garden Scene",
-      description:
-        "Oil painting inspired by classic Impressionist techniques. This garden scene bursts with color and light.",
-      price: 675.0,
-      path: "garden-impression",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Light & Palette Studio",
-        path: "light-palette",
-      },
-      artCategory: {
-        category: "Painting",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/garden/400/300",
-        alttext: "Impressionist garden painting",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-10",
-      title: "Urban Night Cityscape",
-      description: "Moody cityscape captured in oil paints with dramatic lighting. Framed and ready to hang.",
-      price: 525.0,
-      path: "night-cityscape",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Metropolitan Arts",
-        path: "metro-arts",
-      },
-      artCategory: {
-        category: "Painting",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/city/400/300",
-        alttext: "Urban night cityscape painting",
       },
       featured: true,
       loves: getRandomCount(),
@@ -512,25 +393,25 @@ const Listings = (props) => {
     },
   }
   return (
-    <SocialRealtimeProvider>
-      <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
+    
+      <div className="relative isolate min-h-screen bg-base-100 text-base-content overflow-hidden bloomscroll-shell">
+        <div className="bloomscroll-rail-slot left">
+          <BloomscrollVineRail side="left" />
+        </div>
+        <div className="bloomscroll-main-column">
         <TagSEO metadataProp={pageMetaData} canonicalSlug="art" />
         {/* Hero Section */}
-        <section className="text-center py-12">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
-            Art Listings
+        <section className="relative text-center py-6 md:py-8">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-primary">
+            Bloomscroll
           </h1>
-          <p className="text-xl md:text-2xl text-secondary mb-6">
-            Explore a curated selection of art pieces to inspire your creativity.
+          <p className="text-sm md:text-base text-secondary/90 mb-0">
+            Like doomscrolling, but make it art and ad-free. Endlessly browse listings by our artist members.
           </p>
-          <div className="badge badge-info badge-lg">
-            ✨ Enhanced with Social Features
-          </div>
         </section>
-      <main className="container mx-auto px-4 py-8 flex-1 w-full">
+      <main className="relative container mx-auto px-4 py-8 flex-1 w-full">
         {/* Dynamic listings section */}
         <div className="mb-16">
-          <h3 className="text-2xl font-bold mb-6">Featured Art</h3>
           <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
             {props.listings.map((listing, index) => (
               <div
@@ -545,8 +426,72 @@ const Listings = (props) => {
         {/* Fake listings section */}
         <FakeListingsSection fakeListings={props.fakeListings} />
       </main>
+      </div>
+      <div className="bloomscroll-rail-slot right">
+        <BloomscrollVineRail side="right" />
+      </div>
+
+      <style jsx>{`
+        .bloomscroll-shell {
+          --vine-rail-width: min(18vw, 9.5rem);
+          --vine-rail-gap: 1rem;
+          --bloomscroll-slot-width: calc(var(--vine-rail-width) + var(--vine-rail-gap));
+          display: grid;
+          grid-template-columns: var(--bloomscroll-slot-width) minmax(0, 1fr) var(--bloomscroll-slot-width);
+          width: calc(100% + (var(--bloomscroll-slot-width) * 2));
+          margin-left: calc(-1 * var(--bloomscroll-slot-width));
+        }
+
+        .bloomscroll-rail-slot {
+          min-width: 0;
+          display: flex;
+          z-index: 0;
+        }
+
+        .bloomscroll-rail-slot.left {
+          grid-column: 1;
+          justify-content: flex-start;
+          padding-right: var(--vine-rail-gap);
+        }
+
+        .bloomscroll-rail-slot.right {
+          grid-column: 3;
+          justify-content: flex-end;
+          padding-left: var(--vine-rail-gap);
+        }
+
+        .bloomscroll-main-column {
+          grid-column: 2;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+          .bloomscroll-shell {
+            --vine-rail-width: 5.8rem;
+            --vine-rail-gap: 0.6rem;
+            grid-template-columns: var(--bloomscroll-slot-width) minmax(0, 1fr);
+            width: calc(100% + var(--bloomscroll-slot-width));
+            margin-left: calc(-0.25 * var(--bloomscroll-slot-width));
+          }
+
+          .bloomscroll-rail-slot.left {
+            padding-right: 0;
+          }
+
+          .bloomscroll-rail-slot.right {
+            display: none;
+          }
+
+          .bloomscroll-main-column {
+            grid-column: 2;
+          }
+        }
+      `}</style>
     </div>
-    </SocialRealtimeProvider>
+    
   )
 }
 
@@ -721,3 +666,4 @@ Listings.getInitialProps = async (context) => {
 }
 
 export default Listings
+

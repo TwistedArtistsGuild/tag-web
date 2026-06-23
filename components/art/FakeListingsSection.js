@@ -5,12 +5,9 @@ import { getPanelClass } from "@/components/cards/sizes/panel-layout"
 
 export default function FakeListingsSection({ fakeListings }) {
   return (
-    <div className="mt-24 mb-20 md:flex md:items-stretch md:gap-6">
-      <div className="hidden md:block w-px bg-base-300/70" aria-hidden="true" />
-      <div className="flex-1">
-        <h3 className="text-3xl font-bold mb-8 text-center">Coming Soon: Bloomscrolling (example artist links may be broken)</h3>
-        <p className="mb-12 text-xl text-center max-w-4xl mx-auto">Imagine endlessly viewing listings from our artistic community, with no advertisements!.</p>
-        <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
+    <div className="mt-8 mb-20">
+      <p className="text-xs text-base-content/40 mb-6 text-center tracking-wide uppercase">Fake listings</p>
+      <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
           {(fakeListings || []).map((listing, index) => (
             <div
               key={listing.path || listing.listingid || `${listing.title || "fake-listing"}-${index}`}
@@ -24,7 +21,6 @@ export default function FakeListingsSection({ fakeListings }) {
             </div>
           ))}
         </div>
-      </div>
     </div>
   )
 }

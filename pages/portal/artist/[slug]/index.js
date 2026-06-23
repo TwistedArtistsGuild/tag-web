@@ -20,7 +20,6 @@ import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin } from "@/utils/authHelpers"
 import { sanitizeDefaultHtml } from "@/components/security/sanitize"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import GalleryManager from "@/components/gallery/GalleryManager"
 
 const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false })
@@ -336,9 +335,9 @@ export default function ArtistSlugPortalPage({ slug, artistProfile, listings, cu
         </section>
 
         {mode === "preview" ? (
-          <SocialRealtimeProvider>
+          
             <PreviewMode artistProfile={artistProfile} slug={slug} listingCount={listingCount} pictureCreditsById={pictureCreditsById} />
-          </SocialRealtimeProvider>
+          
         ) : (
           <EditMode slug={slug} artistId={artistProfile?.id || artistProfile?.artistID} currentUser={currentUser} />
         )}
@@ -558,4 +557,5 @@ export async function getServerSideProps(context) {
     }
   }
 }
+
 

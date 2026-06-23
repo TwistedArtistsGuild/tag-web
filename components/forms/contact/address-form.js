@@ -9,7 +9,7 @@
 
  Open source · low-profit · human-first*/
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import getApiURL from "@/components/widgets/GetApiURL"
 
 const FALLBACK_LABELS = ["home", "work", "mobile", "office", "studio", "regional office", "support", "booking", "press", "billing", "sales", "other"]
@@ -28,11 +28,23 @@ function normalizeScope(value, fallback = "secondary") {
   return fallback
 }
 
+function scopeFromContact(contact, fallback = "secondary") {
+  const rawIsPrivate = contact?.isPrivate
+  if (rawIsPrivate === true || String(rawIsPrivate || "").trim().toLowerCase() === "true") {
+    return "private"
+  }
+  if (rawIsPrivate === false || String(rawIsPrivate || "").trim().toLowerCase() === "false") {
+    return "secondary"
+  }
+
+  return normalizeScope(contact?.scope, fallback)
+}
+
 function sortByScopeAndOrder(entries = []) {
   const rank = { primary: 0, private: 1, secondary: 2 }
   return [...entries].sort((a, b) => {
-    const aScope = rank[normalizeScope(a?.scope)] ?? 9
-    const bScope = rank[normalizeScope(b?.scope)] ?? 9
+    const aScope = rank[scopeFromContact(a)] ?? 9
+    const bScope = rank[scopeFromContact(b)] ?? 9
     if (aScope !== bScope) return aScope - bScope
     return Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0)
   })
@@ -56,7 +68,7 @@ function makeInitialEntries(existingContacts = [], defaultScope = "secondary", d
       zipCode: String(contact?.address?.postalCode || "").trim(),
       country: rawCountry,
       operationHours: String(contact?.address?.hours || "").trim(),
-      scope: normalizeScope(contact?.scope, defaultScope),
+      scope: scopeFromContact(contact, defaultScope),
       mode: contact?.address?.line1 ? "display" : "edit",
     }
   })
@@ -95,6 +107,9 @@ export default function AddressForm({
   defaultLabel = "office",
   requireCityStateCountry = false,
   requireFullAddressFields = false,
+  singleEntryOnly = false,
+  scopeLabelMap = {},
+  hideDeleteAction = false,
 }) {
   const apiUrl = getApiURL()
   const resolvedContext = String(context || "artist").trim().toLowerCase() || "artist"
@@ -115,12 +130,19 @@ export default function AddressForm({
   const [homePublicOverride, setHomePublicOverride] = useState(false)
   const [entryValidationErrors, setEntryValidationErrors] = useState({})
   const [flashValidation, setFlashValidation] = useState(false)
+  const formRef = useRef(null)
+
+  const getScopeLabel = (scope) => {
+    const normalized = normalizeScope(scope, defaultScope)
+    return scopeLabelMap?.[normalized] || CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalized)?.label || "Secondary"
+  }
 
   useEffect(() => {
-    setEntries(makeInitialEntries(existingContacts, defaultScope, normalizedDefaultLabel))
+    const nextEntries = makeInitialEntries(existingContacts, defaultScope, normalizedDefaultLabel)
+    setEntries(singleEntryOnly ? nextEntries.slice(0, 1) : nextEntries)
     setHasUnsavedChanges(false)
     setHomePublicOverride(false)
-  }, [defaultScope, existingContacts, normalizedDefaultLabel])
+  }, [defaultScope, existingContacts, normalizedDefaultLabel, singleEntryOnly])
 
   useEffect(() => {
     let ignore = false
@@ -169,6 +191,13 @@ export default function AddressForm({
     setErrorMessage(message)
     setEntryValidationErrors(nextErrors)
     setFlashValidation(true)
+    setTimeout(() => {
+      const firstErroredInput = formRef.current?.querySelector(".input-error")
+      if (firstErroredInput) {
+        firstErroredInput.scrollIntoView({ behavior: "smooth", block: "center" })
+        firstErroredInput.focus()
+      }
+    }, 0)
     setTimeout(() => setFlashValidation(false), 900)
   }
 
@@ -187,6 +216,10 @@ export default function AddressForm({
   }, [hasPublicHomeLabel, homePublicOverride])
 
   const addEntry = () => {
+    if (singleEntryOnly) {
+      return
+    }
+
     setEntries((prev) => ([
       ...prev,
       {
@@ -246,7 +279,8 @@ export default function AddressForm({
       return
     }
 
-    const entriesToSubmit = entries.filter((entry, index) => {
+    const candidateEntries = singleEntryOnly ? entries.slice(0, 1) : entries
+    const entriesToSubmit = candidateEntries.filter((entry, index) => {
       if (index === 0) {
         return true
       }
@@ -307,8 +341,8 @@ export default function AddressForm({
         const countryValue = String(entry.country || "").trim()
         const regionValue = String(entry.region || entry.state || "").trim()
         const rawLine1 = String(entry.line1 || "").trim()
-        const addressLine1 = isPrimaryCityStateRequired && !requireFullAddressFields
-          ? `${city}, ${regionValue}`
+        const addressLine1 = (isPrimaryCityStateRequired || requireCityStateCountry) && !requireFullAddressFields
+          ? (rawLine1 || [city, regionValue, countryValue].filter(Boolean).join(", "))
           : rawLine1
 
         if (!addressLine1) return null
@@ -328,8 +362,8 @@ export default function AddressForm({
           zipCode: entry.zipCode.trim() || null,
           country: countryValue || null,
           operationHours: entry.operationHours.trim() || null,
-          scope: normalizeScope(entry.scope, defaultScope),
-          displayOrder: index,
+          isPrivate: normalizeScope(entry.scope, defaultScope) === "private",
+          displayOrder: singleEntryOnly ? 0 : index,
         }
       })
       .filter(Boolean)
@@ -349,8 +383,12 @@ export default function AddressForm({
           body: JSON.stringify(payload),
         })
         if (!response.ok) {
-          const err = await response.json().catch(() => ({}))
-          throw new Error(err?.message || "Unable to save address contacts")
+          const errJson = await response.json().catch(() => null)
+          const errText = typeof errJson === "string"
+            ? errJson
+            : (errJson?.message || errJson?.error || "")
+          const statusText = response.status ? ` (${response.status})` : ""
+          throw new Error(errText || `Unable to save address contacts${statusText}`)
         }
       }
 
@@ -383,7 +421,7 @@ export default function AddressForm({
   }
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form ref={formRef} className="space-y-4" onSubmit={handleSubmit}>
       {hasUnsavedChanges ? (
         <div className="alert alert-warning text-sm">Changes are not applied until you click Save Address Contacts.</div>
       ) : null}
@@ -432,7 +470,7 @@ export default function AddressForm({
                   {primaryCityStateRequired ? (
                     <div className="text-xs text-base-content/60 mt-1">City and state/region are required for the primary public address.</div>
                   ) : null}
-                  <div className="text-xs text-base-content/60 mt-1">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(entry.scope, defaultScope))?.label || "Secondary"}</div>
+                  <div className="text-xs text-base-content/60 mt-1">Scope: {getScopeLabel(entry.scope)}</div>
                 </div>
                 <button
                   type="button"
@@ -444,9 +482,11 @@ export default function AddressForm({
                 >
                   Edit
                 </button>
-                <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                  Delete
-                </button>
+                {!hideDeleteAction ? (
+                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                    Delete
+                  </button>
+                ) : null}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -550,29 +590,30 @@ export default function AddressForm({
                           updateEntry(entry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
                         }}
                       >
-                        {availableScopes.map((scope) => {
-                          const option = CONTACT_SCOPE_OPTIONS.find((row) => row.value === scope)
-                          return <option key={scope} value={scope}>{option?.label || scope}</option>
-                        })}
+                        {availableScopes.map((scope) => (
+                          <option key={scope} value={scope}>{getScopeLabel(scope)}</option>
+                        ))}
                       </select>
                     </label>
                   ) : <div className="flex-1 max-w-xs" />}
-                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                    Delete
-                  </button>
+                  {!hideDeleteAction ? (
+                    <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               </div>
             )}
           </div>
         ))}
 
-        {entries.length > 1 ? (
+        {!singleEntryOnly && entries.length > 1 ? (
           <div className="rounded-box border border-base-300 bg-base-200/40 p-3">
             <div className="text-xs font-semibold uppercase tracking-wide text-base-content/70">Secondary Details</div>
           </div>
         ) : null}
 
-        {entries.slice(1).map((entry) => (
+        {!singleEntryOnly ? entries.slice(1).map((entry) => (
           <div key={entry.id} className="rounded-box border border-base-300 bg-base-100 p-4">
             {entry.mode === "display" ? (
               <div className="flex items-start gap-3">
@@ -581,7 +622,7 @@ export default function AddressForm({
                   <div className="text-sm">{entry.line1}</div>
                   {entry.line2 ? <div className="text-sm">{entry.line2}</div> : null}
                   <div className="text-sm">{[entry.city, entry.region || entry.state, entry.zipCode, entry.country].filter(Boolean).join(", ")}</div>
-                  <div className="text-xs text-base-content/60 mt-1">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(entry.scope, defaultScope))?.label || "Secondary"}</div>
+                  <div className="text-xs text-base-content/60 mt-1">Scope: {getScopeLabel(entry.scope)}</div>
                 </div>
                 <button
                   type="button"
@@ -593,9 +634,11 @@ export default function AddressForm({
                 >
                   Edit
                 </button>
-                <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                  Delete
-                </button>
+                {!hideDeleteAction ? (
+                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                    Delete
+                  </button>
+                ) : null}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -693,23 +736,24 @@ export default function AddressForm({
                         updateEntry(entry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
                       }}
                     >
-                      {availableScopes.map((scope) => {
-                        const option = CONTACT_SCOPE_OPTIONS.find((row) => row.value === scope)
-                        return <option key={scope} value={scope}>{option?.label || scope}</option>
-                      })}
+                      {availableScopes.map((scope) => (
+                        <option key={scope} value={scope}>{getScopeLabel(scope)}</option>
+                      ))}
                     </select>
                   </label>
-                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                    Delete
-                  </button>
+                  {!hideDeleteAction ? (
+                    <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               </div>
             )}
           </div>
-        ))}
+        )) : null}
       </div>
 
-      <button type="button" className="btn btn-outline btn-sm" onClick={addEntry}>Add Address</button>
+      {!singleEntryOnly ? <button type="button" className="btn btn-outline btn-sm" onClick={addEntry}>Add Address</button> : null}
 
       <div className="flex items-center gap-3">
         <button type="submit" className="btn btn-primary" disabled={isSubmitting}>

@@ -1,24 +1,13 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
-import AddressForm from "@/components/forms/contact/address-form"
-import EmailForm from "@/components/forms/contact/email-form"
-import PhoneForm from "@/components/forms/contact/phone-form"
-import SocialHandlesForm from "@/components/forms/contact/social-handles-form"
-import UrlLinksForm from "@/components/forms/contact/url-links-form"
-import GalleryManager from "@/components/gallery/GalleryManager"
+import OrganizationPrimaryContactsStep from "@/components/forms/onboarding/organizations/OrganizationPrimaryContactsStep"
+import OrganizationPublicContactsStep from "@/components/forms/onboarding/organizations/OrganizationPublicContactsStep"
+import OrganizationMediaStep from "@/components/forms/onboarding/organizations/OrganizationMediaStep"
 import JoinPageShell from "@/components/join/common/join-page-shell"
 import getApiURL from "@/components/widgets/GetApiURL"
 
 const apiUrl = getApiURL()
-
-const PUBLIC_CONTACT_TABS = [
-  { key: "public-address", label: "Public Address" },
-  { key: "public-email", label: "Public Email" },
-  { key: "public-phone", label: "Public Phone" },
-  { key: "public-social", label: "Public Social" },
-  { key: "public-urls", label: "Public URLs" },
-]
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -166,11 +155,11 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
 
   const stepCompletionMap = useMemo(() => ({
     3: Boolean(vendorForm.companyName && vendorForm.contractExpires),
-    4: hasRequiredContactTypes,
-    5: hasMedia,
-    6: totalPublicContacts > 0,
+    4: hasMedia,
+    5: true,
+    6: true,
     7: Boolean(vendorForm.isPublished),
-  }), [hasMedia, hasRequiredContactTypes, totalPublicContacts, vendorForm.companyName, vendorForm.contractExpires, vendorForm.isPublished])
+  }), [hasMedia, vendorForm.companyName, vendorForm.contractExpires, vendorForm.isPublished])
 
   const progressPercent = useMemo(() => {
     const steps = [3, 4, 5, 6, 7]
@@ -180,12 +169,12 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
 
   const pageMetaData = {
     title: "Join Vendor",
-    description: "Vendor onboarding workflow with profile details, primary contacts, and media setup.",
+    description: "Vendor onboarding workflow with profile details, media, primary contacts, and publishing.",
     keywords: "join, vendor, onboarding",
     robots: "noindex, nofollow",
     og: {
       title: "Join Vendor",
-      description: "Vendor onboarding workflow with profile details, primary contacts, and media setup.",
+      description: "Vendor onboarding workflow with profile details, media, primary contacts, and publishing.",
     },
   }
 
@@ -203,11 +192,9 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
 
       const data = await response.json()
       const rows = Array.isArray(data?.contacts) ? data.contacts : []
-      const businessRows = rows.filter((contact) => {
-        const scope = String(contact?.scope || "").trim().toLowerCase()
-        return scope === "private" || scope === "primary"
-      })
-      const publicRows = rows.filter((contact) => String(contact?.scope || "").trim().toLowerCase() === "secondary")
+      const isPrivateRow = (contact) => contact?.isPrivate === true || String(contact?.isPrivate || "").trim().toLowerCase() === "true"
+      const businessRows = rows.filter((contact) => isPrivateRow(contact))
+      const publicRows = rows.filter((contact) => !isPrivateRow(contact))
 
       setBusinessAddressContacts(businessRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "address"))
       setBusinessEmailContacts(businessRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "email"))
@@ -226,7 +213,7 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
   }
 
   useEffect(() => {
-    if ((currentStep !== 4 && currentStep !== 6) || !resolvedVendorId) {
+    if ((currentStep !== 5 && currentStep !== 6) || !resolvedVendorId) {
       return
     }
 
@@ -270,7 +257,7 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
   return (
     <JoinPageShell
       title="Join as a Vendor"
-      description="Copying the artist workflow pattern: profile details, primary contacts, media, then review and publish."
+      description="Copying the artist workflow pattern: profile details, media, primary contacts, then review and publish."
       canonicalSlug="join/vendor"
       metadata={pageMetaData}
       steps={[
@@ -282,13 +269,13 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
         },
         {
           href: buildVendorJoinHref(4, resolvedSlug, resolvedVendorId),
-          label: "Primary Contacts",
+          label: "Media and Gallery",
           isActive: currentStep === 4,
           isWarning: currentStep !== 4 && !stepCompletionMap[4],
         },
         {
           href: buildVendorJoinHref(5, resolvedSlug, resolvedVendorId),
-          label: "Media and Gallery",
+          label: "Primary Contacts",
           isActive: currentStep === 5,
           isWarning: currentStep !== 5 && !stepCompletionMap[5],
         },
@@ -430,7 +417,7 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
                   }
                 }}
               >
-                {isSavingStep3 ? "Saving..." : "Continue to Primary Contacts"}
+                {isSavingStep3 ? "Saving..." : "Continue to Media and Gallery"}
               </button>
             </div>
           </div>
@@ -438,263 +425,59 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
       ) : null}
 
       {resolvedVendorId && currentStep === 4 ? (
-        <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body gap-4">
-            <div>
-              <h2 className="card-title">Step 4: Primary Business Contact Info <span className="badge badge-sm badge-info">Guild Only</span></h2>
-              <p className="text-sm text-base-content/70">Enter your business contact details for guild records and operations. Use the scope selector on any entry to mark it as <strong>Private</strong> or <strong>Primary</strong>.</p>
-            </div>
-
-            {loadingContacts ? (
-              <div className="flex items-center gap-2 text-sm text-base-content/60">
-                <span className="loading loading-spinner loading-sm" />
-                Loading existing contacts...
-              </div>
-            ) : null}
-
-            <div className="space-y-6">
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                <h3 className="font-semibold text-base-content mb-1">Business Address</h3>
-                <AddressForm
-                  context="vendor"
-                  entityID={resolvedVendorId}
-                  existingContacts={businessAddressContacts}
-                  defaultScope="private"
-                  availableScopes={["private", "primary"]}
-                  requireFullAddressFields
-                  defaultLabel="work"
-                  onSaved={refreshVendorContacts}
-                />
-              </div>
-
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                <h3 className="font-semibold text-base-content mb-1">Business Email</h3>
-                <EmailForm
-                  context="vendor"
-                  entityID={resolvedVendorId}
-                  existingContacts={businessEmailContacts}
-                  defaultScope="private"
-                  availableScopes={["private", "primary"]}
-                  onSaved={refreshVendorContacts}
-                />
-              </div>
-
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                <h3 className="font-semibold text-base-content mb-1">Business Phone</h3>
-                <PhoneForm
-                  context="vendor"
-                  entityID={resolvedVendorId}
-                  existingContacts={businessPhoneContacts}
-                  defaultScope="private"
-                  availableScopes={["private", "primary"]}
-                  requirePrimaryPhone
-                  onSaved={refreshVendorContacts}
-                />
-              </div>
-
-              <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
-                <h3 className="font-semibold text-base-content mb-1">Business Website URLs</h3>
-                <UrlLinksForm
-                  context="vendor"
-                  entityID={resolvedVendorId}
-                  existingContacts={businessUrlContacts}
-                  defaultScope="private"
-                  availableScopes={["private", "primary"]}
-                  onSaved={refreshVendorContacts}
-                />
-              </div>
-            </div>
-
-            {contactError ? (
-              <div className="alert alert-error"><span>{contactError}</span></div>
-            ) : null}
-
-            <div className="flex gap-2 justify-between flex-wrap">
-              <Link href={buildVendorJoinHref(3, resolvedSlug, resolvedVendorId)} className="btn btn-sm btn-outline">Back to Business Details</Link>
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={() => {
-                  if (!hasRequiredContactTypes) {
-                    setContactError("Save at least one primary address, email, and phone before continuing.")
-                    return
-                  }
-
-                  setContactError("")
-                  window.location.href = buildVendorJoinHref(5, resolvedSlug, resolvedVendorId)
-                }}
-              >
-                Continue to Media and Gallery
-              </button>
-            </div>
-          </div>
-        </div>
+        <OrganizationMediaStep
+          context="vendor"
+          entityId={resolvedVendorId}
+          entitySlug={resolvedSlug}
+          sessionUser={sessionUser}
+          profilePrefix={vendorProfilePrefix}
+          coverPrefix={vendorCoverPrefix}
+          galleryPrefix={vendorGalleryPrefix}
+          setProfileFiles={setProfileFiles}
+          setCoverFiles={setCoverFiles}
+          setGalleryFiles={setGalleryFiles}
+          backHref={buildVendorJoinHref(3, resolvedSlug, resolvedVendorId)}
+          backLabel="Back to Business Details"
+          continueHref={buildVendorJoinHref(5, resolvedSlug, resolvedVendorId)}
+          continueLabel="Continue to Primary Contacts"
+        />
       ) : null}
 
       {resolvedVendorId && currentStep === 5 ? (
-        <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body gap-4">
-            <div>
-              <h2 className="card-title">Step 5: Media and Gallery</h2>
-              <p className="text-sm text-base-content/70">Uploader/content manager parity with artist, rooted at /platformpics/vendorcontent/{'{'}ID{'}'}.</p>
-            </div>
-
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              <GalleryManager
-                entityType="vendor"
-                entityId={resolvedVendorId}
-                entityLabel={`Vendor: ${resolvedSlug || resolvedVendorId}`}
-                currentUser={sessionUser}
-                folderKind="profile"
-                title="Vendor Profile Picture"
-                allowVideo={false}
-                basePrefix={vendorProfilePrefix}
-                onFilesChanged={setProfileFiles}
-              />
-
-              <GalleryManager
-                entityType="vendor"
-                entityId={resolvedVendorId}
-                entityLabel={`Vendor: ${resolvedSlug || resolvedVendorId}`}
-                currentUser={sessionUser}
-                folderKind="cover"
-                title="Vendor Cover Picture"
-                allowVideo={false}
-                basePrefix={vendorCoverPrefix}
-                onFilesChanged={setCoverFiles}
-              />
-            </div>
-
-            <GalleryManager
-              entityType="vendor"
-              entityId={resolvedVendorId}
-              entityLabel={`Vendor: ${resolvedSlug || resolvedVendorId}`}
-              currentUser={sessionUser}
-              folderKind="gallery"
-              title="Vendor Gallery"
-              allowVideo
-              basePrefix={vendorGalleryPrefix}
-              onFilesChanged={setGalleryFiles}
-            />
-
-            <div className="flex gap-2 justify-between flex-wrap">
-              <Link href={buildVendorJoinHref(4, resolvedSlug, resolvedVendorId)} className="btn btn-sm btn-outline">Back to Primary Contacts</Link>
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={() => {
-                  window.location.href = buildVendorJoinHref(6, resolvedSlug, resolvedVendorId)
-                }}
-              >
-                Continue to Public Contacts
-              </button>
-            </div>
-          </div>
-        </div>
+        <OrganizationPrimaryContactsStep
+          context="vendor"
+          entityId={resolvedVendorId}
+          loadingContacts={loadingContacts}
+          addressContacts={businessAddressContacts}
+          emailContacts={businessEmailContacts}
+          phoneContacts={businessPhoneContacts}
+          urlContacts={businessUrlContacts}
+          refreshContacts={refreshVendorContacts}
+          hasRequiredContactTypes={hasRequiredContactTypes}
+          contactError={contactError}
+          setContactError={setContactError}
+          backHref={buildVendorJoinHref(4, resolvedSlug, resolvedVendorId)}
+          backLabel="Back to Media"
+          continueHref={buildVendorJoinHref(6, resolvedSlug, resolvedVendorId)}
+        />
       ) : null}
 
       {resolvedVendorId && currentStep === 6 ? (
-        <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body gap-4">
-            <div>
-              <h2 className="card-title">Step 6: Public Contacts</h2>
-              <p className="text-sm text-base-content/70">These contacts are public-facing. Keep private operations details in Step 4.</p>
-            </div>
-
-            {loadingContacts ? (
-              <div className="flex items-center gap-2 text-sm text-base-content/60">
-                <span className="loading loading-spinner loading-sm" />
-                Loading existing contacts...
-              </div>
-            ) : (
-              <>
-                <div role="tablist" className="tabs tabs-bordered">
-                  {PUBLIC_CONTACT_TABS.map((tab) => (
-                    <button
-                      key={tab.key}
-                      role="tab"
-                      type="button"
-                      className={`tab${contactsTab === tab.key ? " tab-active" : ""}`}
-                      onClick={() => setContactsTab(tab.key)}
-                    >
-                      {tab.label}
-                    </button>
-                  ))}
-                </div>
-
-                {contactsTab === "public-address" ? (
-                  <AddressForm
-                    context="vendor"
-                    entityID={resolvedVendorId}
-                    existingContacts={publicAddressContacts}
-                    defaultScope="secondary"
-                    availableScopes={["secondary"]}
-                    defaultLabel="office"
-                    requireCityStateCountry
-                    onSaved={refreshVendorContacts}
-                  />
-                ) : null}
-
-                {contactsTab === "public-email" ? (
-                  <EmailForm
-                    context="vendor"
-                    entityID={resolvedVendorId}
-                    existingContacts={publicEmailContacts}
-                    defaultScope="secondary"
-                    availableScopes={["secondary"]}
-                    onSaved={refreshVendorContacts}
-                  />
-                ) : null}
-
-                {contactsTab === "public-phone" ? (
-                  <PhoneForm
-                    context="vendor"
-                    entityID={resolvedVendorId}
-                    existingContacts={publicPhoneContacts}
-                    defaultScope="secondary"
-                    availableScopes={["secondary"]}
-                    onSaved={refreshVendorContacts}
-                  />
-                ) : null}
-
-                {contactsTab === "public-social" ? (
-                  <SocialHandlesForm
-                    context="vendor"
-                    entityID={resolvedVendorId}
-                    existingContacts={publicSocialContacts}
-                    defaultScope="secondary"
-                    availableScopes={["secondary"]}
-                    onSaved={refreshVendorContacts}
-                  />
-                ) : null}
-
-                {contactsTab === "public-urls" ? (
-                  <UrlLinksForm
-                    context="vendor"
-                    entityID={resolvedVendorId}
-                    existingContacts={publicUrlContacts}
-                    defaultScope="secondary"
-                    availableScopes={["secondary"]}
-                    onSaved={refreshVendorContacts}
-                  />
-                ) : null}
-              </>
-            )}
-
-            <div className="flex gap-2 justify-between flex-wrap">
-              <Link href={buildVendorJoinHref(5, resolvedSlug, resolvedVendorId)} className="btn btn-sm btn-outline">Back to Media</Link>
-              <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={() => {
-                  window.location.href = buildVendorJoinHref(7, resolvedSlug, resolvedVendorId)
-                }}
-              >
-                Continue to Review
-              </button>
-            </div>
-          </div>
-        </div>
+        <OrganizationPublicContactsStep
+          context="vendor"
+          entityId={resolvedVendorId}
+          loadingContacts={loadingContacts}
+          contactsTab={contactsTab}
+          setContactsTab={setContactsTab}
+          publicAddressContacts={publicAddressContacts}
+          publicEmailContacts={publicEmailContacts}
+          publicPhoneContacts={publicPhoneContacts}
+          publicSocialContacts={publicSocialContacts}
+          publicUrlContacts={publicUrlContacts}
+          refreshContacts={refreshVendorContacts}
+          backHref={buildVendorJoinHref(5, resolvedSlug, resolvedVendorId)}
+          continueHref={buildVendorJoinHref(7, resolvedSlug, resolvedVendorId)}
+        />
       ) : null}
 
       {resolvedVendorId && currentStep === 7 ? (
@@ -714,6 +497,27 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
               <div><span className="font-semibold">Cover files:</span> {coverFiles.length}</div>
               <div><span className="font-semibold">Gallery files:</span> {galleryFiles.length}</div>
               <div><span className="font-semibold">Published:</span> {vendorForm.isPublished ? "Yes" : "No"}</div>
+            </div>
+
+            <div className="rounded-box border border-base-300 bg-base-200/40 p-4">
+              <h3 className="font-semibold mb-2">Step Completion</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                {[3, 4, 5, 6].map((step) => {
+                  const labels = {
+                    3: "Primary Business Details",
+                    4: "Media and Gallery",
+                    5: "Primary Contacts",
+                    6: "Public Contacts",
+                  }
+                  const done = Boolean(stepCompletionMap[step])
+                  return (
+                    <div key={step} className="flex items-center justify-between rounded border border-base-300 px-2 py-1">
+                      <span>{labels[step]}</span>
+                      <span className={`badge badge-xs ${done ? "badge-success" : "badge-neutral"}`}>{done ? "Done" : "Pending"}</span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
             {publishError ? (

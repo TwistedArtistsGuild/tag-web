@@ -73,11 +73,23 @@ function normalizeScope(value, fallback = "secondary") {
   return fallback
 }
 
+function scopeFromContact(contact, fallback = "secondary") {
+  const rawIsPrivate = contact?.isPrivate
+  if (rawIsPrivate === true || String(rawIsPrivate || "").trim().toLowerCase() === "true") {
+    return "private"
+  }
+  if (rawIsPrivate === false || String(rawIsPrivate || "").trim().toLowerCase() === "false") {
+    return "secondary"
+  }
+
+  return normalizeScope(contact?.scope, fallback)
+}
+
 function sortByScopeAndOrder(entries = []) {
   const rank = { primary: 0, private: 1, secondary: 2 }
   return [...entries].sort((a, b) => {
-    const aScope = rank[normalizeScope(a?.scope)] ?? 9
-    const bScope = rank[normalizeScope(b?.scope)] ?? 9
+    const aScope = rank[scopeFromContact(a)] ?? 9
+    const bScope = rank[scopeFromContact(b)] ?? 9
     if (aScope !== bScope) return aScope - bScope
     return Number(a?.displayOrder || 0) - Number(b?.displayOrder || 0)
   })
@@ -280,7 +292,7 @@ function makeInitialEntries(existingContacts = [], defaultScope = "secondary") {
     label: String(contact?.label || "Website").trim(),
     urlValue: String(contact?.value || "").trim(),
     description: String(contact?.description || "").trim(),
-    scope: normalizeScope(contact?.scope, defaultScope),
+    scope: scopeFromContact(contact, defaultScope),
     previewStatus: "idle",
     previewTitle: "",
     previewHint: "",
@@ -296,6 +308,9 @@ export default function UrlLinksForm({
   onSaved,
   defaultScope = "secondary",
   availableScopes = ["private", "primary", "secondary"],
+  singleEntryOnly = false,
+  scopeLabelMap = {},
+  hideDeleteAction = false,
 }) {
   const apiUrl = getApiURL()
   const resolvedContext = String(context || "artist").trim().toLowerCase() || "artist"
@@ -311,11 +326,31 @@ export default function UrlLinksForm({
   const [errorMessage, setErrorMessage] = useState("")
   const [groupedLabelOptions, setGroupedLabelOptions] = useState(createGroupedLabelOptions([]))
   const previewTimersRef = useRef({})
+  const selectableLabels = useMemo(() => flattenLabelOptions(groupedLabelOptions), [groupedLabelOptions])
+  const normalizedSelectableLabels = useMemo(
+    () => new Set(selectableLabels.map((label) => String(label || "").trim().toLowerCase()).filter(Boolean)),
+    [selectableLabels]
+  )
+
+  const resolveLabelForSubmit = (rawLabel) => {
+    const trimmed = String(rawLabel || "").trim()
+    if (!trimmed) {
+      return null
+    }
+
+    return normalizedSelectableLabels.has(trimmed.toLowerCase()) ? trimmed : null
+  }
+
+  const getScopeLabel = (scope) => {
+    const normalized = normalizeScope(scope, defaultScope)
+    return scopeLabelMap?.[normalized] || CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalized)?.label || "Secondary"
+  }
 
   useEffect(() => {
-    setEntries(makeInitialEntries(existingContacts, defaultScope))
+    const nextEntries = makeInitialEntries(existingContacts, defaultScope)
+    setEntries(singleEntryOnly ? nextEntries.slice(0, 1) : nextEntries)
     setHasUnsavedChanges(false)
-  }, [defaultScope, existingContacts])
+  }, [defaultScope, existingContacts, singleEntryOnly])
 
   useEffect(() => {
     let ignore = false
@@ -378,6 +413,10 @@ export default function UrlLinksForm({
   }, [])
 
   const addEntry = () => {
+    if (singleEntryOnly) {
+      return
+    }
+
     setEntries((prev) => ([
       ...prev,
       {
@@ -472,7 +511,8 @@ export default function UrlLinksForm({
       return
     }
 
-    const payloadEntries = entries
+    const candidateEntries = singleEntryOnly ? entries.slice(0, 1) : entries
+    const payloadEntries = candidateEntries
       .map((entry, index) => {
         const finalUrl = normalizeUrl(entry.urlValue)
         if (!finalUrl) return null
@@ -490,8 +530,8 @@ export default function UrlLinksForm({
           category: "website",
           value: finalUrl,
           description: entry.description.trim() || null,
-          scope: normalizeScope(entry.scope, defaultScope),
-          displayOrder: index,
+          isPrivate: normalizeScope(entry.scope, defaultScope) === "private",
+          displayOrder: singleEntryOnly ? 0 : index,
         }
       })
       .filter(Boolean)
@@ -540,7 +580,7 @@ export default function UrlLinksForm({
 
         {entries.map((entry, index) => (
           <Fragment key={entry.id}>
-            {index === 1 ? (
+            {!singleEntryOnly && index === 1 ? (
               <div className="rounded-box border border-base-300 bg-base-200/40 p-3">
                 <div className="text-xs font-semibold uppercase tracking-wide text-base-content/70">Secondary Details</div>
               </div>
@@ -560,7 +600,7 @@ export default function UrlLinksForm({
                   <a href={entry.urlValue} target="_blank" rel="noopener noreferrer" className="text-sm link link-primary truncate block">
                     {entry.urlValue}
                   </a>
-                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {CONTACT_SCOPE_OPTIONS.find((option) => option.value === normalizeScope(entry.scope, defaultScope))?.label || "Secondary"}</div>
+                  <div className="text-xs text-base-content/60 mt-0.5">Scope: {getScopeLabel(entry.scope)}</div>
                   {entry.description ? <p className="text-xs text-base-content/60 mt-0.5 truncate">{entry.description}</p> : null}
                 </div>
                 <button
@@ -573,9 +613,11 @@ export default function UrlLinksForm({
                 >
                   Edit
                 </button>
-                <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                  Delete
-                </button>
+                {!hideDeleteAction ? (
+                  <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                    Delete
+                  </button>
+                ) : null}
                 <div className="cursor-grab text-xs text-base-content/50 shrink-0 select-none px-1" draggable onDragStart={(event) => onGripDragStart(event, entry.id)}>
                   ⠿ reorder
                 </div>
@@ -678,20 +720,23 @@ export default function UrlLinksForm({
                             updateEntry(entry.id, (old) => ({ ...old, scope: normalizeScope(event.target.value, defaultScope) }))
                           }}
                         >
-                          {availableScopes.map((scope) => {
-                            const option = CONTACT_SCOPE_OPTIONS.find((row) => row.value === scope)
-                            return <option key={scope} value={scope}>{option?.label || scope}</option>
-                          })}
+                          {availableScopes.map((scope) => (
+                            <option key={scope} value={scope}>{getScopeLabel(scope)}</option>
+                          ))}
                         </select>
                       </label>
                     ) : <div className="flex-1" />}
-                    <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
-                      Delete
-                    </button>
+                    {!hideDeleteAction ? (
+                      <button type="button" className="btn btn-sm btn-ghost text-error" onClick={() => deleteEntry(entry.id)}>
+                        Delete
+                      </button>
+                    ) : null}
                   </div>
-                  <div className="cursor-grab text-xs text-base-content/50 shrink-0 select-none px-1" draggable onDragStart={(event) => onGripDragStart(event, entry.id)}>
-                    ⠿ reorder
-                  </div>
+                  {!singleEntryOnly ? (
+                    <div className="cursor-grab text-xs text-base-content/50 shrink-0 select-none px-1" draggable onDragStart={(event) => onGripDragStart(event, entry.id)}>
+                      ⠿ reorder
+                    </div>
+                  ) : null}
                 </div>
               </>
             )}
@@ -701,7 +746,7 @@ export default function UrlLinksForm({
       </div>
 
       <div className="flex gap-2">
-        <button type="button" className="btn btn-outline btn-sm" onClick={addEntry}>Add URL</button>
+        {!singleEntryOnly ? <button type="button" className="btn btn-outline btn-sm" onClick={addEntry}>Add URL</button> : null}
       </div>
 
       <div className="flex items-center gap-3">

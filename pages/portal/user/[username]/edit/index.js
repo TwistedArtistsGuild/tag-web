@@ -1,27 +1,12 @@
-/* This file is part of the Twisted Artists Guild project.
-
- Copyright (C) 2025 Twisted Artists Guild
-
- Licensed under the GNU General Public License v3.0
- (https://www.gnu.org/licenses/gpl-3.0.en.html).
-
- This software comes with NO WARRANTY; see the license for details.
-
- Open source · low-profit · human-first*/
-
-import { useState, useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { getServerSession } from "next-auth/next"
 import Link from "next/link"
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import RegisterSlug from "@/components/forms/onboarding/register-slug"
 import UserContextNav from "@/components/portal/UserContextNav"
-import AddressForm from "@/components/forms/contact/address-form"
-import EmailForm from "@/components/forms/contact/email-form"
-import PhoneForm from "@/components/forms/contact/phone-form"
-import SocialHandlesForm from "@/components/forms/contact/social-handles-form"
-import UrlLinksForm from "@/components/forms/contact/url-links-form"
-import GalleryManager from "@/components/gallery/GalleryManager"
+import UserPrivateContactsStep from "@/components/forms/onboarding/users/UserPrivateContactsStep"
+import UserProfileMediaStep from "@/components/forms/onboarding/users/UserProfileMediaStep"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 
@@ -63,12 +48,38 @@ async function getSessionFromRequest(context) {
   }
 }
 
+function getPortalStep(rawStep) {
+  const parsed = Number(rawStep || 1)
+  if (parsed >= 1 && parsed <= 4) {
+    return parsed
+  }
+
+  return 1
+}
+
+function buildUserPortalHref(step, username, userId) {
+  const normalizedUsername = String(username || "").trim().toLowerCase()
+  if (!normalizedUsername) {
+    return "/portal/user"
+  }
+
+  const idSegment = userId ? `&id=${encodeURIComponent(String(userId))}` : ""
+  return `/portal/user/${encodeURIComponent(normalizedUsername)}/edit?step=${step}${idSegment}`
+}
+
+function mapUserToProfile(userData) {
+  return {
+    preferredName: String(userData?.preferredName || userData?.PreferredName || ""),
+    companyTitle: String(userData?.companyTitle || userData?.CompanyTitle || ""),
+    nationality: String(userData?.nationality || userData?.Nationality || ""),
+  }
+}
+
 export async function getServerSideProps(context) {
   const session = await getServerSession(context.req, context.res, authOptions)
   const sessionUser = await getSessionFromRequest(context)
 
   if (!session || !sessionUser) {
-    console.log("[UserEdit] No session found, redirecting to signin")
     return {
       redirect: { destination: "/api/auth/signin", permanent: false },
     }
@@ -76,278 +87,284 @@ export async function getServerSideProps(context) {
 
   const { username } = context.params
   const normalizedUsername = String(username || "").trim().toLowerCase()
-  const apiUrl = getApiURL()
-
-  console.log(`[UserEdit] Loading user: ${normalizedUsername} from ${apiUrl}user/by-username/${encodeURIComponent(normalizedUsername)}`)
+  const currentStep = getPortalStep(context.query?.step)
 
   try {
     const userResponse = await fetch(`${apiUrl}user-details/by-username/${encodeURIComponent(normalizedUsername)}`)
-    console.log(`[UserEdit] API response status: ${userResponse.status}`)
     const userData = userResponse.ok ? await userResponse.json() : null
-    console.log(`[UserEdit] User data:`, userData)
     const userId = userData?.UserID || userData?.id || userData?.ID || null
-    console.log(`[UserEdit] Extracted userId: ${userId}`)
 
     if (!userId) {
-      console.log("[UserEdit] No userId found, returning notFound")
       return { notFound: true }
     }
 
-    console.log("[UserEdit] Returning props with userId:", userId)
     return {
-      props: { userId, userData: userData || {} },
+      props: {
+        currentStep,
+        sessionUser: sessionUser?.user || null,
+        userId,
+        userData: userData || {},
+      },
     }
-  } catch (error) {
-    console.error("[UserEdit] Error:", error)
+  } catch {
     return { notFound: true }
   }
 }
 
-const steps = [
-  { num: 1, label: "Update Username", key: "username" },
-  { num: 2, label: "Profile", key: "profile" },
-  { num: 3, label: "Media", key: "media" },
-  { num: 4, label: "Contacts", key: "contacts" },
-]
-
-export default function UserEditPage({ userId, userData }) {
-  const [currentStep, setCurrentStep] = useState(1)
-  const [profileData, setProfileData] = useState({})
+export default function UserEditPage({ currentStep, userId, userData, sessionUser }) {
+  const [profileData, setProfileData] = useState(mapUserToProfile(userData || {}))
+  const [profileError, setProfileError] = useState("")
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
+  const [loadingContacts, setLoadingContacts] = useState(false)
+  const [contactError, setContactError] = useState("")
   const [addressContacts, setAddressContacts] = useState([])
   const [emailContacts, setEmailContacts] = useState([])
   const [phoneContacts, setPhoneContacts] = useState([])
   const [socialContacts, setSocialContacts] = useState([])
   const [urlContacts, setUrlContacts] = useState([])
-  const [contactsTab, setContactsTab] = useState("address")
-  const [isLoading, setIsLoading] = useState(false)
 
-  useEffect(() => {
-    if (!userId) return
+  const normalizedUsername = String(userData?.username || userData?.Username || "").trim().toLowerCase()
+  const totalContacts = addressContacts.length + emailContacts.length + phoneContacts.length + socialContacts.length + urlContacts.length
 
-    const loadContacts = async () => {
-      setIsLoading(true)
-      try {
-        const res = await fetch(`${apiUrl}contact/user/${userId}`)
-        if (res.ok) {
-          const data = await res.json()
-          const rows = Array.isArray(data?.contacts) ? data.contacts : []
+  const stepCompletionMap = useMemo(() => ({
+    1: Boolean(normalizedUsername),
+    2: Boolean(String(profileData.preferredName || "").trim() || String(profileData.companyTitle || "").trim()),
+    3: true,
+    4: totalContacts > 0,
+  }), [normalizedUsername, profileData.companyTitle, profileData.preferredName, totalContacts])
 
-          setAddressContacts(rows.filter((c) => String(c?.contactType || "").toLowerCase() === "address"))
-          setEmailContacts(rows.filter((c) => String(c?.contactType || "").toLowerCase() === "email"))
-          setPhoneContacts(rows.filter((c) => String(c?.contactType || "").toLowerCase() === "phone"))
-          setSocialContacts(rows.filter((c) => String(c?.contactType || "").toLowerCase() === "social"))
-          setUrlContacts(rows.filter((c) => String(c?.contactType || "").toLowerCase() === "url"))
-        }
-      } finally {
-        setIsLoading(false)
-      }
+  const progressPercent = useMemo(() => {
+    const steps = [1, 2, 3, 4]
+    const completeCount = steps.filter((step) => Boolean(stepCompletionMap[step])).length
+    return Math.round((completeCount / steps.length) * 100)
+  }, [stepCompletionMap])
+
+  const refreshUserContacts = async () => {
+    if (!userId) {
+      return
     }
 
-    loadContacts()
-  }, [userId])
+    setLoadingContacts(true)
+    try {
+      const response = await fetch(`${apiUrl}contact/user/${userId}?includePrivate=true`)
+      if (!response.ok) {
+        return
+      }
 
-  const handleStepChange = (step) => {
-    setCurrentStep(step)
+      const data = await response.json()
+      const rows = Array.isArray(data?.contacts) ? data.contacts : []
+      const isPrivateRow = (contact) => contact?.isPrivate === true || String(contact?.isPrivate || "").trim().toLowerCase() === "true"
+      const privateRows = rows.filter((contact) => isPrivateRow(contact))
+
+      setAddressContacts(privateRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "address"))
+      setEmailContacts(privateRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "email"))
+      setPhoneContacts(privateRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "phone"))
+      setUrlContacts(privateRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "url" && String(contact?.category || "").toLowerCase() === "website"))
+      setSocialContacts(privateRows.filter((contact) => String(contact?.contactType || "").toLowerCase() === "url" && String(contact?.category || "").toLowerCase() !== "website"))
+    } finally {
+      setLoadingContacts(false)
+    }
   }
 
-  const handleProfileChange = (field, value) => {
-    setProfileData((prev) => ({ ...prev, [field]: value }))
-  }
+  useEffect(() => {
+    if (currentStep !== 4 || !userId) {
+      return
+    }
 
-  const handleAddressUpdate = (addresses) => {
-    setAddressContacts(addresses)
-  }
+    refreshUserContacts()
+  }, [currentStep, userId])
 
-  const handleEmailUpdate = (emails) => {
-    setEmailContacts(emails)
-  }
+  const saveProfile = async () => {
+    if (!userId) {
+      setProfileError("Missing user ID.")
+      return
+    }
 
-  const handlePhoneUpdate = (phones) => {
-    setPhoneContacts(phones)
-  }
+    setProfileError("")
+    setIsSavingProfile(true)
 
-  const handleSocialUpdate = (socials) => {
-    setSocialContacts(socials)
-  }
+    try {
+      const response = await fetch(`${apiUrl}user-details/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          preferredName: String(profileData.preferredName || "").trim() || null,
+          companyTitle: String(profileData.companyTitle || "").trim() || null,
+          nationality: String(profileData.nationality || "").trim() || null,
+        }),
+      })
 
-  const handleUrlUpdate = (urls) => {
-    setUrlContacts(urls)
-  }
+      if (!response.ok) {
+        const message = await response.text()
+        setProfileError(message || `Unable to save profile (${response.status}).`)
+        return
+      }
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    )
+      window.location.href = buildUserPortalHref(3, normalizedUsername, userId)
+    } finally {
+      setIsSavingProfile(false)
+    }
   }
 
   return (
     <>
-      <TagSEO title={`Edit ${userData?.username || "User"} - Portal`} description={`Edit profile`} />
+      <TagSEO title={`Edit ${normalizedUsername || "User"} - Portal`} description="Edit user profile with shared onboarding modules." />
       <UserContextNav />
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8">Edit Your Profile</h1>
-
-        {/* Step Indicator */}
-        <div className="flex justify-between mb-8">
-          {steps.map((step) => (
-            <button
-              key={step.key}
-              onClick={() => handleStepChange(step.num)}
-              className={`flex-1 py-2 px-4 text-center rounded transition ${
-                currentStep === step.num
-                  ? "bg-primary text-primary-content font-bold"
-                  : currentStep > step.num
-                    ? "bg-success text-success-content"
-                    : "bg-base-200 text-base-content"
-              }`}
-            >
-              {step.num}. {step.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Step 1: Update Username */}
-        {currentStep === 1 && userId && (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Update Username</h2>
-              <RegisterSlug
-                domain="user"
-                reserveEndpoint={`${apiUrl}user/reserve-username`}
-                updateEndpoint={(id) => `${apiUrl}user/${id}/update-username`}
-                checkEndpoint={(candidateUsername) =>
-                  `${apiUrl}user/check-username/${candidateUsername}?excludeId=${userId}`
-                }
-                currentSlug={userData?.username}
-                entityId={userId}
-                progressApi={{
-                  getProgress: () => ({ username, userId }),
-                  setProgress: () => {},
-                  markStepComplete: () => {},
-                }}
-              />
+      <div className="min-h-screen bg-base-200 p-4 md:p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="card bg-base-100 shadow-lg border border-base-300">
+            <div className="card-body gap-3">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h1 className="text-3xl font-bold text-base-content">Edit User</h1>
+                <Link href={normalizedUsername ? `/portal/user/${encodeURIComponent(normalizedUsername)}` : "/portal/user"} className="btn btn-sm btn-ghost">Back to User</Link>
+              </div>
+              <p className="text-base-content/70">Portal editing now reuses the same modular contact/media forms used in join.</p>
             </div>
           </div>
-        )}
 
-        {/* Step 2: Profile */}
-        {currentStep === 2 && (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Profile Information</h2>
+          <div className="card bg-base-100 shadow border border-base-300">
+            <div className="card-body gap-3">
+              <div className="flex gap-2 flex-wrap items-center">
+                {[1, 2, 3, 4].map((step) => {
+                  const labelMap = {
+                    1: "Username",
+                    2: "Profile",
+                    3: "Media",
+                    4: "Private Contacts",
+                  }
+                  const isActive = currentStep === step
+                  const isWarning = !isActive && !stepCompletionMap[step]
+                  const stateClass = isActive ? "btn-primary" : isWarning ? "btn-warning btn-outline animate-pulse" : "btn-outline"
 
-              <label className="form-control">
-                <div className="label">
-                  <span className="label-text">Tagline</span>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Your tagline"
-                  className="input input-bordered"
-                  value={profileData.tagline}
-                  onChange={(e) => handleProfileChange("tagline", e.target.value)}
-                />
-              </label>
-
-              <label className="form-control">
-                <div className="label">
-                  <span className="label-text">Bio</span>
-                </div>
-                <textarea
-                  className="textarea textarea-bordered"
-                  placeholder="Your bio"
-                  value={profileData.bio}
-                  onChange={(e) => handleProfileChange("bio", e.target.value)}
-                ></textarea>
-              </label>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Media */}
-        {currentStep === 3 && userId && (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Profile Media</h2>
-              <GalleryManager
-                entityType="user"
-                entityId={userId}
-                storagePrefix={`platformpics/usercontent/${userId}/`}
-                allowMultiple={false}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Contacts */}
-        {currentStep === 4 && userId && (
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title">Contacts</h2>
-
-              <div className="tabs tabs-bordered">
-                {[
-                  { key: "address", label: "Address" },
-                  { key: "email", label: "Email" },
-                  { key: "phone", label: "Phone" },
-                  { key: "social", label: "Social" },
-                  { key: "url", label: "URL" },
-                ].map((tab) => (
-                  <button
-                    key={tab.key}
-                    onClick={() => setContactsTab(tab.key)}
-                    className={`tab ${contactsTab === tab.key ? "tab-active" : ""}`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+                  return (
+                    <Link key={step} href={buildUserPortalHref(step, normalizedUsername, userId)} className={`btn btn-sm ${stateClass}`}>
+                      {labelMap[step]}
+                    </Link>
+                  )
+                })}
+                <span className="badge badge-info">User ID: {userId}</span>
               </div>
 
-              {contactsTab === "address" && (
-                <AddressForm contacts={addressContacts} onUpdate={handleAddressUpdate} userId={userId} />
-              )}
-              {contactsTab === "email" && (
-                <EmailForm contacts={emailContacts} onUpdate={handleEmailUpdate} userId={userId} />
-              )}
-              {contactsTab === "phone" && (
-                <PhoneForm contacts={phoneContacts} onUpdate={handlePhoneUpdate} userId={userId} />
-              )}
-              {contactsTab === "social" && (
-                <SocialHandlesForm
-                  contacts={socialContacts}
-                  onUpdate={handleSocialUpdate}
-                  userId={userId}
-                />
-              )}
-              {contactsTab === "url" && (
-                <UrlLinksForm contacts={urlContacts} onUpdate={handleUrlUpdate} userId={userId} />
-              )}
+              <progress className="progress progress-primary w-full" value={progressPercent} max="100" />
+              <div className="text-xs text-base-content/70">{progressPercent}% complete</div>
             </div>
           </div>
-        )}
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          <button
-            onClick={() => handleStepChange(Math.max(1, currentStep - 1))}
-            disabled={currentStep === 1}
-            className="btn btn-outline"
-          >
-            Back
-          </button>
+          {currentStep === 1 ? (
+            <div className="card bg-base-100 shadow border border-base-300">
+              <div className="card-body gap-4">
+                <div>
+                  <h2 className="card-title">Step 1: Update Username</h2>
+                  <p className="text-sm text-base-content/70">Update username using the same slug reservation component used in join.</p>
+                </div>
 
-          {currentStep === steps.length ? (
-            <Link href={`/portal/user/${userData?.username}`} className="btn btn-primary">
-              Done - Back to Profile
-            </Link>
-          ) : (
-            <button onClick={() => handleStepChange(currentStep + 1)} className="btn btn-primary">
-              Next
-            </button>
-          )}
+                <RegisterSlug
+                  domain="user"
+                  domainLabel="User"
+                  reserveEndpoint={`${apiUrl}user/reserve-username`}
+                  updateEndpoint={(id) => `${apiUrl}user/${id}/update-username`}
+                  checkEndpoint={(candidateUsername) => `${apiUrl}user/check-username/${encodeURIComponent(candidateUsername)}?excludeId=${encodeURIComponent(String(userId))}`}
+                  currentSlug={normalizedUsername}
+                  entityId={userId}
+                  progressApi={{
+                    getProgress: () => ({ slug: normalizedUsername, entityId: userId }),
+                    setProgress: () => {},
+                    markStepComplete: () => {},
+                  }}
+                />
+
+                <div className="flex gap-2 justify-end">
+                  <Link href={buildUserPortalHref(2, normalizedUsername, userId)} className="btn btn-sm btn-primary">Continue to Profile</Link>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {currentStep === 2 ? (
+            <div className="card bg-base-100 shadow border border-base-300">
+              <div className="card-body gap-4">
+                <div>
+                  <h2 className="card-title">Step 2: Profile</h2>
+                  <p className="text-sm text-base-content/70">Edit profile fields that map to user details.</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <label className="form-control w-full">
+                    <div className="label"><span className="label-text">Preferred Name</span></div>
+                    <input
+                      type="text"
+                      className="input input-bordered w-full"
+                      value={profileData.preferredName}
+                      onChange={(event) => setProfileData((prev) => ({ ...prev, preferredName: event.target.value }))}
+                    />
+                  </label>
+
+                  <label className="form-control w-full">
+                    <div className="label"><span className="label-text">Company Title</span></div>
+                    <input
+                      type="text"
+                      className="input input-bordered w-full"
+                      value={profileData.companyTitle}
+                      onChange={(event) => setProfileData((prev) => ({ ...prev, companyTitle: event.target.value }))}
+                    />
+                  </label>
+
+                  <label className="form-control w-full md:col-span-2">
+                    <div className="label"><span className="label-text">Nationality</span></div>
+                    <input
+                      type="text"
+                      className="input input-bordered w-full"
+                      value={profileData.nationality}
+                      onChange={(event) => setProfileData((prev) => ({ ...prev, nationality: event.target.value }))}
+                    />
+                  </label>
+                </div>
+
+                {profileError ? (
+                  <div className="alert alert-error"><span>{profileError}</span></div>
+                ) : null}
+
+                <div className="flex gap-2 justify-between flex-wrap">
+                  <Link href={buildUserPortalHref(1, normalizedUsername, userId)} className="btn btn-sm btn-outline">Back to Username</Link>
+                  <button type="button" className="btn btn-sm btn-primary" disabled={isSavingProfile} onClick={saveProfile}>
+                    {isSavingProfile ? "Saving..." : "Continue to Media"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {currentStep === 3 ? (
+            <UserProfileMediaStep
+              sessionUser={sessionUser}
+              userId={userId}
+              userProfilePrefix={`platformpics/usercontent/${userId}/profile/`}
+              userCoverPrefix={`platformpics/usercontent/${userId}/cover/`}
+              backHref={buildUserPortalHref(2, normalizedUsername, userId)}
+              continueHref={buildUserPortalHref(4, normalizedUsername, userId)}
+            />
+          ) : null}
+
+          {currentStep === 4 ? (
+            <UserPrivateContactsStep
+              userId={userId}
+              loadingContacts={loadingContacts}
+              addressContacts={addressContacts}
+              emailContacts={emailContacts}
+              phoneContacts={phoneContacts}
+              socialContacts={socialContacts}
+              urlContacts={urlContacts}
+              refreshContacts={refreshUserContacts}
+              contactError={contactError}
+              setContactError={setContactError}
+              totalContacts={totalContacts}
+              backHref={buildUserPortalHref(3, normalizedUsername, userId)}
+              continueHref={normalizedUsername ? `/portal/user/${encodeURIComponent(normalizedUsername)}` : "/portal/user"}
+            />
+          ) : null}
         </div>
       </div>
     </>

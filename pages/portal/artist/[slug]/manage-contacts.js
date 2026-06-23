@@ -18,7 +18,6 @@ import TagSEO from "@/components/TagSEO"
 import ArtistContextNav from "@/components/portal/ArtistContextNav"
 import SocialHandlesForm from "@/components/forms/contact/social-handles-form"
 import ArtistCard from "@/components/cards/card_artist"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import AddressForm from "@/components/forms/contact/address-form"
 import EmailForm from "@/components/forms/contact/email-form"
 import PhoneForm from "@/components/forms/contact/phone-form"
@@ -64,7 +63,7 @@ export default function ArtistManageContactsPage({
 	}, [selectedArtist?.path])
 
 	return (
-		<SocialRealtimeProvider>
+		
 		<div className="min-h-screen bg-base-200 p-4 md:p-8">
 			<TagSEO
 				metadataProp={{
@@ -135,7 +134,7 @@ export default function ArtistManageContactsPage({
 				</div>
 			</div>
 		</div>
-		</SocialRealtimeProvider>
+		
 	)
 }
 
@@ -253,3 +252,4 @@ export async function getServerSideProps(context) {
 		},
 	}
 }
+
