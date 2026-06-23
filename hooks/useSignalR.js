@@ -135,6 +135,11 @@ export function useSignalR(userId, handlers = {}) {
         handlersRef.current.onConversationUpdate?.(conversation)
       })
 
+      connection.on('NotificationSummaryUpdated', (data) => {
+        console.log('🔔 Notification summary updated:', data)
+        handlersRef.current.onNotification?.(data)
+      })
+
       connection.on('UserOnlineStatusChanged', (data) => {
         console.log('🟢 User online status changed:', data)
         handlersRef.current.onUserStatusChange?.({

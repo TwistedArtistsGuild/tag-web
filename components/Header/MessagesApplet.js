@@ -21,6 +21,7 @@ export default function MessagesApplet({
   contextProfiles = [],
   activeContextId = null,
   onContextChange,
+  initialConversationId = null,
 }) {
   const [localSelectedContextId, setLocalSelectedContextId] = useState(null)
   const selectedContextId = activeContextId || localSelectedContextId || contextProfiles[0]?.id || null
@@ -67,10 +68,10 @@ export default function MessagesApplet({
 
         <DirectMessages
           compact
-          demoMode
+          apiMode
+          initialConversationId={initialConversationId}
           maxHeight={420}
           currentUser={effectiveCurrentUser}
-          demoUserOverride={effectiveCurrentUser}
           panelColor={panelColor}
           composerContextControl={contextProfiles.length > 0 ? (
             <ContextSwitcher

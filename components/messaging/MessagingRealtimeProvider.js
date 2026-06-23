@@ -34,6 +34,9 @@ export function MessagingRealtimeProvider({ children }) {
     onConversationUpdate: (data) => {
       window.dispatchEvent(new CustomEvent('signalr:conversation', { detail: data }))
     },
+    onNotification: (data) => {
+      window.dispatchEvent(new CustomEvent('signalr:notification', { detail: data }))
+    },
     onUserStatusChange: (data) => {
       window.dispatchEvent(new CustomEvent('signalr:userstatus', { detail: data }))
     },
