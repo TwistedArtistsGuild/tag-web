@@ -24,6 +24,7 @@ import { MessagingRealtimeProvider } from '@/components/messaging/MessagingRealt
 let appInsightsInitialized = false
 const DEV_BANNER_DISMISS_KEY = "tag_dev_banner_dismiss_until"
 const DEV_BANNER_RESHOW_MS = 5 * 60 * 1000
+const SCROLL_ROOT_SELECTORS = [".site-main", "main", "#__next"]
 
 const appInsights = new ApplicationInsights({
   config: {
@@ -70,6 +71,77 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
       }
     }
   }, [Component])
+
+  useEffect(() => {
+    if (!router?.events || typeof window === "undefined") {
+      return
+    }
+
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual"
+    }
+
+    const getSectionIdFromUrl = (rawUrl) => {
+      const targetUrl = new URL(String(rawUrl || router.asPath || "/"), window.location.origin)
+      const hashTarget = decodeURIComponent(String(targetUrl.hash || "").replace(/^#/, "")).trim()
+      const queryTarget = decodeURIComponent(String(targetUrl.searchParams.get("section") || "")).trim()
+      return hashTarget || queryTarget
+    }
+
+    const scrollAllRootsToTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+
+      SCROLL_ROOT_SELECTORS.forEach((selector) => {
+        const node = document.querySelector(selector)
+        if (node && typeof node.scrollTo === "function") {
+          node.scrollTo({ top: 0, left: 0, behavior: "auto" })
+        } else if (node) {
+          node.scrollTop = 0
+          node.scrollLeft = 0
+        }
+      })
+    }
+
+    const scrollToSection = (sectionId) => {
+      const target = document.getElementById(sectionId)
+      if (!target) {
+        return false
+      }
+
+      target.scrollIntoView({ behavior: "auto", block: "start" })
+      return true
+    }
+
+    const applyNavigationScroll = (url) => {
+      const sectionId = getSectionIdFromUrl(url)
+
+      if (!sectionId) {
+        scrollAllRootsToTop()
+        window.requestAnimationFrame(scrollAllRootsToTop)
+        return
+      }
+
+      if (scrollToSection(sectionId)) {
+        return
+      }
+
+      window.requestAnimationFrame(() => {
+        if (!scrollToSection(sectionId)) {
+          scrollAllRootsToTop()
+        }
+      })
+    }
+
+    router.events.on("routeChangeComplete", applyNavigationScroll)
+    router.events.on("hashChangeComplete", applyNavigationScroll)
+
+    return () => {
+      router.events.off("routeChangeComplete", applyNavigationScroll)
+      router.events.off("hashChangeComplete", applyNavigationScroll)
+    }
+  }, [router])
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return
