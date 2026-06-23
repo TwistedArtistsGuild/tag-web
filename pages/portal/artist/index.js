@@ -16,7 +16,6 @@ import { getServerSession } from "next-auth/next"
 import ArtistContextNav from "@/components/portal/ArtistContextNav"
 import ArtistCard from "@/components/cards/card_artist"
 import SocialComments from "@/components/social/Comments"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
@@ -93,7 +92,7 @@ function MyArtistsCard({ registeredArtists, sessionUser }) {
 						<Link href="/join/artist" className="btn btn-sm btn-secondary">Register Artist</Link>
 					</div>
 				) : (
-					<SocialRealtimeProvider>
+					
 						<div className={artistCardSize === "medium" ? "grid grid-cols-1 xl:grid-cols-2 gap-3" : "space-y-3"}>
 							{registeredArtists.map((artist) => (
 								<div key={artist.artistID} className="space-y-2">
@@ -144,7 +143,7 @@ function MyArtistsCard({ registeredArtists, sessionUser }) {
 								</div>
 							))}
 						</div>
-					</SocialRealtimeProvider>
+					
 				)}
 			</div>
 		</div>
@@ -305,3 +304,4 @@ export async function getServerSideProps(context) {
 		},
 	}
 }
+

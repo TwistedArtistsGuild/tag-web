@@ -16,7 +16,6 @@ import { getPanelClass } from "@/components/cards/sizes/panel-layout";
 import PhotoGallery from "@/components/cards/card_photoGallery";
 import ArtistCard from "@/components/cards/card_artist";
 import ListingCard from "@/components/cards/card_listing";
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 import ColoredTagCard from "@/components/cards/card_coloredTags";
 import ContentTags, { ContentWarningMediaGate } from "@/components/social/ContentTags";
 
@@ -139,7 +138,7 @@ export default function NewCardsTestPage() {
 	};
 
 	return (
-		<SocialRealtimeProvider>
+		
 			<div className="container mx-auto max-w-6xl p-4 md:p-6">
 				<TagSEO metadataProp={pageMetaData} canonicalSlug="test/newCards" />
 
@@ -233,7 +232,6 @@ export default function NewCardsTestPage() {
 						<ListingCard listing={listing} />
 					</div>
 				))}
-			</div>
 			</div>
 
 			<h2 className="text-2xl md:text-3xl font-semibold text-primary mt-10 mb-4">Colored Tag Card Examples</h2>
@@ -370,6 +368,8 @@ export default function NewCardsTestPage() {
 					]}
 				/>
 			</div>
-		</SocialRealtimeProvider>
+		</div>
+		
 	);
 }
+

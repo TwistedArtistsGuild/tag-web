@@ -23,7 +23,6 @@ import { useMessagingRealtime } from '@/components/messaging/MessagingRealtimePr
 
 // Import components
 import Image from "next/image";
-import { useRealtimeMessages, useTypingIndicator, useSocialRealtime } from './SocialRealtimeContext';
 import TiptapEditor from "@/components/tiptap/tiptap-editor";
 import { useConversations } from '@/hooks/useConversations';
 import { useMessages } from '@/hooks/useMessages';
@@ -74,9 +73,8 @@ const DirectMessages = ({
     const fileInputRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     
-    // Real-time functionality from context
-    const { emit, isConnected } = useSocialRealtime();
-    const { joinConversation: contextJoinConversation, leaveConversation: contextLeaveConversation, sendTypingIndicator: contextSendTyping } = useMessagingRealtime();
+    // Real-time functionality from SignalR context
+    const { isConnected, joinConversation: contextJoinConversation, leaveConversation: contextLeaveConversation, sendTypingIndicator: contextSendTyping } = useMessagingRealtime();
     
     // Use hooks to fetch data (DirectMessages manages its own data)
     const {

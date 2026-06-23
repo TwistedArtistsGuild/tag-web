@@ -12,7 +12,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { BuildingIcon, GraduationCapIcon, CheckIcon, HeartIcon, MessageCircleIcon, EyeIcon, CalendarIcon } from "lucide-react"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 
@@ -139,7 +138,7 @@ export default function EventsLanding() {
   )
 
   return (
-    <SocialRealtimeProvider>
+    
     <div className="min-h-screen bg-gray-100 text-base-content">
       <TagSEO metadataProp={pageMetaData} canonicalSlug="events" />
       {/* Hero Section */}
@@ -331,7 +330,7 @@ export default function EventsLanding() {
         </section>
       </main>
     </div>
-    </SocialRealtimeProvider>
+    
   )
 }
 
@@ -491,4 +490,5 @@ EventsLanding.getInitialProps = async () => {
     }
   }
 }
+
 

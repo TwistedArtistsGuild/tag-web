@@ -13,7 +13,6 @@ import TagSEO from "@/components/TagSEO";
 import ListingCard from "@/components/cards/card_listing";
 import { getPanelClass } from "@/components/cards/sizes/panel-layout";
 import getApiURL from "@/components/widgets/GetApiURL";
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 
 /**
  *
@@ -38,7 +37,7 @@ const Listings = (props) => {
   }
 
   return (
-    <SocialRealtimeProvider>
+    
       <div className="container mx-auto p-4">
         <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
 
@@ -60,7 +59,7 @@ const Listings = (props) => {
           ))}
         </div>
       </div>
-    </SocialRealtimeProvider>
+    
   );
 };
 
@@ -114,4 +113,5 @@ Listings.getInitialProps = async (context) => {
 }
 
 export default Listings
+
 

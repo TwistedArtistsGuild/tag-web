@@ -17,7 +17,6 @@ import { useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { useAppContext } from "@/components/Context"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import DynamicComments, { CommentTargetType } from "@/components/social/DynamicComments"
 
 const userSections = [
@@ -70,7 +69,7 @@ export default function UserProfile(props) {
 	}
 
 	return (
-		<SocialRealtimeProvider>
+		
 			<div className="min-h-screen bg-base-200">
 				<TagSEO metadataProp={pageMetaData} canonicalSlug={`user/${props.slug}`} />
 
@@ -134,7 +133,7 @@ export default function UserProfile(props) {
 					</div>
 				</div>
 			</div>
-		</SocialRealtimeProvider>
+		
 	)
 }
 
@@ -169,3 +168,4 @@ export async function getStaticPaths() {
 		fallback: "blocking",
 	}
 }
+

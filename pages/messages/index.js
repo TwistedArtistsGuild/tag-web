@@ -13,7 +13,6 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
 import TagSEO from '@/components/TagSEO'
-import { SocialRealtimeProvider } from '@/components/social/SocialRealtimeContext'
 import DirectMessages from '@/components/social/DirectMessages'
 
 const MessagesPage = () => {
@@ -53,7 +52,7 @@ const MessagesPage = () => {
   }
 
   return (
-    <SocialRealtimeProvider>
+    
       <div className="min-h-screen bg-base-200">
         <TagSEO metadataProp={pageMetaData} canonicalSlug="messages" />
         
@@ -74,7 +73,7 @@ const MessagesPage = () => {
           </div>
         </div>
       </div>
-    </SocialRealtimeProvider>
+    
   )
 }
 

@@ -13,7 +13,6 @@
 import { useMemo, useState } from "react"
 import { X } from "lucide-react"
 import DirectMessages from "@/components/social/DirectMessages"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import ContextSwitcher from "@/components/Header/ContextSwitcher"
 
 export default function MessagesApplet({
@@ -56,7 +55,7 @@ export default function MessagesApplet({
   }
 
   return (
-    <SocialRealtimeProvider>
+    
       <div className="relative h-full w-full overflow-visible rounded-box border border-base-300 bg-base-100 shadow-lg">
         <button
           onClick={onClose}
@@ -85,6 +84,7 @@ export default function MessagesApplet({
           ) : null}
         />
       </div>
-    </SocialRealtimeProvider>
+    
   )
 }
+

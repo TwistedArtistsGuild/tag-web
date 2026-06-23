@@ -17,7 +17,6 @@ import FakeListingsSection from "@/components/art/FakeListingsSection"
 import BloomscrollVineRail from "@/components/art/bloomscroll-vine-rail"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { getPanelClass } from "@/components/cards/sizes/panel-layout"
 
 /**
@@ -394,7 +393,7 @@ const Listings = (props) => {
     },
   }
   return (
-    <SocialRealtimeProvider>
+    
       <div className="relative isolate min-h-screen bg-base-100 text-base-content overflow-hidden bloomscroll-shell">
         <div className="bloomscroll-rail-slot left">
           <BloomscrollVineRail side="left" />
@@ -492,7 +491,7 @@ const Listings = (props) => {
         }
       `}</style>
     </div>
-    </SocialRealtimeProvider>
+    
   )
 }
 
@@ -667,3 +666,4 @@ Listings.getInitialProps = async (context) => {
 }
 
 export default Listings
+

@@ -3,7 +3,6 @@ import { useEffect, useRef } from "react";
 import AddressForm from "@/components/forms/contact/address-form";
 import PhoneForm from "@/components/forms/contact/phone-form";
 import EmailForm from "@/components/forms/contact/email-form";
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 
 const primaryScopeLabels = {
   private: "Guild Only",
@@ -35,7 +34,7 @@ export default function PrivateContactsForm({
   }, [error]);
 
   return (
-    <SocialRealtimeProvider>
+    
       <div className="card bg-base-100 shadow border border-base-300">
         <div className="card-body gap-4">
           <div>
@@ -126,6 +125,7 @@ export default function PrivateContactsForm({
           </div>
         </div>
       </div>
-    </SocialRealtimeProvider>
+    
   );
 }
+

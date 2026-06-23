@@ -4,7 +4,6 @@ import PhoneForm from "@/components/forms/contact/phone-form";
 import EmailForm from "@/components/forms/contact/email-form";
 import SocialHandlesForm from "@/components/forms/contact/social-handles-form";
 import UrlLinksForm from "@/components/forms/contact/url-links-form";
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
 
 const PUBLIC_CONTACT_TABS = [
   { key: "public-address", label: "Public Address" },
@@ -30,7 +29,7 @@ export default function PublicContactsForm({
   backLabel = "Back to Profile Media Editor",
 }) {
   return (
-    <SocialRealtimeProvider>
+    
       <div className="card bg-base-100 shadow border border-base-300">
         <div className="card-body gap-4">
           <div>
@@ -126,6 +125,7 @@ export default function PublicContactsForm({
           </div>
         </div>
       </div>
-    </SocialRealtimeProvider>
+    
   );
 }
+
