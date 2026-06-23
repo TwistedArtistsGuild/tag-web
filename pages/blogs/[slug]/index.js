@@ -18,7 +18,6 @@ import dynamic from "next/dynamic"
 import longDateOptions from "@/utils/longdateoptions"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import DynamicComments, { CommentTargetType } from "@/components/social/DynamicComments"
 import ImpressionReactions from "@/components/social/ImpressionReactions"
 import { useImpressions, ImpressionTargetType } from "@/hooks/useImpressions"
@@ -162,7 +161,7 @@ const BlogByslug = props => {
 	return (
 		/* suppressHydrationWarning prevents React from logging a hydration mismatch for this subtree.
 		   We also only render the rich `body` HTML after mount to avoid SSR/CSR mismatch. */
-		<SocialRealtimeProvider>
+		
 		<div className="flex flex-col items-center min-h-screen w-full py-8 gap-8" suppressHydrationWarning>
 			<style jsx global>{`
 				.blog-rich-content h3,
@@ -376,7 +375,7 @@ const BlogByslug = props => {
 				)}
 			</div>
 		</div>
-		</SocialRealtimeProvider>
+		
 	)
 }
 
@@ -416,4 +415,5 @@ BlogByslug.getInitialProps = async function (context) {
 }
 
 export default BlogByslug
+
 

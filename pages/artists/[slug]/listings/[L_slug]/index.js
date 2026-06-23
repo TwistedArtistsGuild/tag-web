@@ -9,7 +9,6 @@
 
  Open source · low-profit · human-first*/
 import SocialComments from "@/components/social/Comments"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
@@ -346,7 +345,7 @@ const ListingDetails = () => {
   // Show loading state
   if (loading) {
     return (
-      <SocialRealtimeProvider>
+      
         <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
           <div className="flex flex-col justify-center items-center min-h-screen">
             <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary mb-4"></div>
@@ -359,14 +358,14 @@ const ListingDetails = () => {
             </p>
           </div>
         </div>
-      </SocialRealtimeProvider>
+      
     )
   }
 
   // Show error state
   if (error) {
     return (
-      <SocialRealtimeProvider>
+      
         <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
           <div className="flex flex-col justify-center items-center min-h-screen">
             <div className="alert alert-error max-w-2xl">
@@ -386,14 +385,14 @@ const ListingDetails = () => {
             </button>
           </div>
         </div>
-      </SocialRealtimeProvider>
+      
     )
   }
 
   // Show empty state
   if (isListingEmpty) {
     return (
-      <SocialRealtimeProvider>
+      
         <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
           <div className="flex flex-col justify-center items-center min-h-screen">
             <div className="alert alert-warning max-w-2xl">
@@ -415,13 +414,13 @@ const ListingDetails = () => {
             </button>
           </div>
         </div>
-      </SocialRealtimeProvider>
+      
     )
   }
 
   // Render the full page
   return (
-    <SocialRealtimeProvider>
+    
       <div className="container mx-auto px-4 py-6 bg-base-200 text-base-content">
         <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
         <div className="mb-8">
@@ -498,8 +497,9 @@ const ListingDetails = () => {
           </div>
         </div>
       </div>
-    </SocialRealtimeProvider>
+    
   )
 }
 
 export default ListingDetails
+

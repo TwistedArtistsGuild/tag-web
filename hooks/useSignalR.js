@@ -11,6 +11,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
+import getApiURL from '@/components/widgets/GetApiURL'
 
 /**
  * SignalR hook for real-time messaging
@@ -35,9 +36,13 @@ export function useSignalR(userId, handlers = {}) {
     }
 
     try {
+      const apiUrl = getApiURL()
+      const apiBase = String(apiUrl || '').replace(/\/api\/?$/i, '')
+      const hubUrl = `${apiBase}/hubs/messaging`
+
       // Create connection
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl(`${process.env.NEXT_PUBLIC_API_URL || ''}/hubs/messaging`, {
+        .withUrl(hubUrl, {
           accessTokenFactory: () => {
             // Add your auth token here if needed
             return localStorage.getItem('authToken') || ''
@@ -128,6 +133,11 @@ export function useSignalR(userId, handlers = {}) {
       connection.on('ConversationUpdated', (conversation) => {
         console.log('🔄 Conversation updated:', conversation)
         handlersRef.current.onConversationUpdate?.(conversation)
+      })
+
+      connection.on('NotificationSummaryUpdated', (data) => {
+        console.log('🔔 Notification summary updated:', data)
+        handlersRef.current.onNotification?.(data)
       })
 
       connection.on('UserOnlineStatusChanged', (data) => {
@@ -256,11 +266,19 @@ export function useSignalR(userId, handlers = {}) {
 
   // Connect on mount
   useEffect(() => {
+    let connectTimer = null
+
     if (userId) {
-      connect()
+      connectTimer = window.setTimeout(() => {
+        connect()
+      }, 0)
     }
 
     return () => {
+      if (connectTimer) {
+        window.clearTimeout(connectTimer)
+      }
+
       if (connectionRef.current) {
         connectionRef.current.stop()
       }

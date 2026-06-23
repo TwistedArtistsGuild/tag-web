@@ -18,6 +18,7 @@ export const ARTIST_REGISTRATION_STEPS = {
   ACCEPTED_TC: "accepted_tc",
   RESERVED_SLUG: "reserved_slug",
   PROFILE_INFO: "added_bio",
+  BUSINESS_DETAILS: "business_details",
   PRIVATE_CONTACTS: "private_contacts",
   MEDIA_SETUP: "uploaded_photos",
   PUBLIC_CONTACTS: "added_contacts",

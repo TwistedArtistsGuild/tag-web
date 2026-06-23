@@ -1,38 +1,11 @@
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { getArtistRegistrationProgress } from "@/utils/onboarding/artistWorkflow"
-import { getVendorRegistrationProgress } from "@/utils/onboarding/vendorWorkflow"
-import { getVenueRegistrationProgress } from "@/utils/onboarding/venueWorkflow"
-
-const JOIN_SECTIONS = [
-  {
-    href: "/join/artist",
-    title: "Artist",
-    description: "Artist onboarding, registration forms, and creator application workflows.",
-    countLabel: "Artist onboarding flow",
-  },
-  {
-    href: "/join/user",
-    title: "User",
-    description: "General user onboarding and account-creation flows.",
-    countLabel: "User onboarding flow",
-  },
-  {
-    href: "/join/vendor",
-    title: "Vendor",
-    description: "Vendor onboarding and marketplace participation forms.",
-    countLabel: "No forms published yet",
-  },
-  {
-    href: "/join/venue",
-    title: "Venue",
-    description: "Venue onboarding and operations profile setup.",
-    countLabel: "Venue onboarding flow",
-  },
-]
+import { clearVendorRegistrationProgress, getVendorRegistrationProgress } from "@/utils/onboarding/vendorWorkflow"
+import { clearVenueRegistrationProgress, getVenueRegistrationProgress } from "@/utils/onboarding/venueWorkflow"
 
 const apiUrl = getApiURL()
 
@@ -173,10 +146,72 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
   const [hydratedRows, setHydratedRows] = useState([])
   const [vendorDraft, setVendorDraft] = useState(null)
   const [venueDraft, setVenueDraft] = useState(null)
+  const [deletedRegistrationKeys, setDeletedRegistrationKeys] = useState([])
+  const [deletingRegistrationKey, setDeletingRegistrationKey] = useState("")
+  const [actionFeedback, setActionFeedback] = useState({ type: "", message: "" })
   const baseRows = useMemo(() => (Array.isArray(artistProgressRows) ? artistProgressRows : []), [artistProgressRows])
   const isAdminUser = Array.isArray(sessionUser?.roles) && sessionUser.roles.includes("admin")
   const canAccessOtherRegistrations = isAdminUser || userRegistrationComplete
   const showOtherRegistrationsView = canAccessOtherRegistrations
+  const deletedKeySet = useMemo(() => new Set(deletedRegistrationKeys), [deletedRegistrationKeys])
+
+  const makeRegistrationKey = useCallback((type, entityId) => `${String(type || "").trim().toLowerCase()}:${Number(entityId || 0)}`, [])
+
+  const deleteRegistration = useCallback(async ({ type, entityId, title }) => {
+    const normalizedType = String(type || "").trim().toLowerCase()
+    const resolvedEntityId = Number(entityId || 0)
+
+    if (!resolvedEntityId || !["artist", "vendor", "venue"].includes(normalizedType)) {
+      return
+    }
+
+    const targetName = title || `${normalizedType} ${resolvedEntityId}`
+    const confirmed = window.confirm(
+      `Delete ${targetName} (ID: ${resolvedEntityId})?\n\nThis will permanently remove this registration from the database. This action cannot be undone.`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    const endpoint = `${apiUrl}${normalizedType}/${resolvedEntityId}`
+    const registrationKey = makeRegistrationKey(normalizedType, resolvedEntityId)
+
+    setDeletingRegistrationKey(registrationKey)
+    setActionFeedback({ type: "", message: "" })
+
+    try {
+      const response = await fetch(endpoint, { method: "DELETE" })
+      if (!response.ok) {
+        const message = await response.text()
+        throw new Error(message || `Unable to delete ${normalizedType} registration (${response.status}).`)
+      }
+
+      setDeletedRegistrationKeys((previous) => (
+        previous.includes(registrationKey) ? previous : [...previous, registrationKey]
+      ))
+
+      if (normalizedType === "vendor") {
+        clearVendorRegistrationProgress()
+        setVendorDraft(null)
+      }
+
+      if (normalizedType === "venue") {
+        clearVenueRegistrationProgress()
+        setVenueDraft(null)
+      }
+
+      if (normalizedType === "artist") {
+        setHydratedRows((previous) => previous.filter((row) => Number(row?.artistID || 0) !== resolvedEntityId))
+      }
+
+      setActionFeedback({ type: "success", message: `${targetName} was deleted.` })
+    } catch (error) {
+      setActionFeedback({ type: "error", message: error?.message || `Unable to delete ${targetName}.` })
+    } finally {
+      setDeletingRegistrationKey("")
+    }
+  }, [makeRegistrationKey])
 
   const rows = useMemo(() => {
     if (!hydratedRows.length) {
@@ -266,11 +301,17 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
   }, [baseRows, sessionUserId])
 
   useEffect(() => {
-    const vendorProgress = getVendorRegistrationProgress?.() || null
-    const venueProgress = getVenueRegistrationProgress?.() || null
+    const timerId = window.setTimeout(() => {
+      const vendorProgress = getVendorRegistrationProgress?.() || null
+      const venueProgress = getVenueRegistrationProgress?.() || null
 
-    setVendorDraft(buildDraftFromProgress(vendorProgress, "vendor"))
-    setVenueDraft(buildDraftFromProgress(venueProgress, "venue"))
+      setVendorDraft(buildDraftFromProgress(vendorProgress, "vendor"))
+      setVenueDraft(buildDraftFromProgress(venueProgress, "venue"))
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timerId)
+    }
   }, [])
 
   const pageMetaData = {
@@ -284,7 +325,14 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
     },
   }
 
-  const visibleRows = rows.filter((a) => !a.isPublished)
+  const visibleRows = rows.filter((artist) => {
+    if (artist.isPublished) {
+      return false
+    }
+
+    const artistId = Number(artist?.artistID || 0)
+    return !deletedKeySet.has(makeRegistrationKey("artist", artistId))
+  })
   const inProgressArtists = visibleRows.filter((a) => !a.allDone)
   const completedArtists = visibleRows.filter((a) => a.allDone)
 
@@ -301,6 +349,12 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
             </p>
           </div>
         </div>
+
+        {actionFeedback.message ? (
+          <div className={`alert ${actionFeedback.type === "error" ? "alert-error" : "alert-success"}`}>
+            <span>{actionFeedback.message}</span>
+          </div>
+        ) : null}
 
         <div className="card bg-base-100 shadow border border-base-300">
           <div className="card-body gap-3">
@@ -333,7 +387,12 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
         {showOtherRegistrationsView && inProgressArtists.length > 0 && (
           <div className="card bg-base-100 shadow border border-base-300">
             <div className="card-body gap-3">
-              <h2 className="card-title text-warning">Artist Registrations In Progress</h2>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="card-title text-warning">Artist Registrations In Progress</h2>
+                <Link href="/join/artist?step=1" className="btn btn-sm btn-outline">
+                  Register New Artist
+                </Link>
+              </div>
               <p className="text-sm text-base-content/70">Pick up where you left off. Completed registrations are managed from the Artist Portal.</p>
               <div className="space-y-3">
                 {inProgressArtists.map((artist) => (
@@ -354,14 +413,28 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
                         ))}
                       </div>
                     </div>
-                    <Link
-                      href={artist.slug
-                        ? `/join/artist/${encodeURIComponent(artist.slug)}?step=${artist.nextIncompleteStep}`
-                        : `/join/artist?step=${artist.nextIncompleteStep}`}
-                      className="btn btn-sm btn-warning whitespace-nowrap"
-                    >
-                      Continue Step {artist.nextIncompleteStep}
-                    </Link>
+                    <div className="flex items-center gap-2 sm:ml-auto">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-error btn-outline whitespace-nowrap"
+                        disabled={deletingRegistrationKey === makeRegistrationKey("artist", artist.artistID)}
+                        onClick={() => deleteRegistration({
+                          type: "artist",
+                          entityId: artist.artistID,
+                          title: artist.title,
+                        })}
+                      >
+                        {deletingRegistrationKey === makeRegistrationKey("artist", artist.artistID) ? "Deleting..." : "Delete"}
+                      </button>
+                      <Link
+                        href={artist.slug
+                          ? `/join/artist/${encodeURIComponent(artist.slug)}?step=${artist.nextIncompleteStep}`
+                          : `/join/artist?step=${artist.nextIncompleteStep}`}
+                        className="btn btn-sm btn-warning whitespace-nowrap"
+                      >
+                        Continue Step {artist.nextIncompleteStep}
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -369,18 +442,36 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
           </div>
         )}
 
-        {showOtherRegistrationsView && vendorDraft ? (
+        {showOtherRegistrationsView && vendorDraft && !deletedKeySet.has(makeRegistrationKey("vendor", vendorDraft.entityId)) ? (
           <div className="card bg-base-100 shadow border border-base-300">
             <div className="card-body gap-2">
-              <h2 className="card-title text-warning">Vendor Registration In Progress</h2>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="card-title text-warning">Vendor Registration In Progress</h2>
+                <Link href="/join/vendor?step=1" className="btn btn-sm btn-outline">
+                  Register New Vendor
+                </Link>
+              </div>
               <p className="text-sm text-base-content/70">Continue your vendor draft or start a new one from the vendor join page.</p>
               <div className="flex flex-wrap items-center gap-2 rounded-md border border-base-300 bg-base-200 p-3">
                 <span className="text-sm font-semibold">{vendorDraft.title || "Untitled Vendor"}</span>
                 <span className="badge badge-sm">/{vendorDraft.slug}</span>
                 <span className="badge badge-sm badge-outline">ID: {vendorDraft.entityId}</span>
+                <div className="ml-auto" />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-error btn-outline"
+                  disabled={deletingRegistrationKey === makeRegistrationKey("vendor", vendorDraft.entityId)}
+                  onClick={() => deleteRegistration({
+                    type: "vendor",
+                    entityId: vendorDraft.entityId,
+                    title: vendorDraft.title || "Vendor",
+                  })}
+                >
+                  {deletingRegistrationKey === makeRegistrationKey("vendor", vendorDraft.entityId) ? "Deleting..." : "Delete"}
+                </button>
                 <Link
                   href={`/join/vendor/${encodeURIComponent(vendorDraft.slug)}?step=${vendorDraft.nextStep}&id=${vendorDraft.entityId}`}
-                  className="btn btn-sm btn-warning ml-auto"
+                  className="btn btn-sm btn-warning"
                 >
                   Continue Vendor Step {vendorDraft.nextStep}
                 </Link>
@@ -389,41 +480,41 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
           </div>
         ) : null}
 
-        {showOtherRegistrationsView && venueDraft ? (
+        {showOtherRegistrationsView && venueDraft && !deletedKeySet.has(makeRegistrationKey("venue", venueDraft.entityId)) ? (
           <div className="card bg-base-100 shadow border border-base-300">
             <div className="card-body gap-2">
-              <h2 className="card-title text-warning">Venue Registration In Progress</h2>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="card-title text-warning">Venue Registration In Progress</h2>
+                <Link href="/join/venue?step=1" className="btn btn-sm btn-outline">
+                  Register New Venue
+                </Link>
+              </div>
               <p className="text-sm text-base-content/70">Continue your venue draft or start a new one from the venue join page.</p>
               <div className="flex flex-wrap items-center gap-2 rounded-md border border-base-300 bg-base-200 p-3">
                 <span className="text-sm font-semibold">{venueDraft.title || "Untitled Venue"}</span>
                 <span className="badge badge-sm">/{venueDraft.slug}</span>
                 <span className="badge badge-sm badge-outline">ID: {venueDraft.entityId}</span>
+                <div className="ml-auto" />
+                <button
+                  type="button"
+                  className="btn btn-sm btn-error btn-outline"
+                  disabled={deletingRegistrationKey === makeRegistrationKey("venue", venueDraft.entityId)}
+                  onClick={() => deleteRegistration({
+                    type: "venue",
+                    entityId: venueDraft.entityId,
+                    title: venueDraft.title || "Venue",
+                  })}
+                >
+                  {deletingRegistrationKey === makeRegistrationKey("venue", venueDraft.entityId) ? "Deleting..." : "Delete"}
+                </button>
                 <Link
                   href={`/join/venue/${encodeURIComponent(venueDraft.slug)}?step=${venueDraft.nextStep}&id=${venueDraft.entityId}`}
-                  className="btn btn-sm btn-warning ml-auto"
+                  className="btn btn-sm btn-warning"
                 >
                   Continue Venue Step {venueDraft.nextStep}
                 </Link>
               </div>
             </div>
-          </div>
-        ) : null}
-
-        {showOtherRegistrationsView ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {JOIN_SECTIONS.filter((section) => section.href !== "/join/user").map((section) => (
-              <div key={section.href} className="card bg-base-100 shadow border border-base-300">
-                <div className="card-body">
-                  <h2 className="card-title">{section.title}</h2>
-                  <p className="text-sm text-base-content/70">{section.description}</p>
-                  <div className="pt-2">
-                    <Link href={section.href} className="btn btn-sm btn-outline">
-                      {section.href === "/join/artist" ? "Register New Artist" : "Get Started"}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         ) : null}
 

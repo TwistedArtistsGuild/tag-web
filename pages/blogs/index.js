@@ -11,7 +11,6 @@
 
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import BlogCard from "@/components/cards/card_blog"
 
 const Blog = (props) => {
@@ -29,7 +28,7 @@ const Blog = (props) => {
   }
   
   return (
-    <SocialRealtimeProvider>
+    
       <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
         <TagSEO metadataProp={pageMetaData} canonicalSlug="blogs" />
         
@@ -55,7 +54,7 @@ const Blog = (props) => {
           </div>
         </main>
       </div>
-    </SocialRealtimeProvider>
+    
   )
 }
 
@@ -76,3 +75,4 @@ Blog.getInitialProps = async () => {
 }
 
 export default Blog
+

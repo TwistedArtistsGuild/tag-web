@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useState, useCallback, memo, useRef } from 'react';
-import { useRealtimeReactions, useSocialRealtime } from './SocialRealtimeContext';
 
 function buildReactionMap(initialReactions = [], currentUser) {
     const reactionMap = new Map();
@@ -74,7 +73,6 @@ const SocialReactions = ({
     const [isLoading, setIsLoading] = useState(false);
     const [expanded, setExpanded] = useState(false);
     const collapseTimer = useRef(null);
-    const { emit, isConnected } = useSocialRealtime();
 
     const handleMouseEnter = () => {
         clearTimeout(collapseTimer.current);
@@ -100,61 +98,6 @@ const SocialReactions = ({
     ];
 
     const availableReactions = customAvailableReactions || defaultAvailableReactions;
-
-    // Handle real-time reaction updates
-    const handleRealtimeUpdate = useCallback((update) => {
-        if (update.data.targetId !== targetId || update.data.targetType !== targetType) {
-            return;
-        }
-
-        const { reaction, userId, username, timestamp } = update.data;
-        
-        setReactions(prev => {
-            const newReactions = new Map(prev);
-            
-            if (!newReactions.has(reaction)) {
-                newReactions.set(reaction, {
-                    emoji: reaction,
-                    count: 0,
-                    users: [],
-                    hasReacted: false
-                });
-            }
-            
-            const current = newReactions.get(reaction);
-            
-            if (update.type === 'reaction_added') {
-                // Check if user already reacted with this emoji
-                const existingUser = current.users.find(user => user.id === userId);
-                if (!existingUser) {
-                    current.count++;
-                    current.users.push({ id: userId, username, timestamp });
-                    
-                    if (currentUser && userId === currentUser.id) {
-                        current.hasReacted = true;
-                    }
-                }
-            } else if (update.type === 'reaction_removed') {
-                const userIndex = current.users.findIndex(user => user.id === userId);
-                if (userIndex > -1) {
-                    current.count--;
-                    current.users.splice(userIndex, 1);
-                    
-                    if (currentUser && userId === currentUser.id) {
-                        current.hasReacted = false;
-                    }
-                    
-                    if (current.count === 0) {
-                        newReactions.delete(reaction);
-                    }
-                }
-            }
-            
-            return newReactions;
-        });
-    }, [targetId, targetType, currentUser]);
-
-    useRealtimeReactions(handleRealtimeUpdate);
 
     // Add reaction
     const addReaction = useCallback(async (emoji) => {
@@ -191,21 +134,6 @@ const SocialReactions = ({
                 return newReactions;
             });
             
-            // Emit real-time update
-            if (isConnected) {
-                emit('reactions', {
-                    type: 'reaction_added',
-                    data: {
-                        targetId,
-                        targetType,
-                        reaction: emoji,
-                        userId: currentUser.id,
-                        username: currentUser.username,
-                        timestamp: new Date().toISOString()
-                    }
-                });
-            }
-            
             // Call parent callback
             await onReactionAdd({
                 targetId,
@@ -234,7 +162,7 @@ const SocialReactions = ({
         } finally {
             setIsLoading(false);
         }
-    }, [currentUser, readOnly, isLoading, targetId, targetType, onReactionAdd, emit, isConnected]);
+    }, [currentUser, readOnly, isLoading, targetId, targetType, onReactionAdd]);
 
     // Remove reaction
     const removeReaction = useCallback(async (emoji) => {
@@ -260,21 +188,6 @@ const SocialReactions = ({
                 
                 return newReactions;
             });
-            
-            // Emit real-time update
-            if (isConnected) {
-                emit('reactions', {
-                    type: 'reaction_removed',
-                    data: {
-                        targetId,
-                        targetType,
-                        reaction: emoji,
-                        userId: currentUser.id,
-                        username: currentUser.username,
-                        timestamp: new Date().toISOString()
-                    }
-                });
-            }
             
             // Call parent callback
             await onReactionRemove({
@@ -312,7 +225,7 @@ const SocialReactions = ({
         } finally {
             setIsLoading(false);
         }
-    }, [currentUser, readOnly, isLoading, targetId, targetType, onReactionRemove, emit, isConnected]);
+    }, [currentUser, readOnly, isLoading, targetId, targetType, onReactionRemove]);
 
     // Toggle reaction (add if not reacted, remove if already reacted)
     const toggleReaction = useCallback((emoji) => {

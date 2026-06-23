@@ -13,7 +13,6 @@
 import { useMemo, useState } from "react"
 import { X } from "lucide-react"
 import DirectMessages from "@/components/social/DirectMessages"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import ContextSwitcher from "@/components/Header/ContextSwitcher"
 
 export default function MessagesApplet({
@@ -22,6 +21,7 @@ export default function MessagesApplet({
   contextProfiles = [],
   activeContextId = null,
   onContextChange,
+  initialConversationId = null,
 }) {
   const [localSelectedContextId, setLocalSelectedContextId] = useState(null)
   const selectedContextId = activeContextId || localSelectedContextId || contextProfiles[0]?.id || null
@@ -56,7 +56,7 @@ export default function MessagesApplet({
   }
 
   return (
-    <SocialRealtimeProvider>
+    
       <div className="relative h-full w-full overflow-visible rounded-box border border-base-300 bg-base-100 shadow-lg">
         <button
           onClick={onClose}
@@ -68,10 +68,10 @@ export default function MessagesApplet({
 
         <DirectMessages
           compact
-          demoMode
+          apiMode
+          initialConversationId={initialConversationId}
           maxHeight={420}
           currentUser={effectiveCurrentUser}
-          demoUserOverride={effectiveCurrentUser}
           panelColor={panelColor}
           composerContextControl={contextProfiles.length > 0 ? (
             <ContextSwitcher
@@ -85,6 +85,7 @@ export default function MessagesApplet({
           ) : null}
         />
       </div>
-    </SocialRealtimeProvider>
+    
   )
 }
+

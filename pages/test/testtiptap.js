@@ -16,8 +16,7 @@ import TTTitleLine from "@/components/tiptap/TT_TitleLine";
 import TTArticle from "@/components/tiptap/TT_Article";
 import TTPortfolio from "@/components/tiptap/TT_Portfolio";
 import { TTCommentsEditorCard } from "@/components/tiptap/TT_Comments";
-import TTDirectMessages from "@/components/tiptap/TT_DirectMessages";
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
+import DirectMessages from "@/components/social/DirectMessages";
 import { sanitizeDefaultHtml } from "@/components/security/sanitize";
 
 import TagSEO from "@/components/TagSEO"
@@ -134,17 +133,16 @@ export default function TiptapTestPage() {
           </div>
 
           <div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
-            <h2 className="text-lg font-semibold">Direct Messages (Demo Simulation)</h2>
+            <h2 className="text-lg font-semibold">Direct Messages (Live API)</h2>
             <p className="text-sm text-base-content/70">
-              Interactive chat simulation using the direct messages component in demo mode.
+              Direct messages using the production component and API hooks.
             </p>
-            <SocialRealtimeProvider>
-              <TTDirectMessages demoMode maxHeight={560} />
-            </SocialRealtimeProvider>
+            <DirectMessages apiMode maxHeight={560} />
           </div>
         </section>
       </main>
     </>
   );
 }
+
 

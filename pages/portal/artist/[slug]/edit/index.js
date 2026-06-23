@@ -139,9 +139,10 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
   const steps = [
     { num: 1, label: "Update Slug", key: "slug" },
     { num: 2, label: "Profile", key: "profile" },
-    { num: 3, label: "Private Contacts", key: "private-contacts" },
+    { num: 3, label: "Business Details", key: "business-details" },
     { num: 4, label: "Media", key: "media" },
-    { num: 5, label: "Public Contacts", key: "public-contacts" },
+    { num: 5, label: "Private Contacts", key: "private-contacts" },
+    { num: 6, label: "Public Contacts", key: "public-contacts" },
   ]
 
   return (
@@ -218,7 +219,7 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
           <div className="card bg-base-100 shadow border border-base-300">
             <div className="card-body gap-4">
               <h2 className="text-2xl font-semibold">Profile Information</h2>
-              <p className="text-sm text-base-content/70">Update your profile details and business information.</p>
+              <p className="text-sm text-base-content/70">Update your profile details.</p>
 
               <div className="rounded-box border border-base-300 bg-base-200/40 p-4 space-y-4">
                 <h3 className="font-semibold text-base-content">Profile Details</h3>
@@ -284,6 +285,75 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
                   />
                 </label>
               </div>
+
+              {profileFormError && (
+                <div className="alert alert-error">
+                  <span>{profileFormError}</span>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <button onClick={() => setCurrentStep(1)} className="btn btn-ghost">
+                  Back to Slug
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!artistId) {
+                      setProfileFormError("Artist ID is missing.")
+                      return
+                    }
+
+                    const titleText = profileTitle.trim()
+                    if (!titleText) {
+                      setProfileFormError("Title is required.")
+                      return
+                    }
+
+                    setProfileFormError("")
+                    setIsSavingProfileForm(true)
+
+                    try {
+                      const response = await fetch(`${apiUrl}artist/byID/${artistId}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          title: profileTitle,
+                          byline: profileByline.trim() || null,
+                          biography: profileBiography.trim() || null,
+                          statement: profileStatement.trim() || null,
+                          seoTags: profileSeoTags.trim() || null,
+                        }),
+                      })
+
+                      if (!response.ok) {
+                        const errorText = await response.text()
+                        setProfileFormError(errorText || `Unable to save profile (${response.status}).`)
+                        return
+                      }
+
+                      setCurrentStep(3)
+                    } catch (error) {
+                      setProfileFormError(error.message || "Unable to save profile details.")
+                    } finally {
+                      setIsSavingProfileForm(false)
+                    }
+                  }}
+                  disabled={isSavingProfileForm}
+                  className="btn btn-primary"
+                >
+                  {isSavingProfileForm ? "Saving..." : "Continue to Business Details"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Business Details */}
+        {currentStep === 3 && (
+          <div className="card bg-base-100 shadow border border-base-300">
+            <div className="card-body gap-4">
+              <h2 className="text-2xl font-semibold">Business Details</h2>
+              <p className="text-sm text-base-content/70">Update your location and business information.</p>
 
               <div className="rounded-box border border-base-300 bg-base-200/40 p-4 space-y-4">
                 <h3 className="font-semibold text-base-content">Location & Business</h3>
@@ -407,19 +477,13 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
               )}
 
               <div className="flex gap-2">
-                <button onClick={() => setCurrentStep(1)} className="btn btn-ghost">
-                  Back to Slug
+                <button onClick={() => setCurrentStep(2)} className="btn btn-ghost">
+                  Back to Profile
                 </button>
                 <button
                   onClick={async () => {
                     if (!artistId) {
                       setProfileFormError("Artist ID is missing.")
-                      return
-                    }
-
-                    const titleText = profileTitle.trim()
-                    if (!titleText) {
-                      setProfileFormError("Title is required.")
                       return
                     }
 
@@ -470,11 +534,6 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                          title: profileTitle,
-                          byline: profileByline.trim() || null,
-                          biography: profileBiography.trim() || null,
-                          statement: profileStatement.trim() || null,
-                          seoTags: profileSeoTags.trim() || null,
                           city: city.trim(),
                           country: country.trim(),
                           stateOrProvince: stateOrProvince.trim(),
@@ -487,13 +546,13 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
 
                       if (!response.ok) {
                         const errorText = await response.text()
-                        setProfileFormError(errorText || `Unable to save profile (${response.status}).`)
+                        setProfileFormError(errorText || `Unable to save business details (${response.status}).`)
                         return
                       }
 
-                      setCurrentStep(3)
+                      setCurrentStep(4)
                     } catch (error) {
-                      setProfileFormError(error.message || "Unable to save profile details.")
+                      setProfileFormError(error.message || "Unable to save business details.")
                     } finally {
                       setIsSavingProfileForm(false)
                     }
@@ -501,31 +560,7 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
                   disabled={isSavingProfileForm}
                   className="btn btn-primary"
                 >
-                  {isSavingProfileForm ? "Saving..." : "Continue to Private Contacts"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Private Contacts */}
-        {currentStep === 3 && (
-          <div className="card bg-base-100 shadow border border-base-300">
-            <div className="card-body gap-4">
-              <h2 className="text-2xl font-semibold">Private Contacts (Business)</h2>
-              <p className="text-sm text-base-content/70">These are required for internal operations and won't be shown publicly.</p>
-              <div className="space-y-4">
-                <AddressForm scope="private" artistID={artistId} onContactsChange={setPrivateAddressContacts} existingContacts={privateAddressContacts} />
-                <EmailForm scope="private" artistID={artistId} onContactsChange={setPrivateEmailContacts} existingContacts={privateEmailContacts} />
-                <PhoneForm scope="private" artistID={artistId} onContactsChange={setPrivatePhoneContacts} existingContacts={privatePhoneContacts} />
-                <UrlLinksForm scope="private" artistID={artistId} onContactsChange={setPrivateUrlContacts} existingContacts={privateUrlContacts} />
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => setCurrentStep(2)} className="btn btn-ghost">
-                  Back to Profile
-                </button>
-                <button onClick={() => setCurrentStep(4)} className="btn btn-primary">
-                  Continue to Media
+                  {isSavingProfileForm ? "Saving..." : "Continue to Media"}
                 </button>
               </div>
             </div>
@@ -547,9 +582,33 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
               )}
               <div className="flex gap-2">
                 <button onClick={() => setCurrentStep(3)} className="btn btn-ghost">
-                  Back to Contacts
+                  Back to Business Details
                 </button>
                 <button onClick={() => setCurrentStep(5)} className="btn btn-primary">
+                  Continue to Private Contacts
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Private Contacts */}
+        {currentStep === 5 && (
+          <div className="card bg-base-100 shadow border border-base-300">
+            <div className="card-body gap-4">
+              <h2 className="text-2xl font-semibold">Private Contacts (Business)</h2>
+              <p className="text-sm text-base-content/70">These are required for internal operations and won't be shown publicly.</p>
+              <div className="space-y-4">
+                <AddressForm scope="private" artistID={artistId} onContactsChange={setPrivateAddressContacts} existingContacts={privateAddressContacts} />
+                <EmailForm scope="private" artistID={artistId} onContactsChange={setPrivateEmailContacts} existingContacts={privateEmailContacts} />
+                <PhoneForm scope="private" artistID={artistId} onContactsChange={setPrivatePhoneContacts} existingContacts={privatePhoneContacts} />
+                <UrlLinksForm scope="private" artistID={artistId} onContactsChange={setPrivateUrlContacts} existingContacts={privateUrlContacts} />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setCurrentStep(4)} className="btn btn-ghost">
+                  Back to Media
+                </button>
+                <button onClick={() => setCurrentStep(6)} className="btn btn-primary">
                   Continue to Public Contacts
                 </button>
               </div>
@@ -557,8 +616,8 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
           </div>
         )}
 
-        {/* Step 5: Public Contacts */}
-        {currentStep === 5 && (
+        {/* Step 6: Public Contacts */}
+        {currentStep === 6 && (
           <div className="card bg-base-100 shadow border border-base-300">
             <div className="card-body gap-4">
               <h2 className="text-2xl font-semibold">Public Contacts</h2>
@@ -591,8 +650,8 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
               </div>
 
               <div className="flex gap-2">
-                <button onClick={() => setCurrentStep(4)} className="btn btn-ghost">
-                  Back to Media
+                <button onClick={() => setCurrentStep(5)} className="btn btn-ghost">
+                  Back to Private Contacts
                 </button>
                 <Link href={`/portal/artist/${artistData?.path || ""}`} className="btn btn-success">
                   Done - Back to Profile

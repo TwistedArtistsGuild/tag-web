@@ -12,7 +12,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { SearchIcon } from "lucide-react"
 
@@ -22,7 +22,6 @@ import { useAppContext } from "@/components/Context"
 import ArtistCard from "@/components/cards/card_artist"
 import ListingCardSmall from "@/components/cards/card_listing_small"
 import ContactCard from "@/components/cards/card_contactList"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import DynamicComments, { CommentTargetType } from "@/components/social/DynamicComments"
 import ArtistEventsSection from "@/components/artist/ArtistEventsSection"
 import { isArtist, isStaff, isAdmin } from "@/utils/authHelpers"
@@ -106,15 +105,16 @@ const Artist = (props) => {
     artist: { ...(l.artist || {}), path: l.artist?.path || props.slug },
   }))
 
-  const galleryItems =
+  const galleryItems = useMemo(() => (
     props.artist?.gallery?.galleryItems ||
     props.artist?.gallery?.GalleryItems ||
     props.artist?.gallery?.items ||
     props.artist?.relatedGallery?.galleryItems ||
     props.artist?.relatedGallery?.GalleryItems ||
     []
+  ), [props.artist])
 
-  const relatedGalleryImages = galleryItems
+  const relatedGalleryImages = useMemo(() => galleryItems
     .map((item, index) => {
       const pictureUrl = item?.picture?.url || item?.picture?.URL
       const pictureThumbUrl = item?.picture?.thumbnailURL || item?.picture?.thumbnailUrl || item?.picture?.ThumbnailURL || pictureUrl
@@ -164,12 +164,12 @@ const Artist = (props) => {
 
       return null
     })
-    .filter(Boolean)
+    .filter(Boolean), [galleryItems, props.pictureCreditsById])
 
   const hasGalleryItemsButNoMedia = galleryItems.length > 0 && relatedGalleryImages.length === 0
 
   return (
-    <SocialRealtimeProvider>
+    
       <div className="mx-auto p-4 relative max-w-6xl bg-base-200 text-base-content">
         <TagSEO metadataProp={pageMetaData} canonicalSlug={`artists/${props.slug}`} />
 
@@ -357,7 +357,7 @@ const Artist = (props) => {
           </>
         )}
       </div>
-    </SocialRealtimeProvider>
+    
   )
 }
 
@@ -470,4 +470,5 @@ Artist.getInitialProps = async (context) => {
 }
 
 export default Artist
+
 

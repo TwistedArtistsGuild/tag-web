@@ -570,11 +570,15 @@ function CreditsAdder({ credits, onChange, artists, users, onSave, saving, roleO
   )
 }
 
-export default function GalleryManager({ entityType, entityId, entityLabel, currentUser, basePrefix, folderKind = "gallery", title = "Gallery Manager", allowVideo, onFilesChanged }) {
+export default function GalleryManager({ entityType, entityId, entityLabel, currentUser, basePrefix, lockedRootPrefix, folderKind = "gallery", title = "Gallery Manager", allowVideo, singleImageMode = false, onFilesChanged }) {
   const normalizedFolderKind = String(folderKind || "gallery").trim().toLowerCase()
   const galleryPrefix = basePrefix || getManagedPrefix(entityType, entityId, normalizedFolderKind)
+  const startPrefix = lockedRootPrefix || galleryPrefix
   const canManageOrder = normalizedFolderKind === "gallery"
+  const isSingleImageMode = Boolean(singleImageMode)
   const canPostVideo = typeof allowVideo === "boolean" ? allowVideo : normalizedFolderKind === "gallery"
+  const [currentPrefix, setCurrentPrefix] = useState(galleryPrefix)
+  const [directories, setDirectories] = useState([])
   const folderDisplayName = normalizedFolderKind.charAt(0).toUpperCase() + normalizedFolderKind.slice(1)
   const localCreditsKey = useMemo(() => `gallery-manager:${entityType}:${entityId}:credits`, [entityType, entityId])
   const localWarningsKey = useMemo(() => `gallery-manager:${entityType}:${entityId}:warnings`, [entityType, entityId])
@@ -629,6 +633,8 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
   const [selectedWarnings, setSelectedWarnings] = useState([])
   const [warningsDirty, setWarningsDirty] = useState(false)
   const [savingWarnings, setSavingWarnings] = useState(false)
+  const [editorTab, setEditorTab] = useState("metadata")
+  const [settingAsActive, setSettingAsActive] = useState(false)
 
   const warningOptions = useMemo(
     () => Object.keys(WARNING_DEFINITIONS).map((key) => ({ key, label: warningKeyToLabel(key) })),
@@ -639,6 +645,31 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
 
   const roleOptions = creditRoles.length ? creditRoles : fallbackRoleOptions
   const defaultRoleID = String(roleOptions[0]?.creditRoleID || "")
+  const isContextFolderView = currentPrefix === galleryPrefix
+  const galleryLinkedCount = useMemo(() => {
+    if (!(canManageOrder && isContextFolderView)) return files.length
+    return files.filter((file) => Boolean(file?.persistedGalleryItemId)).length
+  }, [canManageOrder, isContextFolderView, files])
+
+  const selectedSortPosition = useMemo(() => {
+    if (!(canManageOrder && isContextFolderView) || !selectedFile) return null
+
+    const selectedUrl = normalizeUrl(selectedFile?.url)
+    const selectedVirtualKey = String(selectedFile?.virtualKey || "")
+    const linkedFiles = files.filter((file) => file?.isInGallery !== false)
+    const index = linkedFiles.findIndex((file) => {
+      if (selectedVirtualKey && file?.isVideoPreview) {
+        return String(file?.virtualKey || "") === selectedVirtualKey
+      }
+      return normalizeUrl(file?.url) === selectedUrl
+    })
+
+    return index >= 0 ? index + 1 : null
+  }, [canManageOrder, isContextFolderView, files, selectedFile])
+
+  useEffect(() => {
+    setCurrentPrefix(galleryPrefix)
+  }, [galleryPrefix])
 
   const showMessage = (msg) => {
     setMessage(msg)
@@ -678,15 +709,17 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         ? `${api_url}blog/${entityId}`
         : `${api_url}${entityType}/byID/${entityId}`
 
-      const blobResPromise = fetch(`/api/image/list?container=tagpictures&startPrefix=${encodeURIComponent(galleryPrefix)}&prefix=${encodeURIComponent(galleryPrefix)}`)
-      const entityResPromise = canManageOrder ? fetch(entityFetchUrl) : Promise.resolve(null)
+      const blobResPromise = fetch(`/api/image/list?container=tagpictures&startPrefix=${encodeURIComponent(startPrefix)}&prefix=${encodeURIComponent(currentPrefix)}`)
+      const entityResPromise = canManageOrder && isContextFolderView ? fetch(entityFetchUrl) : Promise.resolve(null)
 
       const [entityRes, blobRes] = await Promise.all([entityResPromise, blobResPromise])
 
       const entityData = entityRes?.ok ? await entityRes.json() : null
-      const galleryItems = canManageOrder && Array.isArray(entityData?.gallery?.galleryItems) ? entityData.gallery.galleryItems : []
+      const galleryItems = canManageOrder && isContextFolderView && Array.isArray(entityData?.gallery?.galleryItems) ? entityData.gallery.galleryItems : []
       const blobData = blobRes.ok ? await blobRes.json() : null
       const remoteFiles = Array.isArray(blobData?.files) ? blobData.files : []
+      const nextDirectories = Array.isArray(blobData?.directories) ? blobData.directories : []
+      setDirectories(nextDirectories)
 
       const byUrl = new Map()
 
@@ -711,6 +744,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                 persistedVideoId: item.videoID,
                 persistedGalleryItemId: item.galleryItemID,
                 sortOrder: Number(item.sortOrder) || 0,
+                isInGallery: true,
               }
             }
 
@@ -723,6 +757,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
               persistedPictureId: item.pictureID,
               persistedGalleryItemId: item.galleryItemID,
               sortOrder: Number(item.sortOrder) || 0,
+              isInGallery: true,
             }
           })
 
@@ -735,18 +770,32 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
       remoteFiles.forEach((item) => {
         const key = normalizeUrl(item?.url)
         if (!key || byUrl.has(key)) return
-        byUrl.set(key, item)
+        byUrl.set(key, {
+          ...item,
+          isInGallery: false,
+          persistedGalleryItemId: null,
+          sortOrder: null,
+        })
       })
 
       const nextFiles = Array.from(byUrl.values())
-      setFiles(nextFiles)
-      onFilesChanged?.(nextFiles)
+      const orderedFiles = canManageOrder && isContextFolderView
+        ? [
+          ...nextFiles.filter((file) => file?.isInGallery !== false),
+          ...nextFiles.filter((file) => file?.isInGallery === false),
+        ]
+        : nextFiles
+
+      setFiles(orderedFiles)
+      if (isContextFolderView) {
+        onFilesChanged?.(orderedFiles)
+      }
     } catch (err) {
       showError(err.message)
     } finally {
       setLoadingFiles(false)
     }
-  }, [canManageOrder, entityType, entityId, galleryPrefix, onFilesChanged])
+  }, [canManageOrder, currentPrefix, entityType, entityId, isContextFolderView, onFilesChanged, startPrefix])
 
   const loadPictureMetadata = useCallback(async () => {
     try {
@@ -917,12 +966,16 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     if (selectedFile) applySelectedFileData(selectedFile)
   }, [selectedFile, applySelectedFileData])
 
+  useEffect(() => {
+    setEditorTab("metadata")
+  }, [selectedFile?.url, selectedFile?.virtualKey])
+
   const uploadSingleFile = async (file) => {
     const formData = new FormData()
     formData.append("file", file)
     formData.append("container", "tagpictures")
-    formData.append("startPrefix", galleryPrefix)
-    formData.append("targetPrefix", galleryPrefix)
+    formData.append("startPrefix", startPrefix)
+    formData.append("targetPrefix", currentPrefix)
     formData.append("userID", String(currentUserId || entityId || "staff"))
     formData.append("category", entityType)
     formData.append("entityID", String(entityId || ""))
@@ -991,6 +1044,34 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     const errors = []
     const uploaded = []
 
+    if (isSingleImageMode && isContextFolderView) {
+      const existingRootFiles = files.filter((file) => !file?.isVideoPreview)
+      for (const existingFile of existingRootFiles) {
+        const timestampFolder = new Date().toISOString().replace(/[:.]/g, "-")
+        const fileName = displayFileName(existingFile.name)
+        const archivedName = `${currentPrefix}${timestampFolder}/${fileName}`
+
+        try {
+          const response = await fetch("/api/image/rename", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              container: "tagpictures",
+              oldName: existingFile.name,
+              newName: archivedName,
+            }),
+          })
+
+          const data = await response.json().catch(() => ({}))
+          if (!response.ok) {
+            throw new Error(data?.error || data?.message || "Archive move failed")
+          }
+        } catch (err) {
+          errors.push(err.message || `Failed to archive ${fileName}`)
+        }
+      }
+    }
+
     for (let i = 0; i < filesToUpload.length; i++) {
       setUploadProgress(`${i + 1} / ${filesToUpload.length}`)
       try {
@@ -1015,11 +1096,78 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     }
   }
 
+  const ensurePictureRecord = useCallback(async (file) => {
+    if (!file || file?.isVideoPreview) return null
+
+    const normalized = normalizeUrl(file?.url)
+    const existing = pictureByUrl[normalized]
+    const existingId = toNumber(file?.persistedPictureId || existing?.pictureID || existing?.PictureID)
+    if (existingId) {
+      return existingId
+    }
+
+    const nowIso = new Date().toISOString()
+    const payload = {
+      URL: file.url,
+      NormalizedURL: normalized,
+      Path: currentPrefix,
+      Title: displayFileName(file.name) || null,
+      Context: entityType || null,
+      Created: nowIso,
+      Updated: nowIso,
+    }
+
+    const res = await fetch(`${api_url}picture`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}))
+      throw new Error(errorData?.message || errorData?.error || "Failed to create picture record")
+    }
+
+    const created = await res.json().catch(() => null)
+    const createdId = toNumber(created?.pictureID || created?.PictureID)
+    if (!createdId) {
+      throw new Error("Picture record created but PictureID was not returned")
+    }
+
+    setPictureByUrl((prev) => ({
+      ...prev,
+      [normalized]: {
+        ...(prev[normalized] || {}),
+        ...payload,
+        pictureID: createdId,
+      },
+    }))
+
+    return createdId
+  }, [currentPrefix, entityType, pictureByUrl])
+
   const persistGalleryItems = useCallback(async (items) => {
     if (!entityId || !canManageOrder) return
 
+    const normalizedItems = await Promise.all(items.map(async (file) => {
+      if (file?.isVideoPreview) {
+        return {
+          ...file,
+          persistedPictureId: null,
+        }
+      }
+
+      const ensuredPictureId = await ensurePictureRecord(file)
+      return {
+        ...file,
+        persistedPictureId: ensuredPictureId,
+      }
+    }))
+
     const payload = {
-      items: items.map((file) => {
+      items: normalizedItems
+        .filter((file) => file?.isInGallery !== false)
+        .map((file) => {
         if (file?.isVideoPreview) {
           return {
             mediaType: "video",
@@ -1034,7 +1182,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
           pictureID: file.persistedPictureId || null,
           url: file.url,
         }
-      }),
+        }),
     }
 
     const res = await fetch(`${api_url}${entityType}/${entityId}/gallery/order`, {
@@ -1047,14 +1195,14 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
       const errorData = await res.json().catch(() => ({}))
       throw new Error(errorData?.message || errorData?.error || "Failed to save gallery order")
     }
-  }, [canManageOrder, entityId, entityType])
+  }, [canManageOrder, entityId, entityType, ensurePictureRecord])
 
   const handleArchive = async (file) => {
     if (!file || file?.isVideoPreview) return
 
     const timestampFolder = new Date().toISOString().replace(/[:.]/g, "-")
     const fileName = displayFileName(file.name)
-    const archivedName = `${galleryPrefix}${timestampFolder}/${fileName}`
+    const archivedName = `${currentPrefix}${timestampFolder}/${fileName}`
 
     try {
       const response = await fetch("/api/image/rename", {
@@ -1104,9 +1252,11 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
 
       const nextFiles = files.filter((f) => f.url !== file.url)
       setFiles(nextFiles)
-      onFilesChanged?.(nextFiles)
+      if (isContextFolderView) {
+        onFilesChanged?.(nextFiles)
+      }
       if (selectedFile?.url === file.url) setSelectedFile(null)
-      if (canManageOrder) {
+      if (canManageOrder && isContextFolderView) {
         await persistGalleryItems(nextFiles)
         setOrderDirty(false)
       }
@@ -1116,6 +1266,72 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     } finally {
       setDeletingUrl(null)
     }
+  }
+
+  const handleRemoveFromGallery = async (file) => {
+    if (!file || !(canManageOrder && isContextFolderView)) return
+
+    const targetUrl = normalizeUrl(file?.url)
+    const targetVirtualKey = String(file?.virtualKey || "")
+
+    const nextFiles = files.map((item) => {
+      const sameItem = item?.isVideoPreview
+        ? String(item?.virtualKey || "") === targetVirtualKey
+        : normalizeUrl(item?.url) === targetUrl
+
+      if (!sameItem) return item
+
+      return {
+        ...item,
+        isInGallery: false,
+        persistedGalleryItemId: null,
+        sortOrder: null,
+      }
+    })
+
+    const ordered = [
+      ...nextFiles.filter((item) => item?.isInGallery !== false),
+      ...nextFiles.filter((item) => item?.isInGallery === false),
+    ]
+
+    setFiles(ordered)
+    if (isContextFolderView) {
+      onFilesChanged?.(ordered)
+    }
+    setOrderDirty(true)
+    showMessage("Removed from gallery. Click Save Gallery Changes to persist.")
+  }
+
+  const handleAddToGallery = async (file) => {
+    if (!file || !(canManageOrder && isContextFolderView)) return
+
+    const targetUrl = normalizeUrl(file?.url)
+    const targetVirtualKey = String(file?.virtualKey || "")
+
+    const nextFiles = files.map((item) => {
+      const sameItem = item?.isVideoPreview
+        ? String(item?.virtualKey || "") === targetVirtualKey
+        : normalizeUrl(item?.url) === targetUrl
+
+      if (!sameItem) return item
+
+      return {
+        ...item,
+        isInGallery: true,
+      }
+    })
+
+    const ordered = [
+      ...nextFiles.filter((item) => item?.isInGallery !== false),
+      ...nextFiles.filter((item) => item?.isInGallery === false),
+    ]
+
+    setFiles(ordered)
+    if (isContextFolderView) {
+      onFilesChanged?.(ordered)
+    }
+    setOrderDirty(true)
+    showMessage("Added back to gallery. Click Save Gallery Changes to persist.")
   }
 
   const handleDragStart = (index) => {
@@ -1168,6 +1384,146 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     }
   }
 
+  const handleSetAsActiveSingleImage = async () => {
+    if (!isSingleImageMode || !selectedFile || selectedFile?.isVideoPreview) return
+
+    setSettingAsActive(true)
+    const selectedBlobName = String(selectedFile.name || "").trim()
+    const selectedFileName = displayFileName(selectedBlobName)
+    if (!selectedBlobName || !selectedFileName) return
+
+    try {
+      let promotedUrl = String(selectedFile?.url || "").trim()
+
+      // Keep exactly one active root file by archiving other root files first.
+      const existingRootFiles = files.filter((file) => {
+        if (file?.isVideoPreview) return false
+        const blobName = String(file?.name || "").trim()
+        return blobName.startsWith(galleryPrefix)
+      })
+
+      for (const file of existingRootFiles) {
+        const blobName = String(file?.name || "").trim()
+        if (!blobName || blobName === selectedBlobName) continue
+
+        const timestampFolder = new Date().toISOString().replace(/[:.]/g, "-")
+        const fileName = displayFileName(blobName)
+        const archivedName = `${galleryPrefix}${timestampFolder}/${fileName}`
+
+        const archiveResponse = await fetch("/api/image/rename", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            container: "tagpictures",
+            oldName: blobName,
+            newName: archivedName,
+          }),
+        })
+
+        const archiveData = await archiveResponse.json().catch(() => ({}))
+        if (!archiveResponse.ok) {
+          throw new Error(archiveData?.error || archiveData?.message || "Failed to archive existing active image")
+        }
+      }
+
+      if (!selectedBlobName.startsWith(galleryPrefix)) {
+        const targetName = `${galleryPrefix}${selectedFileName}`
+        const promoteResponse = await fetch("/api/image/rename", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            container: "tagpictures",
+            oldName: selectedBlobName,
+            newName: targetName,
+          }),
+        })
+
+        const promoteData = await promoteResponse.json().catch(() => ({}))
+        if (!promoteResponse.ok) {
+          throw new Error(promoteData?.error || promoteData?.message || "Failed to promote selected image")
+        }
+
+        if (promoteData?.newUrl) {
+          promotedUrl = String(promoteData.newUrl).trim()
+        }
+      }
+
+      const normalizedUrl = normalizeUrl(promotedUrl)
+      let pictureId = toNumber(
+        selectedFile?.persistedPictureId
+        || pictureByUrl[normalizedUrl]?.pictureID
+        || pictureByUrl[normalizedUrl]?.PictureID
+      )
+
+      if (!pictureId && promotedUrl) {
+        const nowIso = new Date().toISOString()
+        const picturePayload = {
+          URL: promotedUrl,
+          NormalizedURL: normalizedUrl,
+          Path: galleryPrefix,
+          Title: `${folderDisplayName} Active`,
+          Context: entityType || null,
+          Created: nowIso,
+          Updated: nowIso,
+        }
+
+        const pictureCreateRes = await fetch(`${api_url}picture`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(picturePayload),
+        })
+
+        if (pictureCreateRes.ok) {
+          const created = await pictureCreateRes.json().catch(() => null)
+          pictureId = toNumber(created?.pictureID || created?.PictureID)
+          if (pictureId) {
+            setPictureByUrl((prev) => ({
+              ...prev,
+              [normalizedUrl]: {
+                ...picturePayload,
+                pictureID: pictureId,
+              },
+            }))
+          }
+        }
+      }
+
+      if ((normalizedFolderKind === "profile" || normalizedFolderKind === "cover") && !pictureId) {
+        throw new Error(`Unable to resolve PictureID for active ${normalizedFolderKind} image`)
+      }
+
+      if (entityType === "artist" && entityId && pictureId) {
+        const artistRes = await fetch(`${api_url}artist/byID/${entityId}`)
+        const artistData = artistRes.ok ? await artistRes.json() : {}
+        const profileId = toNumber(artistData?.ProfilePicID || artistData?.profilePicID)
+        const coverId = toNumber(artistData?.CoverPicID || artistData?.coverPicID)
+
+        const profilePayloadId = normalizedFolderKind === "profile" ? pictureId : (profileId || null)
+        const coverPayloadId = normalizedFolderKind === "cover" ? pictureId : (coverId || null)
+
+        const updateRes = await fetch(`${api_url}artist/byID/${entityId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ProfilePicID: profilePayloadId,
+            CoverPicID: coverPayloadId,
+          }),
+        })
+
+        if (!updateRes.ok) {
+          throw new Error("Failed to update artist active picture fields")
+        }
+      }
+
+      showMessage(`${folderDisplayName} image set as active.`)
+      await loadFiles()
+    } catch (err) {
+      showError(err.message || `Failed to set active ${folderDisplayName.toLowerCase()} image.`)
+    } finally {
+      setSettingAsActive(false)
+    }
+  }
+
   const handleSavePicMeta = async () => {
     if (!selectedFile) return
     setSavingPicMeta(true)
@@ -1182,7 +1538,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         pictureID: existingId,
         url: selectedFile.url,
         normalizedURL: key,
-        path: galleryPrefix,
+        path: currentPrefix,
         title: picMetadata.title || null,
         altText: picMetadata.altText || null,
         byline: picMetadata.byline || null,
@@ -1393,6 +1749,21 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     }
   }
 
+  const goToRoot = () => {
+    setCurrentPrefix(startPrefix)
+  }
+
+  const goUpOneLevel = () => {
+    if (currentPrefix === startPrefix) return
+    const trimmed = String(currentPrefix || "").replace(/\/+$/, "")
+    const parent = trimmed.slice(0, Math.max(0, trimmed.lastIndexOf("/") + 1))
+    if (parent.startsWith(startPrefix)) {
+      setCurrentPrefix(parent || startPrefix)
+      return
+    }
+    setCurrentPrefix(startPrefix)
+  }
+
   return (
     <div className="card bg-base-100 shadow-md border border-base-300">
       <div className="card-body gap-4">
@@ -1420,7 +1791,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
               }}
             >
               <div className="font-semibold mb-1">Upload to {normalizedFolderKind}</div>
-              <div className="text-xs text-base-content/60 mb-3 font-mono">{galleryPrefix}</div>
+              <div className="text-xs text-base-content/60 mb-3 font-mono">{currentPrefix}</div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1452,9 +1823,47 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
           {uploadError ? <div className="alert alert-error text-sm">{uploadError}</div> : null}
           {uploadMessage ? <div className="alert alert-success text-sm break-all">{uploadMessage}</div> : null}
 
+          <div className="rounded-md border border-base-300 bg-base-200 p-3 space-y-2">
+            <div className="text-xs font-semibold text-base-content/80">Browse Artist Media Folders</div>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn btn-xs btn-outline" onClick={goToRoot} disabled={currentPrefix === startPrefix}>
+                Artist Root
+              </button>
+              <button type="button" className="btn btn-xs btn-outline" onClick={goUpOneLevel} disabled={currentPrefix === startPrefix}>
+                Up
+              </button>
+              <button type="button" className="btn btn-xs btn-outline" onClick={() => setCurrentPrefix(galleryPrefix)} disabled={currentPrefix === galleryPrefix}>
+                {folderDisplayName} Folder
+              </button>
+            </div>
+            <div className="text-[11px] text-base-content/60 font-mono break-all">Current: {currentPrefix}</div>
+            {directories.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {directories.map((dir) => {
+                  const trimmed = String(dir || "").replace(/\/+$/, "")
+                  const label = trimmed.split("/").pop() || trimmed
+                  return (
+                    <button
+                      key={dir}
+                      type="button"
+                      className="btn btn-xs btn-ghost border border-base-300"
+                      onClick={() => setCurrentPrefix(dir)}
+                      disabled={currentPrefix === dir}
+                      title={dir}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-xs text-base-content/60">No subfolders in this level.</div>
+            )}
+          </div>
+
           <div className="border border-base-300 rounded-md">
             <div className="px-3 py-2 border-b border-base-300 text-sm font-semibold flex justify-between items-center">
-              <span>{folderDisplayName} Images ({files.length})</span>
+              <span>{folderDisplayName} Images ({galleryLinkedCount})</span>
               <div className="flex items-center gap-2">
                 <button type="button" className="btn btn-xs btn-outline" onClick={() => fileInputRef.current?.click()} disabled={uploadLoading}>
                   {uploadLoading ? "Uploading..." : "Upload"}
@@ -1462,13 +1871,19 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                 <button type="button" className="btn btn-xs btn-ghost" onClick={loadFiles} disabled={loadingFiles}>
                   {loadingFiles ? "Loading..." : "Refresh"}
                 </button>
-                {canManageOrder && orderDirty ? (
-                  <button type="button" className="btn btn-xs btn-primary" onClick={handleSaveOrder} disabled={savingOrder}>
-                    {savingOrder ? "Saving..." : "Save Order"}
+                {canManageOrder && isContextFolderView ? (
+                  <button type="button" className="btn btn-xs btn-primary" onClick={handleSaveOrder} disabled={savingOrder || !orderDirty}>
+                    {savingOrder ? "Saving..." : "Save Gallery Changes"}
                   </button>
                 ) : null}
               </div>
             </div>
+
+            {canManageOrder && isContextFolderView && orderDirty ? (
+              <div className="px-3 py-2 border-b border-base-300 bg-warning/10 text-warning text-xs">
+                Gallery selection/order has unsaved changes. Click Save Gallery Changes.
+              </div>
+            ) : null}
 
             <div className="max-h-136 overflow-auto">
               {files.length === 0 ? (
@@ -1478,12 +1893,12 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                   {files.map((file, index) => (
                     <div
                       key={`${file.name}-${file.virtualKey || "native"}`}
-                      draggable
-                      onDragStart={() => handleDragStart(index)}
-                      onDragOver={(e) => handleDragOver(e, index)}
-                      onDrop={() => handleDragDrop(index)}
-                      onDragEnd={handleDragEnd}
-                      className={`relative group rounded-md border-2 transition-colors cursor-grab active:cursor-grabbing ${selectedFile?.url === file.url ? "border-primary" : dragOverIndex === index ? "border-secondary border-dashed" : "border-base-300"}`}
+                      draggable={canManageOrder && isContextFolderView && file?.isInGallery !== false}
+                      onDragStart={() => (canManageOrder && isContextFolderView && file?.isInGallery !== false ? handleDragStart(index) : null)}
+                      onDragOver={(e) => (canManageOrder && isContextFolderView && file?.isInGallery !== false ? handleDragOver(e, index) : null)}
+                      onDrop={() => (canManageOrder && isContextFolderView && file?.isInGallery !== false ? handleDragDrop(index) : null)}
+                      onDragEnd={() => (canManageOrder && isContextFolderView && file?.isInGallery !== false ? handleDragEnd() : null)}
+                      className={`relative group rounded-md border-2 transition-colors ${canManageOrder && isContextFolderView && file?.isInGallery !== false ? "cursor-grab active:cursor-grabbing" : ""} ${selectedFile?.url === file.url ? "border-primary" : dragOverIndex === index ? "border-secondary border-dashed" : "border-base-300"}`}
                     >
                       <button type="button" className="w-full aspect-square block" onClick={() => selectImage(file)}>
                         <div className="relative w-full h-full min-h-20">
@@ -1491,28 +1906,50 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                         </div>
                       </button>
 
-                      <div className="absolute top-1 left-1 badge badge-sm badge-neutral opacity-70 select-none pointer-events-none">{index + 1}</div>
+                      {canManageOrder && isContextFolderView && file?.isInGallery !== false ? (
+                        <div className="absolute top-1 left-1 badge badge-sm badge-neutral opacity-70 select-none pointer-events-none">
+                          {files.slice(0, index + 1).filter((item) => item?.isInGallery !== false).length}
+                        </div>
+                      ) : null}
 
-                      <button
-                        type="button"
-                        className="absolute top-1 right-8 btn btn-xs btn-warning opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleArchive(file)}
-                        title="Archive image"
-                      >
-                        A
-                      </button>
+                      {canManageOrder && isContextFolderView ? (
+                        <>
+                          <button
+                            type="button"
+                            className={`absolute top-1 right-1 btn btn-xs opacity-0 group-hover:opacity-100 transition-opacity ${file?.isInGallery !== false ? "btn-warning" : "btn-success"}`}
+                            onClick={() => (file?.isInGallery !== false ? handleRemoveFromGallery(file) : handleAddToGallery(file))}
+                            title={file?.isInGallery !== false ? "Remove from gallery" : "Add back to gallery"}
+                          >
+                            {file?.isInGallery !== false ? "-" : "+"}
+                          </button>
+                        </>
+                      ) : !isSingleImageMode ? (
+                        <>
+                          <button
+                            type="button"
+                            className="absolute top-1 right-8 btn btn-xs btn-warning opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleArchive(file)}
+                            title="Archive image"
+                          >
+                            A
+                          </button>
 
-                      <button
-                        type="button"
-                        className="absolute top-1 right-1 btn btn-xs btn-error opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => handleDelete(file)}
-                        disabled={!file?.isVideoPreview && deletingUrl === file.url}
-                        title="Delete image"
-                      >
-                        {!file?.isVideoPreview && deletingUrl === file.url ? "..." : "X"}
-                      </button>
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 btn btn-xs btn-error opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleDelete(file)}
+                            disabled={!file?.isVideoPreview && deletingUrl === file.url}
+                            title="Delete image"
+                          >
+                            {!file?.isVideoPreview && deletingUrl === file.url ? "..." : "X"}
+                          </button>
+                        </>
+                      ) : null}
 
                       <div className="text-[10px] truncate px-1 pb-0.5 text-base-content/70 select-none">{displayFileName(file.name)}</div>
+                      {canManageOrder && isContextFolderView && file?.isInGallery === false ? (
+                        <div className="text-[10px] px-1 text-warning select-none">Unsorted (not in gallery)</div>
+                      ) : null}
                       <div className="text-[10px] px-1 pb-1 text-base-content/50 select-none">{formatSize(file.contentLength)}</div>
                     </div>
                   ))}
@@ -1523,109 +1960,76 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         </div>
 
         {selectedFile ? (
-          selectedFile?.isVideoPreview ? (
-            <div className="space-y-4">
-              {(videoMetaDirty || videoCreditsDirty) && (
+          <div className="space-y-4">
+            {selectedFile?.isVideoPreview ? (
+              (videoMetaDirty || videoCreditsDirty) && (
                 <div className="alert alert-warning text-sm">Unsaved changes detected. Please click Save before leaving this section.</div>
-              )}
+              )
+            ) : (
+              (picMetaDirty || picCreditsDirty) && (
+                <div className="alert alert-warning text-sm">Unsaved changes detected. Please click Save before leaving this section.</div>
+              )
+            )}
 
-              {warningsDirty && (
-                <div className="alert alert-warning text-sm">Unsaved content warning tags. Click Save Tags before leaving this section.</div>
-              )}
+            {warningsDirty && (
+              <div className="alert alert-warning text-sm">Unsaved content warning tags. Click Save Tags before leaving this section.</div>
+            )}
 
-              {videoPreviewUrl && (
+            {selectedFile?.isVideoPreview ? (
+              videoPreviewUrl ? (
                 <div className="rounded-md border border-base-300 overflow-hidden" style={{ aspectRatio: "16/9" }}>
                   <iframe src={videoPreviewUrl} className="w-full h-full" frameBorder="0" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title="Video preview" />
                 </div>
-              )}
-
-              {videoPreviewUrl ? (
-                <>
-                  <div className="rounded-md border border-base-300 bg-base-200 p-3 space-y-3">
-                    <div className="font-semibold text-sm">Video Metadata</div>
-                    <input className={defaultFieldClass} placeholder="Title" value={videoMeta.title} onChange={(e) => { setVideoMetaDirty(true); setVideoMeta((m) => ({ ...m, title: e.target.value })) }} />
-                    <input className={defaultFieldClass} placeholder="Byline" value={videoMeta.byline} onChange={(e) => { setVideoMetaDirty(true); setVideoMeta((m) => ({ ...m, byline: e.target.value })) }} />
-                    <textarea className="textarea textarea-bordered w-full" rows={2} placeholder="Description" value={videoMeta.description} onChange={(e) => { setVideoMetaDirty(true); setVideoMeta((m) => ({ ...m, description: e.target.value })) }} />
-
-                    <div className="form-control">
-                      <label className="label pb-0"><span className="label-text text-xs">Submitted by</span></label>
-                      <input className="input input-bordered w-full bg-base-300 cursor-not-allowed" value={currentUserLabel} readOnly tabIndex={-1} />
-                    </div>
-
-                    <div className="flex justify-end">
-                      <button type="button" className="btn btn-sm btn-primary" onClick={handleSaveVideoMeta} disabled={savingVideoMeta}>
-                        {savingVideoMeta ? "Saving..." : "Save Video"}
-                      </button>
-                    </div>
-                  </div>
-
-                  <CreditsAdder
-                    credits={videoCredits}
-                    onChange={(next) => { setVideoCredits(next); setVideoCreditsDirty(true) }}
-                    artists={artists}
-                    users={users}
-                    onSave={handleSaveVideoCredits}
-                    saving={savingVideoCredits}
-                    roleOptions={roleOptions}
-                    defaultRoleID={defaultRoleID}
-                    onDirty={() => setVideoCreditsDirty(true)}
-                    currentUser={currentUser}
-                  />
-
-                  <div className="rounded-md border border-base-300 bg-base-200 p-3 space-y-3">
-                    <div className="font-semibold text-sm">Content Warning Tags</div>
-                    <p className="text-xs text-base-content/60">Use existing warning taxonomy tags for this media.</p>
-
-                    <div className="flex flex-wrap gap-2">
-                      {warningOptions.map((option) => {
-                        const selected = selectedWarnings.includes(option.key)
-                        return (
-                          <button
-                            key={option.key}
-                            type="button"
-                            className={`btn btn-xs ${selected ? "btn-primary" : "btn-outline"}`}
-                            onClick={() => toggleWarning(option.key)}
-                          >
-                            {option.label}
-                          </button>
-                        )
-                      })}
-                    </div>
-
-                    {selectedWarnings.length > 0 ? (
-                      <ContentTags warnings={selectedWarnings.map(warningKeyToLabel)} title="Selected Warnings" size="sm" />
-                    ) : (
-                      <div className="text-xs text-base-content/60">No warning tags selected.</div>
-                    )}
-
-                    <div className="flex justify-end">
-                      <button type="button" className="btn btn-sm btn-primary" onClick={handleSaveWarnings} disabled={savingWarnings}>
-                        {savingWarnings ? "Saving..." : "Save Tags"}
-                      </button>
-                    </div>
-                  </div>
-                </>
               ) : (
                 <div className="text-sm text-base-content/60">Enter a valid Vimeo or YouTube URL above to preview and add metadata.</div>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {(picMetaDirty || picCreditsDirty) && (
-                <div className="alert alert-warning text-sm">Unsaved changes detected. Please click Save before leaving this section.</div>
-              )}
-
-              {warningsDirty && (
-                <div className="alert alert-warning text-sm">Unsaved content warning tags. Click Save Tags before leaving this section.</div>
-              )}
-
+              )
+            ) : (
               <>
                 <div className="relative h-48 w-full rounded-md overflow-hidden bg-base-200 border border-base-300">
                   <Image src={selectedFile.url} alt={displayFileName(selectedFile.name)} fill style={{ objectFit: "contain" }} />
                 </div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs text-base-content/60 font-mono">
+                    <span>{displayFileName(selectedFile.name)}</span>
+                    {selectedSortPosition ? (
+                      <span className="badge badge-sm badge-neutral">#{selectedSortPosition}</span>
+                    ) : null}
+                  </div>
+                  {isSingleImageMode ? (
+                    <button type="button" className="btn btn-xs btn-secondary" onClick={handleSetAsActiveSingleImage} disabled={settingAsActive}>
+                      {settingAsActive ? "Setting..." : `Set Active ${folderDisplayName}`}
+                    </button>
+                  ) : null}
+                </div>
+              </>
+            )}
 
-                <div className="text-xs text-base-content/60 font-mono">{displayFileName(selectedFile.name)}</div>
+            <div className="tabs tabs-boxed bg-base-100 border border-base-300 inline-flex">
+              <button type="button" className={`tab ${editorTab === "metadata" ? "tab-active" : ""}`} onClick={() => setEditorTab("metadata")}>Metadata</button>
+              <button type="button" className={`tab ${editorTab === "credits" ? "tab-active" : ""}`} onClick={() => setEditorTab("credits")}>Credits</button>
+              <button type="button" className={`tab ${editorTab === "tags" ? "tab-active" : ""}`} onClick={() => setEditorTab("tags")}>Content Tags</button>
+            </div>
 
+            {editorTab === "metadata" ? (
+              selectedFile?.isVideoPreview ? (
+                <div className="rounded-md border border-base-300 bg-base-200 p-3 space-y-3">
+                  <div className="font-semibold text-sm">Video Metadata</div>
+                  <input className={defaultFieldClass} placeholder="Title" value={videoMeta.title} onChange={(e) => { setVideoMetaDirty(true); setVideoMeta((m) => ({ ...m, title: e.target.value })) }} />
+                  <input className={defaultFieldClass} placeholder="Byline" value={videoMeta.byline} onChange={(e) => { setVideoMetaDirty(true); setVideoMeta((m) => ({ ...m, byline: e.target.value })) }} />
+                  <textarea className="textarea textarea-bordered w-full" rows={2} placeholder="Description" value={videoMeta.description} onChange={(e) => { setVideoMetaDirty(true); setVideoMeta((m) => ({ ...m, description: e.target.value })) }} />
+
+                  <div className="form-control">
+                    <label className="label pb-0"><span className="label-text text-xs">Submitted by</span></label>
+                    <input className="input input-bordered w-full bg-base-300 cursor-not-allowed" value={currentUserLabel} readOnly tabIndex={-1} />
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button type="button" className="btn btn-sm btn-primary" onClick={handleSaveVideoMeta} disabled={savingVideoMeta}>
+                      {savingVideoMeta ? "Saving..." : "Save Video"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
                 <div className="rounded-md border border-base-300 bg-base-200 p-3 space-y-3">
                   <div className="font-semibold text-sm">Image Metadata</div>
                   <input className={defaultFieldClass} placeholder="Title" value={picMetadata.title} onChange={(e) => { setPicMetaDirty(true); setPicMetadata((m) => ({ ...m, title: e.target.value })) }} />
@@ -1644,7 +2048,24 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                     </button>
                   </div>
                 </div>
+              )
+            ) : null}
 
+            {editorTab === "credits" ? (
+              selectedFile?.isVideoPreview ? (
+                <CreditsAdder
+                  credits={videoCredits}
+                  onChange={(next) => { setVideoCredits(next); setVideoCreditsDirty(true) }}
+                  artists={artists}
+                  users={users}
+                  onSave={handleSaveVideoCredits}
+                  saving={savingVideoCredits}
+                  roleOptions={roleOptions}
+                  defaultRoleID={defaultRoleID}
+                  onDirty={() => setVideoCreditsDirty(true)}
+                  currentUser={currentUser}
+                />
+              ) : (
                 <CreditsAdder
                   credits={picCredits}
                   onChange={(next) => { setPicCredits(next); setPicCreditsDirty(true) }}
@@ -1657,42 +2078,44 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
                   onDirty={() => setPicCreditsDirty(true)}
                   currentUser={currentUser}
                 />
+              )
+            ) : null}
 
-                <div className="rounded-md border border-base-300 bg-base-200 p-3 space-y-3">
-                  <div className="font-semibold text-sm">Content Warning Tags</div>
-                  <p className="text-xs text-base-content/60">Use existing warning taxonomy tags for this media.</p>
+            {editorTab === "tags" ? (
+              <div className="rounded-md border border-base-300 bg-base-200 p-3 space-y-3">
+                <div className="font-semibold text-sm">Content Warning Tags</div>
+                <p className="text-xs text-base-content/60">Use existing warning taxonomy tags for this media.</p>
 
-                  <div className="flex flex-wrap gap-2">
-                    {warningOptions.map((option) => {
-                      const selected = selectedWarnings.includes(option.key)
-                      return (
-                        <button
-                          key={option.key}
-                          type="button"
-                          className={`btn btn-xs ${selected ? "btn-primary" : "btn-outline"}`}
-                          onClick={() => toggleWarning(option.key)}
-                        >
-                          {option.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-
-                  {selectedWarnings.length > 0 ? (
-                    <ContentTags warnings={selectedWarnings.map(warningKeyToLabel)} title="Selected Warnings" size="sm" />
-                  ) : (
-                    <div className="text-xs text-base-content/60">No warning tags selected.</div>
-                  )}
-
-                  <div className="flex justify-end">
-                    <button type="button" className="btn btn-sm btn-primary" onClick={handleSaveWarnings} disabled={savingWarnings}>
-                      {savingWarnings ? "Saving..." : "Save Tags"}
-                    </button>
-                  </div>
+                <div className="flex flex-wrap gap-2">
+                  {warningOptions.map((option) => {
+                    const selected = selectedWarnings.includes(option.key)
+                    return (
+                      <button
+                        key={option.key}
+                        type="button"
+                        className={`btn btn-xs ${selected ? "btn-primary" : "btn-outline"}`}
+                        onClick={() => toggleWarning(option.key)}
+                      >
+                        {option.label}
+                      </button>
+                    )
+                  })}
                 </div>
-              </>
-            </div>
-          )
+
+                {selectedWarnings.length > 0 ? (
+                  <ContentTags warnings={selectedWarnings.map(warningKeyToLabel)} title="Selected Warnings" size="sm" />
+                ) : (
+                  <div className="text-xs text-base-content/60">No warning tags selected.</div>
+                )}
+
+                <div className="flex justify-end">
+                  <button type="button" className="btn btn-sm btn-primary" onClick={handleSaveWarnings} disabled={savingWarnings}>
+                    {savingWarnings ? "Saving..." : "Save Tags"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
         ) : (
           <div className="text-sm text-base-content/60 py-2">Select an image or video tile from the gallery above to edit metadata and credits.</div>
         )}

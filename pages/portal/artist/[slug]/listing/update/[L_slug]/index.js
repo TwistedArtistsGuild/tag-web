@@ -107,9 +107,9 @@ export default function UpdateListingForm2(props) {
             {previewListing && (
                 <div className="rounded-box border border-base-300 bg-base-100 p-3">
                     <div className="mb-2 text-sm font-semibold text-base-content/80">Listing Preview (Gallery-Aware)</div>
-                        <SocialRealtimeProvider>
+                        
                             <ListingCard listing={previewListing} panelSize="full" showGalleryThumbnails />
-                        </SocialRealtimeProvider>
+                        
                 </div>
             )}
             <DynaFormDB request="update" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={props.listingdata} />
@@ -246,3 +246,4 @@ export async function getServerSideProps(context) {
         }
     };
 }
+
