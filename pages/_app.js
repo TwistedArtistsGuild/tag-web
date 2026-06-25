@@ -145,10 +145,68 @@ export default function App({ Component, pageProps: { session, sidebarProps, ...
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "development") return
-    const timer = window.setInterval(() => {
-      setNowMs(Date.now())
-    }, 1000)
-    return () => window.clearInterval(timer)
+    // Capture a single timestamp for banner diagnostics without forcing global periodic re-renders.
+    setNowMs(Date.now())
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const now = Date.now()
+    const dismissUntilMs = Number(window.localStorage.getItem(DEV_BANNER_DISMISS_KEY) || "0")
+    const shouldShowBanner = !Number.isFinite(dismissUntilMs) || dismissUntilMs <= now
+
+    const initTimer = window.setTimeout(() => {
+      setShowDevBanner(shouldShowBanner)
+      setBannerReady(true)
+    }, 0)
+
+    if (shouldShowBanner) {
+      return () => window.clearTimeout(initTimer)
+    }
+
+    const waitMs = Math.max(0, dismissUntilMs - now)
+    const restoreTimer = window.setTimeout(() => {
+      window.localStorage.removeItem(DEV_BANNER_DISMISS_KEY)
+      setShowDevBanner(true)
+    }, waitMs)
+
+    return () => {
+      window.clearTimeout(initTimer)
+      window.clearTimeout(restoreTimer)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const now = Date.now()
+    const dismissUntilMs = Number(window.localStorage.getItem(DEV_BANNER_DISMISS_KEY) || "0")
+    const shouldShowBanner = !Number.isFinite(dismissUntilMs) || dismissUntilMs <= now
+
+    const initTimer = window.setTimeout(() => {
+      setShowDevBanner(shouldShowBanner)
+      setBannerReady(true)
+    }, 0)
+
+    if (shouldShowBanner) {
+      return () => window.clearTimeout(initTimer)
+    }
+
+    const waitMs = Math.max(0, dismissUntilMs - now)
+    const restoreTimer = window.setTimeout(() => {
+      window.localStorage.removeItem(DEV_BANNER_DISMISS_KEY)
+      setShowDevBanner(true)
+    }, waitMs)
+
+    return () => {
+      window.clearTimeout(initTimer)
+      window.clearTimeout(restoreTimer)
+    }
   }, [])
 
   useEffect(() => {

@@ -1,11 +1,7 @@
 import { useMemo } from "react"
-import { useRouter } from "next/router"
 import EntityContextNav from "@/components/portal/EntityContextNav"
 
 export default function UserContextNav() {
-  const router = useRouter()
-  const username = String(router.query?.username || "").trim()
-
   const items = useMemo(() => {
     return [
       {
@@ -38,15 +34,8 @@ export default function UserContextNav() {
         href: "/portal/user/settings",
         purpose: "Access account settings, notifications, and password pages.",
       },
-      {
-        key: "user-username-edit",
-        label: "Username Edit",
-        href: username ? `/portal/user/${username}/edit` : "",
-        purpose: "Open username-scoped edit workspace.",
-        disabled: !username,
-      },
     ]
-  }, [username])
+  }, [])
 
   return <EntityContextNav title="User Context" items={items} showEntitySwitcher defaultEntityHref="/portal/user" />
 }

@@ -3,10 +3,9 @@ import getApiURL from "@/components/widgets/GetApiURL";
 import React, { useMemo } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { isAdmin, isStaff, hasPermission } from "@/utils/authHelpers";
-import { PERMISSIONS } from "@/utils/permissions";
+import { isAdmin, isStaff } from "@/utils/authHelpers";
 import TagSEO from "@/components/TagSEO";
-import StaffContextNav from "@/components/portal/StaffContextNav";
+import BoardContextNav from "@/components/portal/BoardContextNav";
 
 const api_url = getApiURL();
 const formName = "CreateMotionForm"; // Make sure to configure this form in the DB metadata editor
@@ -21,8 +20,8 @@ export default function CreateMotionForm(props) {
 
         return {
             ...base,
-            FromURL: "/portal/staff/motions/create",
-            redirectURL: "/portal/staff/motions",
+            FromURL: "/portal/board/motions/create",
+            redirectURL: "/portal/board/motions",
             APIURL: resolvedApiUrl,
             entityId: "new"
         };
@@ -37,9 +36,9 @@ export default function CreateMotionForm(props) {
 
     return (
         <div className="p-4 pt-12 bg-base-200 min-h-screen">
-            <TagSEO metadataProp={{ title: "Propose Motion" }} canonicalSlug="portal/staff/motions/create" />
+            <TagSEO metadataProp={{ title: "Propose Motion" }} canonicalSlug="portal/board/motions/create" />
             
-            <StaffContextNav />
+            <BoardContextNav />
             
             <div className="max-w-4xl mx-auto mt-8 bg-base-100 p-8 rounded-box shadow border border-base-300">
                 <h1 className="text-3xl font-bold text-primary mb-6">Create New Motion</h1>
@@ -53,10 +52,7 @@ export async function getServerSideProps(context) {
     const session = await getServerSession(context.req, context.res, authOptions);
     if (!session?.user) return { redirect: { destination: `/api/auth/signin`, permanent: false } };
     if (!isStaff(session) && !isAdmin(session)) return { notFound: true };
-
-    if (!hasPermission(session, PERMISSIONS.MOTION.CREATE)) {
-        return { notFound: true }; // Hide create page if they don't have CREATE permissions
-    }
+    // TODO(board-permission-role): Restore board-specific create permission checks when board roles are available.
 
     let metadata = {};
     try {

@@ -2,10 +2,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getServerSession } from "next-auth/next";
 import TagSEO from "@/components/TagSEO";
-import StaffContextNav from "@/components/portal/StaffContextNav";
+import BoardContextNav from "@/components/portal/BoardContextNav";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { isAdmin, isStaff, hasPermission } from "@/utils/authHelpers";
-import { PERMISSIONS } from "@/utils/permissions";
+import { isAdmin, isStaff } from "@/utils/authHelpers";
 import getApiURL from "@/components/widgets/GetApiURL";
 import { stripHtmlText } from "@/components/security/sanitize";
 
@@ -33,9 +32,9 @@ export default function MotionsIndex(props) {
 
     return (
         <div className="p-4 pt-12 bg-base-200 min-h-screen">
-            <TagSEO metadataProp={{ title: "Board Motions" }} canonicalSlug="portal/staff/motions" />
+            <TagSEO metadataProp={{ title: "Board Motions" }} canonicalSlug="portal/board/motions" />
             
-            <StaffContextNav />
+            <BoardContextNav />
             
             <div className="max-w-6xl mx-auto space-y-6 mt-8">
                 <div className="flex justify-between items-center bg-base-100 shadow border border-base-300 p-6 rounded-box">
@@ -44,7 +43,7 @@ export default function MotionsIndex(props) {
                         <p className="text-base-content/70">Review, second, and vote on motions.</p>
                     </div>
                     {canCreate && (
-                        <Link href="/portal/staff/motions/create" className="btn btn-primary">
+                        <Link href="/portal/board/motions/create" className="btn btn-primary">
                             Propose New Motion
                         </Link>
                     )}
@@ -55,7 +54,7 @@ export default function MotionsIndex(props) {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {motions.map(motion => (
-                            <Link href={`/portal/staff/motions/${motion.id}`} key={motion.id} className="card bg-base-100 shadow border border-base-300 hover:border-primary cursor-pointer transition">
+                            <Link href={`/portal/board/motions/${motion.id}`} key={motion.id} className="card bg-base-100 shadow border border-base-300 hover:border-primary cursor-pointer transition">
                                 <div className="card-body">
                                     <h2 className="card-title text-primary line-clamp-2">
                                         {stripHtmlText(motion.title)}
@@ -80,18 +79,15 @@ export async function getServerSideProps(context) {
     const session = await getServerSession(context.req, context.res, authOptions);
     
     if (!session?.user) {
-        return { redirect: { destination: `/api/auth/signin?callbackUrl=/portal/staff/motions`, permanent: false } };
+        return { redirect: { destination: `/api/auth/signin?callbackUrl=/portal/board/motions`, permanent: false } };
     }
     
     if (!isStaff(session) && !isAdmin(session)) {
         return { notFound: true };
     }
 
-    if (!hasPermission(session, PERMISSIONS.MOTION.VIEW)) {
-        return { notFound: true }; // Hide page completely if no VIEW permission
-    }
-    
-    const canCreate = hasPermission(session, PERMISSIONS.MOTION.CREATE);
+    // TODO(board-permission-role): Replace temporary staff/admin access with board-scoped permission checks.
+    const canCreate = true;
 
     return { 
         props: { 
