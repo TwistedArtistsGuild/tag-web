@@ -166,6 +166,7 @@ const ArtistCard = ({
 	const [logoSrc, setLogoSrc] = useState(getArtistLogoSrc(artist))
 	const artistDescription = getArtistDescription(artist)
 	const headerGalleryImages = useMemo(() => getArtistHeaderGalleryImages(artist), [artist])
+	const contentGalleryImages = useMemo(() => getArtistContentGalleryImages(artist), [artist])
 	const contentWarnings = useMemo(() => extractContentWarnings(artist), [artist])
 	
 	const artistId = artist?.artistid || artist?.artistID || artist?.id || artist?.path || artist?.title || "artist"
@@ -242,6 +243,18 @@ const ArtistCard = ({
 						navigationMode={headerGalleryImages.length > 1 ? "hover" : "manual"}
 						imageEffect="landscape"
 						showThumbnails={false}
+						contentWarnings={contentWarnings}
+						contentWarningSize="sm"
+					/>
+				)}
+
+				{!compact && showContentGallery && contentGalleryImages.length > 0 && (
+					<PhotoGallery
+						images={contentGalleryImages}
+						mode="standalone"
+						navigationMode={contentGalleryImages.length > 1 ? "hover" : "manual"}
+						imageEffect="landscape"
+						showThumbnails={contentGalleryImages.length > 1}
 						contentWarnings={contentWarnings}
 						contentWarningSize="sm"
 					/>

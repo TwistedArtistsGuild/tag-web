@@ -17,7 +17,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 
-export default function Portal_Artist() {
+export default function Portal_Artist({ canViewBoardPortal }) {
 	const pageMetaData = {
 		title: "Portal Links",
 		description: "Dashboard and Reports",
@@ -53,6 +53,17 @@ export default function Portal_Artist() {
 				"Access moderation workflows, operational views, and internal support tools.",
 			badge: "Operations",
 		},
+		...(canViewBoardPortal
+			? [
+					{
+						href: "/portal/board",
+						title: "Board Portal",
+						description:
+							"Open board governance dashboards, motion lookup, and strategic oversight widgets.",
+						badge: "Governance",
+					},
+			  ]
+			: []),
 		{
 			href: "/portal/vendor/",
 			title: "Vendor Portal",
@@ -131,5 +142,9 @@ export async function getServerSideProps(context) {
 		};
 	}
 
-	return { props: {} };
+	return {
+		props: {
+			canViewBoardPortal: isStaff(session) || isAdmin(session),
+		},
+	};
 }
