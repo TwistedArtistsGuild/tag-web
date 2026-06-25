@@ -65,16 +65,9 @@ export default function ArtistContextNav() {
       },
       {
         key: "artist-edit",
-        label: "Profile Edit",
+        label: "Edit Profile",
         href: slug ? `/portal/artist/${slug}/edit` : "",
-        purpose: "Edit artist profile content and metadata.",
-        disabled: !slug,
-      },
-      {
-        key: "artist-contacts",
-        label: "Manage Contacts",
-        href: slug ? `/portal/artist/${slug}/manage-contacts` : "",
-        purpose: "Manage contacts linked to this artist.",
+        purpose: "Manage artist profile, contacts, and media in one place.",
         disabled: !slug,
       },
       {

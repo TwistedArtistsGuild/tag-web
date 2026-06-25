@@ -23,8 +23,8 @@ import { Bell, MessageSquare, ChevronUp, ChevronDown, Search } from "lucide-reac
 import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
 import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
 import BugReportControl from "@/components/forms/bug-report"
-import { getSeededStockPhotoByCategory } from "@/utils/stockPhotos"
 import getApiURL from "@/components/widgets/GetApiURL"
+import { buildHeaderNotifications } from "@/components/Header/notification-items"
 
 // Available themes
 const themes = [
@@ -159,53 +159,12 @@ export default function Header() {
     }
   }, [hasValidUserId, includeSelfActions, userId])
 
-  const notifications = useMemo(() => {
-    const items = []
-
-    if (reactionSummary.latestReaction) {
-      items.push({
-        type: "reactions",
-        href: reactionSummary.latestReaction.href || "/artists",
-        title: `Reactions (${reactionSummary.count})`,
-        body: `${reactionSummary.latestReaction.reactorName || "Someone"} reacted to your ${String(reactionSummary.latestReaction.targetType || "item").toLowerCase()}.`,
-        time: formatRelativeTime(reactionSummary.latestReaction.createdAt),
-        avatar: getSeededStockPhotoByCategory("Reaction", "artist"),
-        createdAt: reactionSummary.latestReaction.createdAt,
-      })
-    }
-
-    if (commentSummary.latestComment) {
-      items.push({
-        type: "comments",
-        href: commentSummary.latestComment.href || "/news#comments-section",
-        title: `Comments (${commentSummary.count})`,
-        body: `${commentSummary.latestComment.commenterName || "Someone"} commented: ${commentSummary.latestComment.contentPreview || "New comment"}`,
-        time: formatRelativeTime(commentSummary.latestComment.createdAt),
-        avatar: getSeededStockPhotoByCategory("Comment", "artist"),
-        createdAt: commentSummary.latestComment.createdAt,
-      })
-    }
-
-    if (messageSummary.latestMessage) {
-      items.push({
-        type: "messages",
-        href: messageSummary.latestMessage.href || "/messages",
-        title: `Messages (${messageSummary.unreadMessages})`,
-        body: `${messageSummary.latestMessage.senderName || "Someone"}: ${messageSummary.latestMessage.contentPreview || "New message"}`,
-        time: formatRelativeTime(messageSummary.latestMessage.createdAt),
-        avatar: getSeededStockPhotoByCategory("New Message", "artist"),
-        createdAt: messageSummary.latestMessage.createdAt,
-        conversationId: messageSummary.latestMessage.conversationId ? String(messageSummary.latestMessage.conversationId) : null,
-      })
-    }
-
-    return items
-      .sort((a, b) => {
-        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0
-        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0
-        return bTime - aTime
-      })
-  }, [commentSummary, formatRelativeTime, messageSummary, reactionSummary])
+  const notifications = useMemo(() => buildHeaderNotifications({
+    reactionSummary,
+    commentSummary,
+    messageSummary,
+    formatRelativeTime,
+  }), [commentSummary, formatRelativeTime, messageSummary, reactionSummary])
 
   const socialNotifications = useMemo(
     () => notifications.filter((item) => item.type !== "messages"),
