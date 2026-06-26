@@ -2,11 +2,23 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
 import getApiURL from "@/components/widgets/GetApiURL"
+import { sanitizeCardHtml, stripHtmlText } from "@/components/security/sanitize"
 
 const apiUrl = getApiURL()
 
 function normalizeSlug(value) {
   return String(value || "").trim().toLowerCase()
+}
+
+function pickField(record, ...keys) {
+  for (const key of keys) {
+    const value = record?.[key]
+    if (value !== undefined && value !== null) {
+      return value
+    }
+  }
+
+  return undefined
 }
 
 function splitMedia(files = []) {
@@ -27,6 +39,7 @@ export default function VenueProfilePage({ venue }) {
 
   const venueId = Number(venue?.venueID || venue?.VenueID || 0)
   const venueName = String(venue?.name || venue?.Name || "Venue")
+  const venueNameRichtext = pickField(venue, "nameRichtext", "NameRichtext") || venueName
   const mediaPrefix = useMemo(() => (
     venueId > 0 ? `platformpics/venuecontent/${venueId}/` : ""
   ), [venueId])
@@ -78,7 +91,10 @@ export default function VenueProfilePage({ venue }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:py-12 space-y-6">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h1 className="text-3xl font-bold">{venueName}</h1>
+        <h1
+          className="text-3xl font-bold"
+          dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(venueNameRichtext) }}
+        />
         <Link href="/search" className="btn btn-sm btn-outline">Back to Search</Link>
       </div>
 
@@ -93,7 +109,10 @@ export default function VenueProfilePage({ venue }) {
           <h2 className="text-xl font-semibold">Venue Profile</h2>
           <p className="text-sm text-base-content/70">This basic venue page stays aligned with the lightweight venue API model while gallery and contact data are linked separately.</p>
           <div className="text-sm space-y-2">
-            <div><span className="font-semibold">Venue:</span> {venueName}</div>
+            <div>
+              <span className="font-semibold">Venue:</span>{" "}
+              <span dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(venueNameRichtext) }} />
+            </div>
             <div><span className="font-semibold">Published:</span> {venue?.isPublished || venue?.IsPublished ? "Yes" : "No"}</div>
             <div><span className="font-semibold">Address FK:</span> {venue?.addressID || venue?.AddressID || "Not linked"}</div>
             <div><span className="font-semibold">Phone FK:</span> {venue?.phoneContactID || venue?.PhoneContactID || "Not linked"}</div>
@@ -105,7 +124,7 @@ export default function VenueProfilePage({ venue }) {
           <h3 className="font-semibold mb-3">Profile Image</h3>
           <img
             src={profile?.url || "/blank_image.png"}
-            alt={`${venueName} profile`}
+            alt={`${stripHtmlText(venueNameRichtext || venueName)} profile`}
             className="w-full h-56 object-cover rounded-box border border-base-300"
           />
         </div>

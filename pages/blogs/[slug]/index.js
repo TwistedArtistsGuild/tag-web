@@ -27,6 +27,17 @@ import { PERMISSIONS } from "@/utils/permissions";
 import { hasPermission } from "@/utils/authHelpers";
 import { sanitizeDefaultHtml, sanitizeCardHtml } from "@/components/security/sanitize";
 
+function pickField(record, ...keys) {
+	for (const key of keys) {
+		const value = record?.[key];
+		if (value !== undefined && value !== null) {
+			return value;
+		}
+	}
+
+	return undefined;
+}
+
 
 
 function formatCompactNumber(value, fallback = 0) {
@@ -75,6 +86,11 @@ const BlogByslug = props => {
 	const { data: session } = useSession();
 	const [mounted, setMounted] = useState(false)
 	const blog = props.blog
+	const blogRichtext = {
+		title: pickField(blog, "titleRichtext", "TitleRichtext") || blog?.title || "",
+		byline: pickField(blog, "bylineRichtext", "BylineRichtext") || blog?.byline || "",
+		body: pickField(blog, "bodyRichtext", "BodyRichtext") || blog?.body || "",
+	}
 	const seoKeywords = `blog, post, article, ${blog.searchterms}`
 	const canonicalSlug = `blogs/${blog.path}`
 	const hasBlankCover = !blog?.image || blog.image === "/blank_image.png"
@@ -269,11 +285,11 @@ const BlogByslug = props => {
 
 				<div className="rounded-box border border-base-300 bg-base-200/40 p-4">
 					<h1 className="font-poiret text-5xl md:text-7xl shadow-text">
-						{stripHtmlTags(props.blog.title) || "Untitled"}
+						{stripHtmlTags(blogRichtext.title || props.blog.title) || "Untitled"}
 					</h1>
 					<div
 						className="font-fredoka pt-2"
-						dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(props.blog.byline) }}
+						dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(blogRichtext.byline || props.blog.byline) }}
 					></div>
 					<div className="font-baloo pt-2 text-xs shadow-dark">{props.blog.formattedCreated}</div>
 				</div>
@@ -337,7 +353,7 @@ const BlogByslug = props => {
 
 						<div
 							className="blog-rich-content font-fredoka rounded-box border border-base-300 bg-base-100 p-6 md:p-8 space-y-6"
-							dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(addSectionAnchors(String(blog.body || ""))) }}
+							dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(addSectionAnchors(String(blogRichtext.body || ""))) }}
 						>
 						</div>
 					</>
