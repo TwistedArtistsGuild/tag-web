@@ -31,6 +31,17 @@ import SendMessageButton from '@/components/messaging/SendMessageButton'
 
 const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false })
 
+function pickField(record, ...keys) {
+  for (const key of keys) {
+    const value = record?.[key]
+    if (value !== undefined && value !== null) {
+      return value
+    }
+  }
+
+  return undefined
+}
+
 function stripHtmlTags(value) {
   return String(value || "")
     .replace(/<[^>]*>/g, " ")
@@ -100,10 +111,43 @@ const Artist = (props) => {
     og: { title: stripHtmlTags(props.artist.title), description: stripHtmlTags(props.artist.byline) },
   }
 
-  const listings = (props.listings || []).map((l) => ({
-    ...l,
-    artist: { ...(l.artist || {}), path: l.artist?.path || props.slug },
-  }))
+  const artistForHtmlRender = useMemo(() => {
+    if (!props.artist) {
+      return null
+    }
+
+    const titleRichtext = pickField(props.artist, "titleRichtext", "TitleRichtext")
+    const bylineRichtext = pickField(props.artist, "bylineRichtext", "BylineRichtext")
+    const statementRichtext = pickField(props.artist, "statementRichtext", "StatementRichtext")
+    const biographyRichtext = pickField(props.artist, "biographyRichtext", "BiographyRichtext")
+
+    return {
+      ...props.artist,
+      title: titleRichtext || props.artist.title,
+      byline: bylineRichtext || props.artist.byline,
+      statement: statementRichtext || props.artist.statement,
+      biography: biographyRichtext || props.artist.biography,
+    }
+  }, [props.artist])
+
+  const listings = useMemo(() => (props.listings || []).map((listing) => {
+    const titleRichtext = pickField(listing, "titleRichtext", "TitleRichtext")
+    const descriptionRichtext = pickField(listing, "descriptionRichtext", "DescriptionRichtext")
+    const artistTitleRichtext = pickField(listing?.artist, "titleRichtext", "TitleRichtext")
+    const artistBylineRichtext = pickField(listing?.artist, "bylineRichtext", "BylineRichtext")
+
+    return {
+      ...listing,
+      title: titleRichtext || listing?.title,
+      description: descriptionRichtext || listing?.description,
+      artist: {
+        ...(listing.artist || {}),
+        title: artistTitleRichtext || listing?.artist?.title,
+        byline: artistBylineRichtext || listing?.artist?.byline,
+        path: listing?.artist?.path || props.slug,
+      },
+    }
+  }), [props.listings, props.slug])
 
   const galleryItems = useMemo(() => (
     props.artist?.gallery?.galleryItems ||
@@ -198,11 +242,11 @@ const Artist = (props) => {
                   showContentGallery={false}
                   textRenderMode="html"
                   artist={{
-                    ...props.artist,
+                    ...artistForHtmlRender,
                     profilePic: props.profilePic,
                     images: props.profilePic?.url ? [props.profilePic.url] : [],
                     path: props.slug,
-                    since: props.artist?.applied,
+                    since: artistForHtmlRender?.applied,
                     panelSize: "full",
                   }}
                 />
@@ -272,7 +316,7 @@ const Artist = (props) => {
               <h2 className="text-2xl font-bold mb-4 border-b pb-2 text-primary">Artist Statement</h2>
               <div
                 dangerouslySetInnerHTML={{
-                  __html: sanitizeDefaultHtml(props.artist.statement || "No statement available."),
+                  __html: sanitizeDefaultHtml(artistForHtmlRender?.statement || "No statement available."),
                 }}
               />
             </div>
