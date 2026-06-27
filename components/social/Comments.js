@@ -22,7 +22,6 @@ import { ClientDate } from "@/utils/hydration";
 
 // Import components
 import Image from "next/image";
-import { useRealtimeComments, useSocialRealtime } from './SocialRealtimeContext';
 import ImpressionReactions from './ImpressionReactions';
 import { useImpressions, ImpressionTargetType } from '@/hooks/useImpressions';
 import TiptapEditor from "@/components/tiptap/tiptap-editor";
@@ -48,6 +47,35 @@ function buildCommentsState(initialComments = []) {
             isEditing: false
         })) || []
     }));
+}
+
+function hasActiveDrafts(comments = []) {
+    return comments.some((comment) => {
+        const commentId = String(comment?.id || "");
+        const commentEditing = Boolean(comment?.isEditing) || commentId.startsWith("temp-");
+        if (commentEditing) return true;
+
+        const replies = Array.isArray(comment?.replies) ? comment.replies : [];
+        return replies.some((reply) => {
+            const replyId = String(reply?.id || "");
+            return Boolean(reply?.isEditing) || replyId.startsWith("temp-");
+        });
+    });
+}
+
+function commentsSignature(comments = []) {
+    return JSON.stringify(
+        comments.map((comment) => ({
+            id: comment?.id,
+            content: comment?.content || comment?.body || "",
+            updatedAt: comment?.updatedAt || comment?.updated || comment?.modifiedAt || "",
+            replies: (Array.isArray(comment?.replies) ? comment.replies : []).map((reply) => ({
+                id: reply?.id,
+                content: reply?.content || reply?.body || "",
+                updatedAt: reply?.updatedAt || reply?.updated || reply?.modifiedAt || "",
+            })),
+        })),
+    );
 }
 
 /**
@@ -88,37 +116,24 @@ const SocialComments = ({
         return localStorage.getItem("theme") || "tag-theme";
     });
     
-    // Real-time functionality
-    const { emit, isConnected } = useSocialRealtime();
-    
     // Sync comments when initialComments change (important for API-driven updates)
     useEffect(() => {
-        if (managedExternally) {
-            console.log('Syncing comments from initialComments:', initialComments)
-            setComments(buildCommentsState(initialComments))
+        if (!managedExternally) {
+            return;
         }
-    }, [initialComments, managedExternally])
-    
-    const handleRealtimeUpdate = useCallback((update) => {
-        if (update.type === 'comment_added') {
-            setComments(prevComments => {
-                // Check if comment already exists to avoid duplicates
-                const exists = prevComments.some(comment => comment.id === update.data.id);
-                if (!exists) {
-                    return [...prevComments, { ...update.data, isEditing: false, replies: [] }];
-                }
-                return prevComments;
-            });
-        } else if (update.type === 'comment_updated') {
-            setComments(prevComments => prevComments.map(comment => 
-                comment.id === update.data.id ? { ...comment, ...update.data, isEditing: false } : comment
-            ));
-        } else if (update.type === 'comment_deleted') {
-            setComments(prevComments => prevComments.filter(comment => comment.id !== update.data.id));
-        }
-    }, []);
 
-    useRealtimeComments(contextId, handleRealtimeUpdate);       
+        const nextComments = buildCommentsState(initialComments);
+        setComments((prevComments) => {
+            // Do not clobber in-progress edits/drafts while a user is typing.
+            if (hasActiveDrafts(prevComments)) {
+                return prevComments;
+            }
+
+            return commentsSignature(prevComments) === commentsSignature(nextComments)
+                ? prevComments
+                : nextComments;
+        });
+    }, [initialComments, managedExternally])
     
     // Check if the current user can edit a specific comment
     const canEditComment = useCallback((comment) => {
@@ -256,28 +271,8 @@ const SocialComments = ({
                     const newId = `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                     updatedComment.id = newId;
                     
-                    if (isConnected) {
-                        emit('comments', {
-                            type: 'comment_added',
-                            data: {
-                                ...updatedComment,
-                                contextId
-                            }
-                        });
-                    }
-                    
                     onAddComment(updatedComment);
                 } else {
-                    if (isConnected) {
-                        emit('comments', {
-                            type: 'comment_updated',
-                            data: {
-                                ...updatedComment,
-                                contextId
-                            }
-                        });
-                    }
-                    
                     onUpdateComment(updatedComment);
                 }
                 
@@ -298,30 +293,8 @@ const SocialComments = ({
                             const newId = `reply-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                             updatedReply.id = newId;
                             
-                            if (isConnected) {
-                                emit('comments', {
-                                    type: 'reply_added',
-                                    data: {
-                                        ...updatedReply,
-                                        parentId: comment.id,
-                                        contextId
-                                    }
-                            });
-                            }
-                            
                             onAddComment(updatedReply, comment.id);
                         } else {
-                            if (isConnected) {
-                                emit('comments', {
-                                    type: 'reply_updated',
-                                    data: {
-                                        ...updatedReply,
-                                        parentId: comment.id,
-                                        contextId
-                                    }
-                            });
-                            }
-                            
                             onUpdateComment(updatedReply, comment.id);
                         }
                         
@@ -335,7 +308,7 @@ const SocialComments = ({
             
             return comment;
         }));
-    }, [currentUser, managedExternally, onAddComment, onUpdateComment, isConnected, emit, contextId]);
+    }, [currentUser, managedExternally, onAddComment, onUpdateComment]);
 
     /**
      * Increments like count for a comment or reply
@@ -419,7 +392,23 @@ const SocialComments = ({
      */
     const Comment = memo(({ comment, isReply = false, parentId = null, index = 0 }) => {
         // Store draft content locally to avoid re-renders
-        const [draftContent, setDraftContent] = useState(comment.content || "");
+        const [draftContent, setDraftContent] = useState(() => draftContentRef.current[comment.id] ?? (comment.content || ""));
+
+        useEffect(() => {
+            if (!comment.isEditing) {
+                draftContentRef.current[comment.id] = undefined;
+                return;
+            }
+
+            const savedDraft = draftContentRef.current[comment.id];
+            if (typeof savedDraft === "string") {
+                setDraftContent(savedDraft);
+            } else {
+                const nextDraft = comment.content || "";
+                setDraftContent(nextDraft);
+                draftContentRef.current[comment.id] = nextDraft;
+            }
+        }, [comment.id, comment.content, comment.isEditing]);
         
         // Hook for impressions
         const { 
@@ -485,7 +474,10 @@ const SocialComments = ({
                         {/* Rich text editor for content */}
                         <TiptapEditor
                             value={draftContent}
-                            onChange={(content) => setDraftContent(content)}
+                            onChange={(content) => {
+                                draftContentRef.current[comment.id] = content;
+                                setDraftContent(content);
+                            }}
                             placeholder={isReply ? "Write your reply..." : "What's on your mind?"}
                             className="bg-base-100"
                             preset={allowMedia ? "medium" : "minimal"}
@@ -502,7 +494,10 @@ const SocialComments = ({
                             </button>
                             <button 
                                 className="btn btn-sm btn-primary" 
-                                onClick={() => handleCommentSubmit(comment.id, draftContent, isReply, parentId)}
+                                onClick={() => {
+                                    handleCommentSubmit(comment.id, draftContent, isReply, parentId);
+                                    draftContentRef.current[comment.id] = undefined;
+                                }}
                                 aria-label={isNew ? "Post comment" : "Save changes"}
                             >
                                 {isNew ? (isReply ? "Post Reply" : "Post Comment") : "Save"}

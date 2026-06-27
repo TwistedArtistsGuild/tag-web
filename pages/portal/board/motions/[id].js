@@ -1,14 +1,13 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { isAdmin, isStaff, hasPermission } from "@/utils/authHelpers";
-import { PERMISSIONS } from "@/utils/permissions";
+import { isAdmin, isStaff } from "@/utils/authHelpers";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import getApiURL from "@/components/widgets/GetApiURL";
 import TagSEO from "@/components/TagSEO";
-import StaffContextNav from "@/components/portal/StaffContextNav";
+import BoardContextNav from "@/components/portal/BoardContextNav";
 import { sanitizeDefaultHtml, stripHtmlText } from "@/components/security/sanitize";
 
 export default function MotionDetails(props) {
@@ -122,8 +121,8 @@ export default function MotionDetails(props) {
 
     return (
         <div className="p-4 pt-12 bg-base-200 min-h-screen">
-            <TagSEO metadataProp={{ title: stripHtmlText(motion.title) }} canonicalSlug={`portal/staff/motions/${id}`} />
-            <StaffContextNav />
+            <TagSEO metadataProp={{ title: stripHtmlText(motion.title) }} canonicalSlug={`portal/board/motions/${id}`} />
+            <BoardContextNav />
             
             <div className="max-w-4xl mx-auto mt-8 space-y-6">
 
@@ -262,19 +261,16 @@ export async function getServerSideProps(context) {
     const session = await getServerSession(context.req, context.res, authOptions);
     
     if (!session?.user) {
-        return { redirect: { destination: `/api/auth/signin?callbackUrl=/portal/staff/motions`, permanent: false } };
+        return { redirect: { destination: `/api/auth/signin?callbackUrl=/portal/board/motions`, permanent: false } };
     }
     
     if (!isStaff(session) && !isAdmin(session)) {
         return { notFound: true }; 
     }
 
-    if (!hasPermission(session, PERMISSIONS.MOTION.VIEW)) {
-        return { notFound: true }; 
-    }
-    
-    const canSecond = hasPermission(session, PERMISSIONS.MOTION.SECOND);
-    const canVote = hasPermission(session, PERMISSIONS.MOTION.VOTE);
+    // TODO(board-permission-role): Restore board-scoped VIEW/SECOND/VOTE permission checks when board roles are available.
+    const canSecond = true;
+    const canVote = true;
 
     return { 
         props: {

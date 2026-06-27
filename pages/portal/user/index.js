@@ -3,7 +3,6 @@ import Link from "next/link"
 import { useMemo, useState } from "react"
 import { getServerSession } from "next-auth/next"
 
-import CardMyArtists from "@/components/cards/card_myArtists"
 import UserContextNav from "@/components/portal/UserContextNav"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
@@ -71,20 +70,6 @@ function ModuleCard({ module, index, total, onMoveUp, onMoveDown, onRemove, chil
 				{children}
 			</div>
 		</div>
-	)
-}
-
-function ConceptCard({ href, title, description, icon }) {
-	return (
-		<Link href={href} className="card bg-base-100 border border-base-300 hover:border-primary hover:shadow transition-all">
-			<div className="card-body p-3 gap-0.5 sm:flex-row sm:items-center sm:justify-between">
-				<h4 className="font-medium text-sm text-base-content sm:min-w-56">
-					<span className="mr-2">{icon}</span>
-					{title}
-				</h4>
-				<p className="text-xs text-base-content/65 flex-1">{description}</p>
-			</div>
-		</Link>
 	)
 }
 
@@ -202,16 +187,8 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 	}
 
 	const roles = apiSnapshot?.roles || []
-	const registeredArtists = apiSnapshot?.registeredArtists || []
 	const registeredVendors = apiSnapshot?.registeredVendors || []
 	const registeredVenues = apiSnapshot?.registeredVenues || []
-	const resolvedUsername = String(
-		apiSnapshot?.user?.username
-			|| apiSnapshot?.user?.Username
-			|| apiSnapshot?.user?.handle
-			|| apiSnapshot?.user?.Handle
-			|| "",
-	).trim()
 
 	const roleLabels = roles.filter((role) => ROLE_META[role]).map((role) => ROLE_META[role].label)
 	const greetingRoles =
@@ -303,26 +280,6 @@ export default function UserIndexPage({ sessionUser, apiSnapshot }) {
 						</div>
 					</div>
 				</div>
-
-				<CardMyArtists
-					registeredArtists={registeredArtists}
-					sessionUser={sessionUser}
-					title="Registered Artists"
-					description="Artist profiles linked to your user account."
-					emptyCtaLabel="Register Artist"
-					emptyCtaClassName="btn btn-sm btn-primary"
-					renderArtistActions={(artist) => (
-						<div className="flex justify-end">
-							<Link
-								href={artist.path ? `/portal/artist/${artist.path}` : "/portal/artist"}
-								className="btn btn-sm btn-primary"
-							>
-								Open Artist Portal
-							</Link>
-						</div>
-					)}
-					footerContent={<Link href="/join/artist" className="btn btn-sm btn-outline btn-primary">Register Another Artist</Link>}
-				/>
 
 				<div className="card bg-base-100 border border-base-300 shadow">
 					<div className="card-body p-4 gap-3">

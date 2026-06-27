@@ -15,8 +15,6 @@ import { getServerSession } from "next-auth/next"
 
 import ArtistContextNav from "@/components/portal/ArtistContextNav"
 import ArtistCard from "@/components/cards/card_artist"
-import SocialComments from "@/components/social/Comments"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
@@ -39,38 +37,42 @@ function getArtistAccentClass(index) {
 	return ARTIST_ACCENT_CLASSES[index % ARTIST_ACCENT_CLASSES.length]
 }
 
-function ConceptCard({ href, title, description, icon }) {
-	return (
-		<Link href={href} className="card bg-base-100 border border-base-300 hover:border-primary hover:shadow transition-all">
-			<div className="card-body p-3 gap-0.5 sm:flex-row sm:items-center sm:justify-between">
-				<h4 className="font-medium text-sm text-base-content sm:min-w-56">
-					<span className="mr-2">{icon}</span>
-					{title}
-				</h4>
-				<p className="text-xs text-base-content/65 flex-1">{description}</p>
-			</div>
-		</Link>
-	)
+function hasBusinessDetails(artist) {
+	const city = String(artist?.city ?? artist?.City ?? "").trim()
+	const region = String(artist?.stateOrProvince ?? artist?.StateOrProvince ?? "").trim()
+	const postal = String(artist?.zipCode ?? artist?.ZipCode ?? artist?.postalCode ?? artist?.PostalCode ?? "").trim()
+	const country = String(artist?.country ?? artist?.Country ?? "").trim()
+	return Boolean(city && region && postal && country)
 }
 
-function MyArtistsCard({ registeredArtists, sessionUser }) {
-	const [artistCardSize, setArtistCardSize] = useState("large")
-	const commentsUser = sessionUser
-		? {
-			id: sessionUser.id,
-			username: sessionUser.email || sessionUser.name || "user",
-			displayName: sessionUser.name || sessionUser.email || "User",
-			avatarUrl: sessionUser.image || "/images/default-avatar.png",
-			isAdmin: Array.isArray(sessionUser.roles) && sessionUser.roles.includes("admin"),
-		}
-		: null
+function getNextArtistJoinStep(artist, workflowSummary) {
+	const steps = Array.isArray(workflowSummary?.steps) ? workflowSummary.steps : []
+	const completed = new Set(
+		steps
+			.filter((step) => Boolean(step?.isCompleted))
+			.map((step) => String(step?.stepKey || "").trim().toLowerCase()),
+	)
+
+	if (!completed.has("accepted_tc")) return 1
+	if (!completed.has("reserved_slug")) return 2
+	if (!completed.has("added_bio")) return 3
+	if (!hasBusinessDetails(artist)) return 4
+	if (!completed.has("uploaded_photos")) return 5
+	if (!completed.has("private_contacts")) return 6
+	if (!completed.has("added_contacts")) return 7
+	return 8
+}
+
+function MyArtistsCard({ registeredArtists }) {
+	const [artistCardSize, setArtistCardSize] = useState("medium")
+	const showGalleryFocusedCard = artistCardSize !== "small"
 
 	return (
 		<div className="card bg-base-100 border border-base-300 shadow">
 			<div className="card-body p-4 gap-3">
 				<SectionHeading>Linked Artist Workspaces</SectionHeading>
 				<div className="flex items-center justify-between gap-3 flex-wrap">
-					<p className="text-sm text-base-content/70">Each linked artist gets its own portal page, public preview, and edit-mode workspace.</p>
+						<p className="text-sm text-base-content/70">Each linked artist gets its own portal page, public preview, and a single settings surface for edits.</p>
 					<label className="form-control w-full sm:w-auto">
 						<div className="label py-0">
 							<span className="label-text text-xs text-base-content/60">Card Size</span>
@@ -93,24 +95,41 @@ function MyArtistsCard({ registeredArtists, sessionUser }) {
 						<Link href="/join/artist" className="btn btn-sm btn-secondary">Register Artist</Link>
 					</div>
 				) : (
-					<SocialRealtimeProvider>
-						<div className={artistCardSize === "medium" ? "grid grid-cols-1 xl:grid-cols-2 gap-3" : "space-y-3"}>
+					
+						<div className={artistCardSize === "small" ? "grid grid-cols-1 lg:grid-cols-2 gap-3" : artistCardSize === "medium" ? "grid grid-cols-1 xl:grid-cols-2 gap-3" : "space-y-3"}>
 							{registeredArtists.map((artist) => (
 								<div key={artist.artistID} className="space-y-2">
-									<ArtistCard
-										artist={{
-											...artist,
-											panelSize:
-												artistCardSize === "large"
-													? "full"
-													: artistCardSize === "medium"
-														? "half"
-														: "third",
-										}}
-										compact={artistCardSize === "small"}
-										showHeaderGallery={artistCardSize === "large"}
-										showContentGallery={artistCardSize === "large"}
-									/>
+									{(() => {
+										const artistPortalHref = artist.path ? `/portal/artist/${artist.path}` : "/portal/artist"
+										const joinHref = artist.path
+											? `/join/artist/${artist.path}?step=${artist.nextJoinStep || 3}`
+											: `/join/artist?step=${artist.nextJoinStep || 3}`
+										const primaryHref = artist.isPublished ? artistPortalHref : joinHref
+										const primaryTitle = artist.isPublished ? "Open Artist Portal" : "Continue Registration"
+
+										return (
+									<div className="grid grid-cols-1 md:grid-cols-[12rem_1fr] gap-2 items-stretch">
+										<Link
+											href={primaryHref}
+											className="rounded-box border border-primary/30 bg-primary/10 hover:bg-primary/15 transition-colors p-4 flex items-center justify-start min-h-24"
+										>
+											<div>
+												<div className="text-xs uppercase tracking-wider text-primary/80">Workspace</div>
+												<div className="font-semibold text-primary mt-1">{primaryTitle}</div>
+											</div>
+										</Link>
+										<ArtistCard
+											artist={{
+												...artist,
+												panelSize: showGalleryFocusedCard ? "full" : "third",
+											}}
+											compact={artistCardSize === "small"}
+											showHeaderGallery={false}
+											showContentGallery={showGalleryFocusedCard}
+										/>
+									</div>
+										)
+									})()}
 									{artist.isPublished ? (
 										<div className="badge badge-success gap-2">
 											✓ Published
@@ -120,31 +139,10 @@ function MyArtistsCard({ registeredArtists, sessionUser }) {
 											⟳ Registration in Progress
 										</div>
 									)}
-									<div className="flex gap-2 flex-wrap justify-end">
-										<Link href={artist.path ? `/artists/${artist.path}` : "/artists"} className="btn btn-xs btn-ghost">
-											Public Profile
-										</Link>
-										<Link href={artist.path ? `/portal/artist/${artist.path}` : "/portal/artist"} className="btn btn-xs btn-outline">
-											Artist Portal
-										</Link>
-										<Link
-											href={artist.artistID ? `/portal/artist/manage-contacts?artistId=${artist.artistID}` : "/portal/artist/manage-contacts"}
-											className="btn btn-xs btn-primary"
-										>
-											Manage Contacts
-										</Link>
-									</div>
-									<div className="rounded-box border border-base-300 bg-base-100/70 p-3">
-										<SocialComments
-											contextId={`artist-card-${artist.artistID || artist.path || artist.title}`}
-											currentUser={commentsUser}
-											allowMedia={false}
-										/>
-									</div>
 								</div>
 							))}
 						</div>
-					</SocialRealtimeProvider>
+					
 				)}
 			</div>
 		</div>
@@ -178,7 +176,7 @@ export default function PortalArtistIndex({ sessionUser, registeredArtists }) {
 						</p>
 					</div>
 				</div>
-				<MyArtistsCard registeredArtists={registeredArtists} sessionUser={sessionUser} />
+				<MyArtistsCard registeredArtists={registeredArtists} />
 
 				<div className="card bg-base-100 border border-base-300 shadow">
 					<div className="card-body p-4 gap-4">
@@ -237,7 +235,7 @@ export async function getServerSideProps(context) {
 
 			if (response.ok) {
 				const artistData = await response.json()
-				registeredArtists = Array.isArray(artistData)
+				const linkedArtists = Array.isArray(artistData)
 					? artistData.map((artist) => ({
 						artistID: artist?.artistID ?? artist?.ArtistID ?? null,
 						title: artist?.title ?? artist?.Title ?? null,
@@ -248,6 +246,47 @@ export async function getServerSideProps(context) {
 						isPublished: artist?.isPublished ?? artist?.IsPublished ?? false,
 					}))
 					: []
+
+				registeredArtists = await Promise.all(
+					linkedArtists.map(async (artist) => {
+						const slug = String(artist?.path || "").trim().toLowerCase()
+						if (!slug) {
+							return artist
+						}
+
+						try {
+							const [profileRes, detailRes] = await Promise.all([
+								fetch(`${apiUrl}artist/${slug}/profile`),
+								fetch(`${apiUrl}artist/${slug}`),
+							])
+
+							const profileData = profileRes.ok ? await profileRes.json() : null
+							const detailData = detailRes.ok ? await detailRes.json() : null
+							const profileArtist = profileData?.artist || {}
+
+							return {
+								...artist,
+								artistID: artist.artistID ?? profileArtist?.artistID ?? profileArtist?.ArtistID ?? detailData?.artistID ?? detailData?.ArtistID ?? null,
+								title: artist.title ?? profileArtist?.title ?? profileArtist?.Title ?? detailData?.title ?? detailData?.Title ?? null,
+								path: artist.path ?? profileArtist?.path ?? profileArtist?.Path ?? slug,
+								byline: artist.byline ?? profileArtist?.byline ?? profileArtist?.Byline ?? detailData?.byline ?? detailData?.Byline ?? null,
+								profilePic: profileData?.profilePic ?? detailData?.profilePic ?? artist.profilePic ?? null,
+								coverPic: profileData?.coverPic ?? detailData?.coverPic ?? null,
+								gallery: detailData?.gallery ?? profileArtist?.gallery ?? null,
+								images: Array.isArray(profileData?.images)
+									? profileData.images
+									: Array.isArray(profileArtist?.images)
+										? profileArtist.images
+										: Array.isArray(detailData?.images)
+											? detailData.images
+											: [],
+							}
+						} catch (error) {
+							console.error(`Unable to hydrate artist ${slug} profile for portal card:`, error.message)
+							return artist
+						}
+					}),
+				)
 
 				// Check for artists that should be auto-published
 				for (const artist of registeredArtists) {
@@ -260,6 +299,7 @@ export async function getServerSideProps(context) {
 
 							if (workflowResponse.ok) {
 								const workflowSummary = await workflowResponse.json()
+								artist.nextJoinStep = getNextArtistJoinStep(artist, workflowSummary)
 								const steps = Array.isArray(workflowSummary?.steps) ? workflowSummary.steps : []
 								const requiredSteps = Array.isArray(workflowSummary?.requiredSteps)
 									? workflowSummary.requiredSteps
@@ -277,14 +317,31 @@ export async function getServerSideProps(context) {
 
 									if (publishResponse.ok) {
 										artist.isPublished = true
+										artist.nextJoinStep = 8
 									}
 								}
+							} else {
+								artist.nextJoinStep = getNextArtistJoinStep(artist, null)
 							}
 						} catch (error) {
 							console.error(`Unable to check/publish artist ${artist.artistID}:`, error.message)
+							artist.nextJoinStep = getNextArtistJoinStep(artist, null)
 						}
+					} else {
+						artist.nextJoinStep = 8
 					}
 				}
+
+				registeredArtists = registeredArtists
+					.slice()
+					.sort((a, b) => {
+						if (Boolean(a.isPublished) !== Boolean(b.isPublished)) {
+							return a.isPublished ? -1 : 1
+						}
+						const aTitle = String(a.title || "").trim().toLowerCase()
+						const bTitle = String(b.title || "").trim().toLowerCase()
+						return aTitle.localeCompare(bTitle)
+					})
 			}
 		} catch (error) {
 			console.error("Unable to load linked artists for artist portal:", error.message)
@@ -305,3 +362,4 @@ export async function getServerSideProps(context) {
 		},
 	}
 }
+

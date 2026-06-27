@@ -5,7 +5,6 @@ import { useState } from "react"
 
 import ArtistCard from "@/components/cards/card_artist"
 import SocialComments from "@/components/social/Comments"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 
 function SectionHeading({ children }) {
 	return <h2 className="text-xs font-semibold text-base-content/50 uppercase tracking-widest">{children}</h2>
@@ -69,7 +68,7 @@ export default function CardMyArtists({
 						<Link href={emptyCtaHref} className={emptyCtaClassName}>{emptyCtaLabel}</Link>
 					</div>
 				) : (
-					<SocialRealtimeProvider>
+					
 						<div className={artistCardSize === "medium" ? "grid grid-cols-1 xl:grid-cols-2 gap-3" : "space-y-3"}>
 							{registeredArtists.map((artist) => (
 								<div key={artist.artistID || artist.path || artist.title} className="space-y-2">
@@ -101,7 +100,7 @@ export default function CardMyArtists({
 							))}
 							{footerContent ? <div className={artistCardSize === "medium" ? "pt-1 xl:col-span-2" : "pt-1"}>{footerContent}</div> : null}
 						</div>
-					</SocialRealtimeProvider>
+					
 				)}
 			</div>
 		</div>

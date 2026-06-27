@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { getServerSession } from "next-auth/next"
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
-import RegisterSlug from "@/components/forms/onboarding/register-slug"
+import OrganizationSlugReservationStep from "@/components/forms/onboarding/organizations/OrganizationSlugReservationStep"
 import JoinPageShell from "@/components/join/common/join-page-shell"
 import TermsAgreementStep from "@/components/join/common/terms-agreement-step"
 import getApiURL from "@/components/widgets/GetApiURL"
@@ -88,55 +88,18 @@ export default function JoinVendorIndexPage({ termsContent, currentStep }) {
       ) : null}
 
       {currentStep === 2 ? (
-        <div className="space-y-3">
-          {reservedId > 0 ? (
-            <div className="rounded-box border border-base-300 bg-base-200/40 p-3 text-sm space-y-2">
-              <div className="font-semibold">Existing vendor registration found</div>
-              <div className="text-base-content/70">
-                ID: {reservedId}
-                {reservedSlug ? ` | Slug: ${reservedSlug}` : ""}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {reservedSlug ? (
-                  <a className="btn btn-sm btn-outline" href={buildVendorJoinHref(3, reservedSlug, reservedId)}>
-                    Continue Existing Vendor Registration
-                  </a>
-                ) : null}
-                <button
-                  type="button"
-                  className="btn btn-sm btn-error btn-outline"
-                  onClick={() => {
-                    clearVendorRegistrationProgress()
-                    window.location.href = "/join/vendor?step=2"
-                  }}
-                >
-                  Start New Vendor Registration
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          <RegisterSlug
-            domain="vendor"
-            domainLabel="Vendor"
-            apiBaseUrl={apiUrl}
-            reserveEndpoint={`${apiUrl}vendor/reserve-slug`}
-            updateEndpoint={(id) => `${apiUrl}vendor/${id}/update-slug`}
-            checkEndpoint={(candidateSlug, currentId) => `${apiUrl}vendor/check-slug/${encodeURIComponent(candidateSlug)}${currentId ? `?excludeId=${encodeURIComponent(currentId)}` : ""}`}
-            nextRoute={(id) => {
-              const nextProgress = getVendorRegistrationProgress?.() || {}
-              return buildVendorJoinHref(3, nextProgress.slug, id)
-            }}
-            progressApi={{
-              getProgress: getVendorRegistrationProgress,
-              setProgress: setVendorRegistrationProgress,
-              markStepComplete: markVendorRegistrationStepComplete,
-            }}
-            titleFieldLabel="Vendor Display Name"
-            titlePlaceholder="Enter vendor name"
-            slugDescription="Vendor slug creates a dedicated vendor workspace URL."
-          />
-        </div>
+        <OrganizationSlugReservationStep
+          context="vendor"
+          entityLabel="Vendor"
+          apiBaseUrl={apiUrl}
+          reservedId={reservedId}
+          reservedSlug={reservedSlug}
+          buildJoinHref={buildVendorJoinHref}
+          clearProgress={clearVendorRegistrationProgress}
+          getProgress={getVendorRegistrationProgress}
+          setProgress={setVendorRegistrationProgress}
+          markStepComplete={markVendorRegistrationStepComplete}
+        />
       ) : null}
     </JoinPageShell>
   )

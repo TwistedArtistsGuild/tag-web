@@ -2,11 +2,23 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
 import getApiURL from "@/components/widgets/GetApiURL"
+import { sanitizeCardHtml, sanitizeDefaultHtml, stripHtmlText } from "@/components/security/sanitize"
 
 const apiUrl = getApiURL()
 
 function normalizeSlug(value) {
   return String(value || "").trim().toLowerCase()
+}
+
+function pickField(record, ...keys) {
+  for (const key of keys) {
+    const value = record?.[key]
+    if (value !== undefined && value !== null) {
+      return value
+    }
+  }
+
+  return undefined
 }
 
 function splitMedia(files = []) {
@@ -29,6 +41,9 @@ export default function VendorProfilePage({ vendor }) {
   const vendorName = String(vendor?.companyName || vendor?.CompanyName || "Vendor")
   const vendorNotes = String(vendor?.notesOnVendors || vendor?.NotesOnVendors || "")
   const contractNotes = String(vendor?.notesOnContracts || vendor?.NotesOnContracts || "")
+  const vendorNameRichtext = pickField(vendor, "companyNameRichtext", "CompanyNameRichtext") || vendorName
+  const vendorNotesRichtext = pickField(vendor, "notesOnVendorsRichtext", "NotesOnVendorsRichtext") || vendorNotes
+  const contractNotesRichtext = pickField(vendor, "notesOnContractsRichtext", "NotesOnContractsRichtext") || contractNotes
   const mediaPrefix = useMemo(() => (
     vendorId > 0 ? `platformpics/vendorcontent/${vendorId}/` : ""
   ), [vendorId])
@@ -80,7 +95,10 @@ export default function VendorProfilePage({ vendor }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:py-12 space-y-6">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h1 className="text-3xl font-bold">{vendorName}</h1>
+        <h1
+          className="text-3xl font-bold"
+          dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(vendorNameRichtext) }}
+        />
         <Link href="/search" className="btn btn-sm btn-outline">Back to Search</Link>
       </div>
 
@@ -95,21 +113,34 @@ export default function VendorProfilePage({ vendor }) {
           <h2 className="text-xl font-semibold">Vendor Profile</h2>
           <p className="text-sm text-base-content/70">This basic profile uses the same vendor API-backed fields configured during onboarding.</p>
           <div className="text-sm space-y-2">
-            <div><span className="font-semibold">Company:</span> {vendorName}</div>
+            <div>
+              <span className="font-semibold">Company:</span>{" "}
+              <span dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(vendorNameRichtext) }} />
+            </div>
             <div><span className="font-semibold">POC:</span> {vendor?.pocName || vendor?.POCName || "Not listed"}</div>
             <div><span className="font-semibold">POC Email:</span> {vendor?.pocEmail || vendor?.POCEmail || "Not listed"}</div>
             <div><span className="font-semibold">POC Phone:</span> {vendor?.pocPhone || vendor?.POCPhone || "Not listed"}</div>
             <div><span className="font-semibold">Contract Link:</span> {vendor?.linkToContract || vendor?.LinkToContract || "Not listed"}</div>
           </div>
-          {vendorNotes ? <p className="text-sm whitespace-pre-wrap">{vendorNotes}</p> : null}
-          {contractNotes ? <p className="text-sm whitespace-pre-wrap text-base-content/70">{contractNotes}</p> : null}
+          {vendorNotesRichtext ? (
+            <div
+              className="text-sm"
+              dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(vendorNotesRichtext) }}
+            />
+          ) : null}
+          {contractNotesRichtext ? (
+            <div
+              className="text-sm text-base-content/70"
+              dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(contractNotesRichtext) }}
+            />
+          ) : null}
         </div>
 
         <div className="rounded-box border border-base-300 bg-base-100 shadow p-4">
           <h3 className="font-semibold mb-3">Profile Image</h3>
           <img
             src={profile?.url || "/blank_image.png"}
-            alt={`${vendorName} profile`}
+            alt={`${stripHtmlText(vendorNameRichtext || vendorName)} profile`}
             className="w-full h-56 object-cover rounded-box border border-base-300"
           />
         </div>

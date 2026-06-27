@@ -18,7 +18,6 @@ import dynamic from "next/dynamic"
 import longDateOptions from "@/utils/longdateoptions"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import DynamicComments, { CommentTargetType } from "@/components/social/DynamicComments"
 import ImpressionReactions from "@/components/social/ImpressionReactions"
 import { useImpressions, ImpressionTargetType } from "@/hooks/useImpressions"
@@ -27,6 +26,17 @@ import { defaultFieldClass } from "@/utils/formSettings"
 import { PERMISSIONS } from "@/utils/permissions";
 import { hasPermission } from "@/utils/authHelpers";
 import { sanitizeDefaultHtml, sanitizeCardHtml } from "@/components/security/sanitize";
+
+function pickField(record, ...keys) {
+	for (const key of keys) {
+		const value = record?.[key];
+		if (value !== undefined && value !== null) {
+			return value;
+		}
+	}
+
+	return undefined;
+}
 
 
 
@@ -76,6 +86,11 @@ const BlogByslug = props => {
 	const { data: session } = useSession();
 	const [mounted, setMounted] = useState(false)
 	const blog = props.blog
+	const blogRichtext = {
+		title: pickField(blog, "titleRichtext", "TitleRichtext") || blog?.title || "",
+		byline: pickField(blog, "bylineRichtext", "BylineRichtext") || blog?.byline || "",
+		body: pickField(blog, "bodyRichtext", "BodyRichtext") || blog?.body || "",
+	}
 	const seoKeywords = `blog, post, article, ${blog.searchterms}`
 	const canonicalSlug = `blogs/${blog.path}`
 	const hasBlankCover = !blog?.image || blog.image === "/blank_image.png"
@@ -162,7 +177,7 @@ const BlogByslug = props => {
 	return (
 		/* suppressHydrationWarning prevents React from logging a hydration mismatch for this subtree.
 		   We also only render the rich `body` HTML after mount to avoid SSR/CSR mismatch. */
-		<SocialRealtimeProvider>
+		
 		<div className="flex flex-col items-center min-h-screen w-full py-8 gap-8" suppressHydrationWarning>
 			<style jsx global>{`
 				.blog-rich-content h3,
@@ -270,11 +285,11 @@ const BlogByslug = props => {
 
 				<div className="rounded-box border border-base-300 bg-base-200/40 p-4">
 					<h1 className="font-poiret text-5xl md:text-7xl shadow-text">
-						{stripHtmlTags(props.blog.title) || "Untitled"}
+						{stripHtmlTags(blogRichtext.title || props.blog.title) || "Untitled"}
 					</h1>
 					<div
 						className="font-fredoka pt-2"
-						dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(props.blog.byline) }}
+						dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(blogRichtext.byline || props.blog.byline) }}
 					></div>
 					<div className="font-baloo pt-2 text-xs shadow-dark">{props.blog.formattedCreated}</div>
 				</div>
@@ -338,7 +353,7 @@ const BlogByslug = props => {
 
 						<div
 							className="blog-rich-content font-fredoka rounded-box border border-base-300 bg-base-100 p-6 md:p-8 space-y-6"
-							dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(addSectionAnchors(String(blog.body || ""))) }}
+							dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(addSectionAnchors(String(blogRichtext.body || ""))) }}
 						>
 						</div>
 					</>
@@ -376,7 +391,7 @@ const BlogByslug = props => {
 				)}
 			</div>
 		</div>
-		</SocialRealtimeProvider>
+		
 	)
 }
 
@@ -416,4 +431,5 @@ BlogByslug.getInitialProps = async function (context) {
 }
 
 export default BlogByslug
+
 

@@ -15,7 +15,6 @@ import ArtistCard from "@/components/cards/card_artist"
 import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { getPanelClass } from "@/components/cards/sizes/panel-layout"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 
 const BATCH_SIZE = 12
 
@@ -102,7 +101,7 @@ const Artists = (props) => {
 	}
 
   return (
-    <SocialRealtimeProvider>
+    
       <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="artists" />
 			{/* Hero Section */}
@@ -148,7 +147,7 @@ const Artists = (props) => {
 				</section>
 			</main>
       </div>
-    </SocialRealtimeProvider>
+    
 	)
 }
 
@@ -378,4 +377,5 @@ Artists.getInitialProps = async () => {
 }
 
 export default Artists
+
 

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useSession } from "next-auth/react"
 import DirectMessages from "@/components/social/DirectMessages"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 
 /** Maps GHL lastMessageType to a human-readable channel label */
 const CHANNEL_LABELS = {
@@ -293,7 +292,7 @@ export default function CrmSocialChat() {
                   <div className="alert alert-warning text-xs mx-4 mt-4">
                     <span>Message history unavailable: {msgError}</span>
                   </div>
-                  <SocialRealtimeProvider>
+                  
                     <DirectMessages
                       messages={[]}
                       onSendMessage={handleSendMessage}
@@ -304,10 +303,10 @@ export default function CrmSocialChat() {
                       demoMode={false}
                       maxHeight={300}
                     />
-                  </SocialRealtimeProvider>
+                  
                 </>
               ) : (
-                <SocialRealtimeProvider>
+                
                   <DirectMessages
                     messages={messages}
                     onSendMessage={handleSendMessage}
@@ -318,7 +317,7 @@ export default function CrmSocialChat() {
                     demoMode={false}
                     maxHeight={400}
                   />
-                </SocialRealtimeProvider>
+                
               )}
             </div>
           </>
@@ -331,3 +330,4 @@ export default function CrmSocialChat() {
     </div>
   )
 }
+

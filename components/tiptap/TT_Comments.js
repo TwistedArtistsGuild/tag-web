@@ -16,7 +16,6 @@ import { sanitizeDefaultHtml } from "@/components/security/sanitize";
 
 // Import components
 import Image from "next/image";
-import { useRealtimeComments, useSocialRealtime } from '../social/SocialRealtimeContext';
 import SocialReactions from '../social/Reactions';
 import TiptapEditor from "@/components/tiptap/tiptap-editor";
 
@@ -65,31 +64,6 @@ const SocialComments = ({
 
         return localStorage.getItem("theme") || "tag-theme";
     });
-    
-    // Real-time functionality
-    const { emit, isConnected } = useSocialRealtime();
-    
-    // Handle real-time comment updates
-    const handleRealtimeUpdate = useCallback((update) => {
-        if (update.type === 'comment_added') {
-            setComments(prevComments => {
-                // Check if comment already exists to avoid duplicates
-                const exists = prevComments.some(comment => comment.id === update.data.id);
-                if (!exists) {
-                    return [...prevComments, { ...update.data, isEditing: false, replies: [] }];
-                }
-                return prevComments;
-            });
-        } else if (update.type === 'comment_updated') {
-            setComments(prevComments => prevComments.map(comment => 
-                comment.id === update.data.id ? { ...comment, ...update.data, isEditing: false } : comment
-            ));
-        } else if (update.type === 'comment_deleted') {
-            setComments(prevComments => prevComments.filter(comment => comment.id !== update.data.id));
-        }
-    }, []);
-
-    useRealtimeComments(contextId, handleRealtimeUpdate);
     
     // Check if the current user can edit a specific comment
     const canEditComment = useCallback((comment) => {
@@ -203,31 +177,9 @@ const SocialComments = ({
                     const newId = `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                     updatedComment.id = newId;
                     
-                    // Emit real-time update for new comment
-                    if (isConnected) {
-                        emit('comments', {
-                            type: 'comment_added',
-                            data: {
-                                ...updatedComment,
-                                contextId
-                            }
-                        });
-                    }
-                    
                     // Call the onAddComment callback
                     onAddComment(updatedComment);
                 } else {
-                    // Emit real-time update for updated comment
-                    if (isConnected) {
-                        emit('comments', {
-                            type: 'comment_updated',
-                            data: {
-                                ...updatedComment,
-                                contextId
-                            }
-                        });
-                    }
-                    
                     // Call the onUpdateComment callback
                     onUpdateComment(updatedComment);
                 }
@@ -251,33 +203,9 @@ const SocialComments = ({
                             const newId = `reply-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                             updatedReply.id = newId;
                             
-                            // Emit real-time update for new reply
-                            if (isConnected) {
-                                emit('comments', {
-                                    type: 'reply_added',
-                                    data: {
-                                        ...updatedReply,
-                                        parentId: comment.id,
-                                        contextId
-                                    }
-                                });
-                            }
-                            
                             // Call the onAddComment callback with parent info
                             onAddComment(updatedReply, comment.id);
                         } else {
-                            // Emit real-time update for updated reply
-                            if (isConnected) {
-                                emit('comments', {
-                                    type: 'reply_updated',
-                                    data: {
-                                        ...updatedReply,
-                                        parentId: comment.id,
-                                        contextId
-                                    }
-                                });
-                            }
-                            
                             // Call the onUpdateComment callback
                             onUpdateComment(updatedReply, comment.id);
                         }
@@ -292,7 +220,7 @@ const SocialComments = ({
             
             return comment;
         }));
-    }, [onAddComment, onUpdateComment, emit, isConnected, contextId]);
+    }, [onAddComment, onUpdateComment]);
 
     /**
      * Increments like count for a comment or reply

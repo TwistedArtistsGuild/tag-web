@@ -11,6 +11,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
+import getApiURL from '@/components/widgets/GetApiURL'
 
 /**
  * SignalR hook for real-time messaging
@@ -35,9 +36,13 @@ export function useSignalR(userId, handlers = {}) {
     }
 
     try {
+      const apiUrl = getApiURL()
+      const apiBase = String(apiUrl || '').replace(/\/api\/?$/i, '')
+      const hubUrl = `${apiBase}/hubs/messaging`
+
       // Create connection
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl(`${process.env.NEXT_PUBLIC_API_URL || ''}/hubs/messaging`, {
+        .withUrl(hubUrl, {
           accessTokenFactory: () => {
             // Add your auth token here if needed
             return localStorage.getItem('authToken') || ''
@@ -130,6 +135,11 @@ export function useSignalR(userId, handlers = {}) {
         handlersRef.current.onConversationUpdate?.(conversation)
       })
 
+      connection.on('NotificationSummaryUpdated', (data) => {
+        console.log('🔔 Notification summary updated:', data)
+        handlersRef.current.onNotification?.(data)
+      })
+
       connection.on('UserOnlineStatusChanged', (data) => {
         console.log('🟢 User online status changed:', data)
         handlersRef.current.onUserStatusChange?.({
@@ -160,10 +170,17 @@ export function useSignalR(userId, handlers = {}) {
         setIsConnected(false)
       })
 
-      connection.onreconnected((connectionId) => {
+      connection.onreconnected(async (connectionId) => {
         console.log('✅ SignalR reconnected:', connectionId)
         setConnectionState('Connected')
         setIsConnected(true)
+
+        try {
+          await connection.invoke('RegisterUser', userId)
+          console.log(`🔁 Re-registered SignalR user group: ${userId}`)
+        } catch (err) {
+          console.error('Failed to re-register SignalR user after reconnect:', err)
+        }
 
         // Rejoin all active conversations
         handlersRef.current.onReconnected?.()
@@ -256,11 +273,19 @@ export function useSignalR(userId, handlers = {}) {
 
   // Connect on mount
   useEffect(() => {
+    let connectTimer = null
+
     if (userId) {
-      connect()
+      connectTimer = window.setTimeout(() => {
+        connect()
+      }, 0)
     }
 
     return () => {
+      if (connectTimer) {
+        window.clearTimeout(connectTimer)
+      }
+
       if (connectionRef.current) {
         connectionRef.current.stop()
       }

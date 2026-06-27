@@ -13,7 +13,6 @@
 import Image from "next/image" // Import Image component
 import Link from "next/link" // Import Link component
 import { HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon } from "lucide-react" // Import Lucide icons
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import getApiURL from "@/components/widgets/GetApiURL"
@@ -95,7 +94,7 @@ export default function News(props) {
   };
 
   return (
-    <SocialRealtimeProvider>
+    
     <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
       <TagSEO metadataProp={pageMetaData} canonicalSlug="news" />
       {/* Hero Section */}
@@ -231,7 +230,7 @@ export default function News(props) {
         </section>
       </main>
     </div>
-    </SocialRealtimeProvider>
+    
   )
 }
 
@@ -259,6 +258,7 @@ News.getInitialProps = async () => {
     blogs: blogs || [],
   }
 }
+
 
 
 
