@@ -98,12 +98,63 @@ const ListingCardSmall = ({ listing, artist, textRenderMode = "strip" }) => {
         ) : (
           <p className="text-xs text-base-content/80">Artist: {artistText}</p>
         )}
-        <p className="text-xs text-base-content/80">
-          Category: {listing?.artCategory?.category || "No category found"}
-        </p>       
+        
+        <div className="flex justify-between items-center mt-2">
+          <p className="text-xs text-base-content/80">
+            Category: {listing?.artCategory?.category || "No category found"}
+          </p>
+          
+          {listing?.price !== undefined && listing?.price !== null && Number(listing.price) > 0 && (
+            <span className="font-bold text-primary font-mono">${Number(listing.price).toFixed(2)}</span>
+          )}
+        </div>
+
+        {/* Add to Cart Actions */}
+        {listing?.price !== undefined && listing?.price !== null && Number(listing.price) > 0 && (
+          <div className="card-actions justify-end mt-2">
+              <AddToCartButtonSmall listing={listing} />
+          </div>
+        )}
       </div>
     </div>
   )
 }
+
+// Ensure you add these imports strictly at the top of the file!
+import { useCart } from "@/components/cart/CartContext";
+import { IoCartOutline } from 'react-icons/io5';
+import { useLayout } from "@/components/LayoutProvider";
+
+const AddToCartButtonSmall = ({ listing }) => {
+  const { addToCart } = useCart();
+  const { toggleRightSidebar } = useLayout ? useLayout() : { toggleRightSidebar: () => {} };
+
+  const handleAddToCart = (e) => {
+      e.preventDefault(); // Prevent accidental navigation if nested in strange link structures
+      
+      const normalizedListing = {
+          ...listing,
+          id: listing.listingID || listing.id,
+          price: Number(listing.price || 0)
+      };
+
+      addToCart(normalizedListing, 1);
+      
+      if (typeof toggleRightSidebar === 'function') {
+          setTimeout(() => toggleRightSidebar(true), 100);
+      }
+  };
+
+  return (
+    <button 
+      onClick={handleAddToCart}
+      className="btn btn-secondary btn-sm"
+      title="Add to Cart"
+    >
+      <IoCartOutline size={18} />
+      Add to Cart
+    </button>
+  );
+};
 
 export default ListingCardSmall
