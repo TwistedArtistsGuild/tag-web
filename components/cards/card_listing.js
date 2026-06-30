@@ -20,6 +20,7 @@ import { extractContentWarnings } from "@/components/social/ContentTags"
 import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout"
 import { useImpressions, ImpressionTargetType } from "@/hooks/useImpressions"
 import { sanitizeCardHtml, stripHtmlText } from "@/components/security/sanitize"
+import { useLayout } from "@/components/LayoutProvider";
 
 const getSeededCount = (seed, max, min = 1, salt = "") => {
   const base = `${seed || "listing"}-${salt}`
@@ -264,10 +265,53 @@ const ListingCard = ({
           <Link href={`/artists/${listing?.artist?.path || ""}`} className="btn btn-outline btn-sm">
             View Artist
           </Link>
+          {/* Add to Cart Button Logic */}
+          {listing?.price !== undefined && listing?.price !== null && Number(listing.price) > 0 && (
+            <AddToCartButton listing={listing} />
+          )}
         </div>
       </div>
     </article>
   )
 }
+
+// Child component to safely hook into CartContext without breaking SSR
+import { useCart } from "@/components/cart/CartContext";
+import { IoCartOutline } from 'react-icons/io5';
+
+const AddToCartButton = ({ listing }) => {
+  const { addToCart } = useCart();
+  
+  // Try to safely access the toggleRightSidebar - if it's deeply nested, the global CartContext uses setIsCartOpen equivalent
+  const { toggleRightSidebar } = useLayout ? useLayout() : { toggleRightSidebar: () => {} };
+
+  const handleAddToCart = () => {
+      // Normalize listing ID property safely
+      const normalizedListing = {
+          ...listing,
+          id: listing.listingID || listing.id,
+          price: Number(listing.price || 0)
+      };
+
+      addToCart(normalizedListing, 1);
+      
+      // Attempt to force the layout sidebar open if context allows it
+      if (typeof toggleRightSidebar === 'function') {
+          // If it acts as a toggle, we only fire it if it's closed
+          setTimeout(() => toggleRightSidebar(true), 100);
+      }
+  };
+
+  return (
+    <button 
+      onClick={handleAddToCart}
+      className="btn btn-secondary btn-sm"
+      title="Add to Cart"
+    >
+      <IoCartOutline size={18} />
+      Add to Cart
+    </button>
+  );
+};
 
 export default ListingCard
