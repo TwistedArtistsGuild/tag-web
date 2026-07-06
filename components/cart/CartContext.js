@@ -10,6 +10,8 @@ export function CartProvider({ children }) {
     const [cartItems, setCartItems] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const api_url = getApiURL();
+
     // 1. Initial Load from LocalStorage (Instant UI feedback before APIs)
     useEffect(() => {
         try {
