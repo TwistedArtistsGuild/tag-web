@@ -10,8 +10,6 @@ export function CartProvider({ children }) {
     const [cartItems, setCartItems] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-    const api_url = getApiURL();
-
     // 1. Initial Load from LocalStorage (Instant UI feedback before APIs)
     useEffect(() => {
         try {
@@ -38,7 +36,7 @@ export function CartProvider({ children }) {
             if (!session?.user?.id) return;
             
             try {
-                const res = await fetch(`${api_url}cart?userId=${session.user.id}`);
+                const res = await fetch(`/api/cart?userId=${session.user.id}`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data.items && data.items.length > 0) {
@@ -53,7 +51,7 @@ export function CartProvider({ children }) {
         if (session?.user?.id && !loading) {
             fetchCart();
         }
-    }, [session?.user?.id, loading, api_url]);
+    }, [session?.user?.id, loading]);
 
     // 4. Add Item to Cart
     const addToCart = async (listing, quantity = 1) => {
@@ -85,7 +83,7 @@ export function CartProvider({ children }) {
 
         if (session?.user?.id) {
             try {
-                await fetch(`${api_url}cart/add`, {
+                await fetch(`/api/cart/add`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
@@ -114,7 +112,7 @@ export function CartProvider({ children }) {
 
         if (session?.user?.id) {
             try {
-                await fetch(`${api_url}cart/update`, {
+                await fetch(`/api/cart/update`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ userId: session.user.id, listingId, quantity })
@@ -131,7 +129,7 @@ export function CartProvider({ children }) {
 
         if (session?.user?.id) {
             try {
-                await fetch(`${api_url}cart/remove`, {
+                await fetch(`/api/cart/remove`, {
                     method: "DELETE",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ userId: session.user.id, listingId })

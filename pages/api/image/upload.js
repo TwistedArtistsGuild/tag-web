@@ -83,7 +83,7 @@ async function resolvePictureByUrl(api_url, normalizedURL) {
 function getEntityReadEndpoint(api_url, category, entityId) {
     switch (category) {
         case "artist":
-            return `${api_url}artist/byID/${entityId}`;
+            return `$/api/artist/byID/${entityId}`;
         case "blog":
             return `${api_url}blog/${entityId}`;
         case "listing":

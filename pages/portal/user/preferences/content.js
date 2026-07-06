@@ -18,6 +18,7 @@ const DEFAULT_MODE_BY_POLICY = {
     ageGate: "optIn",
     autoHide: "autoHide",
 }
+
 export default function ContentPreferences({ embedded = false }) {
     const { data: session } = useSession()
     const [warningGroups, setWarningGroups] = useState([])
@@ -30,27 +31,19 @@ export default function ContentPreferences({ embedded = false }) {
     const optInCount = Object.values(contentPreference).filter((value) => value === "optIn").length
     const autoHideCount = Object.values(contentPreference).filter((value) => value === "autoHide").length
 
-    const api_url = getApiURL()
-
     useEffect(() => {
         const fetchPreferences = async () => {
             try {
-                const res = await fetch(`${api_url}ContentPreference?userId=${session?.user?.id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${session?.accessToken}`, // Assuming your session holds the JWT
-                        'Content-Type': 'application/json'
-                    }
-                })
+                // Next.js rewrites silently proxy this Request securely to .NET!
+                const res = await fetch(`/api/ContentPreference?userId=${session?.user?.id}`)
                 if (!res.ok) throw new Error("Failed to fetch preferences")
 
                 const data = await res.json()
                 setWarningGroups(data)
 
-                // Initialize local state mapping Key -> PreferenceMode
                 const initialPrefs = {}
                 data.forEach(group => {
                     group.items.forEach(item => {
-                        // Priority: User saved pref > Default based on policy
                         initialPrefs[item.key] = item.userPreference ||
                             (item.defaultHidden ? "autoHide" : "alwaysShow")
                     })
@@ -64,7 +57,7 @@ export default function ContentPreferences({ embedded = false }) {
         }
 
         if (session) fetchPreferences()
-    }, [api_url, session])
+    }, [session])
 
     const updatePreference = (key, nextMode) => {
         setContentPreference(prev => ({ ...prev, [key]: nextMode }))
@@ -77,17 +70,17 @@ export default function ContentPreferences({ embedded = false }) {
             warningGroups.forEach(group => {
                 group.items.forEach(item => {
                     payload.push({
-                        userId: session?.user?.id,//TODO: Remove it once authorization is implemented in APIs
+                        userId: session?.user?.id,
                         itemId: item.id,
                         preferenceMode: contentPreference[item.key]
                     })
                 })
             })
 
-            const res = await fetch(`${api_url}ContentPreference`, {
+            // Clean Fetch Call! Browser auto-attaches cookies, Next proxy decrypts & verifies them cleanly to .NET
+            const res = await fetch(`/api/ContentPreference`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${session?.accessToken}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payload)
@@ -95,6 +88,8 @@ export default function ContentPreferences({ embedded = false }) {
 
             if (res.ok) {
                 toast.success("Preferences updated successfully!")
+            } else {
+                toast.error("Failed to authenticate session.")
             }
         } catch (err) {
             toast.error("Failed to save preferences.")

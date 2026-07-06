@@ -11,10 +11,8 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import Image from "next/image"
-import getApiURL from "@/components/widgets/GetApiURL"
 import ContentTags, { WARNING_DEFINITIONS } from "@/components/social/ContentTags"
 
-const api_url = getApiURL()
 const defaultFieldClass = "input input-bordered w-full"
 
 const fallbackRoleOptions = [
@@ -260,10 +258,8 @@ function CreditsAdder({ credits, onChange, artists, users, onSave, saving, roleO
 
     ownerAutofillRef.current = true
     
-    // If currentUser is an object with an ID, fetch their linked artists to find their primary artist profile
     const currentUserId = typeof currentUser === "object" ? currentUser?.id : null
     if (!currentUserId) {
-      // User is not logged in or no ID; just use the user suggestion
       updateCredit(0, {
         displayName: userSuggestion.displayName,
         externalURL: "",
@@ -274,12 +270,11 @@ function CreditsAdder({ credits, onChange, artists, users, onSave, saving, roleO
       return
     }
 
-    // Fetch the current user's linked artists
-    fetch(`${api_url}linker_usertoartist/byUserID/${currentUserId}`)
+    // Relative NextJS internal proxy URL
+    fetch(`/api/linker_usertoartist/byUserID/${currentUserId}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
         if (!Array.isArray(data) || !data.length) {
-          // No artist linked; use user name
           updateCredit(0, {
             displayName: userSuggestion.displayName,
             externalURL: "",
@@ -395,7 +390,6 @@ function CreditsAdder({ credits, onChange, artists, users, onSave, saving, roleO
           label: "Artist",
           displayName: getProfileDisplayName(artist),
           artistPath,
-          // Use internal profile URL if path exists, otherwise fall back to external URL
           externalURL: artistPath ? `/artists/${artistPath}` : (artist?.externalURL || artist?.webSite || ""),
           username: artist?.username || "",
           email: artist?.emailOne || artist?.email || "",
@@ -404,7 +398,6 @@ function CreditsAdder({ credits, onChange, artists, users, onSave, saving, roleO
       })
       .filter((suggestion) => String(suggestion.displayName || "").trim())
 
-    // Keep artists ahead of users so dedupe preserves the richer artist identity/tag.
     const combined = [...suggestions, ...artistMatches, ...userMatches]
     const deduped = []
     const seen = new Set()
@@ -421,7 +414,6 @@ function CreditsAdder({ credits, onChange, artists, users, onSave, saving, roleO
 
   const applySuggestion = (index, suggestion) => {
     const profileName = suggestion.displayName || ""
-    // Prefer internal artist profile link; fall back to external URL on suggestion
     const profileUrl = suggestion.externalURL || credits[index]?.externalURL || ""
     updateCredit(index, {
       selectedArtist: suggestion.sourceArtist || null,
@@ -706,8 +698,8 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     setLoadingFiles(true)
     try {
       const entityFetchUrl = entityType === "blog"
-        ? `${api_url}blog/${entityId}`
-        : `${api_url}${entityType}/byID/${entityId}`
+        ? `/api/blog/${entityId}`
+        : `/api/${entityType}/byID/${entityId}`
 
       const blobResPromise = fetch(`/api/image/list?container=tagpictures&startPrefix=${encodeURIComponent(startPrefix)}&prefix=${encodeURIComponent(currentPrefix)}`)
       const entityResPromise = canManageOrder && isContextFolderView ? fetch(entityFetchUrl) : Promise.resolve(null)
@@ -799,7 +791,8 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
 
   const loadPictureMetadata = useCallback(async () => {
     try {
-      const res = await fetch(`${api_url}picture`)
+      // Relative NextJS internal proxy URL
+      const res = await fetch(`/api/picture`)
       if (!res.ok) return
       const data = await res.json()
       if (!Array.isArray(data)) return
@@ -845,19 +838,19 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
 
   useEffect(() => {
     const currentUserId = typeof currentUser === "object" ? currentUser?.id : null
-
-    fetch(`${api_url}user`)
+    
+    fetch(`/api/user`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setUsers(Array.isArray(data) ? data : []))
       .catch(() => setUsers([]))
 
-    fetch(`${api_url}artist`)
+    fetch(`/api/artist`)
       .then((r) => r.json())
       .then((data) => setArtists(Array.isArray(data) ? data : []))
       .catch(() => {})
 
     if (currentUserId) {
-      fetch(`${api_url}linker_usertoartist/byUserID/${currentUserId}`)
+      fetch(`/api/linker_usertoartist/byUserID/${currentUserId}`)
         .then((r) => (r.ok ? r.json() : []))
         .then((data) => {
           if (!Array.isArray(data) || !data.length) return
@@ -866,7 +859,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         .catch(() => {})
     }
 
-    fetch(`${api_url}blog/credit-roles`)
+    fetch(`/api/blog/credit-roles`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setCreditRoles(Array.isArray(data) ? data : []))
       .catch(() => {})
@@ -897,7 +890,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     } else if (file?.isVideoPreview) {
       setVideoCredits([makeEmptyCreditRow("Copyright Owner", defaultRoleID)])
       if (persistedVideoId) {
-        fetch(`${api_url}picture/video/${persistedVideoId}/credits`)
+        fetch(`/api/picture/video/${persistedVideoId}/credits`)
           .then((res) => (res.ok ? res.json() : []))
           .then((rows) => {
             const mapped = mapApiCreditsToEditorRows(rows)
@@ -910,7 +903,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     } else {
       setPicCredits([makeEmptyCreditRow("Copyright Owner", defaultRoleID)])
       if (persistedPictureId) {
-        fetch(`${api_url}picture/${persistedPictureId}/credits`)
+        fetch(`/api/picture/${persistedPictureId}/credits`)
           .then((res) => (res.ok ? res.json() : []))
           .then((rows) => {
             const mapped = mapApiCreditsToEditorRows(rows)
@@ -1002,7 +995,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
   const syncVideoToGallery = useCallback(async ({ provider, videoId, sourceUrl, previewImage, embedUrl }) => {
     if (!entityId) return null
 
-    const res = await fetch(`${api_url}${entityType}/${entityId}/gallery/video`, {
+    const res = await fetch(`/api/${entityType}/${entityId}/gallery/video`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1117,7 +1110,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
       Updated: nowIso,
     }
 
-    const res = await fetch(`${api_url}picture`, {
+    const res = await fetch(`/api/picture`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -1185,7 +1178,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         }),
     }
 
-    const res = await fetch(`${api_url}${entityType}/${entityId}/gallery/order`, {
+    const res = await fetch(`/api/${entityType}/${entityId}/gallery/order`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -1395,7 +1388,6 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
     try {
       let promotedUrl = String(selectedFile?.url || "").trim()
 
-      // Keep exactly one active root file by archiving other root files first.
       const existingRootFiles = files.filter((file) => {
         if (file?.isVideoPreview) return false
         const blobName = String(file?.name || "").trim()
@@ -1467,7 +1459,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
           Updated: nowIso,
         }
 
-        const pictureCreateRes = await fetch(`${api_url}picture`, {
+        const pictureCreateRes = await fetch(`/api/picture`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(picturePayload),
@@ -1493,7 +1485,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
       }
 
       if (entityType === "artist" && entityId && pictureId) {
-        const artistRes = await fetch(`${api_url}artist/byID/${entityId}`)
+        const artistRes = await fetch(`/api/artist/byID/${entityId}`)
         const artistData = artistRes.ok ? await artistRes.json() : {}
         const profileId = toNumber(artistData?.ProfilePicID || artistData?.profilePicID)
         const coverId = toNumber(artistData?.CoverPicID || artistData?.coverPicID)
@@ -1501,7 +1493,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         const profilePayloadId = normalizedFolderKind === "profile" ? pictureId : (profileId || null)
         const coverPayloadId = normalizedFolderKind === "cover" ? pictureId : (coverId || null)
 
-        const updateRes = await fetch(`${api_url}artist/byID/${entityId}`, {
+        const updateRes = await fetch(`/api/artist/byID/${entityId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1550,7 +1542,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
       }
 
       if (existingId) {
-        const res = await fetch(`${api_url}picture/${existingId}`, {
+        const res = await fetch(`/api/picture/${existingId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...payload, pictureID: existingId }),
@@ -1558,7 +1550,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         if (!res.ok) throw new Error("Failed to save metadata")
         setPictureByUrl((prev) => ({ ...prev, [key]: { ...payload, pictureID: existingId } }))
       } else {
-        const res = await fetch(`${api_url}picture`, {
+        const res = await fetch(`/api/picture`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -1593,7 +1585,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         credits: buildCreditsSavePayload(picCredits, defaultRoleID),
       }
 
-      const res = await fetch(`${api_url}picture/${pictureId}/credits`, {
+      const res = await fetch(`/api/picture/${pictureId}/credits`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -1720,7 +1712,7 @@ export default function GalleryManager({ entityType, entityId, entityLabel, curr
         credits: buildCreditsSavePayload(videoCredits, defaultRoleID),
       }
 
-      const res = await fetch(`${api_url}picture/video/${videoId}/credits`, {
+      const res = await fetch(`/api/picture/video/${videoId}/credits`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

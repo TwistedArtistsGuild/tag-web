@@ -707,7 +707,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
     setMediaFeedback({ type: "", message: "" });
 
     try {
-      const response = await fetch(`${apiUrl}artist/byID/${resolvedArtistId}`, {
+      const response = await fetch(`/api/artist/byID/${resolvedArtistId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -832,7 +832,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
               setIsSavingProfileForm(true);
 
               try {
-                const response = await fetch(`${apiUrl}artist/byID/${resolvedArtistId}`, {
+                const response = await fetch(`/api/artist/byID/${resolvedArtistId}`, {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
@@ -943,7 +943,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
               });
 
               try {
-                const response = await fetch(`${apiUrl}artist/byID/${resolvedArtistId}`, {
+                const response = await fetch(`/api/artist/byID/${resolvedArtistId}`, {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
@@ -1127,7 +1127,7 @@ export async function getArtistJoinServerProps(context, routeSlug = null, option
 
   if (!strictPreSlugFlow && !artistData && artistId > 0) {
     try {
-      const response = await fetch(`${apiUrl}artist/byID/${artistId}`);
+      const response = await fetch(`/api/artist/byID/${artistId}`);
       if (response.ok) {
         artistData = await response.json();
       }
