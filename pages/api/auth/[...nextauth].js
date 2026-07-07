@@ -18,6 +18,7 @@ import InstagramProvider from "next-auth/providers/instagram"
 import LinkedInProvider from "next-auth/providers/linkedin"
 import PostgresAdapter from "@auth/pg-adapter"
 import { Pool } from "pg"
+import jwt from "jsonwebtoken"
 import config from "@/config"
 
 const pool = new Pool({
@@ -34,9 +35,7 @@ const pool = new Pool({
 })
 
 export const authOptions = {
-	// Set any random key in .env.local
 	secret: process.env.NEXTAUTH_SECRET,
-
 	providers: [
 		AzureADProvider({
 			clientId: process.env.AZURE_AD_CLIENT_ID,
@@ -59,11 +58,7 @@ export const authOptions = {
         RedditProvider({
             clientId: process.env.REDDIT_CLIENT_ID,
             clientSecret: process.env.REDDIT_CLIENT_SECRET,
-            authorization: {
-                params: {
-                    duration: 'permanent',
-                },
-            },
+            authorization: { params: { duration: 'permanent' } },
         }),
         InstagramProvider({
             clientId: process.env.INSTAGRAM_CLIENT_ID,
@@ -72,9 +67,7 @@ export const authOptions = {
         LinkedInProvider({
             clientId: process.env.LINKEDIN_CLIENT_ID,
             clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-            authorization: {
-                params: { scope: 'openid profile email' },
-            },
+            authorization: { params: { scope: 'openid profile email' } },
             issuer: 'https://www.linkedin.com',
             jwks_endpoint: 'https://www.linkedin.com/oauth/openid/jwks',
             profile(profile) {
@@ -93,9 +86,31 @@ export const authOptions = {
 		}),
 	],
 	adapter: PostgresAdapter(pool),
+	
+    // OVERRIDE ENCRYPTION TO ALLOW .NET TO READ IT!
+    jwt: {
+        encode: async ({ secret, token, maxAge }) => {
+            // Standard HS256 JWT signature using your standard secret
+            // Ensure we construct the standard 'iat' (issued at) and 'exp' (expiration) payloads!
+            const nowSeconds = Math.floor(Date.now() / 1000);
+            
+            // NextAuth token object already brings properties, but we enforce standard JWT time claims
+            const jwtClaims = {
+                ...token,
+                iat: nowSeconds,
+                exp: nowSeconds + (maxAge || 30 * 24 * 60 * 60) // 30 days default
+            };
+            
+            return jwt.sign(jwtClaims, secret, { algorithm: "HS256" })
+        },
+        decode: async ({ secret, token }) => {
+            // Decrypt standard HS256 JWT signature
+            return jwt.verify(token, secret, { algorithms: ["HS256"] })
+        },
+    },
+
 	callbacks: {
-		//JWT callback runs when the token is created or updated
-		jwt: async ({ token, user, account }) => {
+		jwt: async ({ token, user }) => {
 			const userId = user?.id || token.sub;
 			if (userId && !token.permissions) {
 				try {
@@ -131,6 +146,7 @@ export const authOptions = {
 	},
 	session: {
 		strategy: "jwt",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
 	},
 	theme: {
 		brandColor: config.colors.main,

@@ -124,14 +124,13 @@ export default function Header() {
       return
     }
 
-    const apiUrl = getApiURL()
     const query = `userId=${encodeURIComponent(userId)}&windowMinutes=60&includeSelfActions=${includeSelfActions ? "true" : "false"}`
 
     try {
       const [reactionRes, commentRes, messageRes] = await Promise.all([
-        fetch(`${apiUrl}impression/received-summary?${query}`),
-        fetch(`${apiUrl}comments/received-summary?${query}`),
-        fetch(`${apiUrl}conversations/unread-total?userId=${encodeURIComponent(userId)}`),
+        fetch(`/api/impression/received-summary?${query}`),
+        fetch(`/api/comments/received-summary?${query}`),
+        fetch(`/api/conversations/unread-total?userId=${encodeURIComponent(userId)}`),
       ])
 
       const [reactionJson, commentJson, messageJson] = await Promise.all([
