@@ -69,7 +69,7 @@ async function fetchSearchResults(searchApiBase, type, queryText, limit = 20) {
 async function fetchArtistPathById(apiUrl, artistId) {
 	if (!artistId) return ""
 	try {
-		const response = await fetch(`${apiUrl}artist/byID/${artistId}`)
+		const response = await fetch(`/api/artist/byID/${artistId}`)
 		if (!response.ok) return ""
 		const artist = await response.json()
 		return artist?.path || ""

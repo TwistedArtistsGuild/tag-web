@@ -313,7 +313,7 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
                     setIsSavingProfileForm(true)
 
                     try {
-                      const response = await fetch(`${apiUrl}artist/byID/${artistId}`, {
+                      const response = await fetch(`/api/artist/byID/${artistId}`, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -530,7 +530,7 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
                     setIsSavingProfileForm(true)
 
                     try {
-                      const response = await fetch(`${apiUrl}artist/byID/${artistId}`, {
+                      const response = await fetch(`/api/artist/byID/${artistId}`, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({

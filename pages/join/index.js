@@ -247,7 +247,7 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
 
       try {
         const [artistRes, contactsRes] = await Promise.all([
-          fetch(`${apiUrl}artist/byID/${localArtistId}`),
+            fetch(`/api/artist/byID/${localArtistId}`),
           fetch(`${apiUrl}contact/artist/${localArtistId}?includePrivate=true`),
         ])
 
@@ -587,7 +587,7 @@ export async function getServerSideProps(context) {
 
       let enriched = artist
       try {
-        const response = await fetch(`${apiUrl}artist/byID/${artistID}`)
+        const response = await fetch(`/api/artist/byID/${artistID}`)
         if (response.ok) {
           enriched = await response.json()
         }
