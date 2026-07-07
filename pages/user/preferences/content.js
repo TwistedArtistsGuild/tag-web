@@ -34,7 +34,7 @@ export default function ContentPreferences({ embedded = false }) {
     useEffect(() => {
         const fetchPreferences = async () => {
             try {
-                const res = await fetch(`${api_url}ContentPreference?userId=${session?.user?.id}`, {
+                const res = await fetch(`/api/ContentPreference?userId=${session?.user?.id}`, {
                     headers: {
                         'Authorization': `Bearer ${session?.accessToken}`, // Assuming your session holds the JWT
                         'Content-Type': 'application/json'
@@ -83,7 +83,7 @@ export default function ContentPreferences({ embedded = false }) {
                 })
             })
 
-            const res = await fetch(`${api_url}ContentPreference`, {
+            const res = await fetch(`/api/ContentPreference`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${session?.accessToken}`,

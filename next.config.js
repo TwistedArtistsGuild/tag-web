@@ -83,6 +83,21 @@ const nextConfig = {
       },
     ],
   },
+
+  // ADDED: Fallback rewrites for clean proxying to .NET without prefixes
+  async rewrites() {
+    return {
+      fallback: [
+        {
+          // If a request starts with /api/...
+          source: '/api/:path*',
+          // ...and NextJS DOES NOT have a matching file in the `pages/api` folder,
+          // Forward it directly and silently to the .NET Backend
+          destination: `${process.env.DOTNET_API_URL || 'http://localhost:5000/api'}/:path*`,
+        },
+      ],
+    }
+  },
 };
 
 module.exports = nextConfig;
