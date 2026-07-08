@@ -16,6 +16,7 @@ import { useRouter } from "next/router"
 import { useSession } from "next-auth/react"
 import { Bug, X } from "lucide-react"
 
+
 const HEADER_HEIGHT_PX = 88
 
 function stringifyConsoleArg(value) {

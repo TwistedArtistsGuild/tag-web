@@ -266,7 +266,7 @@ const Artist = (props) => {
             {/* Artist Actions */}
             <div className="flex flex-wrap gap-3 mt-6">
               {canUpdate && (
-                <Link href={`/artists/${props.slug}/update`} className="btn btn-primary">
+                <Link href={`/portal/artist/${props.slug}/`} className="btn btn-primary">
                   Update Artist Page
                 </Link>
               )}
