@@ -17,7 +17,6 @@ import dynamic from "next/dynamic"
 import { SearchIcon } from "lucide-react"
 
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { useAppContext } from "@/components/Context"
 import ArtistCard from "@/components/cards/card_artist"
 import ListingCardSmall from "@/components/cards/card_listing_small"
@@ -98,7 +97,7 @@ const Artist = (props) => {
 
   useEffect(() => {
       if (!props.artist) console.warn("Artist data failed to load.")
-      else console.log("Artist data loaded successfully:", props.artist)
+      //else console.log("Artist data loaded successfully:", props.artist)
   }, [props.artist])
 
   const pageMetaData = {
@@ -407,7 +406,6 @@ const Artist = (props) => {
 
 Artist.getInitialProps = async (context) => {
   const { slug } = context.query
-  const api_url = getApiURL()
   const defaultPic = {
     picturenum: 1,
     context: "artists",
@@ -421,7 +419,7 @@ Artist.getInitialProps = async (context) => {
 
   if (process.env.DEBUG === "true") {
     console.group(`Artist Slug Page (${slug}) - Data Fetch`)
-    console.log("API URL for profile:", `${api_url}artist/${slug}/profile`)
+    console.log("API URL for profile:", `/api/artist/${slug}/profile`)
   }
 
   const fetchData = async (url, defaultData) => {
@@ -437,7 +435,7 @@ Artist.getInitialProps = async (context) => {
     }
   }
 
-  const artistData = await fetchData(`${api_url}artist/${slug}/profile`, {
+  const artistData = await fetchData(`/api/artist/${slug}/profile`, {
     artist: null,
     profilePic: defaultPic,
     coverPic: defaultPic,
@@ -445,7 +443,7 @@ Artist.getInitialProps = async (context) => {
     links: [],
   })
 
-  const artistGalleryData = await fetchData(`${api_url}artist/${slug}`, null)
+  const artistGalleryData = await fetchData(`/api/artist/${slug}`, null)
   if (artistData?.artist && artistGalleryData?.gallery) {
     artistData.artist.gallery = artistGalleryData.gallery
   }
@@ -469,7 +467,7 @@ Artist.getInitialProps = async (context) => {
   const pictureCreditsById = pictureIds.length
     ? mapCreditsByPictureId(
         await fetchData(
-          `${api_url}picture/credits?pictureIds=${encodeURIComponent([...new Set(pictureIds)].join(","))}`,
+          `/api/picture/credits?pictureIds=${encodeURIComponent([...new Set(pictureIds)].join(","))}`,
           []
         )
       )
@@ -479,7 +477,7 @@ Artist.getInitialProps = async (context) => {
   const artistID = Number(artistData?.artist?.artistID || artistData?.artist?.ArtistID || 0)
   if (artistID > 0) {
     try {
-      const contactsRes = await fetch(`${api_url}contact/artist/${artistID}`)
+      const contactsRes = await fetch(`/api/contact/artist/${artistID}`)
       if (contactsRes.ok) {
         const contactsData = await contactsRes.json()
         const rows = Array.isArray(contactsData?.contacts) ? contactsData.contacts : []

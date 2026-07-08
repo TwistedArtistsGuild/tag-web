@@ -2,7 +2,6 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/router"
 import { useSession } from "next-auth/react"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 function normalizePath(value) {
   return String(value || "").split("?")[0].split("#")[0]
@@ -54,10 +53,9 @@ export default function EntityContextNav({
 
     const loadLinkedEntityFlags = async () => {
       try {
-        const apiUrl = getApiURL()
         const [vendorLinksResponse, venueLinksResponse] = await Promise.all([
-          fetch(`${apiUrl}linker_vendortouser`),
-          fetch(`${apiUrl}linker_usertovenue/byUserID/${userId}`),
+          fetch(`/api/linker_vendortouser`),
+          fetch(`/api/linker_usertovenue/byUserID/${userId}`),
         ])
 
         const vendorLinksRaw = vendorLinksResponse.ok ? await vendorLinksResponse.json() : []

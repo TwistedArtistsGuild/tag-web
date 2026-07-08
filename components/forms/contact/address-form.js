@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 const FALLBACK_LABELS = ["home", "work", "mobile", "office", "studio", "regional office", "support", "booking", "press", "billing", "sales", "other"]
 const CONTACT_SCOPE_OPTIONS = [
@@ -111,7 +110,6 @@ export default function AddressForm({
   scopeLabelMap = {},
   hideDeleteAction = false,
 }) {
-  const apiUrl = getApiURL()
   const resolvedContext = String(context || "artist").trim().toLowerCase() || "artist"
   const resolvedEntityId = Number(entityID || artistID || 0)
   const normalizedDefaultLabel = String(defaultLabel || "Address").trim() || "Address"
@@ -148,7 +146,7 @@ export default function AddressForm({
     let ignore = false
     const loadLabels = async () => {
       try {
-        const response = await fetch(`${apiUrl}contactlabel`)
+        const response = await fetch(`/api/contactlabel`)
         if (!response.ok) return
         const data = await response.json()
         if (!ignore) {
@@ -162,7 +160,7 @@ export default function AddressForm({
     return () => {
       ignore = true
     }
-  }, [apiUrl])
+  })
 
   const updateEntry = (entryId, updateFn) => {
     setEntries((prev) => prev.map((entry) => (entry.id === entryId ? updateFn(entry) : entry)))
@@ -376,7 +374,7 @@ export default function AddressForm({
     setIsSubmitting(true)
     try {
       for (const payload of payloadEntries) {
-        const response = await fetch(`${apiUrl}contact/manage`, {
+        const response = await fetch(`/api/contact/manage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import getApiURL from '@/components/widgets/GetApiURL'
 
 // Cache to prevent duplicate requests
 const conversationCache = new Map()
@@ -69,10 +68,9 @@ export function useConversations(userId, enabled = true) {
 
     try {
       setLoading(true)
-      const apiUrl = getApiURL()
       
       // Create promise for this request
-      const requestPromise = fetch(`${apiUrl}conversations?userId=${encodeURIComponent(userId)}`)
+      const requestPromise = fetch(`/api/conversations?userId=${encodeURIComponent(userId)}`)
         .then(async (response) => {
           if (!response.ok) {
             throw new Error(`Failed to fetch conversations: ${response.status}`)
@@ -143,8 +141,7 @@ export function useConversations(userId, enabled = true) {
    */
   const createConversation = useCallback(async (participantIds, name = null) => {
     try {
-      const apiUrl = getApiURL()
-      const response = await fetch(`${apiUrl}conversations`, {
+      const response = await fetch(`/api/conversations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -182,8 +179,7 @@ export function useConversations(userId, enabled = true) {
    */
   const markAsRead = useCallback(async (conversationId) => {
     try {
-      const apiUrl = getApiURL()
-      const response = await fetch(`${apiUrl}conversations/${conversationId}/read`, {
+      const response = await fetch(`/api/conversations/${conversationId}/read`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
@@ -213,8 +209,7 @@ export function useConversations(userId, enabled = true) {
    */
   const deleteConversation = useCallback(async (conversationId) => {
     try {
-      const apiUrl = getApiURL()
-      const response = await fetch(`${apiUrl}conversations/${conversationId}?userId=${userId}`, {
+      const response = await fetch(`/api/conversations/${conversationId}?userId=${userId}`, {
         method: 'DELETE'
       })
 

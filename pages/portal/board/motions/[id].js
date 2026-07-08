@@ -5,7 +5,6 @@ import { isAdmin, isStaff } from "@/utils/authHelpers";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
-import getApiURL from "@/components/widgets/GetApiURL";
 import TagSEO from "@/components/TagSEO";
 import BoardContextNav from "@/components/portal/BoardContextNav";
 import { sanitizeDefaultHtml, stripHtmlText } from "@/components/security/sanitize";
@@ -22,12 +21,10 @@ export default function MotionDetails(props) {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
 
-    const api_url = getApiURL();
-
     const fetchMotion = async () => {
         if (!id) return;
         setLoading(true);
-        const res = await fetch(`${api_url}motions/${id}`);
+        const res = await fetch(`/api/motions/${id}`);
         if (res.ok) setMotion(await res.json());
         setLoading(false);
     };
@@ -36,7 +33,7 @@ export default function MotionDetails(props) {
 
     const handleSecond = async () => {
         setSubmitting(true);
-        const res = await fetch(`${api_url}motions/${id}/second`, {
+        const res = await fetch(`/api/motions/${id}/second`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(userId)
@@ -48,7 +45,7 @@ export default function MotionDetails(props) {
 
     const handleVote = async (voteValue) => {
         setSubmitting(true);
-        const res = await fetch(`${api_url}motions/${id}/vote`, {
+        const res = await fetch(`/api/motions/${id}/vote`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId, voteValue })

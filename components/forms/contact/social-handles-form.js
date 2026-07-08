@@ -11,7 +11,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { DEFAULT_SOCIALS } from "@/components/cards/card_contactList"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 export const socialPlatforms = {
   instagram: { label: "Instagram", baseUrl: "https://www.instagram.com/" },
@@ -240,8 +239,7 @@ function SocialEntryDisplay({ entry, icon, onEdit, onDragStart, onDelete }) {
  *   availableScopes — allowed scope values for this surface
  *   onSaved         — callback(savedCount) after successful save
  */
-export default function SocialHandlesForm({ context = "artist", entityID, artistID, existingContacts = [], defaultScope = "secondary", availableScopes = ["secondary"], onSaved }) {
-  const apiUrl = getApiURL()
+export default function SocialHandlesForm({ context = "artist", entityID, artistID, existingContacts = [], defaultScope = "secondary", availableScopes = ["secondary"], onSaved }) {  
   const resolvedContext = String(context || "artist").trim().toLowerCase() || "artist"
   const resolvedEntityId = Number(entityID || artistID || 0)
   const canChooseScope = availableScopes.length > 1
@@ -408,7 +406,7 @@ export default function SocialHandlesForm({ context = "artist", entityID, artist
     setIsSubmitting(true)
     try {
       for (const payload of payloadEntries) {
-        const response = await fetch(`${apiUrl}contact/manage`, {
+        const response = await fetch(`/api/contact/manage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

@@ -28,7 +28,6 @@ function readMessage(payload, fallback) {
 export default function RegisterSlug({
   domain,
   domainLabel,
-  apiBaseUrl,
   reserveEndpoint,
   updateEndpoint,
   checkEndpoint,
@@ -415,11 +414,7 @@ export default function RegisterSlug({
           <div className={`alert ${feedback.type === "error" ? "alert-error" : "alert-success"}`}>
             <span>{feedback.message}</span>
           </div>
-        )}
-
-        <div className="text-xs text-base-content/60">
-          API: {apiBaseUrl}
-        </div>
+        )}        
       </div>
     </div>
   );

@@ -5,7 +5,6 @@ import { getServerSession } from "next-auth/next"
 
 import UserContextNav from "@/components/portal/UserContextNav"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 
 const ROLE_META = {
@@ -446,7 +445,6 @@ export async function getServerSideProps(context) {
 
 	if (userId) {
 		try {
-			const apiUrl = getApiURL()
 
 			const fetchJsonOrNull = async (url) => {
 				const res = await fetch(url)
@@ -457,13 +455,13 @@ export async function getServerSideProps(context) {
 			}
 
 			const [user, preference, privacy, settings, registeredArtists, vendorLinksRaw, linkedVenuesRaw] = await Promise.all([
-				fetchJsonOrNull(`${apiUrl}user-details/${userId}/private?viewerUserId=${encodeURIComponent(String(userId))}`),
-				fetchJsonOrNull(`${apiUrl}userpreference/${userId}`),
-				fetchJsonOrNull(`${apiUrl}userprivacy/by-user/${userId}?viewerUserId=${encodeURIComponent(String(userId))}`),
-				fetchJsonOrNull(`${apiUrl}usersettings/${userId}`),
-				fetchJsonOrNull(`${apiUrl}linker_usertoartist/byUserID/${userId}`),
-				fetchJsonOrNull(`${apiUrl}linker_vendortouser`),
-				fetchJsonOrNull(`${apiUrl}linker_usertovenue/byUserID/${userId}`),
+				fetchJsonOrNull(`/api/user-details/${userId}/private?viewerUserId=${encodeURIComponent(String(userId))}`),
+				fetchJsonOrNull(`/api/userpreference/${userId}`),
+				fetchJsonOrNull(`/api/userprivacy/by-user/${userId}?viewerUserId=${encodeURIComponent(String(userId))}`),
+				fetchJsonOrNull(`/api/usersettings/${userId}`),
+				fetchJsonOrNull(`/api/linker_usertoartist/byUserID/${userId}`),
+				fetchJsonOrNull(`/api/linker_vendortouser`),
+				fetchJsonOrNull(`/api/linker_usertovenue/byUserID/${userId}`),
 			])
 
 			apiSnapshot.user = user
@@ -487,7 +485,7 @@ export async function getServerSideProps(context) {
 						return artist
 					}
 
-					const profileData = await fetchJsonOrNull(`${apiUrl}artist/${artist.path}/profile`)
+					const profileData = await fetchJsonOrNull(`/api/artist/${artist.path}/profile`)
 					if (!profileData?.artist) {
 						return artist
 					}
@@ -525,7 +523,7 @@ export async function getServerSideProps(context) {
 
 			const vendorProfiles = await Promise.all(
 				linkedVendorIds.map(async (vendorId) => {
-					const vendorData = await fetchJsonOrNull(`${apiUrl}vendor/byID/${vendorId}`)
+					const vendorData = await fetchJsonOrNull(`/api/vendor/byID/${vendorId}`)
 					if (!vendorData) {
 						return null
 					}

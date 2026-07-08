@@ -12,12 +12,9 @@
 
 
 import DynaFormDB from "@/components/widgets/DynaFormDB"
-import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 
 //broken but don't care!!!!
-
-const api_url = getApiURL();
 /**
  * Component for updating user details.
  * @param {Object} props
@@ -28,7 +25,7 @@ const api_url = getApiURL();
 export default function UpdateEventForm1(props) {
     props.metadataProp.FromURL = "/events/" + props.slug + "/update.js";
     props.metadataProp.redirectURL = "/events/" + props.slug;
-    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}/${props.slug}`;
+    props.metadataProp.APIURL = `/api/${props.metadataProp.apiurlpostfix}/${props.slug}`;
     return (
         <div className="p-4">
             <TagSEO
@@ -63,9 +60,9 @@ UpdateEventForm1.getInitialProps = async function (context) {
     let data = {};
     let metadata = {};
     try {
-        const res1 = await fetch(api_url + `event/${slug}`);
+        const res1 = await fetch(`/api/event/${slug}`);
         data = await res1.json();
-        const res2 = await fetch(api_url + `forms_metadata/EventForm1`);
+        const res2 = await fetch(`/api/forms_metadata/EventForm1`);
         metadata = await res2.json();
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);

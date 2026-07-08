@@ -9,10 +9,8 @@
 
  Open source · low-profit · human-first*/
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
 import TagSEO from "@/components/TagSEO";
 
-const api_url = getApiURL();
 const formName = "EventForm1";
 //broken but don't care!!!!
 
@@ -20,7 +18,7 @@ export default function CreateEventForm1(props) {
     props.metadataProp = props.metadataProp || {};
     props.metadataProp.FromURL = "/events/create.js";
     props.metadataProp.redirectURL = "/events/";
-    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}`;
+    props.metadataProp.APIURL = `/api/${props.metadataProp.apiurlpostfix}`;
     return (
         <div className="p-4">
             <TagSEO
@@ -44,7 +42,7 @@ export default function CreateEventForm1(props) {
 CreateEventForm1.getInitialProps = async function () {
     let metadata = {};
     try {
-        const res = await fetch(api_url + 'forms_metadata/'+ formName);
+        const res = await fetch(`/api/forms_metadata/${formName}`);
         metadata = await res.json();
     } catch (error) {
         console.error("Error fetching form meta:", error);

@@ -14,7 +14,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import DateInput from "./DynaDateInput";
 import { useSession } from "next-auth/react";
-import getApiURL from "@/components/widgets/GetApiURL";
 import TTArticle from "@/components/tiptap/TT_Article";
 import TTArticleGallery from "@/components/tiptap/TT_ArticleGallery";
 import TTSingleLine from "@/components/tiptap/TT_SingleLine";
@@ -131,7 +130,6 @@ function isValueMissing(field, value) {
 export default function DynaForm(props) {
   const router = useRouter();
   const { data: session } = useSession();
-  const api_url = getApiURL();
 
   const getSafeClassName = (fieldClassName, fallbackClassName) => {
     const rawClassName = String(fieldClassName || "").trim();
@@ -207,7 +205,7 @@ export default function DynaForm(props) {
     }
 
     if (metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix) {
-      const baseUrl = api_url || "";
+      const baseUrl = '/api/';
       const postfix = metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix || "";
       const separator = baseUrl.endsWith('/') || postfix.startsWith('/') ? '' : '/';
 
@@ -215,7 +213,7 @@ export default function DynaForm(props) {
     }
 
     return "";
-  }, [api_url, metadata.APIURL, metadata.APIURLpostfix, metadata.apiurlpostfix, metadata.apiurLpostfix]);
+  }, [metadata.APIURL, metadata.APIURLpostfix, metadata.apiurlpostfix, metadata.apiurLpostfix]);
 
   const rawRequestType = String(props.request || metadata.requestType || metadata.RequestType || "add").trim().toLowerCase();
   const effectiveRequestType =
@@ -297,13 +295,13 @@ export default function DynaForm(props) {
       console.group("🔍 DynaFormDB Debug Info - Initial Load");
       console.log("Form Metadata:", metadata);
       console.log("Form Initial Values:", initialValues);
-      console.log("API Endpoint:", metadata.APIURL || `${api_url}${metadata.APIURLpostfix || metadata.apiurLpostfix || ''}`);
+      console.log("API Endpoint:", metadata.APIURL || `/api/${metadata.APIURLpostfix || metadata.apiurLpostfix || ''}`);
       console.log("Request Type:", effectiveRequestType);
       console.log("Session Data:", session);
       console.groupEnd();
     }
     return () => window.cancelAnimationFrame(frameId);
-  }, [api_url, effectiveRequestType, endpoint, metadata, orderedFields, props.formData, session]);
+  }, [effectiveRequestType, endpoint, metadata, orderedFields, props.formData, session]);
 
     /**
         * Handles input field changes and updates form state

@@ -3,15 +3,12 @@
  Licensed under the GNU General Public License v3.0 */
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
 import React, { useMemo, useState } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
 import TagSEO from "@/components/TagSEO";
 import StaffContextNav from "@/components/portal/StaffContextNav";
-
-const api_url = getApiURL();
 
 const formName = "CreateContestForm";
 
@@ -35,7 +32,7 @@ export default function CreateContestForm(props) {
             ...base,
             FromURL: "/contests/create.js",
             redirectURL: "/contests",
-            APIURL: `${api_url}contest/create`
+            APIURL: `/api/contest/create`
         };
     }, [props.metadataProp]);
 
@@ -178,10 +175,10 @@ export async function getServerSideProps(context) {
 
     let metadata = {};
     try {
-        let res = await fetch(`${api_url}formsmetadata/${formName}`);
+        let res = await fetch(`/api/formsmetadata/${formName}`);
 
         if (!res.ok) {
-            res = await fetch(`${api_url}forms_metadata/${formName}`);
+            res = await fetch(`/api/forms_metadata/${formName}`);
         }
 
         if (res.ok) {

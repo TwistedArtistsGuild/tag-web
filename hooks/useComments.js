@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useState, useEffect, useCallback } from 'react'
-import getApiURL from '@/components/widgets/GetApiURL'
 
 /**
  * Hook to fetch and manage comments for any target (listing, artist, post, etc.)
@@ -36,11 +35,10 @@ export function useComments(targetId, targetType, enabled = true) {
 
     try {
       setLoading(true)
-      const apiUrl = getApiURL()
       
       // Fetch comments
       const response = await fetch(
-        `${apiUrl}comments?targetType=${targetType}&targetId=${encodeURIComponent(targetId)}`
+        `/api/comments?targetType=${targetType}&targetId=${encodeURIComponent(targetId)}`
       )
       
       if (!response.ok) {
@@ -70,9 +68,8 @@ export function useComments(targetId, targetType, enabled = true) {
     }
 
     try {
-      const apiUrl = getApiURL()
       const response = await fetch(
-        `${apiUrl}comments/count?targetType=${targetType}&targetId=${encodeURIComponent(targetId)}`
+        `/api/comments/count?targetType=${targetType}&targetId=${encodeURIComponent(targetId)}`
       )
       
       if (!response.ok) {
@@ -101,7 +98,6 @@ export function useComments(targetId, targetType, enabled = true) {
     try {
       console.log('useComments.addComment called:', { commentData, parentCommentId })
       
-      const apiUrl = getApiURL()
       const payload = {
         targetId,
         targetType,
@@ -112,7 +108,7 @@ export function useComments(targetId, targetType, enabled = true) {
       
       console.log('API Payload:', payload)
       
-      const response = await fetch(`${apiUrl}comments`, {
+      const response = await fetch(`/api/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -153,8 +149,7 @@ export function useComments(targetId, targetType, enabled = true) {
    */
   const updateComment = useCallback(async (commentId, content, userId) => {
     try {
-      const apiUrl = getApiURL()
-      const response = await fetch(`${apiUrl}comments/${commentId}`, {
+      const response = await fetch(`/api/comments/${commentId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -195,9 +190,8 @@ export function useComments(targetId, targetType, enabled = true) {
    */
   const deleteComment = useCallback(async (commentId, userId) => {
     try {
-      const apiUrl = getApiURL()
       const response = await fetch(
-        `${apiUrl}comments/${commentId}?userId=${encodeURIComponent(userId)}`,
+        `/api/comments/${commentId}?userId=${encodeURIComponent(userId)}`,
         {
           method: 'DELETE',
         }
@@ -229,8 +223,7 @@ export function useComments(targetId, targetType, enabled = true) {
    */
   const getComment = useCallback(async (commentId) => {
     try {
-      const apiUrl = getApiURL()
-      const response = await fetch(`${apiUrl}comments/${commentId}`)
+      const response = await fetch(`/api/comments/${commentId}`)
 
       if (!response.ok) {
         throw new Error(`Failed to fetch comment: ${response.status}`)

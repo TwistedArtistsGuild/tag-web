@@ -1,6 +1,5 @@
 // pages/api/delete-image.js
 import { BlobServiceClient } from '@azure/storage-blob';
-import getApiURL from '@/components/widgets/GetApiURL';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
@@ -20,11 +19,10 @@ export default async function handler(req, res) {
 
         await blockBlobClient.deleteIfExists();
 
-        const apiUrl = getApiURL();
         let resolvedPictureId = pictureId;
 
         if (!resolvedPictureId) {
-            const lookup = await fetch(`${apiUrl}picture/by-url?url=${encodeURIComponent(imageUrl)}`).catch(() => null);
+            const lookup = await fetch(`/api/picture/by-url?url=${encodeURIComponent(imageUrl)}`).catch(() => null);
             if (lookup?.ok) {
                 const found = await lookup.json().catch(() => null);
                 resolvedPictureId = found?.id ?? found?.pictureId ?? null;
@@ -32,7 +30,7 @@ export default async function handler(req, res) {
         }
 
         if (resolvedPictureId) {
-            await fetch(`${apiUrl}picture/${resolvedPictureId}`, {
+            await fetch(`/api/picture/${resolvedPictureId}`, {
                 method: 'DELETE',
             }).catch(() => null);
         }

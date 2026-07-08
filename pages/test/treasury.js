@@ -11,7 +11,6 @@
 
 import { useEffect, useMemo, useState } from "react"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 // --- Fee constants ---
 const DEFAULT_PLATFORM_FEE_RATE = 0.065
@@ -69,13 +68,11 @@ const [users, setUsers]                 = useState([])
 const [artists, setArtists]             = useState([])
 const [pickListings, setPickListings]   = useState([])
 
-const apiUrl = useMemo(() => getApiURL(), [])
-
 useEffect(() => {
 if (!apiUrl) return
 Promise.all([
-fetch(`${apiUrl}user`).then((r) => (r.ok ? r.json() : [])),
-fetch(`${apiUrl}artist`).then((r) => (r.ok ? r.json() : [])),
+fetch(`/api/user`).then((r) => (r.ok ? r.json() : [])),
+fetch(`/api/artist`).then((r) => (r.ok ? r.json() : [])),
 ])
 .then(([u, a]) => {
 setUsers(Array.isArray(u) ? u : [])
@@ -87,7 +84,7 @@ setArtists(Array.isArray(a) ? a : [])
 useEffect(() => {
 if (!apiUrl || !pickArtistId) return
 let cancelled = false
-fetch(`${apiUrl}listing/artist/${pickArtistId}`)
+fetch(`/api/listing/artist/${pickArtistId}`)
 .then((r) => (r.ok ? r.json() : []))
 .then((data) => { if (!cancelled) setPickListings(Array.isArray(data) ? data : []) })
 .catch(() => { if (!cancelled) setPickListings([]) })
@@ -162,7 +159,7 @@ sellerAccountId:       group.artistId,
 vendorAccountId:       "",
 description:           `Purchase of ${group.items.length} listing(s) from ${group.artistTitle}`,
 }
-const res  = await fetch(`${apiUrl}treasury/stripe-event`, {
+const res  = await fetch(`/api/treasury/stripe-event`, {
 method: "POST",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify(payload),

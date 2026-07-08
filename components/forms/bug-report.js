@@ -15,7 +15,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/router"
 import { useSession } from "next-auth/react"
 import { Bug, X } from "lucide-react"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 const HEADER_HEIGHT_PX = 88
 
@@ -57,7 +56,6 @@ export default function BugReportControl({
 	const [expectedBehavior, setExpectedBehavior] = useState(defaultExpectedBehavior)
 	const [longDescription, setLongDescription] = useState(defaultLongDescription)
 	const diagnosticsRef = useRef([])
-	const apiBaseUrl = useMemo(() => getApiURL(), [])
 
 	const buildNumber = process.env.NEXT_PUBLIC_BUILD_NUMBER || process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || "local"
 
@@ -167,7 +165,7 @@ export default function BugReportControl({
 			}
 
 		try {
-			const response = await fetch(`${apiBaseUrl}bug-report`, {
+			const response = await fetch(`/api/bug-report`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({

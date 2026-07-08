@@ -16,7 +16,6 @@ import { getServerSession } from "next-auth/next"
 import ArtistContextNav from "@/components/portal/ArtistContextNav"
 import ArtistCard from "@/components/cards/card_artist"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers"
 
@@ -230,8 +229,7 @@ export async function getServerSideProps(context) {
 
 	if (userId) {
 		try {
-			const apiUrl = getApiURL()
-			const response = await fetch(`${apiUrl}linker_usertoartist/byUserID/${userId}`)
+			const response = await fetch(`/api/linker_usertoartist/byUserID/${userId}`)
 
 			if (response.ok) {
 				const artistData = await response.json()
@@ -256,8 +254,8 @@ export async function getServerSideProps(context) {
 
 						try {
 							const [profileRes, detailRes] = await Promise.all([
-								fetch(`${apiUrl}artist/${slug}/profile`),
-								fetch(`${apiUrl}artist/${slug}`),
+								fetch(`/api/artist/${slug}/profile`),
+								fetch(`/api/artist/${slug}`),
 							])
 
 							const profileData = profileRes.ok ? await profileRes.json() : null
@@ -294,7 +292,7 @@ export async function getServerSideProps(context) {
 						try {
 							// Fetch workflow steps
 							const workflowResponse = await fetch(
-								`${apiUrl}workflows/artist/${artist.artistID}?workflowName=default`
+								`/api/workflows/artist/${artist.artistID}?workflowName=default`
 							)
 
 							if (workflowResponse.ok) {
@@ -309,7 +307,7 @@ export async function getServerSideProps(context) {
 
 								if (allComplete) {
 									// Auto-publish the artist
-									const publishResponse = await fetch(`${apiUrl}artist/${artist.artistID}`, {
+									const publishResponse = await fetch(`/api/artist/${artist.artistID}`, {
 										method: "PUT",
 										headers: { "Content-Type": "application/json" },
 										body: JSON.stringify({ isPublished: true }),

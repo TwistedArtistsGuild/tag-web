@@ -5,7 +5,6 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import OrganizationSlugReservationStep from "@/components/forms/onboarding/organizations/OrganizationSlugReservationStep"
 import JoinPageShell from "@/components/join/common/join-page-shell"
 import TermsAgreementStep from "@/components/join/common/terms-agreement-step"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getMarkdownContent } from "@/components/widgets/markdown"
 import {
   clearVendorRegistrationProgress,
@@ -13,8 +12,6 @@ import {
   markVendorRegistrationStepComplete,
   setVendorRegistrationProgress,
 } from "@/utils/onboarding/vendorWorkflow"
-
-const apiUrl = getApiURL()
 
 function getWizardStep(rawStep) {
   const parsed = Number(rawStep || 1)
@@ -91,7 +88,6 @@ export default function JoinVendorIndexPage({ termsContent, currentStep }) {
         <OrganizationSlugReservationStep
           context="vendor"
           entityLabel="Vendor"
-          apiBaseUrl={apiUrl}
           reservedId={reservedId}
           reservedSlug={reservedSlug}
           buildJoinHref={buildVendorJoinHref}

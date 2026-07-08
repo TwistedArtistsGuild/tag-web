@@ -2,12 +2,9 @@ import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getArtistRegistrationProgress } from "@/utils/onboarding/artistWorkflow"
 import { clearVendorRegistrationProgress, getVendorRegistrationProgress } from "@/utils/onboarding/vendorWorkflow"
 import { clearVenueRegistrationProgress, getVenueRegistrationProgress } from "@/utils/onboarding/venueWorkflow"
-
-const apiUrl = getApiURL()
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -174,7 +171,7 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
       return
     }
 
-    const endpoint = `${apiUrl}${normalizedType}/${resolvedEntityId}`
+    const endpoint = `/api/${normalizedType}/${resolvedEntityId}`
     const registrationKey = makeRegistrationKey(normalizedType, resolvedEntityId)
 
     setDeletingRegistrationKey(registrationKey)
@@ -248,7 +245,7 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
       try {
         const [artistRes, contactsRes] = await Promise.all([
             fetch(`/api/artist/byID/${localArtistId}`),
-          fetch(`${apiUrl}contact/artist/${localArtistId}?includePrivate=true`),
+            fetch(`/api/contact/artist/${localArtistId}?includePrivate=true`),
         ])
 
         if (!artistRes.ok) {
@@ -275,7 +272,7 @@ export default function JoinIndexPage({ artistProgressRows = [], sessionUserId =
         const normalizedUserId = Number(sessionUserId || 0)
         if (Number.isFinite(normalizedUserId) && normalizedUserId > 0) {
           try {
-            await fetch(`${apiUrl}linker_usertoartist`, {
+            await fetch(`/api/linker_usertoartist`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -556,7 +553,7 @@ export async function getServerSideProps(context) {
   }
 
   try {
-    const userDetailsRes = await fetch(`${apiUrl}user-details/${sessionUserId}/private?viewerUserId=${sessionUserId}`)
+      const userDetailsRes = await fetch(`/api/user-details/${sessionUserId}/private?viewerUserId=${sessionUserId}`)
     if (userDetailsRes.ok) {
       const userData = await userDetailsRes.json()
       const username = String(userData?.username || userData?.Username || "").trim().toLowerCase()
@@ -569,7 +566,7 @@ export async function getServerSideProps(context) {
   let linkedArtists = []
 
   try {
-    const linkedResponse = await fetch(`${apiUrl}linker_usertoartist/byUserID/${sessionUserId}`)
+    const linkedResponse = await fetch(`/api/linker_usertoartist/byUserID/${sessionUserId}`)
     if (linkedResponse.ok) {
       const linkedData = await linkedResponse.json()
       linkedArtists = Array.isArray(linkedData) ? linkedData : []
@@ -597,7 +594,7 @@ export async function getServerSideProps(context) {
       // Check if any contacts exist for step 4 progress detection
       let contactCount = 0
       try {
-        const contactsRes = await fetch(`${apiUrl}contact/artist/${artistID}?includePrivate=true`)
+        const contactsRes = await fetch(`/api/contact/artist/${artistID}?includePrivate=true`)
         if (contactsRes.ok) {
           const contactsData = await contactsRes.json()
           const rows = Array.isArray(contactsData?.contacts) ? contactsData.contacts : []

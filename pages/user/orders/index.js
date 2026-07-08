@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import getApiURL from '@/components/widgets/GetApiURL';
 import TagSEO from '@/components/TagSEO';
 import { IoBagCheckOutline } from 'react-icons/io5';
 
@@ -11,8 +10,7 @@ export default function UserOrdersIndexPage() {
     const router = useRouter();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
-    const api_url = getApiURL();
-    const baseApiUrl = api_url.endsWith('/') ? api_url.slice(0, -1) : api_url;
+    const baseApiUrl = '/api'
 
     useEffect(() => {
         if (status === 'unauthenticated') router.push('/');

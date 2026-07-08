@@ -15,7 +15,6 @@ import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
 import FakeListingsSection from "@/components/art/FakeListingsSection"
 import BloomscrollVineRail from "@/components/art/bloomscroll-vine-rail"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { getPanelClass } from "@/components/cards/sizes/panel-layout"
 
@@ -496,7 +495,6 @@ const Listings = (props) => {
 }
 
 Listings.getInitialProps = async (context) => {
-  const api_url = getApiURL()
   const { query } = context
 
   let data = []
@@ -504,7 +502,7 @@ Listings.getInitialProps = async (context) => {
 
   try {
     const queryParams = new URLSearchParams(query).toString()
-    const res = await fetch(`${api_url}listing/?${queryParams}`)
+    const res = await fetch(`/api/listing/?${queryParams}`)
     status = res.status
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${status}`)

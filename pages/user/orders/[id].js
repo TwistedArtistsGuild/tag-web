@@ -3,7 +3,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
-import getApiURL from '@/components/widgets/GetApiURL';
 import TagSEO from '@/components/TagSEO';
 import { IoArrowBackOutline, IoReceiptOutline, IoAnalyticsOutline, IoOpenOutline } from 'react-icons/io5';
 
@@ -14,8 +13,6 @@ export default function OrderDetailsPage() {
 
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
-    const api_url = getApiURL();
-    const baseApiUrl = api_url.endsWith('/') ? api_url.slice(0, -1) : api_url;
 
     useEffect(() => {
         if (status === 'unauthenticated') router.push('/');
@@ -26,7 +23,7 @@ export default function OrderDetailsPage() {
             if (!session?.user?.id || !id) return;
             try {
                 const numericalUserId = parseInt(session.user.id, 10);
-                const res = await fetch(`${baseApiUrl}/order/${id}?userId=${numericalUserId}`);
+                const res = await fetch(`/api/order/${id}?userId=${numericalUserId}`);
                 if (res.ok) {
                     const data = await res.json();
                     setOrder(data);
@@ -41,7 +38,7 @@ export default function OrderDetailsPage() {
         };
 
         if (status === 'authenticated' && id) fetchOrderDetails();
-    }, [status, session, id, baseApiUrl, router]);
+    }, [status, session, id, router]);
 
     if (status === 'loading' || loading) {
         return <div className="min-h-screen flex items-center justify-center"><span className="loading loading-spinner loading-lg text-primary"></span></div>;

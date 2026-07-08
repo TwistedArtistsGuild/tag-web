@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useEffect, useMemo, useState } from "react"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 const PHONE_PREFIX_OPTIONS = [
   { code: "+1", label: "US/CA (+1)" },
@@ -206,7 +205,6 @@ export default function PhoneForm({
   scopeLabelMap = {},
   hideDeleteAction = false,
 }) {
-  const apiUrl = getApiURL()
   const resolvedContext = String(context || "artist").trim().toLowerCase() || "artist"
   const resolvedEntityId = Number(entityID || artistID || 0)
   const canChooseScope = availableScopes.length > 1
@@ -251,7 +249,7 @@ export default function PhoneForm({
     let ignore = false
     const loadLabels = async () => {
       try {
-        const response = await fetch(`${apiUrl}contactlabel`)
+        const response = await fetch(`/api/contactlabel`)
         if (!response.ok) return
         const data = await response.json()
         if (!ignore) {
@@ -265,7 +263,7 @@ export default function PhoneForm({
     return () => {
       ignore = true
     }
-  }, [apiUrl])
+  })
 
   const updateEntry = (entryId, updateFn) => {
     setEntries((prev) => prev.map((entry) => (entry.id === entryId ? updateFn(entry) : entry)))
@@ -343,7 +341,7 @@ export default function PhoneForm({
     setIsSubmitting(true)
     try {
       for (const payload of payloadEntries) {
-        const response = await fetch(`${apiUrl}contact/manage`, {
+        const response = await fetch(`/api/contact/manage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

@@ -1,10 +1,6 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-
-import getApiURL from "@/components/widgets/GetApiURL"
 import { sanitizeCardHtml, sanitizeDefaultHtml, stripHtmlText } from "@/components/security/sanitize"
-
-const apiUrl = getApiURL()
 
 function normalizeSlug(value) {
   return String(value || "").trim().toLowerCase()
@@ -180,7 +176,7 @@ export async function getServerSideProps(context) {
   }
 
   try {
-    const response = await fetch(`${apiUrl}vendor/by-slug/${encodeURIComponent(slug)}`)
+    const response = await fetch(`/api/vendor/by-slug/${encodeURIComponent(slug)}`)
     if (!response.ok) {
       return { notFound: true }
     }

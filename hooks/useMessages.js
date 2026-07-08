@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import getApiURL from '@/components/widgets/GetApiURL'
 
 // Cache to prevent duplicate requests
 const messageCache = new Map()
@@ -75,10 +74,9 @@ export function useMessages(conversationId, enabled = true) {
 
     try {
       setLoading(true)
-      const apiUrl = getApiURL()
       
       const requestPromise = fetch(
-        `${apiUrl}conversations/${conversationId}/messages?page=${pageNum}&limit=50`
+        `/api/conversations/${conversationId}/messages?page=${pageNum}&limit=50`
       ).then(async (response) => {
         if (!response.ok) {
           throw new Error(`Failed to fetch messages: ${response.status}`)

@@ -8,11 +8,9 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import ArtistCard from "@/components/cards/card_artist"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { getPanelClass } from "@/components/cards/sizes/panel-layout"
 
@@ -152,7 +150,6 @@ const Artists = (props) => {
 }
 
 Artists.getInitialProps = async () => {
-  const api_url = getApiURL()
   let data = []
   let status = 200
   let listings = []
@@ -213,16 +210,16 @@ Artists.getInitialProps = async () => {
 
   // If we are running in debug mode, log the active API URL
   if (process.env.DEBUG === "true") {
-    console.log("Artist data fetch starting via API: \n " + api_url + "artist/")
+    console.log("Artist data fetch starting via API: \n /api/artist/")
   }
   try {
-    const listingsRes = await fetch(api_url + "listing/")
+    const listingsRes = await fetch("/api/listing/")
     if (listingsRes.ok) {
       listings = await listingsRes.json()
     }
 
     // Fetch the artist data
-    const res = await fetch(api_url + "artist/")
+    const res = await fetch("/api/artist/")
     status = res.status
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${status}`)

@@ -13,7 +13,6 @@ import TagSEO from "@/components/TagSEO";
 import VendorContextNav from "@/components/portal/VendorContextNav";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import getApiURL from "@/components/widgets/GetApiURL";
 
 export default function Portal_Vendor({ vendors }) {
 	const pageMetaData = {
@@ -107,9 +106,8 @@ export async function getServerSideProps(context) {
 
 	if (userId > 0) {
 		try {
-			const apiUrl = getApiURL()
 
-			const linkerResponse = await fetch(`${apiUrl}linker_vendortouser`)
+			const linkerResponse = await fetch(`/api/linker_vendortouser`)
 			const linkerRows = linkerResponse.ok ? await linkerResponse.json() : []
 			const linkRows = Array.isArray(linkerRows) ? linkerRows : []
 
@@ -126,7 +124,7 @@ export async function getServerSideProps(context) {
 				const vendorResults = await Promise.all(
 					linkedVendorIds.map(async (vendorId) => {
 						try {
-							const response = await fetch(`${apiUrl}vendor/byID/${vendorId}`)
+							const response = await fetch(`/api/vendor/byID/${vendorId}`)
 							if (!response.ok) {
 								return null
 							}

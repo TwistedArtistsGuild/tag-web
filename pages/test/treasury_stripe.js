@@ -13,7 +13,6 @@ import { useEffect, useMemo, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { CardElement, Elements, useElements, useStripe } from "@stripe/react-stripe-js"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 const DEFAULT_PLATFORM_FEE_RATE = 0.065
 const DEFAULT_TAX_RATE = 0.07
@@ -143,21 +142,19 @@ export default function TreasuryTestPage() {
   const [stripePaymentStatus, setStripePaymentStatus] = useState("idle")
   const [stripePaymentAmountCents, setStripePaymentAmountCents] = useState(0)
 
-  const apiUrl = useMemo(() => getApiURL(), [])
   const stripePromise = useMemo(() => (stripePublishableKey ? loadStripe(stripePublishableKey) : null), [stripePublishableKey])
 
   useEffect(() => {
-    if (!apiUrl) return
     Promise.all([
-      fetch(`${apiUrl}user`).then((r) => (r.ok ? r.json() : [])),
-      fetch(`${apiUrl}artist`).then((r) => (r.ok ? r.json() : [])),
+      fetch(`/api/user`).then((r) => (r.ok ? r.json() : [])),
+      fetch(`/api/artist`).then((r) => (r.ok ? r.json() : [])),
     ])
       .then(([u, a]) => {
         setUsers(Array.isArray(u) ? u : [])
         setArtists(Array.isArray(a) ? a : [])
       })
       .catch(() => {})
-  }, [apiUrl])
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -178,7 +175,7 @@ export default function TreasuryTestPage() {
   useEffect(() => {
     if (!apiUrl || !pickArtistId) return
     let cancelled = false
-    fetch(`${apiUrl}listing/artist/${pickArtistId}`)
+    fetch(`/api/listing/artist/${pickArtistId}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
         if (!cancelled) setPickListings(Array.isArray(data) ? data : [])
@@ -319,7 +316,7 @@ export default function TreasuryTestPage() {
             description: `Purchase of ${group.items.length} listing(s) from ${group.artistTitle}`,
           }
 
-          const response = await fetch(`${apiUrl}treasury/stripe-event`, {
+          const response = await fetch(`/api/treasury/stripe-event`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
