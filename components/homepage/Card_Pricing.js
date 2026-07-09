@@ -13,8 +13,8 @@ import Link from "next/link"
 
 const CardPricing = () => {
   return (
-    <div className="card bg-base-100 shadow-lg rounded-box p-8 md:p-10">
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-base-content mb-6">Designed around maximizing your earnings.</h2>
+    <div className="card bg-base-100 shadow-brand rounded-box p-8 md:p-10">
+      <h2 className="text-3xl sm:text-4xl font-bold text-base-content mb-6">Designed around maximizing your earnings.</h2>
       <div className="space-y-4 mb-8">
         <p className="text-lg text-base-content/90 leading-relaxed">
           We ask a minimal monthly or annual membership dues, and a small transaction fee for sales through our
@@ -34,7 +34,7 @@ const CardPricing = () => {
           Competitive pricing, transparent fees, and tools designed to work for artists, not against them.
         </p>
       </div>
-      <Link href="/pricing" className="btn btn-outline btn-wide">
+      <Link href="/pricing" className="btn btn-outline btn-wide border-secondary text-secondary hover:bg-secondary hover:text-secondary-content">
         View Pricing
       </Link>
     </div>

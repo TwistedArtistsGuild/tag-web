@@ -11,8 +11,8 @@
 
 const CardMembershipBenefits = () => {
   return (
-    <div className="card bg-base-100 shadow-lg rounded-box p-8 md:p-10">
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-base-content mb-6">
+    <div className="card bg-base-100 shadow-brand rounded-box p-8 md:p-10">
+      <h2 className="text-3xl sm:text-4xl font-bold text-base-content mb-6">
         More time creating. Less time juggling.
       </h2>
       <div className="space-y-4 mb-8">

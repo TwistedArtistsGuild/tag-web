@@ -14,10 +14,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
-import Image from "next/image"
 import { useSession } from "next-auth/react" // Using useSession for authentication
 import LoginProfile from "@/components/Header/LoginProfile"
 import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
+import ThemeLogo from "@/components/ThemeLogo"
 import { useLayout } from "@/components/LayoutProvider"
 import { Bell, MessageSquare, ChevronUp, ChevronDown, Search } from "lucide-react"
 import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
@@ -471,21 +471,18 @@ export default function Header() {
         {/* Single Header Layer */}
         <div className={headerClass}>
           {/* Left: Logo and Brand */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <Link
               href="/"
-              className="flex items-center space-x-2 px-2 py-1 rounded-md backdrop-blur-sm bg-base-100/18 border border-base-content/10 hover:bg-base-100/24 transition-all"
+              className="flex items-center px-2 py-1 rounded-md backdrop-blur-sm bg-base-100/18 border border-base-content/10 hover:bg-base-100/24 transition-all"
               onClick={() => setActive("")}
             >
-              <Image
-                src="/tag_logo.png"
-                alt="Home"
-                height={40}
-                width={80}
+              <ThemeLogo 
+                src="/HORIZONTAL (HOLLOW WHITE).png" 
+                alt="Twisted Artists Guild" 
+                width="w-48"
+                height="h-14"
               />
-              <span className="font-josefin-sans text-xl font-extrabold italic hidden sm:block">
-                Twisted Artists Guild
-              </span>
             </Link>
             {isMobile && (
               <select

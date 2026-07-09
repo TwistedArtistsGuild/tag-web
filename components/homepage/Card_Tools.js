@@ -11,8 +11,8 @@
 
 const CardTools = () => {
   return (
-    <div className="card bg-base-100 shadow-xl border border-base-300 rounded-box p-8 md:p-10">
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-base-content mb-4">Artists deserve better resources.</h2>
+    <div className="card bg-base-100 shadow-brand border border-base-300 rounded-box p-8 md:p-10">
+      <h2 className="text-3xl sm:text-4xl font-bold text-base-content mb-4">Artists deserve better resources.</h2>
 
       <div className="space-y-5 text-base-content/90">
         <p className="text-lg leading-relaxed max-w-3xl">

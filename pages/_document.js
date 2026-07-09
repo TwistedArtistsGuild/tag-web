@@ -21,7 +21,7 @@ export default function Document() {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Bebas+Neue&family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Courgette&family=Dancing+Script:wght@400;600;700&family=Great+Vibes&family=Oswald:wght@400;500;600&family=Pacifico&family=Parisienne&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Raleway:wght@400;500;600&family=Sacramento&family=Satisfy&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Bebas+Neue&family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Courgette&family=Dancing+Script:wght@400;600;700&family=Great+Vibes&family=ManRope:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Pacifico&family=Parisienne&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Raleway:wght@400;500;600&family=Sacramento&family=Satisfy&display=swap"
         />
         <meta name="theme-color" content={config.colors.main} />
         <link

@@ -12,6 +12,7 @@
 
 
 import Link from "next/link"
+import ThemeLogo from "@/components/ThemeLogo"
 import MissionStatement from "@/components/MissionStatement"
 /**
  * Footer component for website navigation and social media links
@@ -29,7 +30,13 @@ export default function Footer({ className }) {
         <div className="flex flex-wrap lg:items-start">
           <div className="w-64 shrink-0 text-left">
             <Link href="/#" aria-current="page" className="flex gap-2 justify-start items-center">
-              <strong className="font-bold text-lg">Twisted Artist Guild</strong>
+              <ThemeLogo 
+                src="/TAG (HOLLOW).png" 
+                alt="TAG Logo" 
+                width="w-12"
+                height="h-6"
+              />
+              <strong className="font-bold text-lg">Twisted Artists Guild</strong>
             </Link>
             <p className="mt-2 text-sm text-base-content/80">Empowering Artists Worldwide</p>
             {/* Social Media Links */}
