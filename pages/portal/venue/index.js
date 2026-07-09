@@ -14,7 +14,6 @@ import { getServerSession } from "next-auth/next"
 import TagSEO from "@/components/TagSEO"
 import VenueContextNav from "@/components/portal/VenueContextNav"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 export default function VenuePortalIndex({ venues }) {
 	const pageMetaData = {
@@ -114,8 +113,7 @@ export async function getServerSideProps(context) {
 	}
 
 	try {
-		const apiUrl = getApiURL()
-		const response = await fetch(`${apiUrl}linker_usertovenue/byUserID/${userId}`)
+		const response = await fetch(`/api/linker_usertovenue/byUserID/${userId}`)
 
 		if (response.ok) {
 			const venues = await response.json()

@@ -15,7 +15,6 @@ import { useSession } from "next-auth/react"
 import { useEffect } from "react"
 
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { useAppContext } from "@/components/Context"
 import DynamicComments, { CommentTargetType } from "@/components/social/DynamicComments"
 
@@ -139,10 +138,9 @@ export default function UserProfile(props) {
 
 export async function getStaticProps(context) {
 	const { slug } = context.params
-	const apiUrl = getApiURL()
 
 	try {
-		const response = await fetch(`${apiUrl}user-details/by-username/${encodeURIComponent(slug)}`)
+		const response = await fetch(`/api/user-details/by-username/${encodeURIComponent(slug)}`)
 		if (!response.ok) {
 			return { notFound: true }
 		}

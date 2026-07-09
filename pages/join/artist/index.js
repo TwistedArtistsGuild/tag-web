@@ -4,15 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import TagSEO from "@/components/TagSEO";
 import RegisterSlug from "@/components/forms/onboarding/register-slug";
 import TermsAcceptanceForm from "@/components/forms/onboarding/artists/TermsAcceptanceForm";
-import getApiURL from "@/components/widgets/GetApiURL";
 import {
   getArtistRegistrationProgress,
   markArtistRegistrationStepComplete,
   setArtistRegistrationProgress,
   markWorkflowStepComplete,
 } from "@/utils/onboarding/artistWorkflow";
-
-const apiUrl = getApiURL();
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim();
@@ -113,7 +110,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep }) {
       });
     },
     markStepComplete: markArtistRegistrationStepComplete,
-    markWorkflowStep: (entityId, stepKey) => markWorkflowStepComplete(entityId, stepKey, apiUrl),
+    markWorkflowStep: (entityId, stepKey) => markWorkflowStepComplete(entityId, stepKey),
   }), [draftKey, sessionUserId]);
 
   const pageMetaData = {
@@ -174,10 +171,9 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep }) {
           <RegisterSlug
             domain="artist"
             domainLabel="Artist"
-            apiBaseUrl={apiUrl}
-            reserveEndpoint={`${apiUrl}artist/reserve-slug`}
-            updateEndpoint={(id) => `${apiUrl}artist/${id}/update-slug`}
-            checkEndpoint={(candidateSlug, currentId) => `${apiUrl}artist/check-slug/${encodeURIComponent(candidateSlug)}${currentId ? `?excludeId=${encodeURIComponent(currentId)}` : ""}`}
+            reserveEndpoint={`/api/artist/reserve-slug`}
+            updateEndpoint={(id) => `/api/artist/${id}/update-slug`}
+            checkEndpoint={(candidateSlug, currentId) => `/api/artist/check-slug/${encodeURIComponent(candidateSlug)}${currentId ? `?excludeId=${encodeURIComponent(currentId)}` : ""}`}
             nextRoute={() => {
               const progress = scopedProgressApi.getProgress?.() || {};
               const nextSlug = String(progress?.slug || "").trim().toLowerCase();
@@ -192,7 +188,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep }) {
               }
 
               try {
-                await fetch(`${apiUrl}linker_usertoartist`, {
+                await fetch(`/api/linker_usertoartist`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({

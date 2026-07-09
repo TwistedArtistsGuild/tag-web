@@ -23,7 +23,6 @@ import { Bell, MessageSquare, ChevronUp, ChevronDown, Search } from "lucide-reac
 import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
 import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
 import BugReportControl from "@/components/forms/bug-report"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { buildHeaderNotifications } from "@/components/Header/notification-items"
 
 // Available themes

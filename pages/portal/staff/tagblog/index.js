@@ -14,11 +14,9 @@ import { getServerSession } from "next-auth/next";
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import TagSEO from "@/components/TagSEO";
 import StaffContextNav from "@/components/portal/StaffContextNav";
-import getApiURL from "@/components/widgets/GetApiURL";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
 
-const api_url = getApiURL();
 const formName = "BlogForm1";
 
 function isAuthorRole(session) {
@@ -38,7 +36,7 @@ export default function StaffTagBlogSuggestion(props) {
 		const imageStartPrefix = "platformpics/blog/";
 		const apiPostfix = base.apiurlpostfix || base.APIURLpostfix || base.apiurLpostfix || "blog";
 		const normalizedPostfix = String(apiPostfix).replace(/^\/+/, "");
-		const resolvedApiUrl = base.APIURL || `${api_url}${normalizedPostfix}`;
+		const resolvedApiUrl = base.APIURL || `/api/${normalizedPostfix}`;
 
 		return {
 			...base,
@@ -112,9 +110,9 @@ export async function getServerSideProps(context) {
 
 	let metadata = {};
 	try {
-		let res = await fetch(`${api_url}formsmetadata/${formName}`);
+		let res = await fetch(`/api/formsmetadata/${formName}`);
 		if (!res.ok) {
-			res = await fetch(`${api_url}forms_metadata/${formName}`);
+			res = await fetch(`/api/forms_metadata/${formName}`);
 		}
 		if (res.ok) {
 			metadata = await res.json();

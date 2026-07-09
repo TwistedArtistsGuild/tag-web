@@ -9,16 +9,13 @@
 
  Open source · low-profit · human-first*/
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
-import PictureExplorerCard from "@/components/PictureExplorerCard";
 import TagSEO from "@/components/TagSEO";
 import ArtistContextNav from "@/components/portal/ArtistContextNav";
 
-const api_url = getApiURL();
 const formName = "ListingForm1";
 
 export default function UpdateListingForm2(props) {
@@ -35,7 +32,7 @@ export default function UpdateListingForm2(props) {
             ...base,
             FromURL: "/portal/artist/listing/update/[slug]",
             redirectURL: `/portal/artist/listing/${props.listingId}`,
-            APIURL: `${api_url}listing/byID/${props.listingId}`
+            APIURL: `/api/listing/byID/${props.listingId}`
         };
     }, [props.metadataProp, props.listingId]);
 
@@ -137,7 +134,7 @@ export async function getServerSideProps(context) {
 
     if (userId && !isArtist(session) && !isStaff(session) && !isAdmin(session)) {
         try {
-            const linkedResponse = await fetch(`${api_url}linker_usertoartist/byUserID/${userId}`);
+            const linkedResponse = await fetch(`/api/linker_usertoartist/byUserID/${userId}`);
             if (linkedResponse.ok) {
                 const linkedArtists = await linkedResponse.json();
                 hasLinkedArtist = Array.isArray(linkedArtists) && linkedArtists.length > 0;
@@ -174,7 +171,7 @@ export async function getServerSideProps(context) {
 
         if (numericListingId) {
             listingId = numericListingId;
-            const byIdResponse = await fetch(`${api_url}listing/byID/${listingId}`);
+            const byIdResponse = await fetch(`/api/listing/byID/${listingId}`);
             if (byIdResponse.ok) {
                 data = await byIdResponse.json();
             } else {
@@ -186,7 +183,7 @@ export async function getServerSideProps(context) {
                 loadError = "Missing artist slug in route. Open this editor from a valid artist portal URL.";
             }
 
-            let byPathResponse = await fetch(`${api_url}listing/artist/${artistSlug}/listing/${listingSlugOrId}`);
+            let byPathResponse = await fetch(`/api/listing/artist/${artistSlug}/listing/${listingSlugOrId}`);
 
             if (byPathResponse.ok) {
                 data = await byPathResponse.json();
@@ -194,7 +191,7 @@ export async function getServerSideProps(context) {
                 listingId = listingRecordFromPath?.listingID || listingRecordFromPath?.ListingID || null;
 
                 if (listingId) {
-                    const byIdResponse = await fetch(`${api_url}listing/byID/${listingId}`);
+                    const byIdResponse = await fetch(`/api/listing/byID/${listingId}`);
                     if (byIdResponse.ok) {
                         data = await byIdResponse.json();
                     }
@@ -213,11 +210,11 @@ export async function getServerSideProps(context) {
             loadError = "Could not resolve listingId from route or payload.";
         }
 
-        let res2 = await fetch(`${api_url}formsmetadata/${formName}`);
+        let res2 = await fetch(`/api/formsmetadata/${formName}`);
 
         // Backward compatibility with older endpoint naming.
         if (!res2.ok) {
-            res2 = await fetch(`${api_url}forms_metadata/${formName}`);
+            res2 = await fetch(`/api/forms_metadata/${formName}`);
         }
 
         if (res2.ok) {

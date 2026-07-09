@@ -1,5 +1,4 @@
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
 import React, { useMemo } from "react";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
@@ -7,7 +6,6 @@ import { isAdmin, isStaff } from "@/utils/authHelpers";
 import TagSEO from "@/components/TagSEO";
 import BoardContextNav from "@/components/portal/BoardContextNav";
 
-const api_url = getApiURL();
 const formName = "CreateMotionForm"; // Make sure to configure this form in the DB metadata editor
 
 export default function CreateMotionForm(props) {
@@ -16,7 +14,7 @@ export default function CreateMotionForm(props) {
     // We enhance data similar to blogs but inject the user explicitly
     const enhancedMetadata = useMemo(() => {
         const base = props.metadataProp || { APIURLpostfix: "motions", RequestType: "add" };
-        const resolvedApiUrl = `${api_url}motions`;
+        const resolvedApiUrl = `/api/motions`;
 
         return {
             ...base,
@@ -56,8 +54,8 @@ export async function getServerSideProps(context) {
 
     let metadata = {};
     try {
-        let res = await fetch(`${api_url}formsmetadata/${formName}`);
-        if (!res.ok) res = await fetch(`${api_url}forms_metadata/${formName}`);
+        let res = await fetch(`/api/formsmetadata/${formName}`);
+        if (!res.ok) res = await fetch(`/api/forms_metadata/${formName}`);
         if (res.ok) metadata = await res.json();
     } catch (e) { }
 

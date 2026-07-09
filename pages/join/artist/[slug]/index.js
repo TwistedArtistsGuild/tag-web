@@ -2,7 +2,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import TagSEO from "@/components/TagSEO";
-import getApiURL from "@/components/widgets/GetApiURL";
 import ProfileForm from "@/components/forms/onboarding/artists/ProfileForm";
 import BusinessDetailsForm from "@/components/forms/onboarding/artists/BusinessDetailsForm";
 import PrivateContactsForm from "@/components/forms/onboarding/artists/PrivateContactsForm";
@@ -15,8 +14,6 @@ import {
   ARTIST_REGISTRATION_STEPS,
   markWorkflowStepComplete,
 } from "@/utils/onboarding/artistWorkflow";
-
-const apiUrl = getApiURL();
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim();
@@ -271,7 +268,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
    */
   const completeStepAndContinue = async (stepKey, nextStep) => {
     if (resolvedArtistId && stepKey) {
-      await markWorkflowStepComplete(resolvedArtistId, stepKey, apiUrl);
+      await markWorkflowStepComplete(resolvedArtistId, stepKey);
     }
 
     const targetUrl = nextStep === 0 ? "/portal/artist" : buildArtistJoinHref(nextStep, resolvedArtistSlug);
@@ -288,7 +285,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
     setPublishFeedback("");
 
     try {
-      const response = await fetch(`${apiUrl}workflows/artist/${resolvedArtistId}/publish`, {
+      const response = await fetch(`/api/workflows/artist/${resolvedArtistId}/publish`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -624,7 +621,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
 
     setLoadingContacts(true);
     try {
-      const r = await fetch(`${apiUrl}contact/artist/${resolvedArtistId}?includePrivate=true`);
+      const r = await fetch(`/api/contact/artist/${resolvedArtistId}?includePrivate=true`);
       if (!r.ok) {
         return;
       }
@@ -673,7 +670,7 @@ export default function JoinArtistIndexPage({ sessionUser, currentStep, artistId
     const loadWorkflowSummary = async () => {
       setLoadingWorkflowSummary(true);
       try {
-        const response = await fetch(`${apiUrl}workflows/artist/${resolvedArtistId}?workflowName=default`);
+        const response = await fetch(`/api/workflows/artist/${resolvedArtistId}?workflowName=default`);
         if (!response.ok) {
           return;
         }
@@ -1085,7 +1082,7 @@ export async function getArtistJoinServerProps(context, routeSlug = null, option
   let pictures = [];
 
   try {
-    const picturesResponse = await fetch(`${apiUrl}picture`);
+    const picturesResponse = await fetch(`/api/picture`);
     if (picturesResponse.ok) {
       pictures = await picturesResponse.json();
     }
@@ -1095,7 +1092,7 @@ export async function getArtistJoinServerProps(context, routeSlug = null, option
 
   if (normalizedRouteSlug) {
     try {
-      const response = await fetch(`${apiUrl}artist/${encodeURIComponent(normalizedRouteSlug)}`);
+      const response = await fetch(`/api/artist/${encodeURIComponent(normalizedRouteSlug)}`);
       if (response.ok) {
         artistData = await response.json();
         artistId = Number(artistData?.artistID || artistData?.ArtistID || 0);
@@ -1107,7 +1104,7 @@ export async function getArtistJoinServerProps(context, routeSlug = null, option
 
   if (!strictPreSlugFlow && !artistData && !(artistId > 0) && Number.isFinite(sessionUserId) && sessionUserId > 0) {
     try {
-      const linkedResponse = await fetch(`${apiUrl}linker_usertoartist/byUserID/${sessionUserId}`);
+      const linkedResponse = await fetch(`/api/linker_usertoartist/byUserID/${sessionUserId}`);
       if (linkedResponse.ok) {
         const linkedArtists = await linkedResponse.json();
         const rows = Array.isArray(linkedArtists) ? linkedArtists : [];

@@ -3,7 +3,6 @@ import RegisterSlug from "@/components/forms/onboarding/register-slug"
 export default function OrganizationSlugReservationStep({
   context,
   entityLabel,
-  apiBaseUrl,
   reservedId,
   reservedSlug,
   buildJoinHref,
@@ -44,10 +43,9 @@ export default function OrganizationSlugReservationStep({
       <RegisterSlug
         domain={context}
         domainLabel={entityLabel}
-        apiBaseUrl={apiBaseUrl}
-        reserveEndpoint={`${apiBaseUrl}${context}/reserve-slug`}
-        updateEndpoint={(id) => `${apiBaseUrl}${context}/${id}/update-slug`}
-        checkEndpoint={(candidateSlug, currentId) => `${apiBaseUrl}${context}/check-slug/${encodeURIComponent(candidateSlug)}${currentId ? `?excludeId=${encodeURIComponent(currentId)}` : ""}`}
+        reserveEndpoint={`/api/${context}/reserve-slug`}
+        updateEndpoint={(id) => `/api/${context}/${id}/update-slug`}
+        checkEndpoint={(candidateSlug, currentId) => `/api/${context}/check-slug/${encodeURIComponent(candidateSlug)}${currentId ? `?excludeId=${encodeURIComponent(currentId)}` : ""}`}
         nextRoute={(id) => {
           const nextProgress = getProgress?.() || {}
           return buildJoinHref(3, nextProgress.slug, id)

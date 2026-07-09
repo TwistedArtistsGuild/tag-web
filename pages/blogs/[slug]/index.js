@@ -14,10 +14,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react"
-import dynamic from "next/dynamic"
 import longDateOptions from "@/utils/longdateoptions"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import DynamicComments, { CommentTargetType } from "@/components/social/DynamicComments"
 import ImpressionReactions from "@/components/social/ImpressionReactions"
 import { useImpressions, ImpressionTargetType } from "@/hooks/useImpressions"
@@ -397,14 +395,12 @@ const BlogByslug = props => {
 
 BlogByslug.getInitialProps = async function (context) {
 	const {slug} = context.query
-
-	const api_url = getApiURL()
   
 	if (process.env.DEBUG === "true") {
 		console.log (`Fetching blog: ${slug}, path: ${context.pathname}`)
 	} 
-  
-	const res = await fetch (api_url + `blog/path/${slug}`)
+
+	const res = await fetch(`/api/blog/path/${slug}`)
 	const data = await res.json ()
 	
 	const blogData = Array.isArray(data) ? data[0] : data;

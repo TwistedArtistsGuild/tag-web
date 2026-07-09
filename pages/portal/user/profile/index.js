@@ -19,9 +19,6 @@ import UserContextNav from "@/components/portal/UserContextNav"
 import UserPrivateContactsStep from "@/components/forms/onboarding/users/UserPrivateContactsStep"
 import UserProfileMediaStep from "@/components/forms/onboarding/users/UserProfileMediaStep"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
-
-const apiUrl = getApiURL()
 
 function getPortalStep(rawStep) {
   const parsed = Number(rawStep || 1)
@@ -79,7 +76,7 @@ export async function getServerSideProps(context) {
   const currentStep = getPortalStep(context.query?.step)
 
   try {
-    const userResponse = await fetch(`${apiUrl}user-details/${userId}/private?viewerUserId=${encodeURIComponent(String(userId))}`)
+    const userResponse = await fetch(`/api/user-details/${userId}/private?viewerUserId=${encodeURIComponent(String(userId))}`)
     const userData = userResponse.ok ? await userResponse.json() : null
 
     return {
@@ -137,7 +134,7 @@ export default function UserProfilePage({ currentStep, userId, userData, session
 
     setLoadingContacts(true)
     try {
-      const response = await fetch(`${apiUrl}contact/user/${userId}?includePrivate=true`)
+      const response = await fetch(`/api/contact/user/${userId}?includePrivate=true`)
       if (!response.ok) {
         return
       }
@@ -175,7 +172,7 @@ export default function UserProfilePage({ currentStep, userId, userData, session
     setIsSavingProfile(true)
 
     try {
-      const response = await fetch(`${apiUrl}user-details/${userId}`, {
+      const response = await fetch(`/api/user-details/${userId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -255,9 +252,9 @@ export default function UserProfilePage({ currentStep, userId, userData, session
                 <RegisterSlug
                   domain="user"
                   domainLabel="User"
-                  reserveEndpoint={`${apiUrl}user/reserve-username`}
-                  updateEndpoint={(id) => `${apiUrl}user/${id}/update-username`}
-                  checkEndpoint={(candidateUsername) => `${apiUrl}user/check-username/${encodeURIComponent(candidateUsername)}?excludeId=${encodeURIComponent(String(userId))}`}
+                  reserveEndpoint={`/api/user/reserve-username`}
+                  updateEndpoint={(id) => `/api/user/${id}/update-username`}
+                  checkEndpoint={(candidateUsername) => `/api/user/check-username/${encodeURIComponent(candidateUsername)}?excludeId=${encodeURIComponent(String(userId))}`}
                   currentSlug={normalizedUsername}
                   entityId={userId}
                   progressApi={{

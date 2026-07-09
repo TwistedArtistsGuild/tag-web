@@ -3,7 +3,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { useCart } from '../../components/cart/CartContext';
 import TagSEO from '../../components/TagSEO';
-import getApiURL from '../../components/widgets/GetApiURL';
 import { loadStripe } from "@stripe/stripe-js";
 import { CardElement, Elements, useElements, useStripe } from "@stripe/react-stripe-js";
 
@@ -59,8 +58,6 @@ function StripeEmbeddedPaymentForm({ clientSecret, amountCents, currency, buyerN
 export default function CheckoutPaymentPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
-    const api_url = getApiURL();
-    const baseApiUrl = api_url.endsWith('/') ? api_url.slice(0, -1) : api_url;
     
     const { cartItems, cartTotal } = useCart();
     const [mounted, setMounted] = useState(false);
@@ -221,7 +218,7 @@ export default function CheckoutPaymentPage() {
                 }
             }
 
-            const res = await fetch(`${baseApiUrl}/order/place-order`, {
+            const res = await fetch(`/api/order/place-order`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

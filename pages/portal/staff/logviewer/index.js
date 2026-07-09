@@ -18,7 +18,6 @@ import { getServerSession } from "next-auth/next"
 import shortDateOptions from "@/utils/shortdateoptions"
 import TagSEO from "@/components/TagSEO"
 import StaffContextNav from "@/components/portal/StaffContextNav"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
 
@@ -246,12 +245,10 @@ export async function getServerSideProps(context) {
 			notFound: true,
 		}
 	}
-
-	const api_url = getApiURL()
     
 	//Staging API can be added here if needed
 
-	const res = await fetch(api_url + "log/")
+	const res = await fetch("/api/log/")
 	const data = await res.json()
     
 	return {

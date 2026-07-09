@@ -4,7 +4,6 @@
    Licensed under the GNU General Public License v3.0 */
 
 import TagSEO from "@/components/TagSEO";
-import getApiURL from "@/components/widgets/GetApiURL";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import ContestParticipationForm from "@/components/contests/contest-participation-form";
@@ -184,14 +183,13 @@ export async function getServerSideProps(context) {
         };
     }
 
-    const api_url = getApiURL();
     let contest = {};
     let listings = [];
     let artists = [];
 
     try {
         // 1. Fetch Contest
-        const contestRes = await fetch(`${api_url}contest/slug/${slug}`);
+        const contestRes = await fetch(`/api/contest/slug/${slug}`);
 
         if (contestRes.ok) {
             const text = await contestRes.text();
@@ -203,7 +201,7 @@ export async function getServerSideProps(context) {
 
         // 2. Fetch Artists and Listings using the server-side session user ID
         const userId = session.user.id;
-        const artistsRes = await fetch(`${api_url}linker_usertoartist/byUserID/${userId}`);
+        const artistsRes = await fetch(`/api/linker_usertoartist/byUserID/${userId}`);
 
         if (artistsRes.ok) {
             const text = await artistsRes.text();
@@ -214,7 +212,7 @@ export async function getServerSideProps(context) {
                 const listingPromises = artists.map(async (a) => {
                     const id = a.artistID;
                     
-                    const lRes = await fetch(`${api_url}listing/artist/${id}`);
+                    const lRes = await fetch(`/api/listing/artist/${id}`);
                     
                     if (lRes.ok) {
                         const lText = await lRes.text();

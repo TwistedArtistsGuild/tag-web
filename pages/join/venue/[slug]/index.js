@@ -5,9 +5,6 @@ import OrganizationPrimaryContactsStep from "@/components/forms/onboarding/organ
 import OrganizationPublicContactsStep from "@/components/forms/onboarding/organizations/OrganizationPublicContactsStep"
 import OrganizationMediaStep from "@/components/forms/onboarding/organizations/OrganizationMediaStep"
 import JoinPageShell from "@/components/join/common/join-page-shell"
-import getApiURL from "@/components/widgets/GetApiURL"
-
-const apiUrl = getApiURL()
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -152,7 +149,7 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
 
     setLoadingContacts(true)
     try {
-      const response = await fetch(`${apiUrl}contact/venue/${resolvedVenueId}?includePrivate=true`)
+      const response = await fetch(`/api/contact/venue/${resolvedVenueId}?includePrivate=true`)
       if (!response.ok) {
         return
       }
@@ -188,7 +185,7 @@ export default function JoinVenueSlugPage({ currentStep, venueData, routeSlug, v
   }, [currentStep, resolvedVenueId])
 
   const persistVenue = async (payload, setError) => {
-    const response = await fetch(`${apiUrl}venue/${resolvedVenueId}`, {
+    const response = await fetch(`/api/venue/${resolvedVenueId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -497,7 +494,7 @@ export async function getVenueJoinServerProps(context, routeSlug = null) {
 
   if (normalizedRouteSlug) {
     try {
-      const response = await fetch(`${apiUrl}venue/by-slug/${encodeURIComponent(normalizedRouteSlug)}`)
+      const response = await fetch(`/api/venue/by-slug/${encodeURIComponent(normalizedRouteSlug)}`)
       if (response.ok) {
         venueData = await response.json()
         venueId = Number(venueData?.venueID || venueData?.VenueID || 0)
@@ -509,7 +506,7 @@ export async function getVenueJoinServerProps(context, routeSlug = null) {
 
   if (!venueData && venueId > 0) {
     try {
-      const response = await fetch(`${apiUrl}venue/byID/${venueId}`)
+      const response = await fetch(`/api/venue/byID/${venueId}`)
       if (response.ok) {
         venueData = await response.json()
       }

@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import BlogCard from "@/components/cards/card_blog"
 
 const Blog = (props) => {
@@ -59,11 +58,10 @@ const Blog = (props) => {
 }
 
 Blog.getInitialProps = async () => {
-  const api_url = getApiURL()
   let data = []
 
   try {
-    const res = await fetch(api_url + "blog")
+    const res = await fetch("/api/blog")
     data = await res.json()
   } catch (error) {
     console.error("Error fetching blogs:", error)

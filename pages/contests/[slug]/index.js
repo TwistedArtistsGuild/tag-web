@@ -9,7 +9,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import longDateOptions from "@/utils/longdateoptions"
 import ListingCardSmall from "@/components/cards/card_listing_small"
 
@@ -36,11 +35,10 @@ function ContestView(props) {
     const fetchContest = async () => {
       setLoading(true)
       try {
-        const api_url = getApiURL()
         if (process.env.DEBUG === "true") {
-          console.log(`Client fetching contest: ${api_url}contest/slug/${slug}`)
+          console.log(`Client fetching contest: $/api/contest/slug/${slug}`)
         }
-        const res = await fetch(api_url + `contest/slug/${slug}`)
+        const res = await fetch(`/api/contest/slug/${slug}`)
         if (!res.ok) throw new Error(`Contest fetch failed: ${res.status}`)
           const data = await res.json()
           
@@ -221,10 +219,9 @@ function ContestView(props) {
 
 ContestView.getInitialProps = async function (context) {
   const { slug } = context.query
-  const api_url = getApiURL()
 
   try {
-    const res = await fetch(api_url + `contest/slug/${slug}`)
+    const res = await fetch(`/api/contest/slug/${slug}`)
     const data = await res.json()
     const contestData = Array.isArray(data) ? data[0] : data || {}
 

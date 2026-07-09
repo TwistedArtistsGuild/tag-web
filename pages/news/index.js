@@ -15,7 +15,6 @@ import Link from "next/link" // Import Link component
 import { HeartIcon, MessageCircleIcon, ShareIcon, EyeIcon } from "lucide-react" // Import Lucide icons
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getSeededStockPhoto } from "@/utils/stockPhotos"
 import { sanitizeCardHtml } from "@/components/security/sanitize";
 
@@ -235,15 +234,14 @@ export default function News(props) {
 }
 
 News.getInitialProps = async () => {
-  const api_url = getApiURL()
   let blogs = []
   
   // Fetch the blog data to display alongside featured articles
   try {
     if (process.env.DEBUG === "true") {
-      console.log("News page blog data fetch starting\n " + api_url + "blog/")
+      console.log("News page blog data fetch starting\n /api/blog/")
     }
-    const res = await fetch(api_url + "blog/")
+    const res = await fetch("/api/blog/")
     if (res.ok) {
       blogs = await res.json()
     }

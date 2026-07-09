@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 import React, { useState } from "react"
 import Link from "next/link"
-import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 import ArtistCardSmall from "@/components/cards/card_artist_small"
 import ListingCardSmall from "@/components/cards/card_listing_small"
@@ -47,16 +46,11 @@ function getSearchTypes(searchType) {
 	return ENTITY_TYPES.includes(searchType) ? [searchType] : ["artist"]
 }
 
-function getSearchApiBase(apiUrl) {
-	const normalized = String(apiUrl || "").replace(/\/+$/, "/")
-	return normalized.replace(/\/api\/$/i, "/")
-}
-
-async function fetchSearchResults(searchApiBase, type, queryText, limit = 20) {
+async function fetchSearchResults(type, queryText, limit = 20, baseUrl = "") {
 	const endpointPath = SEARCH_ENDPOINTS[type]
 	if (!endpointPath || !queryText) return []
 
-	const endpoint = `${searchApiBase}${endpointPath}?q=${encodeURIComponent(queryText)}&limit=${limit}`
+	const endpoint = `/api/${endpointPath}?q=${encodeURIComponent(queryText)}&limit=${limit}`
 	const response = await fetch(endpoint)
 	if (!response.ok) {
 		throw new Error(`Search ${type} failed with status ${response.status}`)
@@ -66,7 +60,7 @@ async function fetchSearchResults(searchApiBase, type, queryText, limit = 20) {
 	return Array.isArray(data) ? data : []
 }
 
-async function fetchArtistPathById(apiUrl, artistId) {
+async function fetchArtistPathById(artistId, baseUrl = "") {
 	if (!artistId) return ""
 	try {
 		const response = await fetch(`/api/artist/byID/${artistId}`)
@@ -78,7 +72,7 @@ async function fetchArtistPathById(apiUrl, artistId) {
 	}
 }
 
-async function attachArtistPathsToListings(apiUrl, listings, artistResults = []) {
+async function attachArtistPathsToListings(listings, artistResults = [], baseUrl = "") {
 	if (!Array.isArray(listings) || listings.length === 0) return []
 
 	const artistPathById = new Map()
@@ -97,7 +91,7 @@ async function attachArtistPathsToListings(apiUrl, listings, artistResults = [])
 
 	if (unresolvedArtistIds.length > 0) {
 		const resolvedPaths = await Promise.all(
-			unresolvedArtistIds.map((artistId) => fetchArtistPathById(apiUrl, artistId))
+			unresolvedArtistIds.map((artistId) => fetchArtistPathById(artistId, baseUrl))
 		)
 		resolvedPaths.forEach((artistPath, idx) => {
 			if (artistPath) {
@@ -264,28 +258,25 @@ const SearchPage = ({ initialSearchTerm, searchType: initialSearchType = "all", 
 			return
 		}
 
-		const api_url = getApiURL()
-		const searchApiBase = getSearchApiBase(api_url)
 		const typesToSearch = getSearchTypes(searchType)
-		const nextRawResults = buildEmptyResultsByType()
 		const nextResults = buildEmptyResultsByType()
 		setSearchError("")
 		setIsLoading(true)
 
 		try {
 			const settled = await Promise.allSettled(
-				typesToSearch.map((type) => fetchSearchResults(searchApiBase, type, trimmedSearchTerm, 30))
-			)
+typesToSearch.map((type) => fetchSearchResults(type, trimmedSearchTerm, 30))
+		)
 
-			settled.forEach((result, idx) => {
-				const type = typesToSearch[idx]
-				if (result.status === "fulfilled") {
-					nextRawResults[type] = result.value
-				}
-			})
+		settled.forEach((result, idx) => {
+			const type = typesToSearch[idx]
+			if (result.status === "fulfilled") {
+				nextRawResults[type] = result.value
+			}
+		})
 
-			if (typesToSearch.includes("listing")) {
-				nextRawResults.listing = await attachArtistPathsToListings(api_url, nextRawResults.listing, nextRawResults.artist)
+		if (typesToSearch.includes("listing")) {
+			nextRawResults.listing = await attachArtistPathsToListings(nextRawResults.listing, nextRawResults.artist)
 			}
 
 			typesToSearch.forEach((type) => {
@@ -418,15 +409,18 @@ const SearchPage = ({ initialSearchTerm, searchType: initialSearchType = "all", 
 	)
 }
 
-SearchPage.getInitialProps = async function ({ query }) {
-	const api_url = getApiURL()
+SearchPage.getInitialProps = async function ({ query, req }) {
 	const initialResultsByType = buildEmptyResultsByType()
 	let status = 200
 	const searchTerm = query.term || ""
 	const searchType = query.type || "all"
 	const trimmedSearchTerm = String(searchTerm).trim()
 	const typesToSearch = getSearchTypes(searchType)
-	const searchApiBase = getSearchApiBase(api_url)
+	
+	// Build base URL for server-side fetches
+	const baseUrl = req 
+		? `http://${req.headers.host}`
+		: (process.env.NEXT_PUBLIC_API_URL || `http://localhost:3000`)
 
 	if (process.env.DEBUG === "true") {
 		console.log("Search fetch starting via API for types: ", typesToSearch.join(", "))
@@ -435,7 +429,7 @@ SearchPage.getInitialProps = async function ({ query }) {
 	try {
 		if (trimmedSearchTerm) {
 			const settled = await Promise.allSettled(
-				typesToSearch.map((type) => fetchSearchResults(searchApiBase, type, trimmedSearchTerm, 30))
+				typesToSearch.map((type) => fetchSearchResults(type, trimmedSearchTerm, 30, baseUrl))
 			)
 
 			settled.forEach((result, idx) => {
@@ -448,7 +442,7 @@ SearchPage.getInitialProps = async function ({ query }) {
 			})
 
 			if (typesToSearch.includes("listing")) {
-				initialResultsByType.listing = await attachArtistPathsToListings(api_url, initialResultsByType.listing, initialResultsByType.artist)
+				initialResultsByType.listing = await attachArtistPathsToListings(initialResultsByType.listing, initialResultsByType.artist, baseUrl)
 			}
 		}
 	} catch (error) {

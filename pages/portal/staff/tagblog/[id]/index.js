@@ -14,11 +14,8 @@ import { getServerSession } from "next-auth/next";
 import TagSEO from "@/components/TagSEO";
 import StaffContextNav from "@/components/portal/StaffContextNav";
 import BlogCreditsEditor from "@/components/blog/BlogCreditsEditor";
-import getApiURL from "@/components/widgets/GetApiURL";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
-
-const api_url = getApiURL();
 
 function isAuthorRole(session) {
 	return !!session?.user?.roles?.includes("author");
@@ -89,7 +86,7 @@ export async function getServerSideProps(context) {
 	}
 
 	try {
-		const response = await fetch(`${api_url}blog/${id}`);
+		const response = await fetch(`/api/blog/${id}`);
 		if (!response.ok) {
 			return { notFound: true };
 		}
