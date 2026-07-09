@@ -15,7 +15,6 @@ import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
 import StaffContextNav from "@/components/portal/StaffContextNav"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
 
@@ -23,14 +22,13 @@ export default function BugViewerIndexPage() {
 	const [items, setItems] = useState([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState("")
-	const apiBaseUrl = getApiURL()
 
 	useEffect(() => {
 		const load = async () => {
 			setLoading(true)
 			setError("")
 			try {
-				const response = await fetch(`${apiBaseUrl}bug-report`)
+				const response = await fetch(`/api/bug-report`)
 				const body = await response.json().catch(() => ({}))
 				if (!response.ok) {
 					throw new Error(body?.error || "Failed to load bug reports")
@@ -44,7 +42,7 @@ export default function BugViewerIndexPage() {
 		}
 
 		load()
-	}, [apiBaseUrl])
+	}, [])
 
 	return (
 		<div className="min-h-screen bg-base-200 text-base-content p-4 md:p-6">

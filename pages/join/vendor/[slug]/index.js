@@ -5,9 +5,6 @@ import OrganizationPrimaryContactsStep from "@/components/forms/onboarding/organ
 import OrganizationPublicContactsStep from "@/components/forms/onboarding/organizations/OrganizationPublicContactsStep"
 import OrganizationMediaStep from "@/components/forms/onboarding/organizations/OrganizationMediaStep"
 import JoinPageShell from "@/components/join/common/join-page-shell"
-import getApiURL from "@/components/widgets/GetApiURL"
-
-const apiUrl = getApiURL()
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -185,7 +182,7 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
 
     setLoadingContacts(true)
     try {
-      const response = await fetch(`${apiUrl}contact/vendor/${resolvedVendorId}?includePrivate=true`)
+      const response = await fetch(`/api/contact/vendor/${resolvedVendorId}?includePrivate=true`)
       if (!response.ok) {
         return
       }
@@ -221,7 +218,7 @@ export default function JoinVendorSlugPage({ currentStep, vendorData, routeSlug,
   }, [currentStep, resolvedVendorId])
 
   const persistVendor = async (payload, setError) => {
-    const response = await fetch(`${apiUrl}vendor/${resolvedVendorId}`, {
+    const response = await fetch(`/api/vendor/${resolvedVendorId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -580,7 +577,7 @@ export async function getVendorJoinServerProps(context, routeSlug = null) {
 
   if (normalizedRouteSlug) {
     try {
-      const response = await fetch(`${apiUrl}vendor/by-slug/${encodeURIComponent(normalizedRouteSlug)}`)
+      const response = await fetch(`/api/vendor/by-slug/${encodeURIComponent(normalizedRouteSlug)}`)
       if (response.ok) {
         vendorData = await response.json()
         vendorId = Number(vendorData?.vendorID || vendorData?.VendorID || 0)
@@ -592,7 +589,7 @@ export async function getVendorJoinServerProps(context, routeSlug = null) {
 
   if (!vendorData && vendorId > 0) {
     try {
-      const response = await fetch(`${apiUrl}vendor/byID/${vendorId}`)
+      const response = await fetch(`/api/vendor/byID/${vendorId}`)
       if (response.ok) {
         vendorData = await response.json()
       }

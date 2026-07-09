@@ -8,9 +8,6 @@ import OrganizationPrimaryContactsStep from "@/components/forms/onboarding/organ
 import OrganizationPublicContactsStep from "@/components/forms/onboarding/organizations/OrganizationPublicContactsStep"
 import JoinPageShell from "@/components/join/common/join-page-shell"
 import RegisterSlug from "@/components/forms/onboarding/register-slug"
-import getApiURL from "@/components/widgets/GetApiURL"
-
-const apiUrl = getApiURL()
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -180,7 +177,7 @@ export default function PortalVendorEditPage({ currentStep, vendorData, routeSlu
 
     setLoadingContacts(true)
     try {
-      const response = await fetch(`${apiUrl}contact/vendor/${resolvedVendorId}?includePrivate=true`)
+      const response = await fetch(`/api/contact/vendor/${resolvedVendorId}?includePrivate=true`)
       if (!response.ok) {
         return
       }
@@ -216,7 +213,7 @@ export default function PortalVendorEditPage({ currentStep, vendorData, routeSlu
   }, [currentStep, resolvedVendorId])
 
   const persistVendor = async (payload, setError) => {
-    const response = await fetch(`${apiUrl}vendor/${resolvedVendorId}`, {
+    const response = await fetch(`/api/vendor/${resolvedVendorId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -307,9 +304,9 @@ export default function PortalVendorEditPage({ currentStep, vendorData, routeSlu
             <RegisterSlug
               domain="vendor"
               domainLabel="Vendor"
-              reserveEndpoint={`${apiUrl}vendor/reserve-slug`}
-              updateEndpoint={(id) => `${apiUrl}vendor/${id}/update-slug`}
-              checkEndpoint={(candidateSlug) => `${apiUrl}vendor/check-slug/${encodeURIComponent(candidateSlug)}?excludeId=${encodeURIComponent(String(resolvedVendorId))}`}
+              reserveEndpoint={`/api/vendor/reserve-slug`}
+              updateEndpoint={(id) => `/api/vendor/${id}/update-slug`}
+              checkEndpoint={(candidateSlug) => `/api/vendor/check-slug/${encodeURIComponent(candidateSlug)}?excludeId=${encodeURIComponent(String(resolvedVendorId))}`}
               currentSlug={resolvedSlug}
               entityId={resolvedVendorId}
               progressApi={{
@@ -526,7 +523,7 @@ export async function getServerSideProps(context) {
   const currentStep = getPortalStep(context.query?.step)
 
   try {
-    const vendorResponse = await fetch(`${apiUrl}vendor/by-slug/${encodeURIComponent(normalizedSlug)}`)
+    const vendorResponse = await fetch(`/api/vendor/by-slug/${encodeURIComponent(normalizedSlug)}`)
     const vendorData = vendorResponse.ok ? await vendorResponse.json() : null
     const vendorId = vendorData?.id || vendorData?.ID || vendorData?.vendorID || vendorData?.VendorID || null
 

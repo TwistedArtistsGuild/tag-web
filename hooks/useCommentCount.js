@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useState, useEffect, useCallback } from 'react'
-import getApiURL from '@/components/widgets/GetApiURL'
 
 /**
  * Lightweight hook to fetch only comment count
@@ -31,9 +30,8 @@ export function useCommentCount(targetId, targetType, enabled = true) {
 
     try {
       setLoading(true)
-      const apiUrl = getApiURL()
       const response = await fetch(
-        `${apiUrl}comments/count?targetType=${targetType}&targetId=${encodeURIComponent(targetId)}`
+        `/api/comments/count?targetType=${targetType}&targetId=${encodeURIComponent(targetId)}`
       )
       
       if (!response.ok) {

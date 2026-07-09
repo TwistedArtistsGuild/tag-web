@@ -13,7 +13,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { useSession } from "next-auth/react"
 import { defaultFieldClass } from "@/utils/formSettings"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 const CONTAINER_CONFIGS = {
 	// This will get depreciated - the intent was to pass in the starting location and ensure the user can't drift into unathorized areas.
@@ -53,7 +52,6 @@ export default function PictureExplorerCard({
 	defaultCredits = {},
 	creditsMode = "legacy",
 }) {
-	const apiUrl = getApiURL()
 	const { data: session } = useSession()
 	const config = CONTAINER_CONFIGS[useCase] || CONTAINER_CONFIGS["personal-blog"]
 	const resolvedContainer = startContainer || config.container
@@ -512,19 +510,18 @@ export default function PictureExplorerCard({
 	}, [useCase, resolvedStartPrefix, resolvedContainer])
 
 	useEffect(() => {
-		fetch(`${apiUrl}artist`)
+		fetch(`/api/artist`)
 			.then((response) => (response.ok ? response.json() : []))
 			.then((data) => setArtistProfiles(Array.isArray(data) ? data : []))
 			.catch(() => setArtistProfiles([]))
-	}, [apiUrl])
+	}, [])
 
 	useEffect(() => {
-		fetch(`${apiUrl}blog/credit-roles`)
+		fetch(`/api/blog/credit-roles`)
 			.then((r) => (r.ok ? r.json() : []))
 			.then((data) => setCreditRoleOptions(Array.isArray(data) ? data : []))
 			.catch(() => setCreditRoleOptions([]))
-	}, [apiUrl])
-
+	}, [])
 
 	useEffect(() => {
 		if (!selectedFile) return

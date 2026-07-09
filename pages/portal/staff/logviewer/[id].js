@@ -12,11 +12,9 @@
 
 //change to displaying an individual log (from Blogs)
 import shortDateOptions from "@/utils/shortdateoptions"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
-import StaffContextNav from "@/components/portal/StaffContextNav"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
 
@@ -90,15 +88,13 @@ export async function getServerSideProps(context) {
 			notFound: true,
 		}
 	}
-
-	const api_url = getApiURL()
  
 	// If we are running in debug mode, log the active API URL
 	if (process.env.DEBUG === "true") {
 		console.log(`Fetching log: ${id}, path: ${context.pathname}`)
 	} 
 
-	const res = await fetch (api_url + `log/${id}`)
+	const res = await fetch(`/api/log/${id}`)
 	const data = await res.json ()
 
 	if (!res.ok || !data) {

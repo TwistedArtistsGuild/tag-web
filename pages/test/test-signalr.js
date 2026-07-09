@@ -14,13 +14,11 @@ export default function TestSignalR() {
     }
 
     useEffect(() => {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-        addLog(`API URL: ${apiUrl}`)
-        addLog(`Hub URL: ${apiUrl}/hubs/messaging`)
+        addLog(`Hub URL: /api/hubs/messaging`)
 
         // Create connection
         const newConnection = new signalR.HubConnectionBuilder()
-            .withUrl(`${apiUrl}/hubs/messaging`, {
+            .withUrl(`/api/hubs/messaging`, {
                 transport: signalR.HttpTransportType.WebSockets |
                     signalR.HttpTransportType.ServerSentEvents |
                     signalR.HttpTransportType.LongPolling,

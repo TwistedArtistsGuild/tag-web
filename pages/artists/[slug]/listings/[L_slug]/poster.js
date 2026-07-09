@@ -14,7 +14,6 @@
 import Head from "next/head"
 import { useMemo, useRef, useState } from "react"
 
-import getApiURL from "@/components/widgets/GetApiURL"
 import { sanitizeDefaultHtml, stripHtmlText } from "@/components/security/sanitize"
 
 const SITE_URL = "https://twistedartistsguild.com"
@@ -378,12 +377,11 @@ export default function ListingPosterPage({ listing, artistSlug, listingSlug, ca
 
 export async function getServerSideProps(context) {
 	const { slug, L_slug } = context.params
-	const apiUrl = getApiURL()
 	const canonicalUrl = buildAbsoluteUrl(`/artists/${slug}/listings/${L_slug}`)
 	const qrUrl = `/api/qr?url=${encodeURIComponent(canonicalUrl)}&size=320`
 
 	try {
-		const listingResponse = await fetch(`${apiUrl}listing/artist/${encodeURIComponent(slug)}/listing/${encodeURIComponent(L_slug)}`)
+		const listingResponse = await fetch(`/api/listing/artist/${encodeURIComponent(slug)}/listing/${encodeURIComponent(L_slug)}`)
 		if (!listingResponse.ok) {
 			return {
 				props: {
@@ -414,7 +412,7 @@ export async function getServerSideProps(context) {
 			}
 		}
 
-		const byIdResponse = await fetch(`${apiUrl}listing/byID/${listingId}`)
+		const byIdResponse = await fetch(`/api/listing/byID/${listingId}`)
 		const byIdPayload = byIdResponse.ok ? await byIdResponse.json() : null
 		const byIdData = Array.isArray(byIdPayload) ? byIdPayload[0] || null : byIdPayload
 

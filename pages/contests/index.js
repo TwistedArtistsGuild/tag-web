@@ -11,13 +11,11 @@
 
 "use client"
 
-import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import TagSEO from "@/components/TagSEO"
 import DocumentationSection from "@/components/DocumentationSection"
 import ContestCard from "@/components/cards/card_contest"
-import getApiURL from "@/components/widgets/GetApiURL";
 
 function ContestsIndex() {
   const pageMetaData = {
@@ -35,14 +33,13 @@ function ContestsIndex() {
   const [loadingActive, setLoadingActive] = useState(true)
   const [loadingArchive, setLoadingArchive] = useState(true)
     const [error, setError] = useState(null)
-  const api_url = getApiURL();
 
   useEffect(() => {
     // Fetch active contests
     const fetchActive = async () => {
       setLoadingActive(true)
       try {
-        const res = await fetch(`${api_url}contest/active`)
+        const res = await fetch(`/api/contest/active`)
         if (!res.ok) throw new Error(`Active fetch failed: ${res.status}`)
         const data = await res.json()
         // Expect data to be an array; otherwise be defensive
@@ -59,7 +56,7 @@ function ContestsIndex() {
     const fetchArchive = async () => {
       setLoadingArchive(true)
       try {
-          const res = await fetch(`${api_url}contest/archive`)
+          const res = await fetch(`/api/contest/archive`)
         if (!res.ok) throw new Error(`Archive fetch failed: ${res.status}`)
         const data = await res.json()
         setArchiveContests(Array.isArray(data) ? data : data?.contests || [])

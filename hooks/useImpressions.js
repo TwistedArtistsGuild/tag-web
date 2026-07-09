@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import getApiURL from '@/components/widgets/GetApiURL'
 
 // Cache to prevent duplicate requests
 const impressionCache = new Map()
@@ -78,11 +77,10 @@ export function useImpressions(targetId, targetType, enabled = true) {
 
     try {
       setLoading(true)
-      const apiUrl = getApiURL()
       
       // Create promise for this request
       const requestPromise = fetch(
-        `${apiUrl}impression/primary?targetId=${encodeURIComponent(normalizedTargetId)}&targetType=${targetType}`
+        `/api/impression/primary?targetId=${encodeURIComponent(normalizedTargetId)}&targetType=${targetType}`
       ).then(async (response) => {
         if (!response.ok) {
           throw new Error(`Failed to fetch impressions: ${response.status}`)
@@ -143,8 +141,7 @@ export function useImpressions(targetId, targetType, enabled = true) {
     }
 
     try {
-      const apiUrl = getApiURL()
-      const response = await fetch(`${apiUrl}impression/react`, {
+      const response = await fetch(`/api/impression/react`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

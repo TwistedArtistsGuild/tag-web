@@ -11,7 +11,6 @@
 
 
 import DynaFormDB from '@/components/widgets/DynaFormDB';
-import getApiURL from "@/components/widgets/GetApiURL";
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -32,7 +31,6 @@ import TagSEO from "@/components/TagSEO"
 export default function UpdateFormsForm1(props) {
   const router = useRouter();
   const [selectedForm, setSelectedForm] = useState(props.slug || '');
-  const api_url = getApiURL();
 
   const mapFieldToEditorData = (field) => ({
     Forms_FieldID: field?.forms_FieldID,
@@ -97,7 +95,7 @@ export default function UpdateFormsForm1(props) {
     props.metadataProp.FromURL = `/test/updateForms`;
     props.metadataProp.redirectURL = `/test/updateForms/${props.slug}`;
     props.metadataProp.APIURL =
-      api_url + `${props.metadataProp.apiurLpostfix || ''}/${props.metadataProp.name || ''}`;
+      `/api/${props.metadataProp.apiurLpostfix || ''}/${props.metadataProp.name || ''}`;
   }
 
   // For the form structure metadata used for designing/updating the form
@@ -105,8 +103,7 @@ export default function UpdateFormsForm1(props) {
     props.FormStructure_metadata.FromURL = `/test/updateForms`;
     props.FormStructure_metadata.redirectURL = `/test/updateForms/${props.slug}`;
     props.FormStructure_metadata.APIURL =
-      api_url +
-      `${props.FormStructure_metadata.apiurLpostfix || ''}/${props.FormStructure_metadata.name || ''}`;
+      `/api/${props.FormStructure_metadata.apiurLpostfix || ''}/${props.FormStructure_metadata.name || ''}`;
   }
 
   return (
@@ -193,11 +190,9 @@ UpdateFormsForm1.getInitialProps = async function (context) {
     };
   }
 
-  const api_url = getApiURL();
-
   try {
     // Fetch metadata for the specified form slug.
-    const metadataRes = await fetch(`${api_url}FormsMetadata/${slug}`);
+    const metadataRes = await fetch(`/api/FormsMetadata/${slug}`);
     if (!metadataRes.ok) {
       console.error(`Failed to fetch metadata for slug "${slug}": ${metadataRes.status} ${metadataRes.statusText}`);
       throw new Error(`HTTP error! status: ${metadataRes.status}`);
@@ -208,7 +203,7 @@ UpdateFormsForm1.getInitialProps = async function (context) {
     console.log('MetadataProp from API:', metadata);
 
     // Fetch the metadata that defines the form structure.
-    const formStructureRes = await fetch(`${api_url}FormsMetadata/UpdateFormsMeta`);
+    const formStructureRes = await fetch(`/api/FormsMetadata/UpdateFormsMeta`);
     if (!formStructureRes.ok) {
       console.error(`Failed to fetch form structure metadata: ${formStructureRes.status} ${formStructureRes.statusText}`);
       throw new Error(`HTTP error! status: ${formStructureRes.status}`);
@@ -217,7 +212,7 @@ UpdateFormsForm1.getInitialProps = async function (context) {
     console.log('FormStructure_Metadata from API:', FormStructure_metadata);
 
 	// Fetch the metadata that defines the form field structure.
-	const FormStructure_fieldRes = await fetch(`${api_url}FormsMetadata/UpdateFormsFields`);
+	const FormStructure_fieldRes = await fetch(`/api/FormsMetadata/UpdateFormsFields`);
 	if (!FormStructure_fieldRes.ok) {
 	  console.error(`Failed to fetch form fields structure: ${FormStructure_fieldRes.status} ${FormStructure_fieldRes.statusText}`);
 	  throw new Error(`HTTP error! status: ${FormStructure_fieldRes.status}`);
@@ -226,7 +221,7 @@ UpdateFormsForm1.getInitialProps = async function (context) {
 	console.log('FormStructure_field from API:', FormStructure_field);
 
     // Fetch list of available form names.
-    const formNamesRes = await fetch(`${api_url}FormsMetadata/listOfForms`);
+    const formNamesRes = await fetch(`/api/FormsMetadata/listOfForms`);
     if (!formNamesRes.ok) {
       console.error(`Failed to fetch list of forms: ${formNamesRes.status} ${formNamesRes.statusText}`);
       throw new Error(`HTTP error! status: ${formNamesRes.status}`);

@@ -1,7 +1,6 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import formidable from "formidable";
 import fs from "fs";
-import getApiURL from "@/components/widgets/GetApiURL";
 
 const SAFE_SEGMENT_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const ALLOWED_PREFIX_RE = /^[A-Za-z0-9/_\-.]*$/;
@@ -67,8 +66,8 @@ function resolveEntityContext({ category, entityID, targetPrefix }) {
     return null;
 }
 
-async function resolvePictureByUrl(api_url, normalizedURL) {
-    const response = await fetch(`${api_url}picture`);
+async function resolvePictureByUrl(normalizedURL) {
+    const response = await fetch(`/api/picture`);
     if (!response.ok) return null;
     const rows = await response.json();
     if (!Array.isArray(rows)) return null;
@@ -80,25 +79,25 @@ async function resolvePictureByUrl(api_url, normalizedURL) {
     }) || null;
 }
 
-function getEntityReadEndpoint(api_url, category, entityId) {
+function getEntityReadEndpoint(category, entityId) {
     switch (category) {
         case "artist":
-            return `$/api/artist/byID/${entityId}`;
+            return `/api/artist/byID/${entityId}`;
         case "blog":
-            return `${api_url}blog/${entityId}`;
+            return `/api/blog/${entityId}`;
         case "listing":
-            return `${api_url}listing/byID/${entityId}`;
+            return `/api/listing/byID/${entityId}`;
         default:
             return null;
     }
 }
 
-function getEntityGalleryOrderEndpoint(api_url, category, entityId) {
+function getEntityGalleryOrderEndpoint(category, entityId) {
     switch (category) {
         case "artist":
         case "blog":
         case "listing":
-            return `${api_url}${category}/${entityId}/gallery/order`;
+            return `/api/${category}/${entityId}/gallery/order`;
         default:
             return null;
     }
@@ -196,7 +195,6 @@ export default async function handler(req, res) {
         // 6. Create a minimal Picture record for gallery/API consumers.
         const nowIso = new Date().toISOString();
         const normalizedURL = String(url || "").trim().toLowerCase();
-        const api_url = getApiURL();
         const picturePayload = {
             URL: url,
             NormalizedURL: normalizedURL,
@@ -211,7 +209,7 @@ export default async function handler(req, res) {
         let metadataError = null;
         let persistedPictureId = null;
         try {
-            const pictureRes = await fetch(`${api_url}picture`, {
+            const pictureRes = await fetch(`/api/picture`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(picturePayload),
@@ -220,7 +218,7 @@ export default async function handler(req, res) {
             if (!pictureRes.ok) {
                 metadataCreated = false;
                 metadataError = `Picture metadata create failed (${pictureRes.status})`;
-                const resolved = await resolvePictureByUrl(api_url, normalizedURL);
+                const resolved = await resolvePictureByUrl(normalizedURL);
                 persistedPictureId = resolved?.PictureID || resolved?.pictureID || null;
             } else {
                 const created = await pictureRes.json().catch(() => null);
@@ -229,7 +227,7 @@ export default async function handler(req, res) {
         } catch (metadataCreateError) {
             metadataCreated = false;
             metadataError = metadataCreateError?.message || "Picture metadata create failed";
-            const resolved = await resolvePictureByUrl(api_url, normalizedURL).catch(() => null);
+            const resolved = await resolvePictureByUrl(normalizedURL).catch(() => null);
             persistedPictureId = resolved?.PictureID || resolved?.pictureID || null;
         }
 
@@ -240,8 +238,8 @@ export default async function handler(req, res) {
 
         if (canSeedGallery) {
             try {
-            const readEndpoint = getEntityReadEndpoint(api_url, entityContext.scopeType, entityContext.scopeEntityID);
-            const orderEndpoint = getEntityGalleryOrderEndpoint(api_url, entityContext.scopeType, entityContext.scopeEntityID);
+            const readEndpoint = getEntityReadEndpoint(entityContext.scopeType, entityContext.scopeEntityID);
+            const orderEndpoint = getEntityGalleryOrderEndpoint(entityContext.scopeType, entityContext.scopeEntityID);
 
                 if (readEndpoint && orderEndpoint) {
                     const entityResponse = await fetch(readEndpoint);

@@ -6,10 +6,7 @@ import UserPrivateContactsStep from "@/components/forms/onboarding/users/UserPri
 import UserProfileMediaStep from "@/components/forms/onboarding/users/UserProfileMediaStep";
 import UserCoreFields from "@/components/join/workflows/user/user-core-fields";
 import UserPrivacyFields from "@/components/join/workflows/user/user-privacy-fields";
-import getApiURL from "@/components/widgets/GetApiURL";
 import ContentPreferences from "@/pages/portal/user/preferences/content";
-
-const apiUrl = getApiURL();
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim();
@@ -205,7 +202,7 @@ export default function JoinUserSlugPage({
 
     setLoadingContacts(true);
     try {
-      const response = await fetch(`${apiUrl}contact/user/${resolvedUserId}?includePrivate=true`);
+      const response = await fetch(`/api/contact/user/${resolvedUserId}?includePrivate=true`);
       if (!response.ok) {
         return;
       }
@@ -298,7 +295,7 @@ export default function JoinUserSlugPage({
         profilePicID: userForm.profilePicID,
       };
 
-      const response = await fetch(`${apiUrl}user-details/${resolvedUserId}`, {
+      const response = await fetch(`/api/user-details/${resolvedUserId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -338,7 +335,7 @@ export default function JoinUserSlugPage({
         userID: privacyForm.userID || resolvedUserId,
       };
 
-      const response = await fetch(`${apiUrl}userprivacy/${privacyForm.userPrivacyID}?viewerUserId=${encodeURIComponent(String(resolvedUserId))}`, {
+      const response = await fetch(`/api/userprivacy/${privacyForm.userPrivacyID}?viewerUserId=${encodeURIComponent(String(resolvedUserId))}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -399,7 +396,7 @@ export default function JoinUserSlugPage({
         profilePicID: userForm.profilePicID,
       };
 
-      const response = await fetch(`${apiUrl}user-details/${resolvedUserId}`, {
+      const response = await fetch(`/api/user-details/${resolvedUserId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -678,8 +675,8 @@ export async function getUserJoinServerProps(context, routeSlug = null) {
   if (normalizedRouteSlug) {
     try {
       const response = viewerUserId > 0
-        ? await fetch(`${apiUrl}user-details/by-username/${encodeURIComponent(normalizedRouteSlug)}/private?viewerUserId=${viewerUserId}`)
-        : await fetch(`${apiUrl}user-details/by-username/${encodeURIComponent(normalizedRouteSlug)}`);
+        ? await fetch(`/api/user-details/by-username/${encodeURIComponent(normalizedRouteSlug)}/private?viewerUserId=${viewerUserId}`)
+        : await fetch(`/api/user-details/by-username/${encodeURIComponent(normalizedRouteSlug)}`);
       if (response.ok) {
         userData = await response.json();
         userId = Number(userData?.userID || userData?.UserID || 0);
@@ -692,8 +689,8 @@ export async function getUserJoinServerProps(context, routeSlug = null) {
   if (!userData && userId > 0) {
     try {
       const response = viewerUserId > 0
-        ? await fetch(`${apiUrl}user-details/${userId}/private?viewerUserId=${viewerUserId}`)
-        : await fetch(`${apiUrl}user-details/${userId}`);
+        ? await fetch(`/api/user-details/${userId}/private?viewerUserId=${viewerUserId}`)
+        : await fetch(`/api/user-details/${userId}`);
       if (response.ok) {
         userData = await response.json();
       }
@@ -704,7 +701,7 @@ export async function getUserJoinServerProps(context, routeSlug = null) {
 
   if (userId > 0) {
     try {
-      const contactsResponse = await fetch(`${apiUrl}contact/user/${userId}?includePrivate=true`);
+      const contactsResponse = await fetch(`/api/contact/user/${userId}?includePrivate=true`);
       if (contactsResponse.ok) {
         await contactsResponse.json();
       }
@@ -713,7 +710,7 @@ export async function getUserJoinServerProps(context, routeSlug = null) {
     }
 
     try {
-      const preferenceResponse = await fetch(`${apiUrl}userpreference/by-user/${userId}`);
+      const preferenceResponse = await fetch(`/api/userpreference/by-user/${userId}`);
       if (preferenceResponse.ok) {
         userPreference = await preferenceResponse.json();
       }
@@ -722,7 +719,7 @@ export async function getUserJoinServerProps(context, routeSlug = null) {
     }
 
     try {
-      const privacyResponse = await fetch(`${apiUrl}userprivacy/by-user/${userId}?viewerUserId=${encodeURIComponent(String(viewerUserId || userId))}`);
+      const privacyResponse = await fetch(`/api/userprivacy/by-user/${userId}?viewerUserId=${encodeURIComponent(String(viewerUserId || userId))}`);
       if (privacyResponse.ok) {
         userPrivacy = await privacyResponse.json();
       }
@@ -731,7 +728,7 @@ export async function getUserJoinServerProps(context, routeSlug = null) {
     }
 
     try {
-      const settingsResponse = await fetch(`${apiUrl}usersettings/by-user/${userId}`);
+      const settingsResponse = await fetch(`/api/usersettings/by-user/${userId}`);
       if (settingsResponse.ok) {
         userSettings = await settingsResponse.json();
       }

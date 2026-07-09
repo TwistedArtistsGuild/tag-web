@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/router"
 import { useSession } from "next-auth/react"
 import EntityContextNav from "@/components/portal/EntityContextNav"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { stripHtmlText } from "@/components/security/sanitize"
 
 export default function ArtistContextNav() {
@@ -25,9 +24,8 @@ export default function ArtistContextNav() {
     if (userId <= 0) return
 
     let cancelled = false
-    const apiUrl = getApiURL()
 
-    fetch(`${apiUrl}linker_usertoartist/byUserID/${userId}`)
+    fetch(`/api/linker_usertoartist/byUserID/${userId}`)
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => {
         if (cancelled) return

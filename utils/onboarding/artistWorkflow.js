@@ -78,17 +78,16 @@ export function markArtistRegistrationStepComplete(step, details = {}) {
  * Mark a workflow step as complete via the API.
  * @param {number} artistId - Artist ID (EntityID)
  * @param {string} stepKey - Step key from ARTIST_WORKFLOW_STEPS
- * @param {string} apiUrl - Base API URL
  * @returns {Promise<boolean>} - True if successful
  */
-export async function markWorkflowStepComplete(artistId, stepKey, apiUrl) {
+export async function markWorkflowStepComplete(artistId, stepKey) {
   if (!artistId || !stepKey) {
     console.warn("markWorkflowStepComplete: missing artistId or stepKey");
     return false;
   }
 
   try {
-    const response = await fetch(`${apiUrl}workflows/upsert-step`, {
+    const response = await fetch(`/api/workflows/upsert-step`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -115,16 +114,15 @@ export async function markWorkflowStepComplete(artistId, stepKey, apiUrl) {
 /**
  * Fetch all workflow steps for an artist and check if registration is complete.
  * @param {number} artistId - Artist ID (EntityID)
- * @param {string} apiUrl - Base API URL
  * @returns {Promise<{allComplete: boolean, steps: Array}>}
  */
-export async function checkArtistRegistrationComplete(artistId, apiUrl) {
+export async function checkArtistRegistrationComplete(artistId) {
   if (!artistId) {
     return { allComplete: false, steps: [], requiredSteps: [] };
   }
 
   try {
-    const response = await fetch(`${apiUrl}workflows/artist/${artistId}?workflowName=default`);
+    const response = await fetch(`/api/workflows/artist/${artistId}?workflowName=default`);
 
     if (!response.ok) {
       console.error(`Failed to fetch workflow steps: ${response.status}`);

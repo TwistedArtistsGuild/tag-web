@@ -17,7 +17,6 @@ import { useEffect, useState } from "react"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import TagSEO from "@/components/TagSEO"
 import ArtistContextNav from "@/components/portal/ArtistContextNav"
-import getApiURL from "@/components/widgets/GetApiURL"
 import RegisterSlug from "@/components/forms/onboarding/register-slug"
 import AddressForm from "@/components/forms/contact/address-form"
 import EmailForm from "@/components/forms/contact/email-form"
@@ -27,8 +26,6 @@ import UrlLinksForm from "@/components/forms/contact/url-links-form"
 import GalleryManager from "@/components/gallery/GalleryManager"
 import TTTitleLine from "@/components/tiptap/TT_TitleLine"
 import TTArticle from "@/components/tiptap/TT_Article"
-
-const apiUrl = getApiURL()
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -105,7 +102,7 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
     const loadContacts = async () => {
       setLoadingContacts(true)
       try {
-        const res = await fetch(`${apiUrl}contact/artist/${artistId}?includePrivate=true`)
+        const res = await fetch(`/api/contact/artist/${artistId}?includePrivate=true`)
         if (res.ok) {
           const data = await res.json()
           const rows = Array.isArray(data?.contacts) ? data.contacts : []
@@ -190,11 +187,10 @@ export default function PortalArtistEditPage({ artistId, artistData }) {
               <RegisterSlug
                 domain="artist"
                 domainLabel="Artist"
-                apiBaseUrl={apiUrl}
-                reserveEndpoint={`${apiUrl}artist/reserve-slug`}
-                updateEndpoint={(id) => `${apiUrl}artist/${id}/update-slug`}
+                reserveEndpoint={`/api/artist/reserve-slug`}
+                updateEndpoint={(id) => `/api/artist/${id}/update-slug`}
                 checkEndpoint={(candidateSlug, currentId) =>
-                  `${apiUrl}artist/check-slug/${encodeURIComponent(candidateSlug)}${currentId ? `?excludeId=${encodeURIComponent(currentId)}` : ""}`
+                  `/api/artist/check-slug/${encodeURIComponent(candidateSlug)}${currentId ? `?excludeId=${encodeURIComponent(currentId)}` : ""}`
                 }
                 progressApi={{
                   getProgress: () => ({ slug: artistData?.path, entityId: artistId }),
@@ -677,12 +673,11 @@ export async function getServerSideProps(context) {
 
   const { slug } = context.params
   const normalizedSlug = String(slug || "").trim().toLowerCase()
-  const apiUrl = getApiURL()
 
-  console.error(`[ArtistEdit getServerSideProps] Starting with slug: "${slug}", normalized: "${normalizedSlug}", apiUrl: "${apiUrl}"`)
+  console.error(`[ArtistEdit getServerSideProps] Starting with slug: "${slug}", normalized: "${normalizedSlug}"`)
 
   try {
-    const fetchUrl = `${apiUrl}artist/${encodeURIComponent(normalizedSlug)}`
+    const fetchUrl = `/api/artist/${encodeURIComponent(normalizedSlug)}`
     console.error(`[ArtistEdit] Fetching from: ${fetchUrl}`)
     const artistResponse = await fetch(fetchUrl)
     console.error(`[ArtistEdit] API response status: ${artistResponse.status}`)

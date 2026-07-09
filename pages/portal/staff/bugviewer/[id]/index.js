@@ -15,8 +15,6 @@ import { useEffect, useState } from "react"
 import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
-import StaffContextNav from "@/components/portal/StaffContextNav"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
 
@@ -29,14 +27,13 @@ export default function BugViewerDetailPage() {
 	const [status, setStatus] = useState("new")
 	const [note, setNote] = useState("")
 	const [saving, setSaving] = useState(false)
-	const apiBaseUrl = getApiURL()
 
 	const loadItem = async () => {
 		if (!id) return
 		setLoading(true)
 		setError("")
 		try {
-			const response = await fetch(`${apiBaseUrl}bug-report/${id}`)
+			const response = await fetch(`/api/bug-report/${id}`)
 			const body = await response.json().catch(() => ({}))
 			if (!response.ok) {
 				throw new Error(body?.error || "Failed to load report")
@@ -57,14 +54,14 @@ export default function BugViewerDetailPage() {
 
 		run()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [apiBaseUrl, id])
+	}, [id])
 
 	const saveNote = async (event) => {
 		event.preventDefault()
 		setSaving(true)
 		setError("")
 		try {
-			const response = await fetch(`${apiBaseUrl}bug-report/${id}`, {
+			const response = await fetch(`/api/bug-report/${id}`, {
 				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ note, status }),

@@ -10,10 +10,7 @@
  Open source · low-profit · human-first*/
 
 import { useEffect, useMemo, useState } from "react";
-import getApiURL from "@/components/widgets/GetApiURL";
 import MediaCredits from "@/components/forms/media-credits";
-
-const apiUrl = getApiURL();
 
 function buildBlankRow(sortOrder = 0) {
 	return {
@@ -66,8 +63,8 @@ export default function BlogCreditsEditor({ blogId }) {
 			setMessage("");
 			try {
 				const [rolesResponse, creditsResponse] = await Promise.all([
-					fetch(`${apiUrl}blog/credit-roles`),
-					fetch(`${apiUrl}blog/${blogId}/credits`),
+					fetch(`/api/blog/credit-roles`),
+					fetch(`/api/blog/${blogId}/credits`),
 				]);
 
 				if (!rolesResponse.ok) {
@@ -171,7 +168,7 @@ export default function BlogCreditsEditor({ blogId }) {
 			}));
 
 		try {
-			const response = await fetch(`${apiUrl}blog/${blogId}/credits`, {
+			const response = await fetch(`/api/blog/${blogId}/credits`, {
 				method: "PUT",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ credits: normalizedRows }),

@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import getApiURL from '@/components/widgets/GetApiURL';
 
 const CartContext = createContext();
 const LOCAL_STORAGE_KEY = 'tag_cart_items';
@@ -10,7 +9,6 @@ export function CartProvider({ children }) {
     const [cartItems, setCartItems] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [loading, setLoading] = useState(true);
-    const api_url = getApiURL();
 
     // 1. Initial Load from LocalStorage (Instant UI feedback before APIs)
     useEffect(() => {

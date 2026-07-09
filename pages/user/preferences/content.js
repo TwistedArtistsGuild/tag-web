@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import TagSEO from "@/components/TagSEO"
-import Link from "next/link"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { toast } from "react-hot-toast" // Assuming you use a toast library for feedback
 
 const VISIBILITY_MODES = {
@@ -28,8 +26,6 @@ export default function ContentPreferences({ embedded = false }) {
     const alwaysShowCount = Object.values(contentPreference).filter((value) => value === "alwaysShow").length
     const optInCount = Object.values(contentPreference).filter((value) => value === "optIn").length
     const autoHideCount = Object.values(contentPreference).filter((value) => value === "autoHide").length
-
-    const api_url = getApiURL()
 
     useEffect(() => {
         const fetchPreferences = async () => {
@@ -63,7 +59,7 @@ export default function ContentPreferences({ embedded = false }) {
         }
 
         if (session) fetchPreferences()
-    }, [api_url, session])
+    }, [session])
 
     const updatePreference = (key, nextMode) => {
         setContentPreference(prev => ({ ...prev, [key]: nextMode }))

@@ -11,8 +11,6 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import * as signalR from '@microsoft/signalr'
-import getApiURL from '@/components/widgets/GetApiURL'
-
 /**
  * SignalR hook for real-time messaging
  * @param {string} userId - Current user ID
@@ -36,9 +34,8 @@ export function useSignalR(userId, handlers = {}) {
     }
 
     try {
-      const apiUrl = getApiURL()
-      const apiBase = String(apiUrl || '').replace(/\/api\/?$/i, '')
-      const hubUrl = `${apiBase}/hubs/messaging`
+
+      const hubUrl = `/api/hubs/messaging`
 
       // Create connection
       const connection = new signalR.HubConnectionBuilder()

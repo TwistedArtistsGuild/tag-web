@@ -15,7 +15,6 @@ import { getServerSession } from "next-auth/next"
 import TagSEO from "@/components/TagSEO"
 import BoardContextNav from "@/components/portal/BoardContextNav"
 import { stripHtmlText } from "@/components/security/sanitize"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
 
@@ -213,10 +212,9 @@ export async function getServerSideProps(context) {
 	}
 
 	let motions = []
-	const apiUrl = getApiURL()
 
 	try {
-		const motionResponse = await fetch(`${apiUrl}motions`)
+		const motionResponse = await fetch(`/api/motions`)
 		if (motionResponse.ok) {
 			const parsed = await motionResponse.json()
 			if (Array.isArray(parsed)) {

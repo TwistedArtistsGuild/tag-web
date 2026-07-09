@@ -5,8 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useCart } from '@/components/cart/CartContext';
 import TagSEO from '@/components/TagSEO';
-import getApiURL from '@/components/widgets/GetApiURL';
-import { IoAddOutline, IoRemoveOutline, IoTrashOutline, IoShieldCheckmarkOutline } from 'react-icons/io5';
+import { IoAddOutline, IoRemoveOutline, IoShieldCheckmarkOutline } from 'react-icons/io5';
 import { IoCartOutline } from 'react-icons/io5';
 
 // Reusable Address Form Component
@@ -70,8 +69,7 @@ export default function CheckoutPage() {
     const [sameAsShipping, setSameAsShipping] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
     
-    const api_url = getApiURL();
-    const baseApiUrl = api_url.endsWith('/') ? api_url.slice(0, -1) : api_url;
+    const baseApiUrl = '/api';
 
     // Available Address Array
     const [savedAddresses, setSavedAddresses] = useState([]);

@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 const BLOCKED_SOCIAL_DOMAINS = [
   "instagram.com",
@@ -312,7 +311,6 @@ export default function UrlLinksForm({
   scopeLabelMap = {},
   hideDeleteAction = false,
 }) {
-  const apiUrl = getApiURL()
   const resolvedContext = String(context || "artist").trim().toLowerCase() || "artist"
   const resolvedEntityId = Number(entityID || artistID || 0)
   const canChooseScope = availableScopes.length > 1
@@ -357,7 +355,7 @@ export default function UrlLinksForm({
 
     const loadLabelOptions = async () => {
       try {
-        const response = await fetch(`${apiUrl}contactlabel`)
+        const response = await fetch(`/api/contactlabel`)
         if (!response.ok) {
           return
         }
@@ -377,7 +375,7 @@ export default function UrlLinksForm({
     return () => {
       ignore = true
     }
-  }, [apiUrl])
+  })
 
   const updateEntry = useCallback((entryId, updateFn) => {
     setEntries((prev) => prev.map((entry) => (entry.id === entryId ? updateFn(entry) : entry)))
@@ -544,7 +542,7 @@ export default function UrlLinksForm({
     setIsSubmitting(true)
     try {
       for (const payload of payloadEntries) {
-        const response = await fetch(`${apiUrl}contact/manage`, {
+        const response = await fetch(`/api/contact/manage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

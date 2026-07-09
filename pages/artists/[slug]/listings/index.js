@@ -10,9 +10,7 @@
  Open source · low-profit · human-first*/
 
 import { useRouter } from "next/router"
-import Link from "next/link"
 import { useState, useEffect } from "react"
-import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
 
@@ -38,8 +36,7 @@ const ArtistListings = ({ initialListings = [] }) => {
       if (!slug) return
 
       try {
-        const apiUrl = getApiURL()
-        const response = await fetch(`${apiUrl}artist/${slug}/listings`)
+        const response = await fetch(`/api/artist/${slug}/listings`)
         
         if (!response.ok) {
           console.error(`Error fetching artist listings: ${response.status}`)
@@ -101,13 +98,12 @@ const ArtistListings = ({ initialListings = [] }) => {
 
 ArtistListings.getInitialProps = async function (context) {
   const { slug } = context.query
-  const apiUrl = getApiURL()
 
   // Only fetch on server-side to avoid duplicate requests
   if (!context.req) return { initialListings: [] }
 
   try {
-    const res = await fetch(`${apiUrl}artist/${slug}/listings`)
+    const res = await fetch(`/api/artist/${slug}/listings`)
     if (!res.ok) return { initialListings: [] }
     
     const data = await res.json()

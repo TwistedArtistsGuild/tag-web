@@ -12,7 +12,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 function getUserId(user) {
 	return user?.userId ?? user?.userID ?? user?.UserID ?? null
@@ -132,10 +131,9 @@ export default function UsersPage({ users = [] }) {
 }
 
 export async function getStaticProps() {
-	const apiUrl = getApiURL()
 
 	try {
-		const response = await fetch(`${apiUrl}user-details`)
+		const response = await fetch(`/api/user-details`)
 		if (!response.ok) {
 			return { props: { users: [] }, revalidate: 3600 }
 		}

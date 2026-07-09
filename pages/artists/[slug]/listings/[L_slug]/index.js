@@ -8,8 +8,6 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import SocialComments from "@/components/social/Comments"
-import getApiURL from "@/components/widgets/GetApiURL"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
 import dynamic from "next/dynamic"
@@ -217,10 +215,7 @@ const ListingDetails = () => {
       setError(null)
 
       try {
-        const api_url = getApiURL()
-        console.log("API Base URL:", api_url)
-        
-        const fullUrl = `${api_url}listing/artist/${slug}/listing/${L_slug}`
+        const fullUrl = `/api/listing/artist/${slug}/listing/${L_slug}`
         console.log("Full URL:", fullUrl)
         
         console.log("Fetching listing...")
@@ -252,7 +247,7 @@ const ListingDetails = () => {
 
         if (resolvedListingId) {
           console.log("Fetching by ID:", resolvedListingId)
-          const byIdUrl = `${api_url}listing/byID/${resolvedListingId}`
+          const byIdUrl = `/api/listing/byID/${resolvedListingId}`
           console.log("ByID URL:", byIdUrl)
           
           const byIdRes = await fetch(byIdUrl)
