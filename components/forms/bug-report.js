@@ -166,7 +166,7 @@ export default function BugReportControl({
 			}
 
 		try {
-			const response = await fetch("/api/bug-report", {
+			const response = await fetch(`/api/bug-report`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({

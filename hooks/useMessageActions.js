@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useCallback } from 'react'
-import getApiURL from '@/components/widgets/GetApiURL'
 import { sanitizeDefaultHtml } from '@/components/security/sanitize'
 
 /**
@@ -48,7 +47,6 @@ export function useMessageActions(conversationId, currentUserId, conversation = 
     }
 
     try {
-      const apiUrl = getApiURL()
       const sanitizedContent = sanitizeDefaultHtml(content)
       
       // Upload files first if any
@@ -59,7 +57,7 @@ export function useMessageActions(conversationId, currentUserId, conversation = 
         formData.append('conversationId', conversationId)
         formData.append('userId', currentUserId)
         
-        const uploadRes = await fetch(`${apiUrl}messages/upload`, {
+        const uploadRes = await fetch(`/api/messages/upload`, {
           method: 'POST',
           body: formData
         })
@@ -94,7 +92,7 @@ export function useMessageActions(conversationId, currentUserId, conversation = 
       }
       
       // Send message with exact API format
-      const response = await fetch(`${apiUrl}conversations/messages`, {
+      const response = await fetch(`/api/conversations/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -134,10 +132,9 @@ export function useMessageActions(conversationId, currentUserId, conversation = 
     }
 
     try {
-      const apiUrl = getApiURL()
       const sanitizedContent = sanitizeDefaultHtml(newContent)
       
-      const response = await fetch(`${apiUrl}messages/${messageId}`, {
+      const response = await fetch(`/api/messages/${messageId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -178,10 +175,9 @@ export function useMessageActions(conversationId, currentUserId, conversation = 
     }
 
     try {
-      const apiUrl = getApiURL()
       
       const response = await fetch(
-        `${apiUrl}messages/${messageId}?userId=${encodeURIComponent(currentUserId)}`,
+        `/api/messages/${messageId}?userId=${encodeURIComponent(currentUserId)}`,
         { method: 'DELETE' }
       )
 
@@ -207,9 +203,8 @@ export function useMessageActions(conversationId, currentUserId, conversation = 
     if (!currentUserId) return { success: false }
 
     try {
-      const apiUrl = getApiURL()
       
-      await fetch(`${apiUrl}messages/${messageId}/read`, {
+      await fetch(`/api/messages/${messageId}/read`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -230,13 +225,12 @@ export function useMessageActions(conversationId, currentUserId, conversation = 
    */
   const uploadFile = useCallback(async (file) => {
     try {
-      const apiUrl = getApiURL()
       const formData = new FormData()
       formData.append('file', file)
       formData.append('ConversationId', conversationId)
       formData.append('UserId', currentUserId)
       
-      const response = await fetch(`${apiUrl}messages/upload`, {
+      const response = await fetch(`/api/messages/upload`, {
         method: 'POST',
         body: formData
       })

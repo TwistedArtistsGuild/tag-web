@@ -14,14 +14,11 @@ import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
 import TagSEO from "@/components/TagSEO";
-import StaffContextNav from "@/components/portal/StaffContextNav";
-import getApiURL from "@/components/widgets/GetApiURL";
 import { sanitizeCardHtml } from "@/components/security/sanitize";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { hasPermission, isAdmin } from "@/utils/authHelpers";
 import { PERMISSIONS } from "@/utils/permissions";
 
-const api_url = getApiURL();
 const TEMP_ALLOW_DELETE_WITHOUT_ROLE = false;
 
 export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) {
@@ -60,7 +57,7 @@ export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) 
 		setDeletingBlogId(blog.blogID);
 
 		try {
-			const response = await fetch(`${api_url}blog/${blog.blogID}`, {
+			const response = await fetch(`/api/blog/${blog.blogID}`, {
 				method: "DELETE",
 				credentials: "include",
 				headers: {
@@ -199,7 +196,7 @@ export async function getServerSideProps(context) {
 
 	let blogs = [];
 	try {
-		const response = await fetch(`${api_url}blog`);
+		const response = await fetch(`/api/blog`);
 		if (response.ok) {
 			const payload = await response.json();
 			const allBlogs = Array.isArray(payload) ? payload : [];

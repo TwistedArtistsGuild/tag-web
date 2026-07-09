@@ -15,7 +15,6 @@ import { buffer } from "micro"
 import { sendEmail } from "@/pages/api/sendEmail"
 import configFile from "@/config"
 import { findCheckoutSession } from "@/libs/stripe"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -74,19 +73,17 @@ export default async function handler(req, res) {
 
 				let user
 
-				const api_url = getApiURL()
-
 				// Get or create the user. userId is normally pass in the checkout session (clientReferenceID) to identify the user when we get the webhook event
 				if (userId) {
-					const userRes = await fetch(`${api_url}users/${userId}`)
+					const userRes = await fetch(`/api/users/${userId}`)
 					user = await userRes.json()
 				} else if (customer.email) {
-					const userRes = await fetch(`${api_url}users?email=${customer.email}`)
+					const userRes = await fetch(`/api/users?email=${customer.email}`)
 					const users = await userRes.json()
 					user = users[0]
 
 					if (!user) {
-						const createUserRes = await fetch(`${api_url}users`, {
+						const createUserRes = await fetch(`/api/users`, {
 							method: "POST",
 							headers: {
 								"Content-Type": "application/json",
@@ -104,7 +101,7 @@ export default async function handler(req, res) {
 				}
 
 				// update user data (for instance add credits)
-				await fetch(`${api_url}users/${user.id}`, {
+				await fetch(`/api/users/${user.id}`, {
 					method: "PUT",
 					headers: {
 						"Content-Type": "application/json",
@@ -121,7 +118,7 @@ export default async function handler(req, res) {
 					const amountTaxCents = session?.total_details?.amount_tax || 0
 					const shippingRevenueCents = session?.total_details?.amount_shipping || 0
 
-					await fetch(`${api_url}treasury/stripe-event`, {
+					await fetch(`/api/treasury/stripe-event`, {
 						method: "POST",
 						headers: {
 							"Content-Type": "application/json",

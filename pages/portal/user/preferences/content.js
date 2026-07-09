@@ -2,8 +2,6 @@ import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import TagSEO from "@/components/TagSEO"
 import UserContextNav from "@/components/portal/UserContextNav"
-import Link from "next/link"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { toast } from "react-hot-toast" // Assuming you use a toast library for feedback
 
 const VISIBILITY_MODES = {

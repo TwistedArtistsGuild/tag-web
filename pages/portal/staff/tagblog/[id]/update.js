@@ -14,14 +14,11 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import GalleryManager from "@/components/gallery/GalleryManager"
 import DynaFormDB from "@/components/widgets/DynaFormDB"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
 import TagSEO from "@/components/TagSEO"
-import StaffContextNav from "@/components/portal/StaffContextNav";
 
-const api_url = getApiURL();
 const formName = "BlogForm1";
 
 function isAuthorRole(session) {
@@ -59,7 +56,7 @@ export default function UpdateBlogForm1(props) {
             FromURL: `/portal/staff/tagblog/${props.id}/update`,
             redirectURL: props.blogdata?.path ? `/blogs/${props.blogdata.path}` : "/blogs",
             // Reuse the normalized base URL from getApiURL() to keep env fallback/overrides consistent
-            APIURL: `${api_url}blog/${props.blogdata?.blogID}`,
+            APIURL: `/api/blog/${props.blogdata?.blogID}`,
             imageCategory: 'blogs',
             entityId: props.blogdata?.blogID,
             imageContainer: "tagpictures",
@@ -133,10 +130,10 @@ export async function getServerSideProps(context) {
     let data = {};
     let metadata = null;
     try {
-        const res1 = await fetch(api_url + `blog/${id}`);
+        const res1 = await fetch(`/api/blog/${id}`);
         data = await res1.json();
 
-        const metadataResponse = await fetch(`${api_url}formsmetadata/${formName}`);
+        const metadataResponse = await fetch(`/api/formsmetadata/${formName}`);
         if (metadataResponse.ok) {
             metadata = await metadataResponse.json();
         }

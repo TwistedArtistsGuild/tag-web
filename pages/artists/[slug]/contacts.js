@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 import ContactCard, { DEFAULT_SOCIALS, DEFAULT_STORES } from "@/components/cards/card_contactList"
 import ArtistCardSmall from "@/components/cards/card_artist_small"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 import TagSEO from "@/components/TagSEO"
 
@@ -224,7 +223,6 @@ const ContactsPage = ({ links, slug, artistSummary, email, location, phone, prim
 
 ContactsPage.getInitialProps = async (context) => {
   const { slug } = context.query
-  const api_url = getApiURL()
 
   const defaultArtistSummary = {
     title: "Satarah",
@@ -236,7 +234,7 @@ ContactsPage.getInitialProps = async (context) => {
   }
 
   try {
-    const profileResponse = await fetch(`${api_url}artist/${slug}/profile`)
+    const profileResponse = await fetch(`/api/artist/${slug}/profile`)
     const profileData = profileResponse.ok ? await profileResponse.json() : {}
     const artistID = Number(profileData?.artist?.artistID || profileData?.artist?.ArtistID || 0)
 
@@ -247,7 +245,7 @@ ContactsPage.getInitialProps = async (context) => {
     let primaryAddressText = ""
 
     if (artistID > 0) {
-      const dbContactsResponse = await fetch(`${api_url}contact/artist/${artistID}`)
+      const dbContactsResponse = await fetch(`/api/contact/artist/${artistID}`)
 
       if (dbContactsResponse.ok) {
         const dbContactsData = await dbContactsResponse.json()
@@ -309,7 +307,7 @@ ContactsPage.getInitialProps = async (context) => {
 
     // Backward-compatible fallback while transitioning all artists to new contact records.
     if (links.length === 0) {
-      const legacyContactsResponse = await fetch(`${api_url}artists/${slug}/contacts`)
+      const legacyContactsResponse = await fetch(`/api/artists/${slug}/contacts`)
       const legacyContactsData = legacyContactsResponse.ok ? await legacyContactsResponse.json() : { links: [] }
       links = Array.isArray(legacyContactsData?.links) ? legacyContactsData.links : []
     }

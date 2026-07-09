@@ -3,7 +3,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Image from 'next/image';
-import getApiURL from '@/components/widgets/GetApiURL';
 import TagSEO from '@/components/TagSEO';
 import { IoArrowBackOutline, IoPrintOutline, IoRocketOutline } from 'react-icons/io5';
 
@@ -16,9 +15,6 @@ export default function ArtistFulfillmentDetailsPage() {
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     
-    const api_url = getApiURL();
-    const baseApiUrl = api_url.endsWith('/') ? api_url.slice(0, -1) : api_url;
-
     // Hardcode matching the index.js logic for testing. Update this to dynamic auth context when available.
     const activeArtistId = 2; 
 
@@ -29,7 +25,7 @@ export default function ArtistFulfillmentDetailsPage() {
     const fetchOrderDetails = async () => {
         if (!session?.user?.id || !id) return;
         try {
-            const res = await fetch(`${baseApiUrl}/order/${id}?artistId=${activeArtistId}`);
+            const res = await fetch(`/api/order/${id}?artistId=${activeArtistId}`);
             if (res.ok) {
                 const data = await res.json();
                 setOrder(data);

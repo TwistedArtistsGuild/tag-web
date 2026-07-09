@@ -12,7 +12,6 @@
 import TagSEO from "@/components/TagSEO";
 import ListingCard from "@/components/cards/card_listing";
 import { getPanelClass } from "@/components/cards/sizes/panel-layout";
-import getApiURL from "@/components/widgets/GetApiURL";
 
 /**
  *
@@ -64,7 +63,6 @@ const Listings = (props) => {
 };
 
 Listings.getInitialProps = async (context) => {
-  const api_url = getApiURL()
   const { supercat = "", cat = "", medium = "", subcat = "" } = context.query
   let data = []
   let status = 200
@@ -83,7 +81,7 @@ Listings.getInitialProps = async (context) => {
       subcat,
       keyword: `${supercat} ${cat} ${medium} ${subcat}`,
     }).toString()
-    const res = await fetch(`${api_url}listing/?${queryParams}`)
+    const res = await fetch(`/api/listing/?${queryParams}`)
     status = res.status
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${status}`)

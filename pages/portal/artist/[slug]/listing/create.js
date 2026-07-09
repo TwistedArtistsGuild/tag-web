@@ -11,7 +11,6 @@
 
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
@@ -19,7 +18,6 @@ import React, { useMemo } from "react";
 import TagSEO from "@/components/TagSEO";
 import ArtistContextNav from "@/components/portal/ArtistContextNav";
 
-const api_url = getApiURL();
 const formName = "ListingForm1";
 
 /**
@@ -42,7 +40,7 @@ export default function CreateListingForm1(props) {
             ...base,
             FromURL: "/portal/artist/listing/create.js",
             redirectURL: "/portal/artist/listing/",
-            APIURL: `${api_url}${base.apiurlpostfix}`
+            APIURL: `/api/${base.apiurlpostfix}`
         };
     }, [props.metadataProp]);
 
@@ -88,7 +86,7 @@ export async function getServerSideProps(context) {
 
     if (userId && !isArtist(session) && !isStaff(session) && !isAdmin(session)) {
         try {
-            const linkedResponse = await fetch(`${api_url}linker_usertoartist/byUserID/${userId}`);
+            const linkedResponse = await fetch(`/api/linker_usertoartist/byUserID/${userId}`);
             if (linkedResponse.ok) {
                 const linkedArtists = await linkedResponse.json();
                 hasLinkedArtist = Array.isArray(linkedArtists) && linkedArtists.length > 0;
@@ -106,11 +104,11 @@ export async function getServerSideProps(context) {
 
     let metadata = {};
     try {
-        let res = await fetch(`${api_url}formsmetadata/${formName}`);
+        let res = await fetch(`/api/formsmetadata/${formName}`);
 
         // Backward compatibility with older endpoint naming.
         if (!res.ok) {
-            res = await fetch(`${api_url}forms_metadata/${formName}`);
+            res = await fetch(`/api/forms_metadata/${formName}`);
         }
 
         if (res.ok) {

@@ -13,7 +13,6 @@ import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
 import ArtistContextNav from "@/components/portal/ArtistContextNav"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin } from "@/utils/authHelpers"
 
@@ -259,8 +258,7 @@ export async function getServerSideProps(context) {
     }
 
     try {
-      const apiUrl = getApiURL()
-      const linkedArtistResponse = await fetch(`${apiUrl}linker_usertoartist/byUserID/${userId}`)
+      const linkedArtistResponse = await fetch(`/api/linker_usertoartist/byUserID/${userId}`)
 
       if (!linkedArtistResponse.ok) {
         return { notFound: true }
@@ -283,12 +281,10 @@ export async function getServerSideProps(context) {
     }
   }
 
-  const apiUrl = getApiURL()
-
   try {
     const [profileResponse, artistResponse] = await Promise.all([
-      fetch(`${apiUrl}artist/${slug}/profile`),
-      fetch(`${apiUrl}artist/${slug}`),
+      fetch(`/api/artist/${slug}/profile`),
+      fetch(`/api/artist/${slug}`),
     ])
 
     if (!profileResponse.ok) {

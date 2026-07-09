@@ -15,7 +15,6 @@ import Head from "next/head"
 import Image from "next/image"
 import { useMemo, useRef, useState } from "react"
 
-import getApiURL from "@/components/widgets/GetApiURL"
 import { sanitizeCardHtml, stripHtmlText } from "@/components/security/sanitize"
 
 const SITE_URL = "https://twistedartistsguild.com"
@@ -342,7 +341,6 @@ export default function ArtistPosterPage({ artist, profilePic, coverPic, slug, q
 
 export async function getServerSideProps(context) {
 	const { slug } = context.params
-	const apiUrl = getApiURL()
 	const canonicalUrl = buildAbsoluteUrl(`/artists/${slug}`)
 	const qrUrl = `/api/qr?url=${encodeURIComponent(canonicalUrl)}&size=320`
 	const defaultPic = {
@@ -369,7 +367,7 @@ export async function getServerSideProps(context) {
 	}
 
 	try {
-		const artistData = await fetchData(`${apiUrl}artist/${encodeURIComponent(slug)}/profile`, {
+		const artistData = await fetchData(`/api/artist/${encodeURIComponent(slug)}/profile`, {
 			artist: null,
 			profilePic: defaultPic,
 			coverPic: defaultPic,

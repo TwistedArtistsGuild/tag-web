@@ -5,7 +5,6 @@ import TagSEO from "@/components/TagSEO";
 import BoardContextNav from "@/components/portal/BoardContextNav";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
-import getApiURL from "@/components/widgets/GetApiURL";
 import { stripHtmlText } from "@/components/security/sanitize";
 
 export default function MotionsIndex(props) {
@@ -15,9 +14,8 @@ export default function MotionsIndex(props) {
 
     useEffect(() => {
         const fetchMotions = async () => {
-            const api_url = getApiURL();
             try {
-                const res = await fetch(`${api_url}motions`);
+                const res = await fetch(`/api/motions`);
                 if (res.ok) {
                     const data = await res.json();
                     setMotions(data);

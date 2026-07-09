@@ -8,7 +8,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import getApiURL from "@/components/widgets/GetApiURL";
 import ContentTags, { hasExplicitWarning, extractContentWarnings } from "@/components/social/ContentTags";
 
 export default function ContestParticipationForm({ initialListings = [], contest = {}, slug }) {
@@ -16,7 +15,6 @@ export default function ContestParticipationForm({ initialListings = [], contest
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const router = useRouter();
-    const api_url = getApiURL();
 
     const toggleSelection = (id) => {
         setSelected((prev) => {
@@ -44,7 +42,7 @@ export default function ContestParticipationForm({ initialListings = [], contest
                 ListingIds: Array.from(selected)
             };
 
-            const res = await fetch(`${api_url}contest/participate`, {
+            const res = await fetch(`/api/contest/participate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),

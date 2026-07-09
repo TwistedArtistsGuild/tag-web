@@ -12,7 +12,6 @@
 
 import Link from "next/link"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import shortDateOptions from "@/utils/shortdateoptions"
 import PhotoGallery from "@/components/cards/card_photoGallery"
 
@@ -82,13 +81,11 @@ const Events = (props) => {
 Events.getInitialProps = async function () {
 	let data = []
 
-	const api_url = getApiURL()
-
 	// If we are running in debug mode, log the active API URL
 	if (process.env.DEBUG === "true") {
-		console.log("regional event data fetch starting\n " + api_url + "artist/") //broke!
+		console.log("regional event data fetch starting\n /api/artist/") //broke!
 	} 
-	const res = await fetch(api_url + "event")
+	const res = await fetch("/api/event")
 		.then((res) => {
 			return res.json()
 		})

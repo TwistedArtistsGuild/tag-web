@@ -8,9 +8,6 @@ import OrganizationPrimaryContactsStep from "@/components/forms/onboarding/organ
 import OrganizationPublicContactsStep from "@/components/forms/onboarding/organizations/OrganizationPublicContactsStep"
 import JoinPageShell from "@/components/join/common/join-page-shell"
 import RegisterSlug from "@/components/forms/onboarding/register-slug"
-import getApiURL from "@/components/widgets/GetApiURL"
-
-const apiUrl = getApiURL()
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -148,7 +145,7 @@ export default function PortalVenueEditPage({ currentStep, venueData, routeSlug,
 
     setLoadingContacts(true)
     try {
-      const response = await fetch(`${apiUrl}contact/venue/${resolvedVenueId}?includePrivate=true`)
+      const response = await fetch(`/api/contact/venue/${resolvedVenueId}?includePrivate=true`)
       if (!response.ok) {
         return
       }
@@ -184,7 +181,7 @@ export default function PortalVenueEditPage({ currentStep, venueData, routeSlug,
   }, [currentStep, resolvedVenueId])
 
   const persistVenue = async (payload, setError) => {
-    const response = await fetch(`${apiUrl}venue/${resolvedVenueId}`, {
+    const response = await fetch(`/api/venue/${resolvedVenueId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -270,9 +267,9 @@ export default function PortalVenueEditPage({ currentStep, venueData, routeSlug,
             <RegisterSlug
               domain="venue"
               domainLabel="Venue"
-              reserveEndpoint={`${apiUrl}venue/reserve-slug`}
-              updateEndpoint={(id) => `${apiUrl}venue/${id}/update-slug`}
-              checkEndpoint={(candidateSlug) => `${apiUrl}venue/check-slug/${encodeURIComponent(candidateSlug)}?excludeId=${encodeURIComponent(String(resolvedVenueId))}`}
+              reserveEndpoint={`/api/venue/reserve-slug`}
+              updateEndpoint={(id) => `/api/venue/${id}/update-slug`}
+              checkEndpoint={(candidateSlug) => `/api/venue/check-slug/${encodeURIComponent(candidateSlug)}?excludeId=${encodeURIComponent(String(resolvedVenueId))}`}
               currentSlug={resolvedSlug}
               entityId={resolvedVenueId}
               progressApi={{
@@ -434,7 +431,7 @@ export async function getServerSideProps(context) {
   const currentStep = getPortalStep(context.query?.step)
 
   try {
-    const venueResponse = await fetch(`${apiUrl}venue/by-slug/${encodeURIComponent(normalizedSlug)}`)
+    const venueResponse = await fetch(`/api/venue/by-slug/${encodeURIComponent(normalizedSlug)}`)
     const venueData = venueResponse.ok ? await venueResponse.json() : null
     const venueId = venueData?.id || venueData?.ID || venueData?.venueID || venueData?.VenueID || null
 

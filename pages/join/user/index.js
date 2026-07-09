@@ -3,14 +3,11 @@ import { useState } from "react";
 
 import RegisterSlug from "@/components/forms/onboarding/register-slug";
 import JoinPageShell from "@/components/join/common/join-page-shell";
-import getApiURL from "@/components/widgets/GetApiURL";
 import {
   getUserRegistrationProgress,
   markUserRegistrationStepComplete,
   setUserRegistrationProgress,
 } from "@/utils/onboarding/userWorkflow";
-
-const apiUrl = getApiURL();
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim();
@@ -179,14 +176,13 @@ export default function JoinUserIndexPage({ sessionUser, currentStep, userId, ro
         <RegisterSlug
           domain="user"
           domainLabel="User"
-          apiBaseUrl={apiUrl}
-          reserveEndpoint={`${apiUrl}user-details/reserve-username`}
-          updateEndpoint={(id) => `${apiUrl}user-details/${id}/update-username`}
+          reserveEndpoint={`/api/user-details/reserve-username`}
+          updateEndpoint={(id) => `/api/user-details/${id}/update-username`}
           checkEndpoint={(candidateSlug, currentId) => {
             const currentNumericId = Number(currentId || 0);
             const canExcludeCurrentUser = routeUserId > 0 && currentNumericId === routeUserId;
             const excludeQuery = canExcludeCurrentUser ? `?excludeId=${encodeURIComponent(String(currentNumericId))}` : "";
-            return `${apiUrl}user-details/check-username/${encodeURIComponent(candidateSlug)}${excludeQuery}`;
+            return `/api/user-details/check-username/${encodeURIComponent(candidateSlug)}${excludeQuery}`;
           }}
           nextRoute={(id) => {
             const progress = getUserRegistrationProgress?.() || {};
@@ -234,7 +230,7 @@ export async function getServerSideProps(context) {
 
   if (!routeUsername && resolvedUserId > 0) {
     try {
-      const response = await fetch(`${apiUrl}user-details/${resolvedUserId}/private?viewerUserId=${resolvedUserId}`);
+      const response = await fetch(`/api/user-details/${resolvedUserId}/private?viewerUserId=${resolvedUserId}`);
       if (response.ok) {
         const userData = await response.json();
         routeUsername = String(userData?.username || userData?.Username || "").trim().toLowerCase();

@@ -11,10 +11,8 @@
 
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
 import TagSEO from "@/components/TagSEO";
 
-const api_url = getApiURL();
 const formName = "UserForm1";
 
 /**
@@ -53,14 +51,14 @@ export default function RegisterUserForm1(props) {
 RegisterUserForm1.getInitialProps = async function () {
     // If we are running in debug mode, log the active API URL
     if (process.env.DEBUG === "true") {
-        console.log("RegisterUserForm1 fetch starting\n " + api_url );
+        console.log("RegisterUserForm1 fetch starting\n /api/" );
     }
-    const metadataRes = await fetch(`${api_url}forms_metadata/${formName}`);
+    const metadataRes = await fetch(`/api/forms_metadata/${formName}`);
     const metadata = await metadataRes.json();
     // Example: fetch registration data if needed, adjust endpoint as appropriate
     let data = null;
     try {
-        const dataRes = await fetch(`${api_url}register_data`);
+        const dataRes = await fetch(`/api/register_data`);
         data = await dataRes.json();
         if (process.env.DEBUG === "true") {
             console.log(`register data fetched. Count: ${Array.isArray(data) ? data.length : (data ? 1 : 0)}`);

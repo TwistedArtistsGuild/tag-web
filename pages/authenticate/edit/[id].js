@@ -19,10 +19,7 @@
  */
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
 import TagSEO from "@/components/TagSEO";
-
-const api_url = getApiURL();
 
 /**
  * Component for updating user details.
@@ -34,7 +31,7 @@ const api_url = getApiURL();
 export default function UpdateUserForm1(props) {
     props.metadataProp.FromURL = "/authenticate/edit/" + props.id + ".js";
     props.metadataProp.redirectURL = "/authenticate/edit/" + props.id;
-    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}/${props.id}`;
+    props.metadataProp.APIURL = `/api/${props.metadataProp.apiurlpostfix}/${props.id}`;
     return (
         <div className="p-4">
             <TagSEO
@@ -69,9 +66,9 @@ UpdateUserForm1.getInitialProps = async function (context) {
     let data = {};
     let metadata = {};
     try {
-        const res1 = await fetch(api_url + `user/${id}`);
+        const res1 = await fetch(`/api/user/${id}`);
         data = await res1.json();
-        const res2 = await fetch(api_url + `forms_metadata/UserForm1`);
+        const res2 = await fetch(`/api/forms_metadata/UserForm1`);
         metadata = await res2.json();
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);

@@ -19,7 +19,6 @@ import Image from "next/image"
 import { Compass, LayoutDashboard, LogOut, Repeat2, Settings, ShoppingBag, SlidersHorizontal, User, Users } from "lucide-react"
 
 import ContextSwitcher from "@/components/Header/ContextSwitcher"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getArtistRegistrationProgress } from "@/utils/onboarding/artistWorkflow"
 import { getUserRegistrationProgress } from "@/utils/onboarding/userWorkflow"
 import { getVendorRegistrationProgress } from "@/utils/onboarding/vendorWorkflow"
@@ -295,15 +294,14 @@ export default function LoginProfile({
 
     const loadLinkedArtistsAndUser = async () => {
       try {
-        const apiUrl = getApiURL()
         const artistProgress = getArtistRegistrationProgress?.() || null
         const userProgress = getUserRegistrationProgress?.() || null
         const vendorProgress = getVendorRegistrationProgress?.() || null
         const venueProgress = getVenueRegistrationProgress?.() || null
 
         const [artistResponse, userResponse] = await Promise.all([
-          fetch(`${apiUrl}linker_usertoartist/byUserID/${session.user.id}`),
-          fetch(`${apiUrl}user-details/${session.user.id}/private?viewerUserId=${encodeURIComponent(String(session.user.id))}`),
+          fetch(`/api/linker_usertoartist/byUserID/${session.user.id}`),
+          fetch(`/api/user-details/${session.user.id}/private?viewerUserId=${encodeURIComponent(String(session.user.id))}`),
         ])
 
         const payload = artistResponse.ok ? await artistResponse.json() : []
@@ -374,8 +372,8 @@ export default function LoginProfile({
         }
 
         await Promise.all([
-          checkEntityDraft("vendor", vendorProgress, (id) => `${apiUrl}vendor/byID/${id}`, "Vendor profile"),
-          checkEntityDraft("venue", venueProgress, (id) => `${apiUrl}venue/byID/${id}`, "Venue profile"),
+          checkEntityDraft("vendor", vendorProgress, (id) => `/api/vendor/byID/${id}`, "Vendor profile"),
+          checkEntityDraft("venue", venueProgress, (id) => `/api/venue/byID/${id}`, "Venue profile"),
         ])
 
         const artistDraftId = toPositiveInteger(artistProgress?.entityId)
