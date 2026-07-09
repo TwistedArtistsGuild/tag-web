@@ -399,8 +399,8 @@ BlogByslug.getInitialProps = async function (context) {
 	if (process.env.DEBUG === "true") {
 		console.log (`Fetching blog: ${slug}, path: ${context.pathname}`)
 	} 
-  
-	const res = await fetch (`/api/blog/path/${slug}`)
+
+	const res = await fetch(`/api/blog/path/${slug}`)
 	const data = await res.json ()
 	
 	const blogData = Array.isArray(data) ? data[0] : data;
