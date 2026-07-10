@@ -22,6 +22,7 @@ import CardTools from "@/components/homepage/Card_Tools"
 import CardMembershipBenefits from "@/components/homepage/Card_membership_benefits"
 import CardContests from "@/components/homepage/Card_Contests"
 import CardPricing from "@/components/homepage/Card_Pricing"
+import CardBloomscroll from "@/components/homepage/Card_Bloomscroll"
 import FAQ from "@/components/homepage/FAQ"
 import CTA from "@/components/homepage/CTA"
 
@@ -71,17 +72,65 @@ export default function Home() {
             </div>
           </section>
 
+          {/* Divider */}
+          <div className="flex items-center justify-center py-8">
+            <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+          </div>
+
           {/* Main Content Sections */}
           <Hero />
+
+          {/* Divider */}
+          <div className="flex items-center justify-center py-8">
+            <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+          </div>
+
           <section className="bg-base-200">
-            <div className="max-w-7xl mx-auto px-8 py-20 space-y-8">
-              <CardTools />
-              <CardMembershipBenefits />
-              <CardContests />
-              <CardPricing />
+            <div className="max-w-7xl mx-auto px-8 py-20 space-y-16">
+              <CardTools index={0} />
+              
+              {/* Divider */}
+              <div className="flex items-center justify-center py-8">
+                <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+              </div>
+              
+              <CardMembershipBenefits index={1} />
+              
+              {/* Divider */}
+              <div className="flex items-center justify-center py-8">
+                <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+              </div>
+              
+              <CardContests index={2} />
+              
+              {/* Divider */}
+              <div className="flex items-center justify-center py-8">
+                <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+              </div>
+              
+              <CardPricing index={3} />
+
+              {/* Divider */}
+              <div className="flex items-center justify-center py-8">
+                <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+              </div>
+
+              <CardBloomscroll index={4} />
             </div>
           </section>
+
+          {/* Divider */}
+          <div className="flex items-center justify-center py-8">
+            <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+          </div>
+
           <FAQ />
+
+          {/* Divider */}
+          <div className="flex items-center justify-center py-8">
+            <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+          </div>
+
           <CTA />
         </div>
       </div>
