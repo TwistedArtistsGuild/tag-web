@@ -15,6 +15,7 @@ import TagSEO from "@/components/TagSEO"
 import ArtistContextNav from "@/components/portal/ArtistContextNav"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin } from "@/utils/authHelpers"
+import serverFetch from "@/libs/serverFetch"
 
 const UPCOMING_DATES = [
   {
@@ -258,7 +259,7 @@ export async function getServerSideProps(context) {
     }
 
     try {
-      const linkedArtistResponse = await fetch(`/api/linker_usertoartist/byUserID/${userId}`)
+      const linkedArtistResponse = await serverFetch(`/linker_usertoartist/byUserID/${userId}`)
 
       if (!linkedArtistResponse.ok) {
         return { notFound: true }
@@ -283,8 +284,8 @@ export async function getServerSideProps(context) {
 
   try {
     const [profileResponse, artistResponse] = await Promise.all([
-      fetch(`/api/artist/${slug}/profile`),
-      fetch(`/api/artist/${slug}`),
+      serverFetch(`/artist/${slug}/profile`),
+      serverFetch(`/artist/${slug}`),
     ])
 
     if (!profileResponse.ok) {

@@ -8,6 +8,7 @@ import OrganizationPrimaryContactsStep from "@/components/forms/onboarding/organ
 import OrganizationPublicContactsStep from "@/components/forms/onboarding/organizations/OrganizationPublicContactsStep"
 import JoinPageShell from "@/components/join/common/join-page-shell"
 import RegisterSlug from "@/components/forms/onboarding/register-slug"
+import serverFetch from "@/libs/serverFetch"
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -523,8 +524,7 @@ export async function getServerSideProps(context) {
   const currentStep = getPortalStep(context.query?.step)
 
   try {
-    const vendorResponse = await fetch(`/api/vendor/by-slug/${encodeURIComponent(normalizedSlug)}`)
-    const vendorData = vendorResponse.ok ? await vendorResponse.json() : null
+    const vendorData = await serverFetch(`/vendor/by-slug/${encodeURIComponent(normalizedSlug)}`)
     const vendorId = vendorData?.id || vendorData?.ID || vendorData?.vendorID || vendorData?.VendorID || null
 
     if (!vendorId) {

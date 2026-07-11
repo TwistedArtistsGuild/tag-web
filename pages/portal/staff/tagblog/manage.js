@@ -18,6 +18,7 @@ import { sanitizeCardHtml } from "@/components/security/sanitize";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { hasPermission, isAdmin } from "@/utils/authHelpers";
 import { PERMISSIONS } from "@/utils/permissions";
+import serverFetch from "@/libs/serverFetch"
 
 const TEMP_ALLOW_DELETE_WITHOUT_ROLE = false;
 
@@ -196,7 +197,7 @@ export async function getServerSideProps(context) {
 
 	let blogs = [];
 	try {
-		const response = await fetch(`/api/blog`);
+		const response = await serverFetch(`/blog`);
 		if (response.ok) {
 			const payload = await response.json();
 			const allBlogs = Array.isArray(payload) ? payload : [];

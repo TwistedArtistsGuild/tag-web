@@ -8,6 +8,7 @@ import UserContextNav from "@/components/portal/UserContextNav"
 import UserPrivateContactsStep from "@/components/forms/onboarding/users/UserPrivateContactsStep"
 import UserProfileMediaStep from "@/components/forms/onboarding/users/UserProfileMediaStep"
 import TagSEO from "@/components/TagSEO"
+import serverFetch from "@/libs/serverFetch"
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -87,7 +88,7 @@ export async function getServerSideProps(context) {
   const currentStep = getPortalStep(context.query?.step)
 
   try {
-    const userResponse = await fetch(`/api/user-details/by-username/${encodeURIComponent(normalizedUsername)}`)
+    const userResponse = await serverFetch(`/user-details/by-username/${encodeURIComponent(normalizedUsername)}`)
     const userData = userResponse.ok ? await userResponse.json() : null
     const userId = userData?.UserID || userData?.id || userData?.ID || null
 

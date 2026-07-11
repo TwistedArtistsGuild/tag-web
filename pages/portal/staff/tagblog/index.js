@@ -16,6 +16,7 @@ import TagSEO from "@/components/TagSEO";
 import StaffContextNav from "@/components/portal/StaffContextNav";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
+import serverFetch from "@/libs/serverFetch"
 
 const formName = "BlogForm1";
 
@@ -110,9 +111,9 @@ export async function getServerSideProps(context) {
 
 	let metadata = {};
 	try {
-		let res = await fetch(`/api/formsmetadata/${formName}`);
+		let res = await serverFetch(`/formsmetadata/${formName}`);
 		if (!res.ok) {
-			res = await fetch(`/api/forms_metadata/${formName}`);
+			res = await serverFetch(`/forms_metadata/${formName}`);
 		}
 		if (res.ok) {
 			metadata = await res.json();

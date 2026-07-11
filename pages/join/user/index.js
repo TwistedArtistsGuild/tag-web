@@ -8,6 +8,7 @@ import {
   markUserRegistrationStepComplete,
   setUserRegistrationProgress,
 } from "@/utils/onboarding/userWorkflow";
+import serverFetch from "@/libs/serverFetch"
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim();
@@ -230,7 +231,7 @@ export async function getServerSideProps(context) {
 
   if (!routeUsername && resolvedUserId > 0) {
     try {
-      const response = await fetch(`/api/user-details/${resolvedUserId}/private?viewerUserId=${resolvedUserId}`);
+      const response = await serverFetch(`/user-details/${resolvedUserId}/private?viewerUserId=${resolvedUserId}`);
       if (response.ok) {
         const userData = await response.json();
         routeUsername = String(userData?.username || userData?.Username || "").trim().toLowerCase();

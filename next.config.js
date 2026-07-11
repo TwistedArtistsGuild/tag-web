@@ -93,7 +93,7 @@ const nextConfig = {
           source: '/api/:path*',
           // ...and NextJS DOES NOT have a matching file in the `pages/api` folder,
           // Forward it directly and silently to the .NET Backend
-          destination: `${process.env.DOTNET_API_URL || 'http://localhost:5000/api'}/:path*`,
+          destination: `${process.env.DOTNET_API_URL || 'https://api.twistedartistsguild.com/api'}/:path*`,
         },
       ],
     }

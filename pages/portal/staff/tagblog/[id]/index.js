@@ -16,6 +16,7 @@ import StaffContextNav from "@/components/portal/StaffContextNav";
 import BlogCreditsEditor from "@/components/blog/BlogCreditsEditor";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
+import serverFetch from "@/libs/serverFetch"
 
 function isAuthorRole(session) {
 	return !!session?.user?.roles?.includes("author");
@@ -86,7 +87,7 @@ export async function getServerSideProps(context) {
 	}
 
 	try {
-		const response = await fetch(`/api/blog/${id}`);
+		const response = await serverFetch(`/blog/${id}`);
 		if (!response.ok) {
 			return { notFound: true };
 		}

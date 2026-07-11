@@ -26,6 +26,7 @@ import UrlLinksForm from "@/components/forms/contact/url-links-form"
 import GalleryManager from "@/components/gallery/GalleryManager"
 import TTTitleLine from "@/components/tiptap/TT_TitleLine"
 import TTArticle from "@/components/tiptap/TT_Article"
+import serverFetch from "@/libs/serverFetch"
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -676,10 +677,9 @@ export async function getServerSideProps(context) {
 
   console.error(`[ArtistEdit getServerSideProps] Starting with slug: "${slug}", normalized: "${normalizedSlug}"`)
 
-  try {
-    const fetchUrl = `/api/artist/${encodeURIComponent(normalizedSlug)}`
-    console.error(`[ArtistEdit] Fetching from: ${fetchUrl}`)
-    const artistResponse = await fetch(fetchUrl)
+  try {    
+    console.error(`[ArtistEdit] Fetching from: /artist/${encodeURIComponent(normalizedSlug)}`)
+    const artistResponse = await serverFetch(`/artist/${encodeURIComponent(normalizedSlug)}`)
     console.error(`[ArtistEdit] API response status: ${artistResponse.status}`)
     
     if (!artistResponse.ok) {
@@ -688,7 +688,6 @@ export async function getServerSideProps(context) {
     }
     
     const artistData = artistResponse.ok ? await artistResponse.json() : null
-    console.error(`[ArtistEdit] Artist data:`, JSON.stringify(artistData).substring(0, 200))
     const artistId = artistData?.id || artistData?.ID || artistData?.artistID || artistData?.ArtistID || null
     console.error(`[ArtistEdit] Extracted artistId: "${artistId}"`)
 

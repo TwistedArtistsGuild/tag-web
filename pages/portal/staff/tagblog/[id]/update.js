@@ -18,6 +18,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
 import TagSEO from "@/components/TagSEO"
+import serverFetch from "@/libs/serverFetch"
 
 const formName = "BlogForm1";
 
@@ -130,10 +131,10 @@ export async function getServerSideProps(context) {
     let data = {};
     let metadata = null;
     try {
-        const res1 = await fetch(`/api/blog/${id}`);
+        const res1 = await serverFetch(`/blog/${id}`);
         data = await res1.json();
 
-        const metadataResponse = await fetch(`/api/formsmetadata/${formName}`);
+        const metadataResponse = await serverFetch(`/formsmetadata/${formName}`);
         if (metadataResponse.ok) {
             metadata = await metadataResponse.json();
         }

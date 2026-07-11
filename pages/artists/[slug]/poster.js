@@ -16,6 +16,7 @@ import Image from "next/image"
 import { useMemo, useRef, useState } from "react"
 
 import { sanitizeCardHtml, stripHtmlText } from "@/components/security/sanitize"
+import serverFetch from "@/libs/serverFetch"
 
 const SITE_URL = "https://twistedartistsguild.com"
 const BLANK_IMAGE_URL = "/blank_image.png"
@@ -355,7 +356,7 @@ export async function getServerSideProps(context) {
 
 	const fetchData = async (url, defaultData) => {
 		try {
-			const response = await fetch(url)
+			const response = await serverFetch(url)
 			if (!response.ok) {
 				throw new Error(`HTTP error! status: ${response.status}`)
 			}
@@ -367,7 +368,7 @@ export async function getServerSideProps(context) {
 	}
 
 	try {
-		const artistData = await fetchData(`/api/artist/${encodeURIComponent(slug)}/profile`, {
+		const artistData = await fetchData(`/artist/${encodeURIComponent(slug)}/profile`, {
 			artist: null,
 			profilePic: defaultPic,
 			coverPic: defaultPic,

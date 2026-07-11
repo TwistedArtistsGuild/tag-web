@@ -5,6 +5,7 @@ import TagSEO from "@/components/TagSEO"
 import { getArtistRegistrationProgress } from "@/utils/onboarding/artistWorkflow"
 import { clearVendorRegistrationProgress, getVendorRegistrationProgress } from "@/utils/onboarding/vendorWorkflow"
 import { clearVenueRegistrationProgress, getVenueRegistrationProgress } from "@/utils/onboarding/venueWorkflow"
+import serverFetch from "@/libs/serverFetch"
 
 function getRequestOrigin(req) {
   const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim()
@@ -553,7 +554,7 @@ export async function getServerSideProps(context) {
   }
 
   try {
-      const userDetailsRes = await fetch(`/api/user-details/${sessionUserId}/private?viewerUserId=${sessionUserId}`)
+      const userDetailsRes = await serverFetch(`/user-details/${sessionUserId}/private?viewerUserId=${sessionUserId}`)
     if (userDetailsRes.ok) {
       const userData = await userDetailsRes.json()
       const username = String(userData?.username || userData?.Username || "").trim().toLowerCase()
@@ -566,7 +567,7 @@ export async function getServerSideProps(context) {
   let linkedArtists = []
 
   try {
-    const linkedResponse = await fetch(`/api/linker_usertoartist/byUserID/${sessionUserId}`)
+    const linkedResponse = await serverFetch(`/linker_usertoartist/byUserID/${sessionUserId}`)
     if (linkedResponse.ok) {
       const linkedData = await linkedResponse.json()
       linkedArtists = Array.isArray(linkedData) ? linkedData : []
@@ -584,7 +585,7 @@ export async function getServerSideProps(context) {
 
       let enriched = artist
       try {
-        const response = await fetch(`/api/artist/byID/${artistID}`)
+        const response = await serverFetch(`/artist/byID/${artistID}`)
         if (response.ok) {
           enriched = await response.json()
         }
@@ -594,7 +595,7 @@ export async function getServerSideProps(context) {
       // Check if any contacts exist for step 4 progress detection
       let contactCount = 0
       try {
-        const contactsRes = await fetch(`/api/contact/artist/${artistID}?includePrivate=true`)
+        const contactsRes = await serverFetch(`/contact/artist/${artistID}?includePrivate=true`)
         if (contactsRes.ok) {
           const contactsData = await contactsRes.json()
           const rows = Array.isArray(contactsData?.contacts) ? contactsData.contacts : []
