@@ -17,6 +17,7 @@ import { getServerSession } from "next-auth/next"
 import TagSEO from "@/components/TagSEO"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
+import serverFetch from "@/libs/serverFetch"
 
 const Logviewer = props => {
 	const options = shortDateOptions
@@ -94,7 +95,7 @@ export async function getServerSideProps(context) {
 		console.log(`Fetching log: ${id}, path: ${context.pathname}`)
 	} 
 
-	const res = await fetch(`/api/log/${id}`)
+	const res = await serverFetch(`/log/${id}`)
 	const data = await res.json ()
 
 	if (!res.ok || !data) {

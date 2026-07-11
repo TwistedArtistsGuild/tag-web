@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { sanitizeCardHtml, sanitizeDefaultHtml, stripHtmlText } from "@/components/security/sanitize"
+import serverFetch from "@/libs/serverFetch"
 
 function normalizeSlug(value) {
   return String(value || "").trim().toLowerCase()
@@ -169,19 +170,14 @@ export default function VendorProfilePage({ vendor }) {
   )
 }
 
-export async function getServerSideProps(context) {
+export async function  getServerSideProps(context) {
   const slug = normalizeSlug(context?.params?.slug)
   if (!slug) {
     return { notFound: true }
   }
 
   try {
-    const response = await fetch(`/api/vendor/by-slug/${encodeURIComponent(slug)}`)
-    if (!response.ok) {
-      return { notFound: true }
-    }
-
-    const vendor = await response.json()
+    const vendor = await serverFetch(`/vendor/by-slug/${encodeURIComponent(slug)}`)
     if (!vendor) {
       return { notFound: true }
     }

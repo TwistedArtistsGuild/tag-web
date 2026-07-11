@@ -17,6 +17,7 @@ import BoardContextNav from "@/components/portal/BoardContextNav"
 import { stripHtmlText } from "@/components/security/sanitize"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
+import serverFetch from "@/libs/serverFetch"
 
 function getStatusBadgeClass(status) {
 	const normalizedStatus = String(status || "").toLowerCase()
@@ -214,7 +215,7 @@ export async function getServerSideProps(context) {
 	let motions = []
 
 	try {
-		const motionResponse = await fetch(`/api/motions`)
+		const motionResponse = await serverFetch(`/motions`)
 		if (motionResponse.ok) {
 			const parsed = await motionResponse.json()
 			if (Array.isArray(parsed)) {

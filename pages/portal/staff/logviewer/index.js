@@ -20,6 +20,7 @@ import TagSEO from "@/components/TagSEO"
 import StaffContextNav from "@/components/portal/StaffContextNav"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
+import serverFetch from "@/libs/serverFetch"
 
 const Log = props => {
 	const options = shortDateOptions
@@ -248,7 +249,7 @@ export async function getServerSideProps(context) {
     
 	//Staging API can be added here if needed
 
-	const res = await fetch("/api/log/")
+	const res = await serverFetch("/log/")
 	const data = await res.json()
     
 	return {

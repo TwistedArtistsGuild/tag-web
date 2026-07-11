@@ -18,6 +18,7 @@ import ArtistCard from "@/components/cards/card_artist"
 import TagSEO from "@/components/TagSEO"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers"
+import serverFetch from "@/libs/serverFetch"
 
 function SectionHeading({ children }) {
 	return <h2 className="text-xs font-semibold text-base-content/50 uppercase tracking-widest">{children}</h2>
@@ -229,7 +230,7 @@ export async function getServerSideProps(context) {
 
 	if (userId) {
 		try {
-			const response = await fetch(`/api/linker_usertoartist/byUserID/${userId}`)
+			const response = await serverFetch(`/linker_usertoartist/byUserID/${userId}`)
 
 			if (response.ok) {
 				const artistData = await response.json()
@@ -254,8 +255,8 @@ export async function getServerSideProps(context) {
 
 						try {
 							const [profileRes, detailRes] = await Promise.all([
-								fetch(`/api/artist/${slug}/profile`),
-								fetch(`/api/artist/${slug}`),
+								serverFetch(`/artist/${slug}/profile`),
+								serverFetch(`/artist/${slug}`),
 							])
 
 							const profileData = profileRes.ok ? await profileRes.json() : null
@@ -286,14 +287,10 @@ export async function getServerSideProps(context) {
 					}),
 				)
 
-				// Check for artists that should be auto-published
 				for (const artist of registeredArtists) {
 					if (artist.artistID && !artist.isPublished) {
 						try {
-							// Fetch workflow steps
-							const workflowResponse = await fetch(
-								`/api/workflows/artist/${artist.artistID}?workflowName=default`
-							)
+							const workflowResponse = await serverFetch(`/workflows/artist/${artist.artistID}?workflowName=default`)
 
 							if (workflowResponse.ok) {
 								const workflowSummary = await workflowResponse.json()
@@ -306,8 +303,7 @@ export async function getServerSideProps(context) {
 								const allComplete = requiredSteps.every((step) => completedSteps.includes(step))
 
 								if (allComplete) {
-									// Auto-publish the artist
-									const publishResponse = await fetch(`/api/artist/${artist.artistID}`, {
+									const publishResponse = await serverFetch(`/artist/${artist.artistID}`, {
 										method: "PUT",
 										headers: { "Content-Type": "application/json" },
 										body: JSON.stringify({ isPublished: true }),

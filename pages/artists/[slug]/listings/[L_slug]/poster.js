@@ -15,6 +15,7 @@ import Head from "next/head"
 import { useMemo, useRef, useState } from "react"
 
 import { sanitizeDefaultHtml, stripHtmlText } from "@/components/security/sanitize"
+import serverFetch from "@/libs/serverFetch"
 
 const SITE_URL = "https://twistedartistsguild.com"
 const BLANK_IMAGE_URL = "/blank_image.png"
@@ -381,7 +382,7 @@ export async function getServerSideProps(context) {
 	const qrUrl = `/api/qr?url=${encodeURIComponent(canonicalUrl)}&size=320`
 
 	try {
-		const listingResponse = await fetch(`/api/listing/artist/${encodeURIComponent(slug)}/listing/${encodeURIComponent(L_slug)}`)
+		const listingResponse = await serverFetch(`/listing/artist/${encodeURIComponent(slug)}/listing/${encodeURIComponent(L_slug)}`)
 		if (!listingResponse.ok) {
 			return {
 				props: {
@@ -412,7 +413,7 @@ export async function getServerSideProps(context) {
 			}
 		}
 
-		const byIdResponse = await fetch(`/api/listing/byID/${listingId}`)
+		const byIdResponse = await serverFetch(`/listing/byID/${listingId}`)
 		const byIdPayload = byIdResponse.ok ? await byIdResponse.json() : null
 		const byIdData = Array.isArray(byIdPayload) ? byIdPayload[0] || null : byIdPayload
 

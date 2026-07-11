@@ -17,6 +17,7 @@ import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
 import TagSEO from "@/components/TagSEO";
 import ArtistContextNav from "@/components/portal/ArtistContextNav";
+import serverFetch from "@/libs/serverFetch"
 
 const formName = "ListingForm1";
 
@@ -86,7 +87,7 @@ export async function getServerSideProps(context) {
 
     if (userId && !isArtist(session) && !isStaff(session) && !isAdmin(session)) {
         try {
-            const linkedResponse = await fetch(`/api/linker_usertoartist/byUserID/${userId}`);
+            const linkedResponse = await serverFetch(`/linker_usertoartist/byUserID/${userId}`);
             if (linkedResponse.ok) {
                 const linkedArtists = await linkedResponse.json();
                 hasLinkedArtist = Array.isArray(linkedArtists) && linkedArtists.length > 0;
@@ -104,11 +105,11 @@ export async function getServerSideProps(context) {
 
     let metadata = {};
     try {
-        let res = await fetch(`/api/formsmetadata/${formName}`);
+        let res = await serverFetch(`/formsmetadata/${formName}`);
 
         // Backward compatibility with older endpoint naming.
         if (!res.ok) {
-            res = await fetch(`/api/forms_metadata/${formName}`);
+            res = await serverFetch(`/forms_metadata/${formName}`);
         }
 
         if (res.ok) {

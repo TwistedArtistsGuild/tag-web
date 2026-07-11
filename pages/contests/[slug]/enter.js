@@ -10,6 +10,7 @@ import ContestParticipationForm from "@/components/contests/contest-participatio
 import Image from "next/image";
 import Link from "next/link";
 import longDateOptions from "@/utils/longdateoptions";
+import serverFetch from "@/libs/serverFetch"
 
 export default function ContestEnterPage({ contest = {}, listings = [], artists = [], slug }) {
     const canonicalSlug = `contests/${slug}/enter`;
@@ -189,7 +190,7 @@ export async function getServerSideProps(context) {
 
     try {
         // 1. Fetch Contest
-        const contestRes = await fetch(`/api/contest/slug/${slug}`);
+        const contestRes = await serverFetch(`/contest/slug/${slug}`);
 
         if (contestRes.ok) {
             const text = await contestRes.text();
@@ -201,7 +202,7 @@ export async function getServerSideProps(context) {
 
         // 2. Fetch Artists and Listings using the server-side session user ID
         const userId = session.user.id;
-        const artistsRes = await fetch(`/api/linker_usertoartist/byUserID/${userId}`);
+        const artistsRes = await serverFetch(`/linker_usertoartist/byUserID/${userId}`);
 
         if (artistsRes.ok) {
             const text = await artistsRes.text();
@@ -212,7 +213,7 @@ export async function getServerSideProps(context) {
                 const listingPromises = artists.map(async (a) => {
                     const id = a.artistID;
                     
-                    const lRes = await fetch(`/api/listing/artist/${id}`);
+                    const lRes = await serverFetch(`/listing/artist/${id}`);
                     
                     if (lRes.ok) {
                         const lText = await lRes.text();

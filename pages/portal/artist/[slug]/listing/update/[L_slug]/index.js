@@ -15,6 +15,7 @@ import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
 import React, { useMemo } from "react";
 import TagSEO from "@/components/TagSEO";
 import ArtistContextNav from "@/components/portal/ArtistContextNav";
+import serverFetch from "@/libs/serverFetch"
 
 const formName = "ListingForm1";
 
@@ -134,7 +135,7 @@ export async function getServerSideProps(context) {
 
     if (userId && !isArtist(session) && !isStaff(session) && !isAdmin(session)) {
         try {
-            const linkedResponse = await fetch(`/api/linker_usertoartist/byUserID/${userId}`);
+            const linkedResponse = await serverFetch(`/linker_usertoartist/byUserID/${userId}`);
             if (linkedResponse.ok) {
                 const linkedArtists = await linkedResponse.json();
                 hasLinkedArtist = Array.isArray(linkedArtists) && linkedArtists.length > 0;
@@ -171,7 +172,7 @@ export async function getServerSideProps(context) {
 
         if (numericListingId) {
             listingId = numericListingId;
-            const byIdResponse = await fetch(`/api/listing/byID/${listingId}`);
+            const byIdResponse = await serverFetch(`/listing/byID/${listingId}`);
             if (byIdResponse.ok) {
                 data = await byIdResponse.json();
             } else {
@@ -183,7 +184,7 @@ export async function getServerSideProps(context) {
                 loadError = "Missing artist slug in route. Open this editor from a valid artist portal URL.";
             }
 
-            let byPathResponse = await fetch(`/api/listing/artist/${artistSlug}/listing/${listingSlugOrId}`);
+            let byPathResponse = await serverFetch(`/listing/artist/${artistSlug}/listing/${listingSlugOrId}`);
 
             if (byPathResponse.ok) {
                 data = await byPathResponse.json();
@@ -191,7 +192,7 @@ export async function getServerSideProps(context) {
                 listingId = listingRecordFromPath?.listingID || listingRecordFromPath?.ListingID || null;
 
                 if (listingId) {
-                    const byIdResponse = await fetch(`/api/listing/byID/${listingId}`);
+                    const byIdResponse = await serverFetch(`/listing/byID/${listingId}`);
                     if (byIdResponse.ok) {
                         data = await byIdResponse.json();
                     }
@@ -210,11 +211,11 @@ export async function getServerSideProps(context) {
             loadError = "Could not resolve listingId from route or payload.";
         }
 
-        let res2 = await fetch(`/api/formsmetadata/${formName}`);
+        let res2 = await serverFetch(`/formsmetadata/${formName}`);
 
         // Backward compatibility with older endpoint naming.
         if (!res2.ok) {
-            res2 = await fetch(`/api/forms_metadata/${formName}`);
+            res2 = await serverFetch(`/forms_metadata/${formName}`);
         }
 
         if (res2.ok) {
