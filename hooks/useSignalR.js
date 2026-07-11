@@ -35,7 +35,7 @@ export function useSignalR(userId, handlers = {}) {
 
     try {
 
-      const hubUrl = `/api/hubs/messaging`
+      const hubUrl = `/hubs/messaging`
 
       // Create connection
       const connection = new signalR.HubConnectionBuilder()
