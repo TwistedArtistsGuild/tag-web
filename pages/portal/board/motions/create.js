@@ -5,6 +5,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
 import TagSEO from "@/components/TagSEO";
 import BoardContextNav from "@/components/portal/BoardContextNav";
+import serverFetch from "@/libs/serverFetch"
 
 const formName = "CreateMotionForm"; // Make sure to configure this form in the DB metadata editor
 
@@ -54,8 +55,8 @@ export async function getServerSideProps(context) {
 
     let metadata = {};
     try {
-        let res = await fetch(`/api/formsmetadata/${formName}`);
-        if (!res.ok) res = await fetch(`/api/forms_metadata/${formName}`);
+        let res = await serverFetch(`/formsmetadata/${formName}`);
+        if (!res.ok) res = await serverFetch(`/forms_metadata/${formName}`);
         if (res.ok) metadata = await res.json();
     } catch (e) { }
 

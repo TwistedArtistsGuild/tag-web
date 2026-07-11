@@ -19,6 +19,7 @@ import UserContextNav from "@/components/portal/UserContextNav"
 import UserPrivateContactsStep from "@/components/forms/onboarding/users/UserPrivateContactsStep"
 import UserProfileMediaStep from "@/components/forms/onboarding/users/UserProfileMediaStep"
 import TagSEO from "@/components/TagSEO"
+import serverFetch from "@/libs/serverFetch"
 
 function getPortalStep(rawStep) {
   const parsed = Number(rawStep || 1)
@@ -76,7 +77,7 @@ export async function getServerSideProps(context) {
   const currentStep = getPortalStep(context.query?.step)
 
   try {
-    const userResponse = await fetch(`/api/user-details/${userId}/private?viewerUserId=${encodeURIComponent(String(userId))}`)
+    const userResponse = await serverFetch(`/user-details/${userId}/private?viewerUserId=${encodeURIComponent(String(userId))}`)
     const userData = userResponse.ok ? await userResponse.json() : null
 
     return {
