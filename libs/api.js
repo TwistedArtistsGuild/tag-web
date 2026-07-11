@@ -16,6 +16,7 @@ import config from "@/config";
 // use this to interact with our own API (nextJS /api folder) from the front-end side
 const apiClient = axios.create({
   baseURL: "/api",
+  withCredentials: true, // Include cookies (NextAuth session token) in all requests
 });
 
 apiClient.interceptors.response.use(
