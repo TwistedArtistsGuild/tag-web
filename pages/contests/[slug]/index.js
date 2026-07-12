@@ -11,6 +11,7 @@ import { useEffect, useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import longDateOptions from "@/utils/longdateoptions"
 import ListingCardSmall from "@/components/cards/card_listing_small"
+import serverFetch from "@/libs/serverFetch"
 
 function ContestView(props) {
   const [contestState, setContestState] = useState(props.contest || {})
@@ -221,7 +222,7 @@ ContestView.getInitialProps = async function (context) {
   const { slug } = context.query
 
   try {
-    const res = await fetch(`/api/contest/slug/${slug}`)
+    const res = await serverFetch(`/contest/slug/${slug}`)
     const data = await res.json()
     const contestData = Array.isArray(data) ? data[0] : data || {}
 

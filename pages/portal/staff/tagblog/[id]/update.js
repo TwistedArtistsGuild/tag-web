@@ -56,7 +56,6 @@ export default function UpdateBlogForm1(props) {
             ...base,
             FromURL: `/portal/staff/tagblog/${props.id}/update`,
             redirectURL: props.blogdata?.path ? `/blogs/${props.blogdata.path}` : "/blogs",
-            // Reuse the normalized base URL from getApiURL() to keep env fallback/overrides consistent
             APIURL: `/api/blog/${props.blogdata?.blogID}`,
             imageCategory: 'blogs',
             entityId: props.blogdata?.blogID,

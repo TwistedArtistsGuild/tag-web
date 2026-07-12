@@ -13,7 +13,7 @@
 import DynaFormDB from '@/components/widgets/DynaFormDB';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-
+import serverFetch from "@/libs/serverFetch"
 import TagSEO from "@/components/TagSEO"
 
 /**
@@ -192,7 +192,7 @@ UpdateFormsForm1.getInitialProps = async function (context) {
 
   try {
     // Fetch metadata for the specified form slug.
-    const metadataRes = await fetch(`/api/FormsMetadata/${slug}`);
+    const metadataRes = await serverFetch(`/FormsMetadata/${slug}`);
     if (!metadataRes.ok) {
       console.error(`Failed to fetch metadata for slug "${slug}": ${metadataRes.status} ${metadataRes.statusText}`);
       throw new Error(`HTTP error! status: ${metadataRes.status}`);
@@ -203,7 +203,7 @@ UpdateFormsForm1.getInitialProps = async function (context) {
     console.log('MetadataProp from API:', metadata);
 
     // Fetch the metadata that defines the form structure.
-    const formStructureRes = await fetch(`/api/FormsMetadata/UpdateFormsMeta`);
+    const formStructureRes = await serverFetch(`/FormsMetadata/UpdateFormsMeta`);
     if (!formStructureRes.ok) {
       console.error(`Failed to fetch form structure metadata: ${formStructureRes.status} ${formStructureRes.statusText}`);
       throw new Error(`HTTP error! status: ${formStructureRes.status}`);
@@ -212,7 +212,7 @@ UpdateFormsForm1.getInitialProps = async function (context) {
     console.log('FormStructure_Metadata from API:', FormStructure_metadata);
 
 	// Fetch the metadata that defines the form field structure.
-	const FormStructure_fieldRes = await fetch(`/api/FormsMetadata/UpdateFormsFields`);
+	const FormStructure_fieldRes = await serverFetch(`/FormsMetadata/UpdateFormsFields`);
 	if (!FormStructure_fieldRes.ok) {
 	  console.error(`Failed to fetch form fields structure: ${FormStructure_fieldRes.status} ${FormStructure_fieldRes.statusText}`);
 	  throw new Error(`HTTP error! status: ${FormStructure_fieldRes.status}`);
@@ -221,7 +221,7 @@ UpdateFormsForm1.getInitialProps = async function (context) {
 	console.log('FormStructure_field from API:', FormStructure_field);
 
     // Fetch list of available form names.
-    const formNamesRes = await fetch(`/api/FormsMetadata/listOfForms`);
+    const formNamesRes = await serverFetch(`/FormsMetadata/listOfForms`);
     if (!formNamesRes.ok) {
       console.error(`Failed to fetch list of forms: ${formNamesRes.status} ${formNamesRes.statusText}`);
       throw new Error(`HTTP error! status: ${formNamesRes.status}`);

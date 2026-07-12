@@ -13,6 +13,7 @@ import TagSEO from "@/components/TagSEO"
 import ArtistCard from "@/components/cards/card_artist"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { getPanelClass } from "@/components/cards/sizes/panel-layout"
+import serverFetch from "@/libs/serverFetch"
 
 const BATCH_SIZE = 12
 
@@ -213,13 +214,13 @@ Artists.getInitialProps = async () => {
     console.log("Artist data fetch starting via API: \n /api/artist/")
   }
   try {
-    const listingsRes = await fetch("/api/listing/")
+    const listingsRes = await serverFetch("/listing/")
     if (listingsRes.ok) {
       listings = await listingsRes.json()
     }
 
     // Fetch the artist data
-    const res = await fetch("/api/artist/")
+    const res = await serverFetch("/artist/")
     status = res.status
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${status}`)

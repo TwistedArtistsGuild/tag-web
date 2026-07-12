@@ -89,11 +89,15 @@ const nextConfig = {
     return {
       fallback: [
         {
-          // If a request starts with /api/...
+          // proxy for API routes
           source: '/api/:path*',
-          // ...and NextJS DOES NOT have a matching file in the `pages/api` folder,
-          // Forward it directly and silently to the .NET Backend
           destination: `${process.env.DOTNET_API_URL || 'https://api.twistedartistsguild.com/api'}/:path*`,
+        },
+        {
+          // proxy for SignalR WebSockets
+          source: '/hubs/:path*',
+          // Note: SignalR endpoints live at the root of .NET, not inside the /api/ folder controller route
+          destination: `${process.env.DOTNET_API_URL ? process.env.DOTNET_API_URL.replace('/api', '') : 'https://api.twistedartistsguild.com'}/hubs/:path*`,
         },
       ],
     }

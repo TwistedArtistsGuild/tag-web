@@ -24,6 +24,7 @@ import { defaultFieldClass } from "@/utils/formSettings"
 import { PERMISSIONS } from "@/utils/permissions";
 import { hasPermission } from "@/utils/authHelpers";
 import { sanitizeDefaultHtml, sanitizeCardHtml } from "@/components/security/sanitize";
+import serverFetch from "@/libs/serverFetch"
 
 function pickField(record, ...keys) {
 	for (const key of keys) {
@@ -400,7 +401,7 @@ BlogByslug.getInitialProps = async function (context) {
 		console.log (`Fetching blog: ${slug}, path: ${context.pathname}`)
 	} 
 
-	const res = await fetch(`/api/blog/path/${slug}`)
+	const res = await serverFetch(`/blog/path/${slug}`)
 	const data = await res.json ()
 	
 	const blogData = Array.isArray(data) ? data[0] : data;

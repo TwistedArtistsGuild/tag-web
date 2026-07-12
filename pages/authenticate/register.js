@@ -12,6 +12,7 @@
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import TagSEO from "@/components/TagSEO";
+import serverFetch from "@/libs/serverFetch"
 
 const formName = "UserForm1";
 
@@ -53,12 +54,12 @@ RegisterUserForm1.getInitialProps = async function () {
     if (process.env.DEBUG === "true") {
         console.log("RegisterUserForm1 fetch starting\n /api/" );
     }
-    const metadataRes = await fetch(`/api/forms_metadata/${formName}`);
+    const metadataRes = await serverFetch(`/forms_metadata/${formName}`);
     const metadata = await metadataRes.json();
     // Example: fetch registration data if needed, adjust endpoint as appropriate
     let data = null;
     try {
-        const dataRes = await fetch(`/api/register_data`);
+        const dataRes = await serverFetch(`/register_data`);
         data = await dataRes.json();
         if (process.env.DEBUG === "true") {
             console.log(`register data fetched. Count: ${Array.isArray(data) ? data.length : (data ? 1 : 0)}`);
