@@ -12,6 +12,7 @@
 import TagSEO from "@/components/TagSEO";
 import ListingCard from "@/components/cards/card_listing";
 import { getPanelClass } from "@/components/cards/sizes/panel-layout";
+import serverFetch from "@/libs/serverFetch"
 
 /**
  *
@@ -81,7 +82,7 @@ Listings.getInitialProps = async (context) => {
       subcat,
       keyword: `${supercat} ${cat} ${medium} ${subcat}`,
     }).toString()
-    const res = await fetch(`/api/listing/?${queryParams}`)
+    const res = await serverFetch(`/listing/?${queryParams}`)
     status = res.status
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${status}`)

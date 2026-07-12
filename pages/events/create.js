@@ -10,6 +10,7 @@
  Open source · low-profit · human-first*/
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import TagSEO from "@/components/TagSEO";
+import serverFetch from "@/libs/serverFetch"
 
 const formName = "EventForm1";
 //broken but don't care!!!!
@@ -42,7 +43,7 @@ export default function CreateEventForm1(props) {
 CreateEventForm1.getInitialProps = async function () {
     let metadata = {};
     try {
-        const res = await fetch(`/api/forms_metadata/${formName}`);
+        const res = await serverFetch(`/forms_metadata/${formName}`);
         metadata = await res.json();
     } catch (error) {
         console.error("Error fetching form meta:", error);

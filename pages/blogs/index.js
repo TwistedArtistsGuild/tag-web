@@ -11,6 +11,7 @@
 
 import TagSEO from "@/components/TagSEO"
 import BlogCard from "@/components/cards/card_blog"
+import serverFetch from "@/libs/serverFetch"
 
 const Blog = (props) => {
   const pageMetaData = {
@@ -61,7 +62,7 @@ Blog.getInitialProps = async () => {
   let data = []
 
   try {
-    const res = await fetch("/api/blog")
+    const res = await serverFetch("/blog")
     data = await res.json()
   } catch (error) {
     console.error("Error fetching blogs:", error)

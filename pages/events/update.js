@@ -13,6 +13,7 @@
 
 import DynaFormDB from "@/components/widgets/DynaFormDB"
 import TagSEO from "@/components/TagSEO"
+import serverFetch from "@/libs/serverFetch"
 
 //broken but don't care!!!!
 /**
@@ -60,9 +61,9 @@ UpdateEventForm1.getInitialProps = async function (context) {
     let data = {};
     let metadata = {};
     try {
-        const res1 = await fetch(`/api/event/${slug}`);
+        const res1 = await serverFetch(`/event/${slug}`);
         data = await res1.json();
-        const res2 = await fetch(`/api/forms_metadata/EventForm1`);
+        const res2 = await serverFetch(`/forms_metadata/EventForm1`);
         metadata = await res2.json();
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);
