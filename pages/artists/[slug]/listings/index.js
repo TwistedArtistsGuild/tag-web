@@ -13,6 +13,7 @@ import { useRouter } from "next/router"
 import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
+import serverFetch from "@/libs/serverFetch"
 
 const ArtistListings = ({ initialListings = [] }) => {
   const [listings, setListings] = useState(initialListings)
@@ -103,7 +104,7 @@ ArtistListings.getInitialProps = async function (context) {
   if (!context.req) return { initialListings: [] }
 
   try {
-    const res = await fetch(`/api/artist/${slug}/listings`)
+    const res = await serverFetch(`/artist/${slug}/listings`)
     if (!res.ok) return { initialListings: [] }
     
     const data = await res.json()

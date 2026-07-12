@@ -16,6 +16,7 @@ import ListingCard from "@/components/cards/card_listing"
 import BloomscrollVineRail from "@/components/art/bloomscroll-vine-rail"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { getPanelClass } from "@/components/cards/sizes/panel-layout"
+import serverFetch from "@/libs/serverFetch"
 
 const Listings = (props) => {
   const pageMetaData = {
@@ -140,7 +141,7 @@ Listings.getInitialProps = async (context) => {
 
   try {
     const queryParams = new URLSearchParams(query).toString()
-    const res = await fetch(`/api/listing/?${queryParams}`)
+    const res = await serverFetch(`/listing/?${queryParams}`)
     status = res.status
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${status}`)

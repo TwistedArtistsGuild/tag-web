@@ -27,6 +27,7 @@ import { isArtist, isStaff, isAdmin } from "@/utils/authHelpers"
 import { sanitizeDefaultHtml } from "@/components/security/sanitize"
 import { pickContactCardData } from "@/utils/artistContactUtils"
 import SendMessageButton from '@/components/messaging/SendMessageButton'
+import serverFetch from "@/libs/serverFetch"
 
 const PhotoGallery = dynamic(() => import("@/components/cards/card_photoGallery"), { ssr: false })
 
@@ -429,7 +430,7 @@ Artist.getInitialProps = async (context) => {
 
   const fetchData = async (path, defaultData) => {
     try {
-      const res = await fetch(path)
+      const res = await serverFetch(url)
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
       const data = await res.json()
       if (process.env.DEBUG === "true") console.log("Response data structure:", Object.keys(data))
@@ -482,8 +483,8 @@ Artist.getInitialProps = async (context) => {
   const artistID = Number(artistData?.artist?.artistID || artistData?.artist?.ArtistID || 0)
   if (artistID > 0) {
     try {
-      const contactUrl = `/api/contact/artist/${artistID}`
-      const contactsRes = await fetch(contactUrl)
+      const contactUrl = getApiUrl(`/contact/artist/${artistID}`, context)
+      const contactsRes = await serverFetch(contactUrl)
       if (contactsRes.ok) {
         const contactsData = await contactsRes.json()
         const rows = Array.isArray(contactsData?.contacts) ? contactsData.contacts : []

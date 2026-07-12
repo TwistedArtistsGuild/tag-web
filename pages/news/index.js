@@ -17,6 +17,7 @@ import { useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import { getSeededStockPhoto } from "@/utils/stockPhotos"
 import { sanitizeCardHtml } from "@/components/security/sanitize";
+import serverFetch from "@/libs/serverFetch"
 
 const featuredArticles = [
   {
@@ -241,7 +242,7 @@ News.getInitialProps = async () => {
     if (process.env.DEBUG === "true") {
       console.log("News page blog data fetch starting\n /api/blog/")
     }
-    const res = await fetch("/api/blog/")
+    const res = await serverFetch("/blog/")
     if (res.ok) {
       blogs = await res.json()
     }
