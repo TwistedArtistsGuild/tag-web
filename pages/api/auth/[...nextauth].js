@@ -90,21 +90,20 @@ export const authOptions = {
     // OVERRIDE ENCRYPTION TO ALLOW .NET TO READ IT!
     jwt: {
         encode: async ({ secret, token, maxAge }) => {
-            // Standard HS256 JWT signature using your standard secret
-            // Ensure we construct the standard 'iat' (issued at) and 'exp' (expiration) payloads!
             const nowSeconds = Math.floor(Date.now() / 1000);
             
-            // NextAuth token object already brings properties, but we enforce standard JWT time claims
             const jwtClaims = {
                 ...token,
                 iat: nowSeconds,
-                exp: nowSeconds + (maxAge || 30 * 24 * 60 * 60) // 30 days default
+                exp: nowSeconds + (maxAge || 30 * 24 * 60 * 60)
             };
             
-            return jwt.sign(jwtClaims, secret, { algorithm: "HS256" })
+            return jwt.sign(jwtClaims, secret, { 
+                algorithm: "HS256",
+                keyid: "nextauth-key"
+            })
         },
         decode: async ({ secret, token }) => {
-            // Decrypt standard HS256 JWT signature
             return jwt.verify(token, secret, { algorithms: ["HS256"] })
         },
     },
