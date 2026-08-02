@@ -191,9 +191,10 @@ export default function CheckoutPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contactID: contactId,
-                userID: Number(rawUserId) ? Number(rawUserId) : null,
-                userIdString: isNaN(rawUserId) ? rawUserId : null,
-                displayOrder: 1
+                entityType: "User",
+                entityID: Number(rawUserId),
+                displayOrder: 1,
+                scope: 0
             })
         });
 
