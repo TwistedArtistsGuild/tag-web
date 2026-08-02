@@ -14,10 +14,12 @@ import DynaFormDB from "@/components/widgets/DynaFormDB";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isArtist, isStaff } from "@/utils/authHelpers";
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useRef, useCallback } from "react";
 import TagSEO from "@/components/TagSEO";
 import ArtistContextNav from "@/components/portal/ArtistContextNav";
-import serverFetch from "@/libs/serverFetch"
+import serverFetch from "@/libs/serverFetch";
+import CostCalculator from "@/components/listings/CostCalculator";
+import { IoCalculatorOutline, IoChevronDownOutline, IoChevronUpOutline } from "react-icons/io5";
 
 const formName = "ListingForm1";
 
@@ -28,6 +30,10 @@ const formName = "ListingForm1";
  * @returns {JSX.Element}
  */
 export default function CreateListingForm1(props) {
+    const [showCalculator, setShowCalculator] = useState(false);
+    const [costBreakdownData, setCostBreakdownData] = useState(null);
+    const costCalculatorRef = useRef(null);
+
     const enhancedMetadata = useMemo(() => {
         const base = Array.isArray(props.metadataProp)
             ? props.metadataProp[0]
@@ -44,6 +50,50 @@ export default function CreateListingForm1(props) {
             APIURL: `/api/${base.apiurlpostfix}`
         };
     }, [props.metadataProp]);
+
+    /**
+     * Called by CostCalculator whenever a calculation is performed.
+     * Stores the full breakdown payload so we can save it after listing creation.
+     */
+    const handleCostDataReady = useCallback((pricingResult, breakdownPayload) => {
+        setCostBreakdownData(breakdownPayload);
+    }, []);
+
+    /**
+     * Post-submit hook — called by DynaFormDB after successful listing creation.
+     * Saves the cost breakdown linked to the newly created listing.
+     * @param {Object} responseData - The API response from listing creation
+     */
+    const handlePostSubmit = useCallback(async (responseData) => {
+        if (!costBreakdownData) return; // No cost data to save
+
+        const newListingId = responseData?.listingID || responseData?.ListingID || responseData?.id;
+        if (!newListingId) {
+            console.warn("Could not extract ListingID from response to save cost breakdown");
+            return;
+        }
+
+        try {
+            const payload = {
+                ...costBreakdownData,
+                listingID: newListingId,
+            };
+
+            const res = await fetch('/api/ListingCostBreakdown', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+                console.error("Failed to save cost breakdown for new listing:", await res.text());
+            } else if (process.env.NODE_ENV === 'development') {
+                console.log("✅ Cost breakdown saved for listing", newListingId);
+            }
+        } catch (err) {
+            console.error("Error saving cost breakdown:", err);
+        }
+    }, [costBreakdownData]);
 
     if (!enhancedMetadata) {
         return <div className="p-10 text-center"><span className="loading loading-ghost loading-lg"></span></div>;
@@ -65,7 +115,41 @@ export default function CreateListingForm1(props) {
                 canonicalSlug="portal/artist/[slug]/listing/create"
             />
             <ArtistContextNav />
-            <DynaFormDB request="add" metadataProp={enhancedMetadata} fieldsProp={enhancedMetadata.forms_fields} formData={null} />
+            <DynaFormDB
+                request="add"
+                metadataProp={enhancedMetadata}
+                fieldsProp={enhancedMetadata.forms_fields}
+                formData={null}
+                onPostSubmit={handlePostSubmit}
+            />
+
+            {/* Cost & Margin Calculator Section */}
+            <div className="mt-6">
+                <button
+                    type="button"
+                    className="btn btn-outline btn-secondary w-full justify-between text-lg"
+                    onClick={() => setShowCalculator(!showCalculator)}
+                >
+                    <span className="flex items-center gap-2">
+                        <IoCalculatorOutline /> Cost & Margin Calculator
+                    </span>
+                    {showCalculator ? <IoChevronUpOutline /> : <IoChevronDownOutline />}
+                </button>
+
+                {showCalculator && (
+                    <div className="mt-4 p-4 bg-base-100 rounded-box border border-base-300 shadow-sm">
+                        <p className="text-sm text-base-content/60 mb-4">
+                            Use the calculator below to determine your pricing. The cost breakdown will be saved automatically when you submit the listing above.
+                        </p>
+                        <CostCalculator
+                            ref={costCalculatorRef}
+                            listingId={null}
+                            onPriceCalculated={handleCostDataReady}
+                            saveMode="deferred"
+                        />
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
