@@ -458,6 +458,15 @@ export default function DynaForm(props) {
         console.groupEnd();
       }
       
+      // Call post-submit hook if provided (e.g. to save related data with the new entity ID)
+      if (props.onPostSubmit) {
+        try {
+          await props.onPostSubmit(responseData);
+        } catch (postSubmitErr) {
+          console.error("onPostSubmit hook error:", postSubmitErr);
+        }
+      }
+
       // Successful submission - redirect
       if (metadata.redirectURL) {
         router.push(metadata.redirectURL);
