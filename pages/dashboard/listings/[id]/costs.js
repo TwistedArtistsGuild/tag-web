@@ -7,7 +7,7 @@
 
  This software comes with NO WARRANTY; see the license for details.
 
- Open source · low-profit · human-first*/
+ Open source Â· low-profit Â· human-first*/
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -69,7 +69,7 @@ export default function ListingCostsPage() {
 
     return (
         <div className="min-h-screen bg-base-200 py-8 lg:py-12">
-            <TagSEO metadataProp={{ title: `Cost Calculator — ${listing.title_Plaintext || listing.title || 'Listing'}` }} canonicalSlug={`dashboard/listings/${id}/costs`} />
+            <TagSEO metadataProp={{ title: `Cost Calculator â€” ${listing.title_Plaintext || listing.title || 'Listing'}` }} canonicalSlug={`dashboard/listings/${id}/costs`} />
 
             <div className="container mx-auto px-4 max-w-4xl">
                 {/* Header */}
