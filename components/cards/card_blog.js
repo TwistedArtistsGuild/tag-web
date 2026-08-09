@@ -21,6 +21,7 @@ import ImpressionReactions from '@/components/social/ImpressionReactions'
 import { getSeededStockPhoto } from '@/utils/stockPhotos'
 import { sanitizeCardHtml } from '@/components/security/sanitize'
 import longDateOptions from '@/utils/longdateoptions'
+import ReportButton from "@/components/moderation/ReportButton"
 
 function toUniformPlainText(html) {
   return String(html || "")
@@ -152,6 +153,15 @@ const BlogCard = ({ blog }) => {
               {commentCountLoading ? '...' : (Number(commentCount) || 0)} comment{(Number(commentCount) || 0) !== 1 ? 's' : ''}
             </span>
           </Link>
+        </div>
+
+        {/* Report Button - Always visible */}
+        <div className="mt-4">
+          <ReportButton 
+            targetId={blogId}
+            targetType="blog"
+            className="w-full"
+          />
         </div>
       </div>
     </div>
