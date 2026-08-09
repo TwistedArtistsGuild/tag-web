@@ -20,6 +20,7 @@ import { extractContentWarnings } from "@/components/social/ContentTags"
 import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout"
 import { useImpressions, ImpressionTargetType } from "@/hooks/useImpressions"
 import { sanitizeCardHtml } from "@/components/security/sanitize"
+import ReportButton from "@/components/moderation/ReportButton"
 
 const stripHtmlTags = (value) =>
 	String(value || "")
@@ -360,6 +361,12 @@ const ArtistCard = ({
 								</div>
 							))}
 						</div>
+					</div>
+				)}
+
+				{!compact && (
+					<div className="card-actions mt-1 justify-start">
+						<ReportButton targetType="Artist" targetId={artist?.artistID || artist?.artistid} />
 					</div>
 				)}
 			</div>

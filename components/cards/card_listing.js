@@ -21,6 +21,7 @@ import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout"
 import { useImpressions, ImpressionTargetType } from "@/hooks/useImpressions"
 import { sanitizeCardHtml, stripHtmlText } from "@/components/security/sanitize"
 import { useLayout } from "@/components/LayoutProvider";
+import ReportButton from "@/components/moderation/ReportButton"
 
 const getSeededCount = (seed, max, min = 1, salt = "") => {
   const base = `${seed || "listing"}-${salt}`
@@ -269,6 +270,7 @@ const ListingCard = ({
           {listing?.price !== undefined && listing?.price !== null && Number(listing.price) > 0 && (
             <AddToCartButton listing={listing} />
           )}
+          <ReportButton targetType="Listing" targetId={listing?.listingID || listing?.listingid} />
         </div>
       </div>
     </article>
