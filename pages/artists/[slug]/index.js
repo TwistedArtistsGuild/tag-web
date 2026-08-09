@@ -430,7 +430,7 @@ Artist.getInitialProps = async (context) => {
 
   const fetchData = async (path, defaultData) => {
     try {
-      const res = await serverFetch(url)
+      const res = await serverFetch(path)
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
       const data = await res.json()
       if (process.env.DEBUG === "true") console.log("Response data structure:", Object.keys(data))
@@ -441,7 +441,7 @@ Artist.getInitialProps = async (context) => {
     }
   }
 
-  const artistData = await fetchData(`/api/artist/${slug}/profile`, {
+  const artistData = await fetchData(`/artist/${slug}/profile`, {
     artist: null,
     profilePic: defaultPic,
     coverPic: defaultPic,
