@@ -45,3 +45,12 @@ next-env.d.ts
 
 public/sitemap*.xml
 public/sitemap-0.xml
+
+# Capacitor native build directories
+/android
+/ios
+
+# Capacitor build artifacts
+dist/
+*.apk
+*.ipa

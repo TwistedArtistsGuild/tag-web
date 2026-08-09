@@ -12,6 +12,7 @@
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import TagSEO from "@/components/TagSEO";
+import { useEffect, useState } from "react";
 import serverFetch from "@/libs/serverFetch"
 
 const formName = "UserForm1";
@@ -23,6 +24,36 @@ const formName = "UserForm1";
  * @returns {JSX.Element}
  */
 export default function RegisterUserForm1(props) {
+    const [metadata, setMetadata] = useState(props.metadata || null);
+    const [data, setData] = useState(props.data || null);
+    const [loading, setLoading] = useState(!props.metadata);
+
+    // Fetch form metadata and data on client-side
+    useEffect(() => {
+        if (metadata) return; // Already loaded from props
+
+        const fetchFormData = async () => {
+            try {
+                const metadataRes = await serverFetch(`/forms_metadata/${formName}`);
+                const metadataData = await metadataRes.json();
+                setMetadata(metadataData);
+
+                try {
+                    const dataRes = await serverFetch(`/register_data`);
+                    const registrationData = await dataRes.json();
+                    setData(registrationData);
+                } catch (err) {
+                    console.error("Error fetching register data", err);
+                }
+            } catch (err) {
+                console.error("Error fetching form metadata", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFormData();
+    }, [metadata]);
     return (
         <div>
             <TagSEO
@@ -38,40 +69,14 @@ export default function RegisterUserForm1(props) {
                 }}
                 canonicalSlug="authenticate/register"
             />
-            <DynaFormDB request="add" formName={formName} metadataProp={props.metadata} formData={props.data} />
+            {loading ? (
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="loading loading-lg loading-spinner"></div>
+                </div>
+            ) : (
+                <DynaFormDB request="add" formName={formName} metadataProp={metadata} formData={data} />
+            )}
         </div>
     );
-}
-
-/**
- * Get initial props for component.
- * @async
- * @param {Object} context
- * @returns {Object}
- */
-RegisterUserForm1.getInitialProps = async function () {
-    // If we are running in debug mode, log the active API URL
-    if (process.env.DEBUG === "true") {
-        console.log("RegisterUserForm1 fetch starting\n /api/" );
-    }
-    const metadataRes = await serverFetch(`/forms_metadata/${formName}`);
-    const metadata = await metadataRes.json();
-    // Example: fetch registration data if needed, adjust endpoint as appropriate
-    let data = null;
-    try {
-        const dataRes = await serverFetch(`/register_data`);
-        data = await dataRes.json();
-        if (process.env.DEBUG === "true") {
-            console.log(`register data fetched. Count: ${Array.isArray(data) ? data.length : (data ? 1 : 0)}`);
-        }
-    } catch (err) {
-        if (process.env.DEBUG === "true") {
-            console.error("Error fetching register data", err);
-        }
-    }
-    return {
-        metadata: metadata,
-        data: data
-    };
 }
 

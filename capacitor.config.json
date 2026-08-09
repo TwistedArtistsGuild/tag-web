@@ -1,0 +1,16 @@
+{
+  "appId": "com.tag.app",
+  "appName": "TAG",
+  "webDir": "./out",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "file:///android_asset/public",
+    "cleartext": true
+  },
+  "ios": {
+    "scheme": "App"
+  },
+  "android": {
+    "minSdkVersion": 22
+  }
+}

@@ -11,12 +11,20 @@
  */
 export async function serverFetch(path, options = {}) {
     const isClient = typeof window !== 'undefined';
+    const isCapacitor = isClient && window.Capacitor;
     
-    // On client-side: use Next.js proxy at /api
-    // On server-side: use absolute backend URL (localhost or Azure)
-    const backendApiUrl = isClient 
-        ? '/api'  // Browser proxies through Next.js
-        : (process.env.DOTNET_API_URL || 'https://localhost:7225/api').replace(/\/$/, "");
+    // Determine API URL based on environment:
+    // - In Capacitor: use Azure API (NEXT_PUBLIC_TAG_API_URL)
+    // - On client (web): use Next.js proxy at /api
+    // - On server: use absolute backend URL (localhost or Azure)
+    let backendApiUrl;
+    if (isCapacitor) {
+        backendApiUrl = (process.env.NEXT_PUBLIC_TAG_API_URL || 'https://api.twistedartistsguild.com/api').replace(/\/$/, "");
+    } else if (isClient) {
+        backendApiUrl = '/api';  // Browser proxies through Next.js
+    } else {
+        backendApiUrl = (process.env.DOTNET_API_URL || 'https://localhost:7225/api').replace(/\/$/, "");
+    }
 
     // Safely strip out the leading slash if the developer accidentally typed it
     const safePath = path.startsWith('/') ? path.substring(1) : path;

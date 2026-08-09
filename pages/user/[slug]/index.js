@@ -12,7 +12,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/router"
 
 import TagSEO from "@/components/TagSEO"
 import { useAppContext } from "@/components/Context"
@@ -40,22 +41,72 @@ function getProfilePic(user) {
 	return String(user?.profilePic ?? user?.ProfilePic ?? "").trim()
 }
 
-export default function UserProfile(props) {
+export default function UserProfile({ initialUser = null, slug: initialSlug = null }) {
 	const { data: session } = useSession()
 	const { setPageSections } = useAppContext()
-	const displayName = getDisplayName(props.user)
-	const username = getUsername(props.user)
-	const profilePic = getProfilePic(props.user)
-	const userId = getUserId(props.user)
+	const router = useRouter()
+	const slug = initialSlug || router.query.slug
+	const [user, setUser] = useState(initialUser)
+	const [loading, setLoading] = useState(!initialUser)
+	const [notFound, setNotFound] = useState(false)
+
+	const displayName = getDisplayName(user)
+	const username = getUsername(user)
+	const profilePic = getProfilePic(user)
+	const userId = getUserId(user)
+
+	// Fetch user data on client-side
+	useEffect(() => {
+		if (!slug || user) return // Skip if slug not ready or user already loaded
+
+		const fetchUser = async () => {
+			try {
+				const response = await fetch(`/api/user-details/by-username/${encodeURIComponent(slug)}`)
+				if (!response.ok) {
+					setNotFound(true)
+					return
+				}
+				const data = await response.json()
+				setUser(data)
+			} catch (error) {
+				console.error("Error fetching user profile:", error)
+				setNotFound(true)
+			} finally {
+				setLoading(false)
+			}
+		}
+
+		fetchUser()
+	}, [slug, user])
 
 	useEffect(() => {
 		setPageSections(userSections)
 		return () => setPageSections([])
 	}, [setPageSections])
 
-	useEffect(() => {
-		if (!props.user) console.warn("User data failed to load.")
-	}, [props.user])
+	if (notFound) {
+		return (
+			<div className="min-h-screen bg-base-200 flex items-center justify-center">
+				<div className="card bg-base-100 shadow border border-base-300">
+					<div className="card-body text-center">
+						<h1 className="text-2xl font-bold text-base-content">User Not Found</h1>
+						<p className="text-base-content/70 mt-2">The user profile you're looking for doesn't exist.</p>
+						<Link href="/user" className="btn btn-primary mt-4">
+							Back to Users
+						</Link>
+					</div>
+				</div>
+			</div>
+		)
+	}
+
+	if (loading || !user) {
+		return (
+			<div className="min-h-screen bg-base-200 flex items-center justify-center">
+				<div className="loading loading-lg loading-spinner"></div>
+			</div>
+		)
+	}
 
 	const pageMetaData = {
 		title: displayName || "User Profile",
@@ -134,36 +185,5 @@ export default function UserProfile(props) {
 			</div>
 		
 	)
-}
-
-export async function getStaticProps(context) {
-	const { slug } = context.params
-
-	try {
-		const response = await fetch(`/api/user-details/by-username/${encodeURIComponent(slug)}`)
-		if (!response.ok) {
-			return { notFound: true }
-		}
-
-		const user = await response.json()
-
-		return {
-			props: {
-				user,
-				slug,
-			},
-			revalidate: 3600,
-		}
-	} catch (error) {
-		console.error("Error fetching user profile:", error.message)
-		return { notFound: true }
-	}
-}
-
-export async function getStaticPaths() {
-	return {
-		paths: [],
-		fallback: "blocking",
-	}
 }
 

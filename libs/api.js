@@ -13,9 +13,19 @@ import { toast } from "react-hot-toast";
 import { signIn } from "next-auth/react";
 import config from "@/config";
 
+// Detect if running in Capacitor (mobile app)
+const isCapacitor = typeof window !== 'undefined' && window.Capacitor;
+
+// Determine API base URL:
+// - In Capacitor: use Azure API (api.twistedartistsguild.com)
+// - Otherwise: use Next.js proxy (/api)
+const baseURL = isCapacitor 
+  ? (process.env.NEXT_PUBLIC_TAG_API_URL || 'https://api.twistedartistsguild.com/api')
+  : "/api";
+
 // use this to interact with our own API (nextJS /api folder) from the front-end side
 const apiClient = axios.create({
-  baseURL: "/api",
+  baseURL: baseURL,
   withCredentials: true, // Include cookies (NextAuth session token) in all requests
 });
 

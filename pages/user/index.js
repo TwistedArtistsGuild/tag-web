@@ -10,7 +10,7 @@
  Open source · low-profit · human-first*/
 import Image from "next/image"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import TagSEO from "@/components/TagSEO"
 
 function getUserId(user) {
@@ -30,7 +30,7 @@ function getProfilePic(user) {
 	return String(user?.profilePic ?? user?.ProfilePic ?? "").trim()
 }
 
-export default function UsersPage({ users = [] }) {
+export default function UsersPage({ users: initialUsers = [] }) {
 	const pageMetaData = {
 		title: "User Directory",
 		description: "Browse user profiles on Twisted Artists Guild.",
@@ -39,8 +39,28 @@ export default function UsersPage({ users = [] }) {
 		og: { title: "User Directory", description: "Browse user profiles." },
 	}
 
+	const [users, setUsers] = useState(initialUsers)
 	const [searchTerm, setSearchTerm] = useState("")
+	const [loading, setLoading] = useState(true)
 	const normalizedSearchTerm = searchTerm.trim().toLowerCase()
+
+	// Fetch users on client-side
+	useEffect(() => {
+		const fetchUsers = async () => {
+			try {
+				const response = await fetch(`/api/user-details`)
+				if (response.ok) {
+					const data = await response.json()
+					setUsers(Array.isArray(data) ? data : [])
+				}
+			} catch (error) {
+				console.error("Error fetching users:", error)
+			} finally {
+				setLoading(false)
+			}
+		}
+		fetchUsers()
+	}, [])
 
 	const filteredUsers = users.filter((user) => {
 		if (!normalizedSearchTerm) {
@@ -128,24 +148,5 @@ export default function UsersPage({ users = [] }) {
 			</div>
 		</div>
 	)
-}
-
-export async function getStaticProps() {
-
-	try {
-		const response = await fetch(`/api/user-details`)
-		if (!response.ok) {
-			return { props: { users: [] }, revalidate: 3600 }
-		}
-
-		const users = await response.json()
-		return {
-			props: { users: Array.isArray(users) ? users : [] },
-			revalidate: 3600,
-		}
-	} catch (error) {
-		console.error("Error fetching users:", error.message)
-		return { props: { users: [] }, revalidate: 3600 }
-	}
 }
 
