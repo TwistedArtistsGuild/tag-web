@@ -263,6 +263,5 @@ export const CommentTargetType = {
   BLOG: 3,
   NEWS: 4,
   USER: 5,
-  // Backward-compatible alias used by older call sites.
-  POST: 3,
+  FEED_POST: 6,
 }

@@ -202,5 +202,6 @@ export const ImpressionTargetType = {
   ARTIST: 2,
   COMMENT: 3,
   BLOG: 4,
-  MESSAGE: 5  // NEW: For message impressions
+  MESSAGE: 5,
+  FEED_POST: 6
 }
