@@ -30,7 +30,7 @@ import {
 } from 'react-icons/io5';
 
 const STATUS_OPTIONS = ['New', 'UnderReview', 'Resolved', 'Dismissed'];
-const TARGET_TYPES = ['Listing', 'Artist', 'User', 'Comment', 'Message', 'Blog', 'Event'];
+const TARGET_TYPES = ['Listing', 'Artist', 'User', 'Comment', 'Message', 'Blog', 'Event', 'FeedPost'];
 const PRIORITY_LABELS = { 0: 'Low', 1: 'Normal', 2: 'High', 3: 'Critical' };
 const PRIORITY_COLORS = { 0: 'badge-ghost', 1: 'badge-info', 2: 'badge-warning', 3: 'badge-error' };
 const STATUS_COLORS = { New: 'badge-warning', UnderReview: 'badge-info', Resolved: 'badge-success', Dismissed: 'badge-ghost' };
