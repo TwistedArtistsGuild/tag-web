@@ -77,8 +77,8 @@ export default function CheckoutPage() {
     const [selectedBillingId, setSelectedBillingId] = useState("new");
 
     // Form Data State (For when "new" is selected)
-    const [shippingAddress, setShippingAddress] = useState({});
-    const [billingAddress, setBillingAddress] = useState({});
+    const [shippingAddress, setShippingAddress] = useState({ country: 'US' });
+    const [billingAddress, setBillingAddress] = useState({ country: 'US' });
 
     useEffect(() => {
         setMounted(true);
