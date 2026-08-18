@@ -23,7 +23,7 @@ import { IoFlagOutline, IoClose, IoCheckmarkCircle } from 'react-icons/io5';
  * @param {string} [props.className] - Additional button class overrides
  * @param {"icon"|"text"|"full"} [props.variant] - Button display variant
  */
-export default function ReportButton({ targetType, targetId, className = '', variant = 'icon' }) {
+export default function ReportButton({ targetType, targetId, className = '', variant = 'icon', targetURL = null }) {
     const { data: session } = useSession();
     const router = useRouter();
 
@@ -93,7 +93,7 @@ export default function ReportButton({ targetType, targetId, className = '', var
                 body: JSON.stringify({
                     targetType,
                     targetID: targetId,
-                    targetURL: typeof window !== 'undefined' ? window.location.pathname : null,
+                    targetURL: targetURL || (typeof window !== 'undefined' ? window.location.pathname : null),
                     description: description.trim(),
                     labelIDs: selectedLabels,
                 }),
