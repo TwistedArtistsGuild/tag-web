@@ -20,6 +20,7 @@ import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
 import ThemeLogo from "@/components/ThemeLogo"
 import { useLayout } from "@/components/LayoutProvider"
 import { Bell, MessageSquare, ChevronUp, ChevronDown, Search } from "lucide-react"
+import Image from "next/image"
 import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
 import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
 import BugReportControl from "@/components/forms/bug-report"
@@ -466,6 +467,9 @@ export default function Header() {
         className={`w-full transition-all duration-300 ease-in-out ${
           isHeaderVisible ? "translate-y-0" : "-translate-y-full"
         } fixed top-0 left-0 right-0 z-40 ${scrolled ? "bg-base-100/95 backdrop-blur-md shadow-lg" : "bg-base-100"}`}
+        style={{
+          filter: 'drop-shadow(0 2px 8px rgba(21, 19, 24, 0.9)) drop-shadow(0 8px 24px color-mix(in srgb, var(--color-primary, #6233FF) 65%, transparent)) drop-shadow(0 12px 32px rgba(98, 51, 255, 0.3))'
+        }}
       >
         {/* Single Header Layer */}
         <div className={headerClass}>
@@ -521,12 +525,32 @@ export default function Header() {
               <Search size={20} />
             </button>
             <Link
+              href="/feed"
+              className={`flex items-center ${getTextColorClass(active === "bloomscroll")} hover:opacity-80 transition-opacity`}
+              onClick={() => handleActive("bloomscroll")}
+              name="bloomscroll"
+              title="Bloomscroll - Social Feed"
+            >
+              <div style={{
+                filter: 'drop-shadow(0 1px 3px rgba(21, 19, 24, 0.6)) drop-shadow(0 4px 12px color-mix(in srgb, var(--color-primary, #6233FF) 85%, transparent))',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <Image
+                  src="/BLOOMSCROLL OFFICIAL/LOGO/BS (HORIZONTAL) V1.png"
+                  alt="Bloomscroll"
+                  width={120}
+                  height={40}
+                />
+              </div>
+            </Link>
+            <Link
               href="/art/"
               className={`text-lg ${getTextColorClass(active === "art")}`}
               onClick={() => handleActive("art")}
               name="art"
             >
-              Bloomscroll
+              Browse
             </Link>
             <Link
               href="/artists"

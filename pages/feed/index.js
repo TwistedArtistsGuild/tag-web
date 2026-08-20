@@ -13,6 +13,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Image from 'next/image';
 import TagSEO from '@/components/TagSEO';
 import FeedPostCard from '@/components/feed/FeedPostCard';
 import FeedComposer from '@/components/feed/FeedComposer';
@@ -156,7 +157,19 @@ export default function BloomscrollFeed() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h1 className="text-3xl font-extrabold text-primary flex items-center gap-2">
-                        <IoFlowerOutline /> Bloomscroll
+                        <div style={{
+                          filter: 'drop-shadow(0 1px 3px rgba(21, 19, 24, 0.6)) drop-shadow(0 4px 12px color-mix(in srgb, var(--color-primary, #6233FF) 85%, transparent))',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}>
+                          <Image
+                            src="/BLOOMSCROLL OFFICIAL/LOGO/BLOOMSCROLL - PLANTS.png"
+                            alt="Bloomscroll"
+                            width={40}
+                            height={40}
+                          />
+                        </div>
+                        Bloomscroll
                     </h1>
                     <div className="flex gap-1">
                         {ALGORITHMS.map(algo => (
