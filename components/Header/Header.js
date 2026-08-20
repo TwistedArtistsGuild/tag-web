@@ -477,7 +477,7 @@ export default function Header() {
               onClick={() => setActive("")}
             >
               <ThemeLogo 
-                src="/HORIZONTAL (HOLLOW WHITE).png" 
+                src="/TAG OFFICIAL/LOGOS/HORIZONTAL (HOLLOW WHITE).png" 
                 alt="Twisted Artists Guild" 
                 width="w-48"
                 height="h-14"
