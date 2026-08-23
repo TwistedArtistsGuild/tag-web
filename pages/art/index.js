@@ -13,42 +13,70 @@
 
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
-import BloomscrollVineRail from "@/components/art/bloomscroll-vine-rail"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
 import { getPanelClass } from "@/components/cards/sizes/panel-layout"
 import serverFetch from "@/libs/serverFetch"
 
 const Listings = (props) => {
   const pageMetaData = {
-    title: "Art Listings",
+    title: "Browse Art",
     description: "Shop and explore curated paintings, sculpture, digital work, and more from independent creators.",
-    keywords: "art listings, paintings, sculpture, digital art, gallery, buy art",
+    keywords: "art listings, paintings, sculpture, digital art, gallery, buy art, browse art",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "Explore Art Listings on Platform",
-      description: "Browse curated artwork across mediums and categories from independent creators.",
+      title: "Browse Art on TAG",
+      description: "Discover curated artwork across mediums and categories from independent artists.",
     },
   }
   return (
-    
-      <div className="relative isolate min-h-screen bg-base-100 text-base-content overflow-hidden bloomscroll-shell">
-        <div className="bloomscroll-rail-slot left">
-          <BloomscrollVineRail side="left" />
-        </div>
-        <div className="bloomscroll-main-column">
-        <TagSEO metadataProp={pageMetaData} canonicalSlug="art" />
-        {/* Hero Section */}
-        <section className="relative text-center py-6 md:py-8">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-primary">
-            Bloomscroll
-          </h1>
-          <p className="text-sm md:text-base text-secondary/90 mb-0">
-            Like doomscrolling, but make it art and ad-free. Endlessly browse listings by our artist members.
-          </p>
-        </section>
+    <div className="relative isolate min-h-screen bg-base-100 text-base-content">
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="art" />
+      {/* Hero Section */}
+      <section className="relative text-center py-6 md:py-8">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-primary">
+          Browse Art
+        </h1>
+        <p className="text-sm md:text-base text-secondary/90 mb-0">
+          Curated paintings, sculpture, digital work, and more from independent creators.
+        </p>
+      </section>
       <main className="relative container mx-auto px-4 py-8 flex-1 w-full">
+        {/* Filter Bar - light touch placeholder */}
+        <div className="mb-8 pb-6 border-b border-base-200">
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="dropdown dropdown-hover">
+              <button className="btn btn-sm btn-ghost gap-2">
+                Category ▾
+              </button>
+              <ul className="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow">
+                <li><a>Painting</a></li>
+                <li><a>Sculpture</a></li>
+                <li><a>Digital Art</a></li>
+                <li><a>Photography</a></li>
+                <li><a>Mixed Media</a></li>
+              </ul>
+            </div>
+            
+            <div className="dropdown dropdown-hover">
+              <button className="btn btn-sm btn-ghost gap-2">
+                Genre ▾
+              </button>
+              <ul className="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow">
+                <li><a>Abstract</a></li>
+                <li><a>Figurative</a></li>
+                <li><a>Landscape</a></li>
+                <li><a>Portrait</a></li>
+                <li><a>Still Life</a></li>
+              </ul>
+            </div>
+            
+            <div className="divider divider-horizontal mx-1 my-0"></div>
+            <span className="text-sm text-base-content/60">{props.listings.length} results</span>
+          </div>
+        </div>
+
         {/* Dynamic listings section */}
         <div className="mb-16">
           <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
@@ -64,70 +92,6 @@ const Listings = (props) => {
         </div>
 
       </main>
-      </div>
-      <div className="bloomscroll-rail-slot right">
-        <BloomscrollVineRail side="right" />
-      </div>
-
-      <style jsx>{`
-        .bloomscroll-shell {
-          --vine-rail-width: min(18vw, 9.5rem);
-          --vine-rail-gap: 1rem;
-          --bloomscroll-slot-width: calc(var(--vine-rail-width) + var(--vine-rail-gap));
-          display: grid;
-          grid-template-columns: var(--bloomscroll-slot-width) minmax(0, 1fr) var(--bloomscroll-slot-width);
-          width: calc(100% + (var(--bloomscroll-slot-width) * 2));
-          margin-left: calc(-1 * var(--bloomscroll-slot-width));
-        }
-
-        .bloomscroll-rail-slot {
-          min-width: 0;
-          display: flex;
-          z-index: 0;
-        }
-
-        .bloomscroll-rail-slot.left {
-          grid-column: 1;
-          justify-content: flex-start;
-          padding-right: var(--vine-rail-gap);
-        }
-
-        .bloomscroll-rail-slot.right {
-          grid-column: 3;
-          justify-content: flex-end;
-          padding-left: var(--vine-rail-gap);
-        }
-
-        .bloomscroll-main-column {
-          grid-column: 2;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          z-index: 10;
-        }
-
-        @media (max-width: 768px) {
-          .bloomscroll-shell {
-            --vine-rail-width: 5.8rem;
-            --vine-rail-gap: 0.6rem;
-            grid-template-columns: var(--bloomscroll-slot-width) minmax(0, 1fr);
-            width: calc(100% + var(--bloomscroll-slot-width));
-            margin-left: calc(-0.25 * var(--bloomscroll-slot-width));
-          }
-
-          .bloomscroll-rail-slot.left {
-            padding-right: 0;
-          }
-
-          .bloomscroll-rail-slot.right {
-            display: none;
-          }
-
-          .bloomscroll-main-column {
-            grid-column: 2;
-          }
-        }
-      `}</style>
     </div>
     
   )

@@ -31,7 +31,7 @@ export default function Footer({ className }) {
           <div className="w-64 shrink-0 text-left">
             <Link href="/#" aria-current="page" className="flex gap-2 justify-start items-center">
               <ThemeLogo 
-                src="/TAG (HOLLOW).png" 
+                src="/TAG OFFICIAL/LOGOS/TAG (HOLLOW).png" 
                 alt="TAG Logo" 
                 width="w-12"
                 height="h-6"
