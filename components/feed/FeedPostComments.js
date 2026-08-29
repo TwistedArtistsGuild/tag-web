@@ -13,7 +13,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { IoTrashOutline } from 'react-icons/io5';
-import longDateOptions from '@/utils/longdateoptions';
+import { timeAgo } from '@/utils/relativeTime';
 
 export default function FeedPostComments({ comments, commentsLoading, session, addComment, deleteComment, refetchCount }) {
     const [newComment, setNewComment] = useState('');
@@ -135,7 +135,7 @@ function CommentItem({ comment, session, onDelete }) {
                 </div>
                 <div className="flex gap-3 mt-0.5 px-1">
                     <span className="text-xs text-base-content/40" suppressHydrationWarning>
-                        {new Date(comment.createdAt).toLocaleDateString('en-US', longDateOptions)}
+                        {timeAgo(new Date(comment.createdAt))}
                     </span>
                     {comment.isEdited && <span className="text-xs text-base-content/30">(edited)</span>}
                 </div>
