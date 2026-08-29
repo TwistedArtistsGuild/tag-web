@@ -33,7 +33,7 @@ import {
     IoChatbubbleOutline,
     IoTrashOutline,
 } from 'react-icons/io5';
-import longDateOptions from '@/utils/longdateoptions';
+import { timeAgo } from '@/utils/relativeTime';
 
 const ENTITY_ICONS = {
     Artist: IoMusicalNotesOutline,
@@ -111,7 +111,7 @@ export default function FeedPostCard({ post }) {
                             )}
                         </div>
                         <p className="text-xs text-base-content/50" suppressHydrationWarning>
-                            {new Date(post.createdAt).toLocaleDateString('en-US', longDateOptions)}
+                            {timeAgo(post.createdAt)}
                             {post.isSuggestedPost && <span className="ml-1 badge badge-xs badge-ghost gap-0.5"><IoSparklesOutline /> First post</span>}
                         </p>
                     </div>
