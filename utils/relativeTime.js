@@ -10,7 +10,8 @@
  Open source - low-profit - human-first*/
 
 /**
- * Returns a human-friendly relative time string like "2m", "5h", "3d", "2w", "4mo", "1y"
+ * Returns relative time for posts within 24 hours ("just now", "5m", "3h"),
+ * otherwise returns formatted date and time ("Aug 29, 2026 at 2:30 PM").
  * @param {string|Date} dateValue - ISO date string or Date object
  * @returns {string}
  */
@@ -24,20 +25,19 @@ export function timeAgo(dateValue) {
     if (seconds < 60) return 'just now';
 
     const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return minutes + 'm';
+    if (minutes < 60) return minutes + 'm ago';
 
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return hours + 'h';
+    if (hours < 24) return hours + 'h ago';
 
-    const days = Math.floor(hours / 24);
-    if (days < 7) return days + 'd';
-
-    const weeks = Math.floor(days / 7);
-    if (weeks < 5) return weeks + 'w';
-
-    const months = Math.floor(days / 30);
-    if (months < 12) return months + 'mo';
-
-    const years = Math.floor(days / 365);
-    return years + 'y';
+    // Beyond 24 hours — show date and time
+    return new Date(dateValue).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    }) + ' at ' + new Date(dateValue).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
 }
