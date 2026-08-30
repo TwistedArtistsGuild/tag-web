@@ -539,8 +539,9 @@ export default function Header() {
                 <Image
                   src="/BLOOMSCROLL OFFICIAL/LOGO/BS (HORIZONTAL) V1.png"
                   alt="Bloomscroll"
-                  width={120}
-                  height={40}
+                  width={180}
+                  height={34}
+                  style={{ height: 'auto' }}
                 />
               </div>
             </Link>
