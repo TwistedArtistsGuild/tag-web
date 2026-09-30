@@ -23,21 +23,18 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: Install dependencies and build Next.js app
+      - name: Install dependencies and build Next.js standalone app
         run: |
           npm ci
           npm run build
+          cp -r .next/static .next/standalone/.next/
+          cp -r public .next/standalone/
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: |
-            .next
-            public
-            package.json
-            package-lock.json
-            next.config.*
+          path: .next/standalone
           if-no-files-found: error
 
   deploy:

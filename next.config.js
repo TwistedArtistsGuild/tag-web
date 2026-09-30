@@ -15,6 +15,7 @@ if (process.env.NODE_ENV === 'development') {
 const localDevStartedAt = process.env.NODE_ENV === "development" ? new Date().toISOString() : ""
 
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
   env: {
     NEXT_PUBLIC_LOCAL_DEV_STARTED_AT: process.env.NEXT_PUBLIC_LOCAL_DEV_STARTED_AT || localDevStartedAt,
