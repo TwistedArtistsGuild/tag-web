@@ -35,7 +35,7 @@ const Blog = (props) => {
         {/* Hero Section */}
         <section className="text-center py-12 bg-linear-to-br from-base-200 to-base-100">
           <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
-            TAG Blog
+            TAG Blog Test Change
           </h1>
           <p className="text-xl md:text-2xl text-base-content/80 mb-6 max-w-3xl mx-auto px-4">
             Platform updates, transparency on our direction, and practical guidance for thriving as an artist here.
