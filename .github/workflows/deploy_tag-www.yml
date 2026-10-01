@@ -24,8 +24,12 @@ jobs:
         run: |
           npm ci
           npm run build
-          # Sync complete .next folder and public assets into standalone directory
-          rsync -av --ignore-existing .next/ .next/standalone/.next/
+          # Copy static files, server build output, and manifests without recursion
+          mkdir -p .next/standalone/.next
+          cp -r .next/static .next/standalone/.next/
+          cp -r .next/server .next/standalone/.next/ 2>/dev/null || true
+          cp .next/BUILD_ID .next/standalone/.next/ 2>/dev/null || true
+          cp .next/prerender-manifest.json .next/standalone/.next/ 2>/dev/null || true
           cp -r public .next/standalone/
 
       - name: Upload artifact for deployment job
