@@ -1,5 +1,7 @@
 # 🎨 tag-web
 
+(Small Change!)
+
 [Wiki](https://github.com/TwistedArtistsGuild/tag-web/wiki) • [Project Board](https://github.com/users/TwistedArtistsGuild/projects/2)
 
 The frontend for [TwistedArtistsGuild.com](https://twistedartistsguild.com) — a mission-driven platform empowering artists through accessible, ethical, and scalable tools. This Next.js application brings the guild’s user-facing experience to life, blending artistic freedom with cooperative infrastructure.
