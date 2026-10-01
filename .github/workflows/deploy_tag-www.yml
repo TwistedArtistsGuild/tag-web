@@ -25,7 +25,7 @@ jobs:
           npm ci
           npm run build
           
-          # Prepare the standalone runtime directory structure
+          # Prepare standalone directory structure
           mkdir -p .next/standalone/.next
           
           # Copy static files & public folder
@@ -59,12 +59,6 @@ jobs:
           name: node-app
           path: ./publish
 
-      - name: Create Deployment Zip
-        run: |
-          cd ./publish
-          # Zip all files including dotfolders like .next, excluding .git
-          zip -r ../deploy.zip . -x "*.git*"
-
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -72,10 +66,9 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A5C31CF05540456B82E59E2EE787B792 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B9348795B52E472E8290A84B114DA478 }}
 
-      - name: Deploy Zip to Azure App Service
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'tag-www'
           slot-name: 'Production'
-          package: './deploy.zip'
-          type: zip
+          package: './publish'
