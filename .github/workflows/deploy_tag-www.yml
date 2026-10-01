@@ -29,6 +29,7 @@ jobs:
           npm run build
           cp -r .next/static .next/standalone/.next/
           cp -r public .next/standalone/
+          rm -f .next/standalone/package.json  # <-- REMOVE package.json so Azure Oryx never triggers
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
