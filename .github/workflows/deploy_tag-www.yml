@@ -62,7 +62,8 @@ jobs:
       - name: Create Deployment Zip
         run: |
           cd ./publish
-          zip -r ../deploy.zip . -x ".*"
+          # Zip all files including dotfolders like .next, excluding .git
+          zip -r ../deploy.zip . -x "*.git*"
 
       - name: Login to Azure
         uses: azure/login@v2
