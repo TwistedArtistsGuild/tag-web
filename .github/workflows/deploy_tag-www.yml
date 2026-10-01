@@ -24,10 +24,9 @@ jobs:
         run: |
           npm ci
           npm run build
-          # Copy static files, public directory, and BUILD_ID into standalone output
-          cp -r .next/static .next/standalone/.next/
+          # Sync complete .next folder and public assets into standalone directory
+          rsync -av --ignore-existing .next/ .next/standalone/.next/
           cp -r public .next/standalone/
-          cp .next/BUILD_ID .next/standalone/.next/ 2>/dev/null || true
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
