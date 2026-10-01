@@ -26,7 +26,6 @@ jobs:
           npm run build
           cp -r .next/static .next/standalone/.next/
           cp -r public .next/standalone/
-          rm -f .next/standalone/package.json
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -67,4 +66,3 @@ jobs:
           app-name: 'tag-www'
           slot-name: 'Production'
           package: './deploy.zip'
-          type: zip
