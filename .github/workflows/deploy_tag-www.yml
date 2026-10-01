@@ -48,10 +48,11 @@ jobs:
           name: node-app
           path: ./publish
 
+      # Zip contents directly without parent directory nesting
       - name: Create Deployment Zip
         run: |
           cd ./publish
-          zip -r ../deploy.zip .
+          zip -r ../deploy.zip . -x ".*"
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -66,3 +67,4 @@ jobs:
           app-name: 'tag-www'
           slot-name: 'Production'
           package: './deploy.zip'
+          type: zip
