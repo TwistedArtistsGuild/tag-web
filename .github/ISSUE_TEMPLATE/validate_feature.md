@@ -2,7 +2,7 @@
 name: "🧪 Feature Validation & Feedback"
 about: Validate a completed feature, identify defects, and recommend follow-on enhancements.
 title: "[VALIDATION] - "
-labels: "validation, feedback, triage"
+labels: "UX - Input Needed, documentation"
 assignees: ""
 ---
 
