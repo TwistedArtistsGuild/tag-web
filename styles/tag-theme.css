@@ -65,12 +65,12 @@ Open source · low-profit · human-first*/
   --color-error: var(--tag-error);
   --color-error-content: var(--tag-ghost-white);
 
-  /* Typography settings */
-  font-family: "Roboto", "Open Sans", "Lato", sans-serif;
+  /* Typography settings — ManRope per Brand Guidelines (400, 500, 600, 700 weights only) */
+  font-family: "ManRope", "Roboto", sans-serif;
   font-size: 1rem;
 
-  /* Rounded corners */
-  --rounded-box: 0.5rem;
+  /* Rounded corners — 24px per Brand Guidelines */
+  --rounded-box: 1.5rem;
   --rounded-btn: 0.25rem;
   --rounded-badge: 1.9rem;
   /* DaisyUI v5 uses --radius-selector for badge/pill border-radius */
@@ -96,6 +96,15 @@ Open source · low-profit · human-first*/
 /* Bump badge horizontal padding so text has breathing room near the pill curves */
 [data-theme="tag-theme"] .badge {
   padding-inline: 0.85rem;
+}
+
+/* Brand-compliant shadow utilities for tag-theme */
+[data-theme="tag-theme"] .shadow-brand {
+  filter: drop-shadow(0 1px 3px rgba(21, 19, 24, 0.6)) drop-shadow(0 4px 12px color-mix(in srgb, var(--color-primary, #6233FF) 85%, transparent));
+}
+
+[data-theme="tag-theme"] .shadow-brand-lg {
+  filter: drop-shadow(0 1px 3px rgba(21, 19, 24, 0.6)) drop-shadow(0 6px 24px color-mix(in srgb, var(--color-primary, #6233FF) 85%, transparent));
 }
 
 /* Neon theme for showcase/testing pages */

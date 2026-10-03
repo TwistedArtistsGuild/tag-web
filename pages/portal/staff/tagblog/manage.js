@@ -13,37 +13,14 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { getServerSession } from "next-auth/next";
-import sanitizeHtml from "sanitize-html";
 import TagSEO from "@/components/TagSEO";
-import getApiURL from "@/components/widgets/GetApiURL";
+import { sanitizeCardHtml } from "@/components/security/sanitize";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { hasPermission, isAdmin } from "@/utils/authHelpers";
 import { PERMISSIONS } from "@/utils/permissions";
+import serverFetch from "@/libs/serverFetch"
 
-const api_url = getApiURL();
 const TEMP_ALLOW_DELETE_WITHOUT_ROLE = false;
-
-const PREVIEW_ALLOWED_TAGS = ["p", "br", "strong", "b", "em", "i", "u", "s", "ul", "ol", "li", "a", "span"];
-
-function sanitizePreviewHtml(html) {
-  return sanitizeHtml(String(html || ""), {
-    allowedTags: PREVIEW_ALLOWED_TAGS,
-    allowedAttributes: {
-      a: ["href", "target", "rel"],
-      p: ["style"],
-      span: ["style"],
-    },
-    allowedSchemes: ["http", "https", "mailto"],
-    allowedStyles: {
-      p: {
-        "text-align": [/^left$/, /^center$/, /^right$/],
-      },
-      span: {
-        "text-align": [/^left$/, /^center$/, /^right$/],
-      },
-    },
-  });
-}
 
 export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) {
 	const { data: session } = useSession();
@@ -81,7 +58,7 @@ export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) 
 		setDeletingBlogId(blog.blogID);
 
 		try {
-			const response = await fetch(`${api_url}blog/${blog.blogID}`, {
+			const response = await fetch(`/api/blog/${blog.blogID}`, {
 				method: "DELETE",
 				credentials: "include",
 				headers: {
@@ -121,9 +98,6 @@ export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) 
 
 			<div className="rounded-xl border border-base-300 bg-base-100 p-4 shadow-sm">
 				<h1 className="text-2xl font-bold text-base-content">Manage Live Blog Posts</h1>
-				<p className="mt-2 text-sm text-base-content/75">
-					Temporary open access is enabled while role detection is being finalized.
-				</p>
 				<p className="mt-2 text-xs uppercase tracking-wide text-base-content/60">
 					Private-review page is intentionally deferred to a later step.
 				</p>
@@ -146,11 +120,11 @@ export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) 
 							<p className="text-xs uppercase tracking-[0.18em] text-secondary">Live Blog</p>
 							<h2
 								className="mt-2 text-xl font-bold text-base-content line-clamp-2"
-								dangerouslySetInnerHTML={{ __html: sanitizePreviewHtml(blog.title || "Untitled") }}
+								dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(blog.title || "Untitled") }}
 							></h2>
 							<div
 								className="mt-2 text-sm text-base-content/70 line-clamp-3"
-								dangerouslySetInnerHTML={{ __html: sanitizePreviewHtml(blog.byline || "No byline") }}
+								dangerouslySetInnerHTML={{ __html: sanitizeCardHtml(blog.byline || "No byline") }}
 							></div>
 							<p className="mt-3 text-xs text-base-content/60">
 								Path: <span className="font-semibold">/{blog.path}</span>
@@ -170,6 +144,13 @@ export default function StaffTagBlogManage({ blogs = [], isAdminUser = false }) 
 									className="link link-warning font-semibold"
 								>
 									Edit Post
+								</Link>
+								<Link
+									href="/portal/staff/tagblog/[id]"
+									as={`/portal/staff/tagblog/${blog.blogID}`}
+									className="link link-secondary font-semibold"
+								>
+									Edit Credits
 								</Link>
 								<button
 									type="button"
@@ -216,7 +197,7 @@ export async function getServerSideProps(context) {
 
 	let blogs = [];
 	try {
-		const response = await fetch(`${api_url}blog`);
+		const response = await serverFetch(`/blog`);
 		if (response.ok) {
 			const payload = await response.json();
 			const allBlogs = Array.isArray(payload) ? payload : [];

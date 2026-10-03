@@ -14,14 +14,12 @@
 import { useState, useRef } from "react"
 import Image from "next/image"
 import axios from "axios"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 /**
  * Component for uploading multiple pictures with metadata.
  * @returns {JSX.Element}
  */
 export default function UploadPictureForm1() {
-	const api_url = getApiURL()
 	// Configurable maximum number of files
 	const MAX_FILES = 5
 
@@ -126,7 +124,7 @@ export default function UploadPictureForm1() {
 		pictureData.url = fileData.uploadedUrl
 
 		try {
-			await axios.post(`${api_url}picture`, pictureData, {
+			await axios.post(`/api/picture`, pictureData, {
 				headers: {
 					"Content-Type": "application/json",
 				},

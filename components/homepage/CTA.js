@@ -35,7 +35,7 @@ const CTA = () => {
 						sustainability.
 					</p>
 					<div className="flex flex-col sm:flex-row gap-3">
-						<Link href="https://marketing.twistedartistsguild.com/membership-drive" className="btn btn-primary btn-wide">
+					<Link href="https://marketing.twistedartistsguild.com/membership-drive" className="btn btn-primary btn-wide text-base-100">
 							Join the waitlist
 						</Link>
 						<Link href="/art" className="btn btn-outline btn-wide text-neutral-content border-neutral-content hover:bg-neutral-content hover:text-neutral">

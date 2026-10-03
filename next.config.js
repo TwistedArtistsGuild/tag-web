@@ -12,9 +12,18 @@
 if (process.env.NODE_ENV === 'development') {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 }
+const localDevStartedAt = process.env.NODE_ENV === "development" ? new Date().toISOString() : ""
 
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
+  env: {
+    NEXT_PUBLIC_LOCAL_DEV_STARTED_AT: process.env.NEXT_PUBLIC_LOCAL_DEV_STARTED_AT || localDevStartedAt,
+  },
+  // Suppress hydration warnings in development
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
   images: {
     // NextJS <Image> component needs to whitelist remote patterns for src{}
     formats: ["image/avif", "image/webp"],
@@ -67,7 +76,32 @@ const nextConfig = {
         port: "",
         pathname: "**",
       },
+      {
+        protocol: "https",
+        hostname: "vumbnail.com",
+        port: "",
+        pathname: "**",
+      },
     ],
+  },
+
+  // ADDED: Fallback rewrites for clean proxying to .NET without prefixes
+  async rewrites() {
+    return {
+      fallback: [
+        {
+          // proxy for API routes
+          source: '/api/:path*',
+          destination: `${process.env.DOTNET_API_URL || 'https://api.twistedartistsguild.com/api'}/:path*`,
+        },
+        {
+          // proxy for SignalR WebSockets
+          source: '/hubs/:path*',
+          // Note: SignalR endpoints live at the root of .NET, not inside the /api/ folder controller route
+          destination: `${process.env.DOTNET_API_URL ? process.env.DOTNET_API_URL.replace('/api', '') : 'https://api.twistedartistsguild.com'}/hubs/:path*`,
+        },
+      ],
+    }
   },
 };
 

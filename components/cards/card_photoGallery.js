@@ -11,6 +11,7 @@
 import ImageGallery from "react-image-gallery";
 import 'react-image-gallery/styles/image-gallery.css';
 import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout";
+import MediaCreditsCard from "@/components/forms/media-credits";
 import ContentTags, { ContentWarningMediaGate } from "@/components/social/ContentTags";
 import { useMemo, useState } from "react";
 
@@ -61,6 +62,35 @@ const normalizeImageEffect = (effect) => {
 	return "landscape";
 };
 
+const isVideoMedia = (item) => {
+	if (!item) return false;
+	const mediaType = String(item.mediaType || "").toLowerCase();
+	if (mediaType === "video") return true;
+	const source = String(item.sourceURL || item.embedURL || item.original || "").toLowerCase();
+	return source.includes("vimeo.com") || source.includes("youtube.com") || source.includes("youtu.be");
+};
+
+const toEmbedUrl = (item) => {
+	const explicit = String(item?.embedURL || "").trim();
+	if (explicit) {
+		if (explicit.includes("player.vimeo.com") || explicit.includes("youtube.com/embed/")) {
+			return explicit;
+		}
+		const vimeoMatch = explicit.match(/vimeo\.com\/(\d+)/i);
+		if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+		const ytMatch = explicit.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/i);
+		if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+	}
+
+	const source = String(item?.sourceURL || item?.original || "").trim();
+	if (!source) return "";
+	const vimeoMatch = source.match(/vimeo\.com\/(\d+)/i);
+	if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+	const ytMatch = source.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/i);
+	if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+	return "";
+};
+
 /**
  * @desc A reusable photo gallery component styled with daisyUI and Tailwind CSS.
  * @param {object} props - Contains the images array for the gallery.
@@ -94,19 +124,61 @@ const PhotoGallery = ({
 				}
 
 				if (image?.original) {
-					return image;
+					const normalized = { ...image };
+					if (isVideoMedia(normalized)) {
+						const embedUrl = toEmbedUrl(normalized);
+						if (embedUrl) {
+							normalized.renderItem = () => (
+								<div className="custom-gallery-video-frame">
+									<iframe
+										src={embedUrl}
+										title={normalized.description || "Embedded video"}
+										className="custom-gallery-video-iframe"
+										frameBorder="0"
+										allow="autoplay; fullscreen; picture-in-picture"
+										allowFullScreen
+									/>
+								</div>
+							);
+						}
+					}
+					return normalized;
 				}
 
 				const fallback = image?.url || "/blank_image.png";
-				return {
+				const normalized = {
 					original: fallback,
 					thumbnail: image?.thumbnail || fallback,
+					mediaType: image?.mediaType,
+					sourceURL: image?.sourceURL,
+					embedURL: image?.embedURL,
 					description: image?.description,
 					attribution: image?.attribution,
 					photographer: image?.photographer,
 					copyright: image?.copyright,
 					makeup: image?.makeup,
+					credits: image?.credits,
 				};
+
+				if (isVideoMedia(normalized)) {
+					const embedUrl = toEmbedUrl(normalized);
+					if (embedUrl) {
+						normalized.renderItem = () => (
+							<div className="custom-gallery-video-frame">
+								<iframe
+									src={embedUrl}
+									title={normalized.description || "Embedded video"}
+									className="custom-gallery-video-iframe"
+									frameBorder="0"
+									allow="autoplay; fullscreen; picture-in-picture"
+									allowFullScreen
+								/>
+							</div>
+						);
+					}
+				}
+
+				return normalized;
 			}),
 		[imageList],
 	);
@@ -120,12 +192,33 @@ const PhotoGallery = ({
 	const galleryClassName = `custom-gallery custom-gallery--${normalizedEffect}`;
 	const safeCurrentIndex = currentIndex < galleryItems.length ? currentIndex : 0;
 	const currentImageAttribution = galleryItems[safeCurrentIndex];
-	const showInfoControl = (isFullscreen || !hoverControlsHidden) && (navConfig.showFullscreenButton || (navConfig.showNav && hasMultipleItems));
+	const showInfoControl = galleryItems.length > 0;
 	const hasAttributionData =
+		(Array.isArray(currentImageAttribution?.credits) && currentImageAttribution.credits.length > 0) ||
 		currentImageAttribution?.photographer ||
 		currentImageAttribution?.copyright ||
 		currentImageAttribution?.makeup ||
 		currentImageAttribution?.attribution;
+
+	const fallbackCredits = [
+		currentImageAttribution?.copyright
+			? { role: "Copyright Owner", name: currentImageAttribution.copyright }
+			: null,
+		currentImageAttribution?.photographer
+			? { role: "Photographer / Videographer", name: currentImageAttribution.photographer }
+			: null,
+		currentImageAttribution?.makeup
+			? { role: "Additional Production Credits", name: currentImageAttribution.makeup }
+			: null,
+		currentImageAttribution?.attribution
+			? { role: "Attribution Notes", note: currentImageAttribution.attribution, name: "Notes" }
+			: null,
+	].filter(Boolean);
+
+	const modalCredits =
+		Array.isArray(currentImageAttribution?.credits) && currentImageAttribution.credits.length > 0
+			? currentImageAttribution.credits
+			: fallbackCredits;
 
 	const effectiveConsent = hasViewerConsent || localViewerConsent;
 	const hasWarnings = Array.isArray(contentWarnings) && contentWarnings.length > 0;
@@ -153,7 +246,7 @@ const PhotoGallery = ({
 						showInfoControl ? (
 							<button
 								type="button"
-								className="image-gallery-custom-info-control absolute bottom-4 left-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-full border border-base-300 bg-base-100/95 text-base-content shadow-md backdrop-blur-sm transition hover:scale-105 hover:bg-base-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary pointer-events-auto"
+								className="image-gallery-custom-info-control absolute top-4 right-4 z-60 inline-flex h-10 w-10 items-center justify-center rounded-full border border-base-300 bg-base-100/95 text-base-content shadow-md backdrop-blur-sm transition hover:scale-105 hover:bg-base-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary pointer-events-auto"
 								onClick={(event) => {
 									event.stopPropagation();
 									setShowAttributionModal(true);
@@ -203,34 +296,13 @@ const PhotoGallery = ({
 					ownership and contributor credits when reusing or publishing this content.
 				</p>
 
-				<div className="mt-4 grid gap-3 sm:grid-cols-2">
-					<div className="rounded-lg border border-base-300 bg-base-100 p-3">
-						<h4 className="text-xs font-semibold uppercase tracking-wide text-primary">Copyright Ownership</h4>
-						<p className="mt-1 text-sm text-base-content/85">
-							{currentImageAttribution?.copyright || "No copyright ownership details were supplied for this asset."}
-						</p>
-					</div>
-
-					<div className="rounded-lg border border-base-300 bg-base-100 p-3">
-						<h4 className="text-xs font-semibold uppercase tracking-wide text-primary">Photographer / Videographer</h4>
-						<p className="mt-1 text-sm text-base-content/85">
-							{currentImageAttribution?.photographer || "No photographer or videographer credit was supplied."}
-						</p>
-					</div>
-
-					<div className="rounded-lg border border-base-300 bg-base-100 p-3">
-						<h4 className="text-xs font-semibold uppercase tracking-wide text-primary">Additional Production Credits</h4>
-						<p className="mt-1 text-sm text-base-content/85">
-							{currentImageAttribution?.makeup || "No makeup, set design, styling, or related production credits were supplied."}
-						</p>
-					</div>
-
-					<div className="rounded-lg border border-base-300 bg-base-100 p-3">
-						<h4 className="text-xs font-semibold uppercase tracking-wide text-primary">General Attribution Notes</h4>
-						<p className="mt-1 text-sm text-base-content/85">
-							{currentImageAttribution?.attribution || "No additional attribution notes were supplied for this asset."}
-						</p>
-					</div>
+				<div className="mt-4">
+					<MediaCreditsCard
+						title="Credits"
+						credits={modalCredits}
+						size="large"
+						emptyLabel="No credit metadata is available yet for this media."
+					/>
 				</div>
 
 				{!hasAttributionData && (
@@ -312,9 +384,23 @@ const PhotoGallery = ({
 					.custom-gallery-host--controls-hidden .image-gallery-left-nav,
 					.custom-gallery-host--controls-hidden .image-gallery-right-nav,
 					.custom-gallery-host--controls-hidden .image-gallery-fullscreen-button,
-					.custom-gallery-host--controls-hidden .image-gallery-play-button {
+					.custom-gallery-host--controls-hidden .image-gallery-play-button,
+					.custom-gallery-host--controls-hidden .image-gallery-custom-info-control {
 						opacity: 0;
 						pointer-events: none;
+					}
+					.custom-gallery-video-frame {
+						position: relative;
+						width: 100%;
+						aspect-ratio: 16 / 9;
+						border-radius: 0.5rem;
+						overflow: hidden;
+						border: 0.125rem solid color-mix(in oklab, var(--color-base-content, hsl(var(--bc))) 25%, transparent);
+						background: color-mix(in oklab, var(--color-base-200, hsl(var(--b2))) 75%, black);
+					}
+					.custom-gallery-video-iframe {
+						width: 100%;
+						height: 100%;
 					}
 				`}</style>
 			</>
@@ -383,9 +469,23 @@ const PhotoGallery = ({
 				.custom-gallery-host--controls-hidden .image-gallery-left-nav,
 				.custom-gallery-host--controls-hidden .image-gallery-right-nav,
 				.custom-gallery-host--controls-hidden .image-gallery-fullscreen-button,
-				.custom-gallery-host--controls-hidden .image-gallery-play-button {
+				.custom-gallery-host--controls-hidden .image-gallery-play-button,
+				.custom-gallery-host--controls-hidden .image-gallery-custom-info-control {
 					opacity: 0;
 					pointer-events: none;
+				}
+				.custom-gallery-video-frame {
+					position: relative;
+					width: 100%;
+					aspect-ratio: 16 / 9;
+					border-radius: 0.5rem;
+					overflow: hidden;
+					border: 0.125rem solid color-mix(in oklab, var(--color-base-content, hsl(var(--bc))) 25%, transparent);
+					background: color-mix(in oklab, var(--color-base-200, hsl(var(--b2))) 75%, black);
+				}
+				.custom-gallery-video-iframe {
+					width: 100%;
+					height: 100%;
 				}
 			`}</style>
 		</div>

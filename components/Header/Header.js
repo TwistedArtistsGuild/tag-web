@@ -11,18 +11,20 @@
 
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
-import Image from "next/image"
 import { useSession } from "next-auth/react" // Using useSession for authentication
 import LoginProfile from "@/components/Header/LoginProfile"
 import ThemeSwitcher from "@/components/Header/ThemeSwitcher"
+import ThemeLogo from "@/components/ThemeLogo"
 import { useLayout } from "@/components/LayoutProvider"
-import { Bell, MessageSquare, ChevronUp, ChevronDown, Menu, Search } from "lucide-react"
+import { Bell, MessageSquare, ChevronUp, ChevronDown, Search } from "lucide-react"
+import Image from "next/image"
 import NotificationsDropdown from "@/components/Header/NotificationsDropdown" // Keep as dropdown for now
 import MessagesApplet from "@/components/Header/MessagesApplet" // The new message applet
-import { getSeededStockPhotoByCategory } from "@/utils/stockPhotos"
+import BugReportControl from "@/components/forms/bug-report"
+import { buildHeaderNotifications } from "@/components/Header/notification-items"
 
 // Available themes
 const themes = [
@@ -49,13 +51,17 @@ const themes = [
 
 export default function Header() {
   const { data: session } = useSession() // Use session for user data
-  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, toggleRightSidebar, isLeftSidebarVisible, theme, updateTheme } = useLayout()
+  const { isHeaderVisible, toggleHeader, isMobile, toggleLeftSidebar, isLeftSidebarVisible, theme, updateTheme } = useLayout()
   const router = useRouter()
   const [active, setActive] = useState("") // State for active navigation link
   const [isNotificationsDropdownOpen, setIsNotificationsDropdownOpen] = useState(false)
   const [isMessageAppletOpen, setIsMessageAppletOpen] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(3) // Mock notification count
-  const [unreadMessages, setUnreadMessages] = useState(2) // Mock unread messages
+  const [reactionSummary, setReactionSummary] = useState({ count: 0, latestReaction: null })
+  const [commentSummary, setCommentSummary] = useState({ count: 0, latestComment: null })
+  const [messageSummary, setMessageSummary] = useState({ unreadMessages: 0, latestMessage: null })
+  const [lastNotificationsSeenAt, setLastNotificationsSeenAt] = useState(null)
+  const [includeSelfActions, setIncludeSelfActions] = useState(true)
+  const [initialConversationId, setInitialConversationId] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isThemeOpen, setIsThemeOpen] = useState(false)
@@ -63,10 +69,138 @@ export default function Header() {
     activeContext: null,
     availableContexts: [],
   })
-  const [activeContextId, setActiveContextId] = useState(null)
+  const [activeContextId, setActiveContextId] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return window.localStorage.getItem("tag:activeContextId")
+      } catch {
+        return null
+      }
+    }
+    return null
+  })
+
+  const mobileNavOptions = useMemo(
+    () => [
+      { value: "/", label: "Homepage" },
+      { value: "/art/", label: "Bloomscroll" },
+      { value: "/artists", label: "Artists" },
+      { value: "/events", label: "Events" },
+      { value: "/blogs", label: "Blog" },
+      { value: "/news", label: "News" },
+      { value: "/contests/", label: "Contests" },
+    ],
+    [],
+  )
 
   const notificationsIconRef = useRef(null)
   const messagesIconRef = useRef(null)
+
+  const userId = Number(session?.user?.id)
+  const hasValidUserId = Number.isFinite(userId) && userId > 0
+
+  const formatRelativeTime = useCallback((timestamp) => {
+    if (!timestamp) {
+      return "Just now"
+    }
+
+    const date = new Date(timestamp)
+    if (Number.isNaN(date.getTime())) {
+      return "Just now"
+    }
+
+    const deltaMs = Date.now() - date.getTime()
+    const deltaMinutes = Math.floor(deltaMs / 60000)
+    if (deltaMinutes < 1) {
+      return "Just now"
+    }
+
+    if (deltaMinutes < 60) {
+      return `${deltaMinutes}m ago`
+    }
+
+    const deltaHours = Math.floor(deltaMinutes / 60)
+    if (deltaHours < 24) {
+      return `${deltaHours}h ago`
+    }
+
+    const deltaDays = Math.floor(deltaHours / 24)
+    return `${deltaDays}d ago`
+  }, [])
+
+  const refreshNotificationSummary = useCallback(async () => {
+    if (!hasValidUserId) {
+      return
+    }
+
+    const query = `userId=${encodeURIComponent(userId)}&windowMinutes=60&includeSelfActions=${includeSelfActions ? "true" : "false"}`
+
+    try {
+      const [reactionRes, commentRes, messageRes] = await Promise.all([
+        fetch(`/api/impression/received-summary?${query}`),
+        fetch(`/api/comments/received-summary?${query}`),
+        fetch(`/api/conversations/unread-total?userId=${encodeURIComponent(userId)}`),
+      ])
+
+      const [reactionJson, commentJson, messageJson] = await Promise.all([
+        reactionRes.ok ? reactionRes.json() : Promise.resolve(null),
+        commentRes.ok ? commentRes.json() : Promise.resolve(null),
+        messageRes.ok ? messageRes.json() : Promise.resolve(null),
+      ])
+
+      setReactionSummary({
+        count: Number(reactionJson?.reactionCountLastHour || 0),
+        latestReaction: reactionJson?.latestReaction || null,
+      })
+
+      setCommentSummary({
+        count: Number(commentJson?.commentCountLastHour || 0),
+        latestComment: commentJson?.latestComment || null,
+      })
+
+      setMessageSummary({
+        unreadMessages: Number(messageJson?.unreadMessages || 0),
+        latestMessage: messageJson?.latestMessage || null,
+      })
+    } catch (error) {
+      console.error("Failed to load notification summaries:", error)
+    }
+  }, [hasValidUserId, includeSelfActions, userId])
+
+  const notifications = useMemo(() => buildHeaderNotifications({
+    reactionSummary,
+    commentSummary,
+    messageSummary,
+    formatRelativeTime,
+  }), [commentSummary, formatRelativeTime, messageSummary, reactionSummary])
+
+  const socialNotifications = useMemo(
+    () => notifications.filter((item) => item.type !== "messages"),
+    [notifications],
+  )
+
+  const unseenSocialNotificationCount = useMemo(() => {
+    if (isNotificationsDropdownOpen) {
+      return 0
+    }
+
+    if (!lastNotificationsSeenAt) {
+      return socialNotifications.length
+    }
+
+    const seenAtMs = new Date(lastNotificationsSeenAt).getTime()
+    if (Number.isNaN(seenAtMs)) {
+      return socialNotifications.length
+    }
+
+    return socialNotifications.filter((item) => {
+      const createdAtMs = item?.createdAt ? new Date(item.createdAt).getTime() : NaN
+      return !Number.isNaN(createdAtMs) && createdAtMs > seenAtMs
+    }).length
+  }, [isNotificationsDropdownOpen, lastNotificationsSeenAt, socialNotifications])
+
+  const notificationCount = unseenSocialNotificationCount
+  const unreadMessages = messageSummary.unreadMessages
 
   const serializeContextSnapshot = (snapshot) => {
     const contexts = snapshot?.availableContexts || []
@@ -112,17 +246,14 @@ export default function Header() {
   function toggleMessageApplet() {
     if (!isMessageAppletOpen) closeAllPopups()
     setIsMessageAppletOpen((open) => !open)
-    if (!isMessageAppletOpen && unreadMessages > 0) {
-      setUnreadMessages(0)
-    }
   }
 
   function toggleNotificationsDropdown() {
-    if (!isNotificationsDropdownOpen) closeAllPopups()
-    setIsNotificationsDropdownOpen((open) => !open)
-    if (!isNotificationsDropdownOpen && notificationCount > 0) {
-      setNotificationCount(0)
+    if (!isNotificationsDropdownOpen) {
+      closeAllPopups()
+      setLastNotificationsSeenAt(new Date().toISOString())
     }
+    setIsNotificationsDropdownOpen((open) => !open)
   }
 
   function toggleLogin() {
@@ -168,17 +299,132 @@ export default function Header() {
   }, [])
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem("tag.notifications.includeSelfActions")
+      if (stored === "false") {
+        setIncludeSelfActions(false)
+      }
+    } catch (error) {
+      console.error("Failed to read includeSelfActions preference:", error)
+    }
+  }, [])
+
+  useEffect(() => {
+    refreshNotificationSummary()
+  }, [refreshNotificationSummary])
+
+  useEffect(() => {
+    const handleRealtimeNotification = (event) => {
+      const update = event?.detail || {}
+      const updateType = String(update.type || "").toLowerCase()
+
+      if (updateType === "reactions") {
+        setReactionSummary({
+          count: Number(update.reactionCountLastHour || 0),
+          latestReaction: update.latestReaction || null,
+        })
+        return
+      }
+
+      if (updateType === "comments") {
+        setCommentSummary({
+          count: Number(update.commentCountLastHour || 0),
+          latestComment: update.latestComment || null,
+        })
+        return
+      }
+
+      if (updateType === "messages") {
+        setMessageSummary({
+          unreadMessages: Number(update.unreadMessages || 0),
+          latestMessage: update.latestMessage || null,
+        })
+        return
+      }
+
+      refreshNotificationSummary()
+    }
+
+    const handleReconnect = () => {
+      refreshNotificationSummary()
+    }
+
+    window.addEventListener("signalr:notification", handleRealtimeNotification)
+    window.addEventListener("signalr:reconnected", handleReconnect)
+
+    return () => {
+      window.removeEventListener("signalr:notification", handleRealtimeNotification)
+      window.removeEventListener("signalr:reconnected", handleReconnect)
+    }
+  }, [refreshNotificationSummary])
+
+  useEffect(() => {
+    const conversationFromQuery = router?.query?.conversationId
+    const nextConversationId = Array.isArray(conversationFromQuery)
+      ? conversationFromQuery[0]
+      : conversationFromQuery
+
+    if (nextConversationId) {
+      setInitialConversationId(String(nextConversationId))
+      setIsNotificationsDropdownOpen(false)
+      setIsMessageAppletOpen(true)
+    }
+  }, [router?.query?.conversationId])
+
+  const onRouteClose = useCallback(() => {
+    setIsNotificationsDropdownOpen(false)
+    setIsMessageAppletOpen(false)
+  }, [])
+
+  const handleNotificationClick = useCallback((notification, event) => {
+    if (notification?.type === "messages" && notification?.conversationId) {
+      event.preventDefault()
+      closeAllPopups()
+      setInitialConversationId(String(notification.conversationId))
+      setIsMessageAppletOpen(true)
+      return
+    }
+
+    onRouteClose()
+  }, [onRouteClose])
+
+  useEffect(() => {
     const contexts = contextSnapshot?.availableContexts || []
     if (contexts.length === 0) {
       return
     }
 
-    if (!activeContextId || !contexts.some((context) => context.id === activeContextId)) {
-      setActiveContextId(contextSnapshot?.activeContext?.id || contexts[0].id)
+    let savedId = null
+    try {
+      if (typeof window !== "undefined") {
+        savedId = window.localStorage.getItem("tag:activeContextId")
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+
+    const targetId = savedId || activeContextId
+    const targetExists = targetId && contexts.some((c) => c.id === targetId)
+
+    if (targetExists && activeContextId !== targetId) {
+      setActiveContextId(targetId)
+    } else if (!targetExists && !savedId) {
+      if (!activeContextId || !contexts.some((c) => c.id === activeContextId)) {
+        setActiveContextId(contextSnapshot?.activeContext?.id || contexts[0].id)
+      }
     }
   }, [activeContextId, contextSnapshot])
 
   const headerClass = getHeaderClassName()
+  const mobileNavValue = useMemo(() => {
+    const currentPath = String(router.asPath || router.pathname || "").split("?")[0].toLowerCase()
+    const match = mobileNavOptions.find((option) => {
+      const optionPath = option.value.toLowerCase()
+      return currentPath === optionPath || currentPath.startsWith(`${optionPath.replace(/\/$/, "")}/`)
+    })
+
+    return match?.value || ""
+  }, [mobileNavOptions, router.asPath, router.pathname])
 
   // Height of the header for popup offset
   const headerHeight = 88
@@ -246,31 +492,48 @@ export default function Header() {
         className={`w-full transition-all duration-300 ease-in-out ${
           isHeaderVisible ? "translate-y-0" : "-translate-y-full"
         } fixed top-0 left-0 right-0 z-40 ${scrolled ? "bg-base-100/95 backdrop-blur-md shadow-lg" : "bg-base-100"}`}
+        style={{
+          filter: 'drop-shadow(0 2px 8px rgba(21, 19, 24, 0.9)) drop-shadow(0 8px 24px color-mix(in srgb, var(--color-primary, #6233FF) 65%, transparent)) drop-shadow(0 12px 32px rgba(98, 51, 255, 0.3))'
+        }}
       >
         {/* Single Header Layer */}
         <div className={headerClass}>
           {/* Left: Logo and Brand */}
-          <div className="flex items-center space-x-4">
-            {isMobile && (
-              <button className="btn btn-ghost btn-circle" onClick={toggleLeftSidebar} aria-label="Toggle left sidebar">
-                <Menu className="w-6 h-6" />
-              </button>
-            )}
+          <div className="flex items-center space-x-2">
             <Link
               href="/"
-              className="flex items-center space-x-2 px-2 py-1 rounded-md backdrop-blur-sm bg-base-100/18 border border-base-content/10 hover:bg-base-100/24 transition-all"
+              className="flex items-center px-2 py-1 rounded-md backdrop-blur-sm bg-base-100/18 border border-base-content/10 hover:bg-base-100/24 transition-all"
               onClick={() => setActive("")}
             >
-              <Image
-                src="/tag_logo.png"
-                alt="Home"
-                height={40}
-                width={80}
+              <ThemeLogo 
+                src="/TAG OFFICIAL/LOGOS/HORIZONTAL (HOLLOW WHITE).png" 
+                alt="Twisted Artists Guild" 
+                width="w-48"
+                height="h-14"
               />
-              <span className="font-josefin-sans text-xl font-extrabold italic hidden sm:block">
-                Twisted Artists Guild
-              </span>
             </Link>
+            {isMobile && (
+              <select
+                className="select select-sm select-bordered max-w-42"
+                value={mobileNavValue}
+                aria-label="Main navigation"
+                onChange={(event) => {
+                  const nextPath = event.target.value
+                  if (nextPath && nextPath !== mobileNavValue) {
+                    router.push(nextPath)
+                  }
+                }}
+              >
+                <option value="" disabled>
+                  Navigate
+                </option>
+                {mobileNavOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Center: Main Navigation - Desktop */}
@@ -287,12 +550,33 @@ export default function Header() {
               <Search size={20} />
             </button>
             <Link
+              href="/feed"
+              className={`flex items-center ${getTextColorClass(active === "bloomscroll")} hover:opacity-80 transition-opacity`}
+              onClick={() => handleActive("bloomscroll")}
+              name="bloomscroll"
+              title="Bloomscroll - Social Feed"
+            >
+              <div style={{
+                filter: 'drop-shadow(0 1px 3px rgba(21, 19, 24, 0.6)) drop-shadow(0 4px 12px color-mix(in srgb, var(--color-primary, #6233FF) 85%, transparent))',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <Image
+                  src="/BLOOMSCROLL OFFICIAL/LOGO/BS (HORIZONTAL) V1.png"
+                  alt="Bloomscroll"
+                  width={180}
+                  height={34}
+                  style={{ height: 'auto' }}
+                />
+              </div>
+            </Link>
+            <Link
               href="/art/"
               className={`text-lg ${getTextColorClass(active === "art")}`}
               onClick={() => handleActive("art")}
               name="art"
             >
-              Bloomscroll
+              Browse
             </Link>
             <Link
               href="/artists"
@@ -338,6 +622,8 @@ export default function Header() {
 
           {/* Right: User Controls */}
           <div className="flex items-center space-x-2">
+            <BugReportControl />
+
             {/* Theme Switcher */}
             <ThemeSwitcher themes={themes} currentTheme={theme} onThemeChange={updateTheme} onToggle={toggleTheme} isOpen={isThemeOpen} />
 
@@ -384,13 +670,6 @@ export default function Header() {
               onActiveContextChange={setActiveContextId}
               onContextSnapshotChange={handleContextSnapshotChange}
             />
-
-            {/* Mobile Right Sidebar Toggle Button */}
-            {isMobile && (
-              <button type="button" className="btn btn-ghost btn-sm lg:hidden" onClick={toggleRightSidebar}>
-                <Menu className="w-5 h-5" />
-              </button>
-            )}
           </div>
           {/* tag-theme visual treatment is handled with CSS pseudo-elements */}
         </div>
@@ -412,44 +691,22 @@ export default function Header() {
       {isMessageAppletOpen && !isNotificationsDropdownOpen && !isLoginOpen && !isThemeOpen && (
         <div style={popupStyle}>
           <MessagesApplet
+            key={`messages-${initialConversationId || "default"}`}
             isOpen={isMessageAppletOpen}
             onClose={toggleMessageApplet}
             currentUser={messagesCurrentUser}
+            initialConversationId={initialConversationId}
             contextProfiles={contextSnapshot?.availableContexts || []}
             activeContextId={activeContextId || resolvedActiveContext?.id || null}
             onContextChange={(nextContextId) => {
-              setActiveContextId(nextContextId)
+              if (nextContextId && nextContextId !== activeContextId) {
+                setActiveContextId(nextContextId)
+                if (typeof window !== "undefined") {
+                  window.localStorage.setItem("tag:activeContextId", nextContextId)
+                  window.location.reload()
+                }
+              }
             }}
-            conversations={[
-              {
-                id: 1,
-                name: "Sarah Johnson",
-                avatar: getSeededStockPhotoByCategory("Sarah Johnson", 'artist'),
-                messages: [
-                  { id: 1, sender: "Sarah Johnson", text: "Hey, how are you?", time: "10:00 AM" },
-                  { id: 2, sender: "You", text: "I'm good, thanks! How about you?", time: "10:05 AM" },
-                  { id: 3, sender: "Sarah Johnson", text: "Doing great! Just finished a new painting.", time: "10:10 AM" },
-                ],
-              },
-              {
-                id: 2,
-                name: "John Doe",
-                avatar: getSeededStockPhotoByCategory("John Doe", 'artist'),
-                messages: [
-                  { id: 4, sender: "John Doe", text: "Meeting at 2 PM?", time: "Yesterday" },
-                  { id: 5, sender: "You", text: "Yes, confirmed!", time: "Yesterday" },
-                ],
-              },
-              {
-                id: 3,
-                name: "Community Chat",
-                avatar: getSeededStockPhotoByCategory("Community Chat", 'general'),
-                messages: [
-                  { id: 6, sender: "Admin", text: "Welcome to the community!", time: "2 days ago" },
-                  { id: 7, sender: "User1", text: "Thanks!", time: "2 days ago" },
-                ],
-              },
-            ]}
           />
         </div>
       )}
@@ -458,98 +715,8 @@ export default function Header() {
         <div style={popupStyle}>
           <NotificationsDropdown
             activeContextColor={activeContextColor}
-            notifications={[
-              {
-                title: "New Follower",
-                body: "Alex started following you.",
-                time: "Just now",
-                avatar: getSeededStockPhotoByCategory("New Follower", 'artist'),
-              },
-              {
-                title: "Comment",
-                body: "Sarah commented on your post.",
-                time: "5m ago",
-                avatar: getSeededStockPhotoByCategory("Comment", 'artist'),
-              },
-              {
-                title: "Sale",
-                body: "You sold 'Sunset Overdrive'!",
-                time: "1h ago",
-                avatar: getSeededStockPhotoByCategory("Sale", 'painting'),
-              },
-              {
-                title: "Event Reminder",
-                body: "Art show starts in 1 hour.",
-                time: "Today",
-                avatar: getSeededStockPhotoByCategory("Event Reminder", 'performance'),
-              },
-              {
-                title: "Blog Update",
-                body: "New blog post: 'The Art of Color'",
-                time: "Yesterday",
-                avatar: getSeededStockPhotoByCategory("Blog Update", 'painting'),
-              },
-              {
-                title: "Mention",
-                body: "You were mentioned in a comment.",
-                time: "2h ago",
-                avatar: getSeededStockPhotoByCategory("Mention", 'artist'),
-              },
-              {
-                title: "Collaboration Invite",
-                body: "John invited you to collaborate.",
-                time: "3h ago",
-                avatar: getSeededStockPhotoByCategory("Collaboration Invite", 'artist'),
-              },
-              {
-                title: "New Message",
-                body: "You have a new message from Emily.",
-                time: "4h ago",
-                avatar: getSeededStockPhotoByCategory("New Message", 'artist'),
-              },
-              {
-                title: "Profile View",
-                body: "Your profile was viewed 10 times today.",
-                time: "Today",
-                avatar: getSeededStockPhotoByCategory("Profile View", 'general'),
-              },
-              {
-                title: "Art Liked",
-                body: "Your artwork 'Blue Dream' got 5 new likes.",
-                time: "Today",
-                avatar: getSeededStockPhotoByCategory("Art Liked", 'painting'),
-              },
-              {
-                title: "Payment Received",
-                body: "You received a payment for a commission.",
-                time: "Yesterday",
-                avatar: getSeededStockPhotoByCategory("Payment Received", 'general'),
-              },
-              {
-                title: "System Update",
-                body: "Platform maintenance scheduled for Sunday.",
-                time: "Yesterday",
-                avatar: getSeededStockPhotoByCategory("System Update", 'general'),
-              },
-              {
-                title: "Contest Winner",
-                body: "Congrats! You won the monthly art contest.",
-                time: "2d ago",
-                avatar: getSeededStockPhotoByCategory("Contest Winner", 'performance'),
-              },
-              {
-                title: "New Resource",
-                body: "A new tutorial is available in Resources.",
-                time: "2d ago",
-                avatar: getSeededStockPhotoByCategory("New Resource", 'general'),
-              },
-              {
-                title: "Feedback Request",
-                body: "Please provide feedback on your last sale.",
-                time: "3d ago",
-                avatar: getSeededStockPhotoByCategory("Feedback Request", 'general'),
-              },
-            ]}
+            notifications={notifications}
+            onNotificationClick={handleNotificationClick}
             onClose={() => setIsNotificationsDropdownOpen(false)}
             isOpen={true}
           />

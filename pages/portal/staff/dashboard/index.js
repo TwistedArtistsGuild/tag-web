@@ -13,6 +13,7 @@ import Link from "next/link"
 import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
+import StaffContextNav from "@/components/portal/StaffContextNav"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
 
@@ -30,14 +31,10 @@ export default function StaffDashboardIndex() {
 
 	return (
 		<div className="p-4 bg-base-200 min-h-screen">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/staff/dashboard" />
-			<div className="max-w-4xl mx-auto space-y-6">
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/staff/dashboard" />				<StaffContextNav />			<div className="max-w-4xl mx-auto space-y-6">
 				<div className="card bg-base-100 shadow border border-base-300">
 					<div className="card-body">
-						<div className="flex items-center justify-between gap-3 flex-wrap">
-							<h1 className="text-3xl font-bold text-primary">Staff Dashboard</h1>
-							<Link href="/portal/staff" className="btn btn-sm btn-ghost">Back to Staff Portal</Link>
-						</div>
+						<h1 className="text-3xl font-bold text-primary">Staff Dashboard</h1>
 						<p className="text-base-content/70">
 							Simple landing page for staff dashboard tools and future operational widgets.
 						</p>

@@ -12,11 +12,10 @@
 
 
 import DynaFormDB from "@/components/widgets/DynaFormDB"
-import getApiURL from "@/components/widgets/GetApiURL"
+import TagSEO from "@/components/TagSEO"
+import serverFetch from "@/libs/serverFetch"
 
 //broken but don't care!!!!
-
-const api_url = getApiURL();
 /**
  * Component for updating user details.
  * @param {Object} props
@@ -27,8 +26,25 @@ const api_url = getApiURL();
 export default function UpdateEventForm1(props) {
     props.metadataProp.FromURL = "/events/" + props.slug + "/update.js";
     props.metadataProp.redirectURL = "/events/" + props.slug;
-    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}/${props.slug}`;
-    return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.eventdata} /></div>;
+    props.metadataProp.APIURL = `/api/${props.metadataProp.apiurlpostfix}/${props.slug}`;
+    return (
+        <div className="p-4">
+            <TagSEO
+                metadataProp={{
+                    title: "Update Event",
+                    description: "Update an existing event listing.",
+                    robots: "noindex, nofollow",
+                    keywords: "events, update event",
+                    og: {
+                        title: "Update Event",
+                        description: "Update an existing event listing.",
+                    },
+                }}
+                canonicalSlug="events/update"
+            />
+            <DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.eventdata} />
+        </div>
+    );
 }
 
 /**
@@ -45,9 +61,9 @@ UpdateEventForm1.getInitialProps = async function (context) {
     let data = {};
     let metadata = {};
     try {
-        const res1 = await fetch(api_url + `event/${slug}`);
+        const res1 = await serverFetch(`/event/${slug}`);
         data = await res1.json();
-        const res2 = await fetch(api_url + `forms_metadata/EventForm1`);
+        const res2 = await serverFetch(`/forms_metadata/EventForm1`);
         metadata = await res2.json();
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);

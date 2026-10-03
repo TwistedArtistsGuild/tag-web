@@ -12,8 +12,7 @@
 import TagSEO from "@/components/TagSEO";
 import ListingCard from "@/components/cards/card_listing";
 import { getPanelClass } from "@/components/cards/sizes/panel-layout";
-import getApiURL from "@/components/widgets/GetApiURL";
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext";
+import serverFetch from "@/libs/serverFetch"
 
 /**
  *
@@ -38,7 +37,7 @@ const Listings = (props) => {
   }
 
   return (
-    <SocialRealtimeProvider>
+    
       <div className="container mx-auto p-4">
         <TagSEO metadataProp={pageMetaData} canonicalSlug={canonicalSlug} />
 
@@ -55,17 +54,16 @@ const Listings = (props) => {
               key={listing.path || listing.listingid || `${listing.title || "listing"}-${index}`}
               className={`${getPanelClass(listing.panelSize)} self-start`}
             >
-              <ListingCard listing={listing} panelSize={listing.panelSize} />
+              <ListingCard listing={listing} panelSize={listing.panelSize} textRenderMode="html" />
             </div>
           ))}
         </div>
       </div>
-    </SocialRealtimeProvider>
+    
   );
 };
 
 Listings.getInitialProps = async (context) => {
-  const api_url = getApiURL()
   const { supercat = "", cat = "", medium = "", subcat = "" } = context.query
   let data = []
   let status = 200
@@ -84,7 +82,7 @@ Listings.getInitialProps = async (context) => {
       subcat,
       keyword: `${supercat} ${cat} ${medium} ${subcat}`,
     }).toString()
-    const res = await fetch(`${api_url}listing/?${queryParams}`)
+    const res = await serverFetch(`/listing/?${queryParams}`)
     status = res.status
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${status}`)
@@ -114,4 +112,5 @@ Listings.getInitialProps = async (context) => {
 }
 
 export default Listings
+
 

@@ -12,19 +12,19 @@
 
 //change to displaying an individual log (from Blogs)
 import shortDateOptions from "@/utils/shortdateoptions"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getServerSession } from "next-auth/next"
 
 import TagSEO from "@/components/TagSEO"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin, isStaff } from "@/utils/authHelpers"
+import serverFetch from "@/libs/serverFetch"
 
 const Logviewer = props => {
 	const options = shortDateOptions
 
 	return (
       <div className="flex flex-col items-center justify-evenly min-h-screen w-full">
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Portal Logviewer Id", description: "Explore Github Projects Web Pages Portal Logviewer Id on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Portal Logviewer Id", description: "Explore Github Projects Web Pages Portal Logviewer Id on Platform." } }} canonicalSlug="portal/staff/logviewer/[id]" />
+			<TagSEO metadataProp={{ title: "Log Viewer", description: "View detailed staff log entries.", keywords: "staff, logs, admin", robots: "noindex, nofollow", og: { title: "Log Viewer", description: "View detailed staff log entries." } }} canonicalSlug="portal/staff/logviewer/[id]" />
 			<div className="w-full max-w-4xl p-4">
 				<h1 className="text-4xl font-bold mb-8 text-primary">Log viewer</h1>
         
@@ -89,15 +89,13 @@ export async function getServerSideProps(context) {
 			notFound: true,
 		}
 	}
-
-	const api_url = getApiURL()
  
 	// If we are running in debug mode, log the active API URL
 	if (process.env.DEBUG === "true") {
 		console.log(`Fetching log: ${id}, path: ${context.pathname}`)
 	} 
 
-	const res = await fetch (api_url + `log/${id}`)
+	const res = await serverFetch(`/log/${id}`)
 	const data = await res.json ()
 
 	if (!res.ok || !data) {

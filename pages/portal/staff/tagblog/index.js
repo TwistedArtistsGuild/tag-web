@@ -13,11 +13,11 @@ import React, { useMemo } from "react";
 import { getServerSession } from "next-auth/next";
 import DynaFormDB from "@/components/widgets/DynaFormDB";
 import TagSEO from "@/components/TagSEO";
-import getApiURL from "@/components/widgets/GetApiURL";
+import StaffContextNav from "@/components/portal/StaffContextNav";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { isAdmin, isStaff } from "@/utils/authHelpers";
+import serverFetch from "@/libs/serverFetch"
 
-const api_url = getApiURL();
 const formName = "BlogForm1";
 
 function isAuthorRole(session) {
@@ -37,7 +37,7 @@ export default function StaffTagBlogSuggestion(props) {
 		const imageStartPrefix = "platformpics/blog/";
 		const apiPostfix = base.apiurlpostfix || base.APIURLpostfix || base.apiurLpostfix || "blog";
 		const normalizedPostfix = String(apiPostfix).replace(/^\/+/, "");
-		const resolvedApiUrl = base.APIURL || `${api_url}${normalizedPostfix}`;
+		const resolvedApiUrl = base.APIURL || `/api/${normalizedPostfix}`;
 
 		return {
 			...base,
@@ -75,8 +75,7 @@ export default function StaffTagBlogSuggestion(props) {
 
 	return (
 		<div className="p-4 space-y-4 bg-base-200">
-			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/staff/tagblog" />
-
+			<TagSEO metadataProp={pageMetaData} canonicalSlug="portal/staff/tagblog" />				<StaffContextNav />
 			<div className="rounded-xl border border-warning/30 bg-base-100 p-4 shadow-sm">
 				<h1 className="text-2xl font-bold text-base-content">Blog Post Suggestion Form</h1>
 				<p className="mt-2 text-sm text-base-content/75">
@@ -112,9 +111,9 @@ export async function getServerSideProps(context) {
 
 	let metadata = {};
 	try {
-		let res = await fetch(`${api_url}formsmetadata/${formName}`);
+		let res = await serverFetch(`/formsmetadata/${formName}`);
 		if (!res.ok) {
-			res = await fetch(`${api_url}forms_metadata/${formName}`);
+			res = await serverFetch(`/forms_metadata/${formName}`);
 		}
 		if (res.ok) {
 			metadata = await res.json();

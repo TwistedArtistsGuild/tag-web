@@ -13,6 +13,7 @@
 import { getMarkdownContent } from "@/components/widgets/markdown"
 
 import TagSEO from "@/components/TagSEO"
+import { sanitizeDefaultHtml } from "@/components/security/sanitize"
 
 export default function CodeOfConduct({ content }) {
 	const pageMetaData = {
@@ -35,7 +36,7 @@ export default function CodeOfConduct({ content }) {
 				<h2 className="text-2xl font-bold mb-4">
           The basics to the code of conduct for any and everyone that we interact with: 
 				</h2>
-				<div dangerouslySetInnerHTML={{ __html: content }} />
+				<div dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(content) }} />
 			</div>
 			<footer className="mt-8 text-center text-base-content/60">
 			</footer>
@@ -51,6 +52,7 @@ export async function getStaticProps() {
 		},
 	}
 }
+
 
 
 

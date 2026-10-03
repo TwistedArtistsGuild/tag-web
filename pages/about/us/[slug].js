@@ -15,6 +15,7 @@ import PhotoGallery from "@/components/cards/card_photoGallery";
 import { CARD_SHELL_CLASS } from "@/components/cards/sizes/panel-layout";
 
 import TagSEO from "@/components/TagSEO";
+import { sanitizeDefaultHtml } from "@/components/security/sanitize";
 
 export default function ProfilePage() {
 	const router = useRouter();
@@ -25,7 +26,7 @@ export default function ProfilePage() {
 	if (!profile) {
 		return (
       <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages About Us Slug", description: "Explore Github Projects Web Pages About Us Slug on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages About Us Slug", description: "Explore Github Projects Web Pages About Us Slug on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/about/us/[slug]" />
+				<TagSEO metadataProp={{ title: "Profile Not Found", description: "The requested profile could not be found.", keywords: "artists, profile", robots: "noindex, follow", og: { title: "Profile Not Found", description: "The requested profile could not be found." } }} canonicalSlug="about/us/[slug]" />
 				<div className="alert alert-error max-w-sm">
 					<span>Profile not found.</span>
 				</div>
@@ -101,7 +102,7 @@ export default function ProfilePage() {
 									prose-ul:list-disc prose-ul:pl-5 prose-li:mb-1
 									prose-blockquote:border-l-4 prose-blockquote:border-primary
 									prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-base-content/70"
-								dangerouslySetInnerHTML={{ __html: profile.bio }}
+								dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(profile.bio) }}
 							/>
 						</div>
 					</div>
@@ -124,3 +125,4 @@ export default function ProfilePage() {
 		</div>
 	);
 }
+

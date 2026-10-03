@@ -17,7 +17,7 @@ import TagSEO from "@/components/TagSEO"
 export default function Portal_Artist() {
 	return (
       <div className="p-4 bg-base-200">
-      <TagSEO metadataProp={{ title: "Github Projects Web Pages Cart Checkout", description: "Explore Github Projects Web Pages Cart Checkout on Platform.", keywords: "artists, art community, marketplace", og: { title: "Github Projects Web Pages Cart Checkout", description: "Explore Github Projects Web Pages Cart Checkout on Platform." } }} canonicalSlug="/github_projects/tag/tag-web/pages/cart/checkout" />
+			<TagSEO metadataProp={{ title: "Checkout", description: "Review and complete your order checkout.", keywords: "checkout, cart, marketplace", og: { title: "Checkout", description: "Review and complete your order checkout." } }} canonicalSlug="cart/checkout" />
 			<h2 className="text-2xl font-bold text-primary">
         Landing page for Checkout
 			</h2>

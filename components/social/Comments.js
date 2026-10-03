@@ -15,27 +15,73 @@
     Exports: SocialComments (default), TTCommentsEditorCard (named)
 */
 
-import { useState, useCallback, memo } from "react";
-import DOMPurify from "dompurify";
-import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5";
+import { useState, useCallback, memo, useEffect, useRef } from "react";
+import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd, IoTrashOutline } from "react-icons/io5";
+import { sanitizeDefaultHtml } from "@/components/security/sanitize";
+import { ClientDate } from "@/utils/hydration";
+import { getIdentityGlowStyle } from "@/utils/identityGlow";
 
 // Import components
 import Image from "next/image";
-import { useRealtimeComments, useSocialRealtime } from './SocialRealtimeContext';
-import SocialReactions from './Reactions';
+import ImpressionReactions from './ImpressionReactions';
+import { useImpressions, ImpressionTargetType } from '@/hooks/useImpressions';
 import TiptapEditor from "@/components/tiptap/tiptap-editor";
+import ContextSwitcher from "@/components/Header/ContextSwitcher";
 // Import the canonical editor card from tiptap folder
 export { TTCommentsEditorCard } from "@/components/tiptap/TT_Comments";
 
 function buildCommentsState(initialComments = []) {
     return initialComments.map(comment => ({
         ...comment,
+        // Normalize API response to component expectations
+        author: comment.authorDisplayName || comment.user?.name || comment.author || "Anonymous",
+        authorDisplayName: comment.authorDisplayName || comment.user?.name || comment.author || "Anonymous",
+        avatarUrl: comment.authorImage || comment.avatarUrl ||
+            (comment.authorEntityType === "user" ? comment.user?.image : null) ||
+            "/blank_image.png",
+        created: comment.createdAt || comment.created,
         isEditing: false,
         replies: comment.replies?.map(reply => ({
             ...reply,
+            // Normalize reply data too
+            author: reply.authorDisplayName || reply.user?.name || reply.author || "Anonymous",
+            authorDisplayName: reply.authorDisplayName || reply.user?.name || reply.author || "Anonymous",
+            avatarUrl: reply.authorImage || reply.avatarUrl ||
+                (reply.authorEntityType === "user" ? reply.user?.image : null) ||
+                "/blank_image.png",
+            created: reply.createdAt || reply.created,
             isEditing: false
         })) || []
     }));
+}
+
+function hasActiveDrafts(comments = []) {
+    return comments.some((comment) => {
+        const commentId = String(comment?.id || "");
+        const commentEditing = Boolean(comment?.isEditing) || commentId.startsWith("temp-");
+        if (commentEditing) return true;
+
+        const replies = Array.isArray(comment?.replies) ? comment.replies : [];
+        return replies.some((reply) => {
+            const replyId = String(reply?.id || "");
+            return Boolean(reply?.isEditing) || replyId.startsWith("temp-");
+        });
+    });
+}
+
+function commentsSignature(comments = []) {
+    return JSON.stringify(
+        comments.map((comment) => ({
+            id: comment?.id,
+            content: comment?.content || comment?.body || "",
+            updatedAt: comment?.updatedAt || comment?.updated || comment?.modifiedAt || "",
+            replies: (Array.isArray(comment?.replies) ? comment.replies : []).map((reply) => ({
+                id: reply?.id,
+                content: reply?.content || reply?.body || "",
+                updatedAt: reply?.updatedAt || reply?.updated || reply?.modifiedAt || "",
+            })),
+        })),
+    );
 }
 
 /**
@@ -45,6 +91,7 @@ function buildCommentsState(initialComments = []) {
  * @param {Array} props.initialComments - Initial comments data to display
  * @param {Function} props.onAddComment - Callback when a comment is added
  * @param {Function} props.onUpdateComment - Callback when a comment is updated
+ * @param {Function} props.onDeleteComment - Callback when a comment is deleted
  * @param {Function} props.onLikeComment - Callback when a comment is liked
  * @param {string} props.contextId - ID of the context being commented on (article ID, etc)
  * @param {Object} props.currentUser - Current user information (null if not logged in)
@@ -56,11 +103,13 @@ const SocialComments = ({
     initialComments = [],
     onAddComment = () => {},
     onUpdateComment = () => {},
+    onDeleteComment = () => {},
     onLikeComment = () => {},
     contextId = "",
     currentUser = null,
     allowMedia = true,
-    readOnly = false
+    readOnly = false,
+    managedExternally = false // NEW: Set to true when comments are managed by parent (API-driven)
 }) => {
     // State management for comments
     const [comments, setComments] = useState(() => buildCommentsState(initialComments));
@@ -73,30 +122,24 @@ const SocialComments = ({
         return localStorage.getItem("theme") || "tag-theme";
     });
     
-    // Real-time functionality
-    const { emit, isConnected } = useSocialRealtime();
-    
-    // Handle real-time comment updates
-    const handleRealtimeUpdate = useCallback((update) => {
-        if (update.type === 'comment_added') {
-            setComments(prevComments => {
-                // Check if comment already exists to avoid duplicates
-                const exists = prevComments.some(comment => comment.id === update.data.id);
-                if (!exists) {
-                    return [...prevComments, { ...update.data, isEditing: false, replies: [] }];
-                }
-                return prevComments;
-            });
-        } else if (update.type === 'comment_updated') {
-            setComments(prevComments => prevComments.map(comment => 
-                comment.id === update.data.id ? { ...comment, ...update.data, isEditing: false } : comment
-            ));
-        } else if (update.type === 'comment_deleted') {
-            setComments(prevComments => prevComments.filter(comment => comment.id !== update.data.id));
+    // Sync comments when initialComments change (important for API-driven updates)
+    useEffect(() => {
+        if (!managedExternally) {
+            return;
         }
-    }, []);
 
-    useRealtimeComments(contextId, handleRealtimeUpdate);       
+        const nextComments = buildCommentsState(initialComments);
+        setComments((prevComments) => {
+            // Do not clobber in-progress edits/drafts while a user is typing.
+            if (hasActiveDrafts(prevComments)) {
+                return prevComments;
+            }
+
+            return commentsSignature(prevComments) === commentsSignature(nextComments)
+                ? prevComments
+                : nextComments;
+        });
+    }, [initialComments, managedExternally])
     
     // Check if the current user can edit a specific comment
     const canEditComment = useCallback((comment) => {
@@ -104,7 +147,7 @@ const SocialComments = ({
         if (!currentUser) return false;
         
         // Allow editing if it's the user's own comment or they have admin permissions
-        return currentUser.id === comment.authorId || currentUser.isAdmin;
+        return currentUser.id === comment.userId || currentUser.isAdmin;
     }, [currentUser, readOnly]);
     
     /**
@@ -140,12 +183,15 @@ const SocialComments = ({
         if (!currentUser || readOnly) return;
         
         const newComment = {
-            id: `temp-${Date.now()}`, // Temporary ID until saved to backend
-            body: "",
-            authorId: currentUser.id,
-            author: currentUser.username || "Anonymous",
-            authorDisplayName: currentUser.displayName || currentUser.username || "Anonymous",
-            avatarUrl: currentUser.avatarUrl || "/images/default-avatar.png",
+            id: `temp-${Date.now()}`, // Change semicolon to comma here
+            content: "",
+            userId: currentUser.id,
+            authorRole: currentUser.type || "user",
+            contextId: currentUser.contextId || "user-primary",
+            user: {
+                name: currentUser.name || "Anonymous",
+                image: currentUser.image || "/images/default-avatar.png",
+            },
             likes: 0,
             created: new Date().toISOString(),
             isEditing: true,
@@ -155,7 +201,7 @@ const SocialComments = ({
         setComments(prevComments => [newComment, ...prevComments]);
     }, [currentUser, readOnly]);
 
-    /**
+    /**AvatarUrl
      * Adds a new blank reply to a specific comment
      */
     const addNewReply = useCallback((parentId) => {
@@ -164,12 +210,15 @@ const SocialComments = ({
         setComments(prevComments => prevComments.map(comment => {
             if (comment.id === parentId) {
                 const newReply = {
-                    id: `temp-reply-${Date.now()}`, // Temporary ID until saved to backend
-                    body: "",
-                    authorId: currentUser.id,
-                    author: currentUser.username || "Anonymous",
-                    authorDisplayName: currentUser.displayName || currentUser.username || "Anonymous",
-                    avatarUrl: currentUser.avatarUrl || "/images/default-avatar.png",
+                    id: `temp-reply-${Date.now()}`, // Make sure this is a comma
+                    content: "",
+                    userId: currentUser.id,
+                    authorRole: currentUser.type || "user",
+                    contextId: currentUser.contextId || "user-primary",
+                    user: {
+                        name: currentUser.name || "Anonymous",
+                        image: currentUser.image || "/images/default-avatar.png",
+                    },
                     likes: 0,
                     created: new Date().toISOString(),
                     isEditing: true
@@ -193,49 +242,47 @@ const SocialComments = ({
         if (!textOnly) return;
         
         // Sanitize content to prevent XSS attacks
-        const sanitizedContent = DOMPurify.sanitize(content);
+        const sanitizedContent = sanitizeDefaultHtml(content);
         
+        // If managed externally, just call the callback and let parent handle state
+        if (managedExternally) {
+            const commentData = {
+                id: commentId,
+                content: sanitizedContent,
+                userId: currentUser?.id,
+                user: {
+                    name: currentUser?.name,
+                    image: currentUser?.image || '/images/default-avatar.png',
+                }
+            };
+            
+            if (commentId.toString().startsWith('temp-')) {
+                // New comment or reply
+                onAddComment(commentData, isReply ? parentId : null);
+            } else {
+                // Update existing comment
+                onUpdateComment(commentData, isReply ? parentId : null);
+            }
+            
+            return;
+        }
+        
+        // Original local state management logic (for non-API mode)
         setComments(prevComments => prevComments.map(comment => {
             // Update top-level comment
             if (!isReply && comment.id === commentId) {
                 const updatedComment = { 
                     ...comment, 
-                    body: sanitizedContent,
-                    isEditing: false // Exit edit mode
+                    content: sanitizedContent,
+                    isEditing: false
                 };
                 
-                // If it's a new comment (has temp- prefix)
                 if (commentId.toString().startsWith('temp-')) {
-                    // Generate a real ID for the comment
                     const newId = `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                     updatedComment.id = newId;
                     
-                    // Emit real-time update for new comment
-                    if (isConnected) {
-                        emit('comments', {
-                            type: 'comment_added',
-                            data: {
-                                ...updatedComment,
-                                contextId
-                            }
-                        });
-                    }
-                    
-                    // Call the onAddComment callback
                     onAddComment(updatedComment);
                 } else {
-                    // Emit real-time update for updated comment
-                    if (isConnected) {
-                        emit('comments', {
-                            type: 'comment_updated',
-                            data: {
-                                ...updatedComment,
-                                contextId
-                            }
-                        });
-                    }
-                    
-                    // Call the onUpdateComment callback
                     onUpdateComment(updatedComment);
                 }
                 
@@ -248,44 +295,16 @@ const SocialComments = ({
                     if (reply.id === commentId) {
                         const updatedReply = { 
                             ...reply, 
-                            body: sanitizedContent,
-                            isEditing: false // Exit edit mode
+                            content: sanitizedContent,
+                            isEditing: false
                         };
                         
-                        // If it's a new reply (has temp- prefix)
                         if (commentId.toString().startsWith('temp-')) {
-                            // Generate a real ID for the reply
                             const newId = `reply-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                             updatedReply.id = newId;
                             
-                            // Emit real-time update for new reply
-                            if (isConnected) {
-                                emit('comments', {
-                                    type: 'reply_added',
-                                    data: {
-                                        ...updatedReply,
-                                        parentId: comment.id,
-                                        contextId
-                                    }
-                                });
-                            }
-                            
-                            // Call the onAddComment callback with parent info
                             onAddComment(updatedReply, comment.id);
                         } else {
-                            // Emit real-time update for updated reply
-                            if (isConnected) {
-                                emit('comments', {
-                                    type: 'reply_updated',
-                                    data: {
-                                        ...updatedReply,
-                                        parentId: comment.id,
-                                        contextId
-                                    }
-                                });
-                            }
-                            
-                            // Call the onUpdateComment callback
                             onUpdateComment(updatedReply, comment.id);
                         }
                         
@@ -299,7 +318,7 @@ const SocialComments = ({
             
             return comment;
         }));
-    }, [onAddComment, onUpdateComment, emit, isConnected, contextId]);
+    }, [currentUser, managedExternally, onAddComment, onUpdateComment]);
 
     /**
      * Increments like count for a comment or reply
@@ -372,60 +391,52 @@ const SocialComments = ({
         }
     }, [toggleEditMode]);
 
-    // Memoize editor content change handler for better performance
-    const handleEditorChange = useCallback((commentId, content, isReply = false, parentId = null) => {
-        setComments(prevComments => {
-            // Find the specific comment to update without re-creating the entire array
-            const commentIndex = prevComments.findIndex(c => 
-                !isReply ? c.id === commentId : c.id === parentId
-            );
-            
-            if (commentIndex === -1) return prevComments;
-            
-            const newComments = [...prevComments];
-            
-            if (!isReply) {
-                // Update main comment
-                if (newComments[commentIndex].body !== content) {
-                    newComments[commentIndex] = { 
-                        ...newComments[commentIndex], 
-                        body: content 
-                    };
-                }
-            } else {
-                // Update reply
-                const replyIndex = newComments[commentIndex].replies.findIndex(r => r.id === commentId);
-                if (replyIndex !== -1 && newComments[commentIndex].replies[replyIndex].body !== content) {
-                    const newReplies = [...newComments[commentIndex].replies];
-                    newReplies[replyIndex] = { 
-                        ...newReplies[replyIndex], 
-                        body: content 
-                    };
-                    newComments[commentIndex] = {
-                        ...newComments[commentIndex],
-                        replies: newReplies
-                    };
-                }
-            }
-            
-            return newComments;
-        });
-    }, []);
+    // Remove the handleEditorChange function entirely (lines 396-434)
+    // We'll store draft content in a ref instead of state
 
-    const sanitizeHtml = (html) => {
-        // Check if we are in the browser (DOMPurify needs a window)
-        if (typeof window !== 'undefined') {
-            return DOMPurify.sanitize(html);
-        }
-        return html; // Fallback for Server-Side Rendering
-    };
+    // Add this near the top of the component, after the state declarations
+    const draftContentRef = useRef({});
 
     /**
      * Comment component - renders a single comment or reply
      */
     const Comment = memo(({ comment, isReply = false, parentId = null, index = 0 }) => {
-        // Check if this is a new comment with empty body
-        const isNew = comment.body === "" || comment.body === "<p><br></p>";
+        // Store draft content locally to avoid re-renders
+        const [draftContent, setDraftContent] = useState(() => draftContentRef.current[comment.id] ?? (comment.content || ""));
+
+        useEffect(() => {
+            if (!comment.isEditing) {
+                draftContentRef.current[comment.id] = undefined;
+                return;
+            }
+
+            const savedDraft = draftContentRef.current[comment.id];
+            if (typeof savedDraft === "string") {
+                setDraftContent(savedDraft);
+            } else {
+                const nextDraft = comment.content || "";
+                setDraftContent(nextDraft);
+                draftContentRef.current[comment.id] = nextDraft;
+            }
+        }, [comment.id, comment.content, comment.isEditing]);
+        
+        // Hook for impressions
+        const { 
+            impressions, 
+            loading: impressionsLoading,
+            toggleReaction
+        } = useImpressions(
+            comment.id, 
+            3, // 3 for Comment type (add to ImpressionTargetType if not exists)
+            !comment.isEditing // Only fetch when not editing
+        );
+        
+        // Check if this is a new comment with empty content
+        const isNew = comment.id?.toString().startsWith('temp-') || 
+                      !comment.content || 
+                      comment.content === "" || 
+                      comment.content === "<p><br></p>" ||
+                      comment.content === "<p></p>";
         
         // Determine background class for alternating comments
         // For accessibility: uses subtle alternating backgrounds while maintaining contrast
@@ -435,12 +446,22 @@ const SocialComments = ({
             : isEven 
                 ? 'bg-base-100' // Even comments get default background
                 : 'bg-base-200'; // Odd comments get slightly darker background
+        const authorType = comment.authorEntityType || comment.authorRole || (comment.artistID ? "artist" : "user");
+        const authorName = comment.authorDisplayName || comment.user?.name || comment.author || "Anonymous";
+        const authorImage = comment.authorImage || comment.avatarUrl ||
+            (authorType === "user" ? comment.user?.image : null) ||
+            "/blank_image.png";
+        const authorIdentity = {
+            type: authorType,
+            id: comment.authorEntityId || comment.artistID || comment.userID || comment.userId,
+            contextId: comment.authorContextId || comment.contextId,
+        };
         
         return (
             <div 
                 className={`rounded-lg shadow-md mb-4 transition-all duration-200
                     ${comment.isEditing 
-                        ? 'bg-base-100 border-2 border-primary p-3' // Editing state - brightest background
+                        ? 'bg-base-100 border border-base-300 p-3' // Editing state - brightest background
                         : `${bgClass} border-l-4 border-primary p-4`}`}
                 data-theme={currentTheme} // Apply the selected theme
                 id={`comment-${comment.id}`}
@@ -448,34 +469,41 @@ const SocialComments = ({
                 {/* Edit Mode */}
                 {comment.isEditing ? (
                     <div>
-                        <div className="flex items-center gap-3 mb-3">
-                            {/* Avatar in edit mode */}
-                            <div className="avatar">
-                                <div className="w-10 h-10 rounded-full overflow-hidden">
-                                    {comment.avatarUrl && (
+                        <div className="flex items-center justify-between gap-3 mb-3">
+                            <div className="flex items-center gap-3">
+                                {/* Avatar in edit mode */}
+                                <div className="avatar">
+                                    <div
+                                        className="w-10 h-10 rounded-full overflow-hidden border"
+                                        style={getIdentityGlowStyle(authorIdentity, { contextId: authorIdentity.contextId })}
+                                    >
                                         <Image 
-                                            src={comment.avatarUrl} 
-                                            alt={`${comment.authorDisplayName || comment.author}'s avatar`}
+                                            src={authorImage}
+                                            alt={`${authorName}'s avatar`}
                                             width={40}
                                             height={40}
                                             className="object-cover"
                                         />
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div>
-                                <p className="font-semibold text-sm">{comment.authorDisplayName || comment.author}</p>
-                                <p className="text-xs text-primary">{isNew ? 'New Comment' : 'Editing...'}</p>
+                                
+                                <div>
+                                    <p className="font-semibold text-sm">{authorName}</p>
+                                    <p className="text-xs text-primary">{isNew ? 'New Comment' : 'Editing...'}</p>
+                                </div>
                             </div>
                         </div>
                         
                         {/* Rich text editor for content */}
                         <TiptapEditor
-                            value={comment.body}
-                            onChange={(content) => handleEditorChange(comment.id, content, isReply, parentId)}
+                            value={draftContent}
+                            onChange={(content) => {
+                                draftContentRef.current[comment.id] = content;
+                                setDraftContent(content);
+                            }}
                             placeholder={isReply ? "Write your reply..." : "What's on your mind?"}
                             className="bg-base-100"
+                            containerStyle={getIdentityGlowStyle(currentUser || comment)}
                             preset={allowMedia ? "medium" : "minimal"}
                         />
                         
@@ -490,7 +518,10 @@ const SocialComments = ({
                             </button>
                             <button 
                                 className="btn btn-sm btn-primary" 
-                                onClick={() => handleCommentSubmit(comment.id, comment.body, isReply, parentId)}
+                                onClick={() => {
+                                    handleCommentSubmit(comment.id, draftContent, isReply, parentId);
+                                    draftContentRef.current[comment.id] = undefined;
+                                }}
                                 aria-label={isNew ? "Post comment" : "Save changes"}
                             >
                                 {isNew ? (isReply ? "Post Reply" : "Post Comment") : "Save"}
@@ -503,57 +534,53 @@ const SocialComments = ({
                         <div className="flex items-center gap-3 mb-2">
                             {/* Avatar */}
                             <div className="avatar">
-                                <div className="w-10 h-10 rounded-full overflow-hidden">
-                                    {comment.avatarUrl && (
-                                        <Image 
-                                            src={comment.avatarUrl} 
-                                            alt={`${comment.authorDisplayName || comment.author}'s avatar`}
-                                            width={40}
-                                            height={40}
-                                            className="object-cover"
-                                        />
-                                    )}
+                                <div
+                                    className="w-10 h-10 rounded-full overflow-hidden border"
+                                    style={getIdentityGlowStyle(authorIdentity, { contextId: authorIdentity.contextId })}
+                                >
+                                    <Image 
+                                        src={authorImage}
+                                        alt={`${authorName}'s avatar`}
+                                        width={40}
+                                        height={40}
+                                        className="object-cover"
+                                    />
                                 </div>
                             </div>
                             
                             <div className="flex justify-between w-full">
-                                <p className="font-semibold">{comment.authorDisplayName || comment.author}</p>
-                                <time 
-                                    className="text-sm text-base-content/60" 
-                                    dateTime={comment.created}
-                                >
-                                    {new Date(comment.created).toLocaleString()}
-                                </time>
+                                <p className="font-semibold">{authorName}</p>
+                                    <ClientDate
+                                        dateString={comment.createdAt}
+                                        className="text-sm text-base-content/60"
+                                    />
                             </div>
                         </div>
                         
                         {/* Comment content with proper sanitization and styling */}
                         <div 
-                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(comment.body) }} 
                             className="py-2 prose max-w-none prose-img:rounded-lg prose-video:rounded-lg"
+                            dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(comment.content || comment.body) }}
                         />
                         
-                        {/* Reactions and Action buttons in one line */}
+                        {/* Impressions/Reactions and Action buttons in one line */}
                         <div className="flex items-center justify-between flex-wrap gap-3 mt-3">
-                            {/* Left side: Reactions */}
+                            {/* Left side: Impressions */}
                             <div className="flex items-center gap-2">
-                                <SocialReactions
-                                    targetId={comment.id}
-                                    targetType="comment"
-                                    initialReactions={comment.reactions || []}
-                                    currentUser={currentUser}
-                                    readOnly={readOnly}
-                                    size="sm"
-                                    showQuickReactions={true}
-                                    onReactionAdd={(reactionData) => {
-                                        // Handle reaction add if needed
-                                        console.log('Reaction added:', reactionData);
-                                    }}
-                                    onReactionRemove={(reactionData) => {
-                                        // Handle reaction remove if needed
-                                        console.log('Reaction removed:', reactionData);
-                                    }}
-                                />
+                                {!impressionsLoading && impressions && impressions.length > 0 ? (
+                                    <ImpressionReactions
+                                        impressions={impressions}
+                                        currentUser={currentUser}
+                                        onToggle={toggleReaction}
+                                        readOnly={readOnly}
+                                        size="sm"
+                                        showDetails={false}
+                                        targetId={`comment-${comment.id}`}
+                                        targetType="comment"
+                                    />
+                                ) : impressionsLoading ? (
+                                    <div className="text-xs text-base-content/50">Loading reactions...</div>
+                                ) : null}
                             </div>
 
                             {/* Right side: Action buttons */}
@@ -562,23 +589,31 @@ const SocialComments = ({
                                     <button 
                                         className="btn btn-xs btn-ghost gap-1 text-base-content/70 hover:text-base-content"
                                         onClick={() => addNewReply(comment.id)}
-                                        aria-label={`Reply to comment by ${comment.authorDisplayName || comment.author}`}
+                                        aria-label={`Reply to comment by ${comment.user?.name || comment.authorDisplayName || comment.author}`}
                                     >
                                         <IoArrowUndo className="h-3 w-3" />
                                         <span className="text-xs">Reply</span>
                                     </button>
                                 )}
                                 
-                                {canEditComment(comment) && (
-                                    <button 
-                                        className="btn btn-xs btn-ghost gap-1 text-base-content/70 hover:text-base-content"
-                                        onClick={() => toggleEditMode(comment.id, isReply, parentId)}
-                                        aria-label={`Edit this ${isReply ? 'reply' : 'comment'}`}
-                                    >
-                                        <IoCreateOutline className="h-3 w-3" />
-                                        <span className="text-xs">Edit</span>
-                                    </button>
-                                )}
+                                {canEditComment(comment) && !comment.isEditing && (
+    <div className="flex gap-2">
+        <button 
+            onClick={() => toggleEditMode(comment.id, isReply, parentId)}
+            className="btn btn-ghost btn-xs"
+            aria-label="Edit comment"
+        >
+            <IoCreateOutline className="text-lg" />
+        </button>
+        <button 
+            onClick={() => handleCommentDelete(comment.id, isReply, parentId)}
+            className="btn btn-ghost btn-xs text-error hover:bg-error/10"
+            aria-label="Delete comment"
+        >
+            <IoTrashOutline className="text-lg" />
+        </button>
+    </div>
+)}
                             </div>
                         </div>
                     </>
@@ -594,7 +629,7 @@ const SocialComments = ({
     if (isLoading) {
         return <div className="p-4 animate-pulse">Loading comments...</div>;
     }
-
+    
     return (
         <div className="comments-container" data-theme={currentTheme}>
             {/* Add comment button - only shown if logged in and not read-only */}
@@ -632,7 +667,7 @@ const SocialComments = ({
                         {comment.replies && comment.replies.length > 0 && (
                             <div 
                                 className="replies ml-8 mt-2 space-y-3 pl-3 border-l-2 border-base-300" 
-                                aria-label={`Replies to comment by ${comment.authorDisplayName || comment.author}`}
+                                aria-label={`Replies to comment by ${comment.user.name}`}
                             >
                                 {comment.replies.map((reply, replyIndex) => (
                                     <Comment 
@@ -663,3 +698,4 @@ const SocialComments = ({
 };
 
 export default SocialComments;
+

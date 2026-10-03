@@ -49,7 +49,7 @@ const TagSchema = () => {
 								priceCurrency: "USD",
 							},
 						],
-					}),
+					}).replace(/</g, "\\u003c"),
 				}}
 			></script>
 		</Head>

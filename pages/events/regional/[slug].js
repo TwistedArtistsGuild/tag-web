@@ -12,8 +12,9 @@
 
 import Link from "next/link"
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
 import shortDateOptions from "@/utils/shortdateoptions"
+import PhotoGallery from "@/components/cards/card_photoGallery"
+import serverFetch from "@/libs/serverFetch"
 
 /**
  * 
@@ -54,6 +55,22 @@ const Events = (props) => {
 							<p className="text-sm">
 								{new Date(event.applied).toLocaleDateString("en-US", options)}
 							</p>
+							<div className="mt-2">
+								<PhotoGallery
+									images={["/blank_image.png"]}
+									mode="standalone"
+									navigationMode="manual"
+									imageEffect="landscape"
+									showThumbnails={false}
+									showContentWarnings={false}
+								/>
+							</div>
+							<div className="text-xs text-base-content/60">Gallery placeholder deployed for this event.</div>
+							<div className="mt-2">
+								<Link href="/portal/event/create">
+									<a className="btn btn-xs btn-outline">Event Gallery Management (Portal placeholder)</a>
+								</Link>
+							</div>
 						</div>
 					</div>
 				))}
@@ -65,13 +82,11 @@ const Events = (props) => {
 Events.getInitialProps = async function () {
 	let data = []
 
-	const api_url = getApiURL()
-
 	// If we are running in debug mode, log the active API URL
 	if (process.env.DEBUG === "true") {
-		console.log("regional event data fetch starting\n " + api_url + "artist/") //broke!
-	} 
-	const res = await fetch(api_url + "event")
+		console.log("regional event data fetch starting\n /api/artist/") //broke!
+	}
+	const res = await serverFetch("/event")
 		.then((res) => {
 			return res.json()
 		})

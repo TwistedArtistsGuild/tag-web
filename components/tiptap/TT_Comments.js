@@ -11,14 +11,15 @@
 
 
 import { useState, useCallback, memo } from "react";
-import DOMPurify from "dompurify";
 import { IoThumbsUp, IoArrowUndo, IoCreateOutline, IoAdd } from "react-icons/io5";
+import { sanitizeDefaultHtml } from "@/components/security/sanitize";
 
 // Import components
 import Image from "next/image";
-import { useRealtimeComments, useSocialRealtime } from '../social/SocialRealtimeContext';
 import SocialReactions from '../social/Reactions';
 import TiptapEditor from "@/components/tiptap/tiptap-editor";
+import { getIdentityGlowStyle } from "@/utils/identityGlow";
+import ContextSwitcher from "@/components/Header/ContextSwitcher";
 
 function buildCommentsState(initialComments = []) {
     return initialComments.map(comment => ({
@@ -65,31 +66,6 @@ const SocialComments = ({
 
         return localStorage.getItem("theme") || "tag-theme";
     });
-    
-    // Real-time functionality
-    const { emit, isConnected } = useSocialRealtime();
-    
-    // Handle real-time comment updates
-    const handleRealtimeUpdate = useCallback((update) => {
-        if (update.type === 'comment_added') {
-            setComments(prevComments => {
-                // Check if comment already exists to avoid duplicates
-                const exists = prevComments.some(comment => comment.id === update.data.id);
-                if (!exists) {
-                    return [...prevComments, { ...update.data, isEditing: false, replies: [] }];
-                }
-                return prevComments;
-            });
-        } else if (update.type === 'comment_updated') {
-            setComments(prevComments => prevComments.map(comment => 
-                comment.id === update.data.id ? { ...comment, ...update.data, isEditing: false } : comment
-            ));
-        } else if (update.type === 'comment_deleted') {
-            setComments(prevComments => prevComments.filter(comment => comment.id !== update.data.id));
-        }
-    }, []);
-
-    useRealtimeComments(contextId, handleRealtimeUpdate);
     
     // Check if the current user can edit a specific comment
     const canEditComment = useCallback((comment) => {
@@ -186,7 +162,7 @@ const SocialComments = ({
         if (!textOnly) return;
         
         // Sanitize content to prevent XSS attacks
-        const sanitizedContent = DOMPurify.sanitize(content);
+        const sanitizedContent = sanitizeDefaultHtml(content);
         
         setComments(prevComments => prevComments.map(comment => {
             // Update top-level comment
@@ -203,31 +179,9 @@ const SocialComments = ({
                     const newId = `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                     updatedComment.id = newId;
                     
-                    // Emit real-time update for new comment
-                    if (isConnected) {
-                        emit('comments', {
-                            type: 'comment_added',
-                            data: {
-                                ...updatedComment,
-                                contextId
-                            }
-                        });
-                    }
-                    
                     // Call the onAddComment callback
                     onAddComment(updatedComment);
                 } else {
-                    // Emit real-time update for updated comment
-                    if (isConnected) {
-                        emit('comments', {
-                            type: 'comment_updated',
-                            data: {
-                                ...updatedComment,
-                                contextId
-                            }
-                        });
-                    }
-                    
                     // Call the onUpdateComment callback
                     onUpdateComment(updatedComment);
                 }
@@ -251,33 +205,9 @@ const SocialComments = ({
                             const newId = `reply-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                             updatedReply.id = newId;
                             
-                            // Emit real-time update for new reply
-                            if (isConnected) {
-                                emit('comments', {
-                                    type: 'reply_added',
-                                    data: {
-                                        ...updatedReply,
-                                        parentId: comment.id,
-                                        contextId
-                                    }
-                                });
-                            }
-                            
                             // Call the onAddComment callback with parent info
                             onAddComment(updatedReply, comment.id);
                         } else {
-                            // Emit real-time update for updated reply
-                            if (isConnected) {
-                                emit('comments', {
-                                    type: 'reply_updated',
-                                    data: {
-                                        ...updatedReply,
-                                        parentId: comment.id,
-                                        contextId
-                                    }
-                                });
-                            }
-                            
                             // Call the onUpdateComment callback
                             onUpdateComment(updatedReply, comment.id);
                         }
@@ -292,7 +222,7 @@ const SocialComments = ({
             
             return comment;
         }));
-    }, [onAddComment, onUpdateComment, emit, isConnected, contextId]);
+    }, [onAddComment, onUpdateComment]);
 
     /**
      * Increments like count for a comment or reply
@@ -514,7 +444,7 @@ const SocialComments = ({
                         
                         {/* Comment content with proper sanitization and styling */}
                         <div 
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comment.body) }} 
+                            dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(comment.body) }} 
                             className="py-2 prose max-w-none prose-img:rounded-lg prose-video:rounded-lg"
                         />
                         
@@ -657,13 +587,30 @@ const SocialComments = ({
     );
 };
 
-export function TTCommentsEditorCard({ value, onChange, onSubmit, onCancel }) {
+export function TTCommentsEditorCard({ value, onChange, onSubmit, onCancel, currentUser = null, contextProfiles = [], activeContextId = null, onContextChange }) {
     return (
-        <div className="rounded-lg border border-base-300 bg-base-100 p-4 space-y-3">
-            <h2 className="text-lg font-semibold">Comment</h2>
-            <p className="text-sm text-base-content/70">
-                Minimal preset with Cancel / Post Comment actions.
-            </p>
+        <div
+            className="rounded-lg border bg-base-100 p-4 space-y-3 transition-all"
+            style={getIdentityGlowStyle(currentUser || "user", { type: currentUser?.type || "user" })}
+        >
+            <div className="flex items-center justify-between gap-3">
+                <div>
+                    <h2 className="text-lg font-semibold">Comment</h2>
+                    <p className="text-sm text-base-content/70">
+                        Posting as {currentUser?.displayName || currentUser?.username || "user"}
+                    </p>
+                </div>
+                {contextProfiles && contextProfiles.length > 0 ? (
+                    <ContextSwitcher
+                        variant="compact"
+                        compactSize="sm"
+                        compactMenuPosition="bottom-right"
+                        contexts={contextProfiles}
+                        activeContextId={activeContextId}
+                        onChange={onContextChange}
+                    />
+                ) : null}
+            </div>
             <TiptapEditor
                 value={value}
                 onChange={onChange}
@@ -684,3 +631,4 @@ export function TTCommentsEditorCard({ value, onChange, onSubmit, onCancel }) {
 }
 
 export default SocialComments;
+

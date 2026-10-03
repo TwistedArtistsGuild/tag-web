@@ -11,6 +11,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
+import { useSession } from "next-auth/react"
 import { defaultFieldClass } from "@/utils/formSettings"
 
 const CONTAINER_CONFIGS = {
@@ -28,16 +29,36 @@ function normalizePrefix(value) {
 	return String(value || "").replace(/^\/+/, "")
 }
 
+function normalizeUrl(value) {
+	if (!value) return ""
+	return String(value).trim().toLowerCase()
+}
+
+function displayProfileName(profile) {
+	return profile?.stageName || profile?.preferredName || profile?.username || profile?.displayName || profile?.name || profile?.email || ""
+}
+
 export default function PictureExplorerCard({
 	useCase = "personal-blog",
 	title,
+	startPrefix,
+	startContainer,
 	allowContainerSwitch = false,
 	preserveStartPrefixOnContainerSwitch = true,
+	showAssetForms = true,
+	onMetadataSave,
+	onCreditsSave,
+	defaultMetadata = {},
+	defaultCredits = {},
+	creditsMode = "legacy",
 }) {
+	const { data: session } = useSession()
 	const config = CONTAINER_CONFIGS[useCase] || CONTAINER_CONFIGS["personal-blog"]
-	const [container, setContainer] = useState(config.container)
-	const [activeStartPrefix, setActiveStartPrefix] = useState(config.startPrefix)
-	const [prefix, setPrefix] = useState(config.startPrefix)
+	const resolvedContainer = startContainer || config.container
+	const resolvedStartPrefix = normalizePrefix(startPrefix ?? config.startPrefix)
+	const [container, setContainer] = useState(resolvedContainer)
+	const [activeStartPrefix, setActiveStartPrefix] = useState(resolvedStartPrefix)
+	const [prefix, setPrefix] = useState(resolvedStartPrefix)
 	const [directories, setDirectories] = useState([])
 	const [files, setFiles] = useState([])
 	const [loading, setLoading] = useState(false)
@@ -53,7 +74,30 @@ export default function PictureExplorerCard({
 	const [isDragOver, setIsDragOver] = useState(false)
 	const [selectedImageUrl, setSelectedImageUrl] = useState("")
 	const [selectedImageName, setSelectedImageName] = useState("")
+	const [selectedFile, setSelectedFile] = useState(null)
+	const [metadataDraft, setMetadataDraft] = useState({
+		title: "",
+		altText: "",
+		byline: "",
+		description: "",
+	})
+	const [creditsDraft, setCreditsDraft] = useState({
+		creditRoleID: "1",
+		role: "Copyright Owner",
+		copyrightOwner: "",
+		ownerProfileUrl: "",
+		additionalCredits: "",
+	})
+	const [creditRoleOptions, setCreditRoleOptions] = useState([])
+	const [artistProfiles, setArtistProfiles] = useState([])
+	const [ownerSuggestions, setOwnerSuggestions] = useState([])
+	const [showOwnerSuggestions, setShowOwnerSuggestions] = useState(false)
+	const [savingMetadata, setSavingMetadata] = useState(false)
+	const [savingCredits, setSavingCredits] = useState(false)
+	const [formsMessage, setFormsMessage] = useState("")
+	const [formsError, setFormsError] = useState("")
 	const fileInputRef = useRef(null)
+	const ownerFieldPrimedRef = useRef(false)
 
 	const rootSegments = useMemo(() => activeStartPrefix.split("/").filter(Boolean), [activeStartPrefix])
 	const currentSegments = useMemo(() => prefix.split("/").filter(Boolean), [prefix])
@@ -83,6 +127,29 @@ export default function PictureExplorerCard({
 		if (bytes < 1024) return `${bytes} B`
 		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
 		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+	}
+
+	const buildMetadataDraft = () => ({
+		title: defaultMetadata.title || "",
+		altText: defaultMetadata.altText || "",
+		byline: defaultMetadata.byline || "",
+		description: defaultMetadata.description || "",
+	})
+
+	const buildCreditsDraft = () => ({
+		creditRoleID: defaultCredits.creditRoleID || "1",
+		role: defaultCredits.role || "Copyright Owner",
+		copyrightOwner: defaultCredits.copyrightOwner || "",
+		ownerProfileUrl: defaultCredits.ownerProfileUrl || defaultCredits.externalURL || "",
+		additionalCredits: defaultCredits.additionalCredits || "",
+	})
+
+	const resetFormsForFile = (file) => {
+		setSelectedFile(file || null)
+		setMetadataDraft(buildMetadataDraft())
+		setCreditsDraft(buildCreditsDraft())
+		setFormsMessage("")
+		setFormsError("")
 	}
 
 	const loadDirectory = async (
@@ -119,15 +186,18 @@ export default function PictureExplorerCard({
 			if (nextImageFiles.length > 0) {
 				setSelectedImageUrl(nextImageFiles[0].url)
 				setSelectedImageName(nextImageFiles[0].name)
+				resetFormsForFile(nextImageFiles[0])
 			} else {
 				setSelectedImageUrl("")
 				setSelectedImageName("")
+				resetFormsForFile(null)
 			}
 		} catch (loadError) {
 			setDirectories([])
 			setFiles([])
 			setSelectedImageUrl("")
 			setSelectedImageName("")
+			resetFormsForFile(null)
 			setError(loadError.message)
 		} finally {
 			setLoading(false)
@@ -163,6 +233,8 @@ export default function PictureExplorerCard({
 	}
 
 	const handleDelete = async (fileUrl) => {
+		if (!window.confirm("Are you sure you want to delete this image?")) return
+
 		setDeleteLoading(fileUrl)
 		setError("")
 
@@ -227,6 +299,159 @@ export default function PictureExplorerCard({
 		if (!isImageFile(file)) return
 		setSelectedImageUrl(file.url)
 		setSelectedImageName(file.name)
+		ownerFieldPrimedRef.current = false
+		resetFormsForFile(file)
+	}
+
+	const currentUserProfile = useMemo(() => {
+		if (!session?.user) return null
+		return {
+			type: "session",
+			id: session.user.id || session.user.email || session.user.name || "current-user",
+			displayName: session.user.name || session.user.email || "Current User",
+			username: session.user.username || session.user.name || "",
+			email: session.user.email || "",
+			externalURL: "",
+		}
+	}, [session])
+
+	const buildOwnerSuggestions = useMemo(() => {
+		return (query = "", includeDefault = false) => {
+			const lowered = String(query || "").trim().toLowerCase()
+			const matches = []
+			if (currentUserProfile && (includeDefault || !lowered || displayProfileName(currentUserProfile).toLowerCase().includes(lowered) || String(currentUserProfile.email || "").toLowerCase().includes(lowered))) {
+				matches.push({
+					...currentUserProfile,
+					badge: "You",
+				})
+			}
+
+			const artistMatches = artistProfiles
+				.filter((artist) => {
+					if (!lowered) return true
+					const stageName = String(artist?.stageName || "").toLowerCase()
+					const username = String(artist?.username || "").toLowerCase()
+					const preferredName = String(artist?.preferredName || "").toLowerCase()
+					const email = String(artist?.email || "").toLowerCase()
+					const externalURL = String(artist?.externalURL || artist?.webSite || "").toLowerCase()
+					return stageName.includes(lowered) || username.includes(lowered) || preferredName.includes(lowered) || email.includes(lowered) || externalURL.includes(lowered)
+				})
+				.slice(0, 12)
+				.map((artist) => ({
+					type: "artist",
+					id: artist.artistID || artist.id || artist.userID || artist.username,
+					displayName: displayProfileName(artist),
+					username: artist.username || "",
+					email: artist.email || "",
+					externalURL: artist.externalURL || artist.webSite || "",
+					badge: "Artist",
+				}))
+
+			const merged = [...matches, ...artistMatches]
+			const seen = new Set()
+			return merged.filter((item) => {
+				const key = `${String(item.displayName || "").toLowerCase()}::${String(item.email || "").toLowerCase()}`
+				if (!key || seen.has(key)) return false
+				seen.add(key)
+				return true
+			})
+		}
+	}, [artistProfiles, currentUserProfile])
+
+	const applyOwnerSuggestion = (suggestion) => {
+		setCreditsDraft((current) => ({
+			...current,
+			copyrightOwner: suggestion.displayName,
+			ownerProfileUrl: suggestion.externalURL || current.ownerProfileUrl || "",
+		}))
+		setShowOwnerSuggestions(false)
+	}
+
+	const tryResolveOwnerByLink = (link) => {
+		const normalized = normalizeUrl(link)
+		if (!normalized) return
+
+		const match = artistProfiles.find((artist) => {
+			const externalURL = normalizeUrl(artist?.externalURL || artist?.webSite)
+			if (!externalURL) return false
+			return externalURL === normalized || normalized.includes(externalURL) || externalURL.includes(normalized)
+		})
+
+		if (!match) return
+
+		const displayName = displayProfileName(match)
+		if (!displayName) return
+
+		setCreditsDraft((current) => ({
+			...current,
+			copyrightOwner: displayName,
+			ownerProfileUrl: match.externalURL || match.webSite || current.ownerProfileUrl || "",
+		}))
+		setFormsMessage(`Matched profile link to ${displayName}.`)
+		setFormsError("")
+	}
+
+	const fallbackSave = async (payload, successMessage) => {
+		await navigator.clipboard.writeText(JSON.stringify(payload, null, 2))
+		setFormsMessage(`${successMessage} (payload copied to clipboard)`)
+	}
+
+	const handleMetadataSave = async () => {
+		if (!selectedFile) return
+
+		setSavingMetadata(true)
+		setFormsError("")
+		setFormsMessage("")
+
+		const payload = {
+			container,
+			prefix,
+			startPrefix: activeStartPrefix,
+			file: selectedFile,
+			metadata: metadataDraft,
+		}
+
+		try {
+			if (typeof onMetadataSave === "function") {
+				await onMetadataSave(payload)
+				setFormsMessage("Metadata saved.")
+			} else {
+				await fallbackSave(payload, "Metadata captured")
+			}
+		} catch (saveError) {
+			setFormsError(saveError.message || "Unable to save metadata.")
+		} finally {
+			setSavingMetadata(false)
+		}
+	}
+
+	const handleCreditsSave = async () => {
+		if (!selectedFile) return
+
+		setSavingCredits(true)
+		setFormsError("")
+		setFormsMessage("")
+
+		const payload = {
+			container,
+			prefix,
+			startPrefix: activeStartPrefix,
+			file: selectedFile,
+			credits: creditsDraft,
+		}
+
+		try {
+			if (typeof onCreditsSave === "function") {
+				await onCreditsSave(payload)
+				setFormsMessage("Credits saved.")
+			} else {
+				await fallbackSave(payload, "Credits captured")
+			}
+		} catch (saveError) {
+			setFormsError(saveError.message || "Unable to save credits.")
+		} finally {
+			setSavingCredits(false)
+		}
 	}
 
 	const uploadFileToCurrentDirectory = async (imageFile) => {
@@ -278,16 +503,45 @@ export default function PictureExplorerCard({
 
 	useEffect(() => {
 		const initialize = setTimeout(() => {
-			loadDirectory(config.startPrefix, config.startPrefix, config.container)
+			loadDirectory(resolvedStartPrefix, resolvedStartPrefix, resolvedContainer)
 		}, 0)
 		return () => clearTimeout(initialize)
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [useCase])
+	}, [useCase, resolvedStartPrefix, resolvedContainer])
+
+	useEffect(() => {
+		fetch(`/api/artist`)
+			.then((response) => (response.ok ? response.json() : []))
+			.then((data) => setArtistProfiles(Array.isArray(data) ? data : []))
+			.catch(() => setArtistProfiles([]))
+	}, [])
+
+	useEffect(() => {
+		fetch(`/api/blog/credit-roles`)
+			.then((r) => (r.ok ? r.json() : []))
+			.then((data) => setCreditRoleOptions(Array.isArray(data) ? data : []))
+			.catch(() => setCreditRoleOptions([]))
+	}, [])
+
+	useEffect(() => {
+		if (!selectedFile) return
+		if (!currentUserProfile) return
+		setCreditsDraft((current) => {
+			if (String(current.copyrightOwner || "").trim()) return current
+			return {
+				...current,
+				copyrightOwner: currentUserProfile.displayName || "",
+			}
+		})
+	}, [currentUserProfile, selectedFile])
 
 	return (
 		<div className="card bg-base-100 shadow-md border border-base-300">
 			<div className="card-body gap-4">
 				<h2 className="card-title">{title || config.label}</h2>
+
+				{formsError ? <div className="alert alert-error">{formsError}</div> : null}
+				{formsMessage ? <div className="alert alert-success">{formsMessage}</div> : null}
 
 				{allowContainerSwitch && (
 					<div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
@@ -547,6 +801,197 @@ export default function PictureExplorerCard({
 						<div className="text-sm text-base-content/60">Select an image row above to preview it here.</div>
 					)}
 				</div>
+
+				{showAssetForms ? (
+					<div className="rounded-md border border-base-300 bg-base-200 p-3">
+						<div className="text-sm font-semibold mb-3">Metadata And Credits</div>
+						{selectedFile ? (
+							<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+								<div className="rounded-md border border-base-300 bg-base-100 p-3">
+									<div className="font-semibold mb-2">Metadata</div>
+									<div className="space-y-2">
+										<input
+											type="text"
+											className={defaultFieldClass}
+											placeholder="Title"
+											value={metadataDraft.title}
+											onChange={(e) => setMetadataDraft((current) => ({ ...current, title: e.target.value }))}
+										/>
+										<input
+											type="text"
+											className={defaultFieldClass}
+											placeholder="Alt text"
+											value={metadataDraft.altText}
+											onChange={(e) => setMetadataDraft((current) => ({ ...current, altText: e.target.value }))}
+										/>
+										<input
+											type="text"
+											className={defaultFieldClass}
+											placeholder="Byline"
+											value={metadataDraft.byline}
+											onChange={(e) => setMetadataDraft((current) => ({ ...current, byline: e.target.value }))}
+										/>
+										<textarea
+											className="textarea textarea-bordered w-full"
+											rows={3}
+											placeholder="Description"
+											value={metadataDraft.description}
+											onChange={(e) => setMetadataDraft((current) => ({ ...current, description: e.target.value }))}
+										/>
+										<div className="flex justify-end">
+											<button
+												type="button"
+												className="btn btn-sm btn-primary"
+												onClick={handleMetadataSave}
+												disabled={savingMetadata}
+											>
+												{savingMetadata ? "Saving..." : "Save Metadata"}
+											</button>
+										</div>
+									</div>
+								</div>
+
+								<div className="rounded-md border border-base-300 bg-base-100 p-3">
+									<div className="font-semibold mb-2">Credits</div>
+									<div className="space-y-2">
+										{creditsMode === "smart-owner" ? (
+											<>
+												<label className="form-control">
+													<span className="label-text text-xs">Role</span>
+													<select
+														className="select select-bordered w-full"
+														value={creditsDraft.creditRoleID || "1"}
+														onChange={(e) => {
+															const roleId = e.target.value
+															const role = creditRoleOptions.find((option) => String(option.creditRoleID) === String(roleId))
+															setCreditsDraft((current) => ({ ...current, creditRoleID: roleId, role: role?.label || "Copyright Owner" }))
+														}}
+													>
+														{creditRoleOptions.map((option) => (
+															<option key={option.creditRoleID} value={String(option.creditRoleID)}>
+																{option.label}
+															</option>
+														))}
+													</select>
+												</label>
+
+												<div className="relative">
+													<input
+														type="text"
+														className={defaultFieldClass}
+														placeholder="Copyright owner name, artist, or profile link"
+														value={creditsDraft.copyrightOwner}
+														onFocus={() => {
+															if (!ownerFieldPrimedRef.current) {
+																ownerFieldPrimedRef.current = true
+																setCreditsDraft((current) => ({ ...current, copyrightOwner: "" }))
+															}
+															setOwnerSuggestions(buildOwnerSuggestions("", true))
+															setShowOwnerSuggestions(true)
+														}}
+														onBlur={() => {
+															setTimeout(() => setShowOwnerSuggestions(false), 100)
+														}}
+														onPaste={(e) => {
+															const pasted = e.clipboardData?.getData("text") || ""
+															if (/^https?:\/\//i.test(pasted.trim())) {
+																setTimeout(() => tryResolveOwnerByLink(pasted.trim()), 0)
+															}
+														}}
+														onChange={(e) => {
+															const value = e.target.value
+															setCreditsDraft((current) => ({ ...current, copyrightOwner: value }))
+															setOwnerSuggestions(buildOwnerSuggestions(value))
+															setShowOwnerSuggestions(true)
+														}}
+													/>
+													{showOwnerSuggestions && ownerSuggestions.length > 0 ? (
+														<div className="absolute z-20 mt-1 w-full rounded-md border border-base-300 bg-base-100 shadow-lg max-h-56 overflow-auto">
+															{ownerSuggestions.map((suggestion) => (
+																<button
+																	key={`${suggestion.type}-${suggestion.id}-${suggestion.displayName}`}
+																	type="button"
+																	className="w-full px-3 py-2 text-left text-sm hover:bg-base-200"
+																	onClick={() => applyOwnerSuggestion(suggestion)}
+																>
+																	<div className="flex items-center justify-between gap-2">
+																		<span className="truncate">{suggestion.displayName}</span>
+																		<span className="badge badge-ghost badge-xs">{suggestion.badge}</span>
+																	</div>
+																	{suggestion.username || suggestion.email ? (
+																		<div className="text-[11px] text-base-content/60 truncate">{suggestion.username || suggestion.email}</div>
+																	) : null}
+																</button>
+															))}
+														</div>
+													) : null}
+												</div>
+
+												<input
+													type="text"
+													className={defaultFieldClass}
+													placeholder="Profile link (optional)"
+													value={creditsDraft.ownerProfileUrl}
+													onBlur={(e) => tryResolveOwnerByLink(e.target.value)}
+													onChange={(e) => setCreditsDraft((current) => ({ ...current, ownerProfileUrl: e.target.value }))}
+												/>
+
+												<div className="text-xs text-base-content/60">
+													Starts by suggesting your profile. Friends can be prioritized next once friend graph is wired in.
+												</div>
+											</>
+										) : (
+											<>
+												<input
+													type="text"
+													className={defaultFieldClass}
+													placeholder="Copyright owner"
+													value={creditsDraft.copyrightOwner}
+													onChange={(e) => setCreditsDraft((current) => ({ ...current, copyrightOwner: e.target.value }))}
+												/>
+												<input
+													type="text"
+													className={defaultFieldClass}
+													placeholder="Photographer or videographer"
+													value={creditsDraft.photographer || ""}
+													onChange={(e) => setCreditsDraft((current) => ({ ...current, photographer: e.target.value }))}
+												/>
+												<input
+													type="text"
+													className={defaultFieldClass}
+													placeholder="Makeup or styling"
+													value={creditsDraft.makeup || ""}
+													onChange={(e) => setCreditsDraft((current) => ({ ...current, makeup: e.target.value }))}
+												/>
+											</>
+										)}
+										<textarea
+											className="textarea textarea-bordered w-full"
+											rows={3}
+											placeholder="Additional credits"
+											value={creditsDraft.additionalCredits}
+											onChange={(e) => setCreditsDraft((current) => ({ ...current, additionalCredits: e.target.value }))}
+										/>
+										<div className="flex justify-end">
+											<button
+												type="button"
+												className="btn btn-sm btn-secondary"
+												onClick={handleCreditsSave}
+												disabled={savingCredits}
+											>
+												{savingCredits ? "Saving..." : "Save Credits"}
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						) : (
+							<div className="text-sm text-base-content/60">
+								Select an image first to edit metadata and credits.
+							</div>
+						)}
+					</div>
+				) : null}
 
 				{renameFile && (
 					<div className="modal modal-open">

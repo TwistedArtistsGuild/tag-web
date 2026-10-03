@@ -33,5 +33,13 @@ export const PERMISSIONS = {
         DELETE: "artist:delete",
         VIEW: "artist:view",
         COMMENT: "artist:comment",
+    },
+    MOTION: {
+        CREATE: "motion:create",
+        UPDATE: "motion:update",
+        DELETE: "motion:delete",
+        VIEW: "motion:view",
+        SECOND: "motion:second",
+        VOTE: "motion:vote",
     }
 };

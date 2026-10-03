@@ -19,9 +19,8 @@
  */
 
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
-
-const api_url = getApiURL();
+import TagSEO from "@/components/TagSEO";
+import serverFetch from "@/libs/serverFetch"
 
 /**
  * Component for updating user details.
@@ -33,8 +32,25 @@ const api_url = getApiURL();
 export default function UpdateUserForm1(props) {
     props.metadataProp.FromURL = "/authenticate/edit/" + props.id + ".js";
     props.metadataProp.redirectURL = "/authenticate/edit/" + props.id;
-    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}/${props.id}`;
-    return <div className="p-4"><DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.userdata} /></div>;
+    props.metadataProp.APIURL = `/api/${props.metadataProp.apiurlpostfix}/${props.id}`;
+    return (
+        <div className="p-4">
+            <TagSEO
+                metadataProp={{
+                    title: "Edit Account",
+                    description: "Update your account profile details.",
+                    robots: "noindex, nofollow",
+                    keywords: "account, edit profile",
+                    og: {
+                        title: "Edit Account",
+                        description: "Update your account profile details.",
+                    },
+                }}
+                canonicalSlug="authenticate/edit/[id]"
+            />
+            <DynaFormDB request="update" metadataProp={props.metadataProp} formData={props.userdata} />
+        </div>
+    );
 }
 
 /**
@@ -51,9 +67,9 @@ UpdateUserForm1.getInitialProps = async function (context) {
     let data = {};
     let metadata = {};
     try {
-        const res1 = await fetch(api_url + `user/${id}`);
+        const res1 = await serverFetch(`/user/${id}`);
         data = await res1.json();
-        const res2 = await fetch(api_url + `forms_metadata/UserForm1`);
+        const res2 = await serverFetch(`/forms_metadata/UserForm1`);
         metadata = await res2.json();
     } catch (error) {
         console.error("Error fetching form meta or field data:", error);

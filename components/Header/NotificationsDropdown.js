@@ -14,15 +14,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { X } from 'lucide-react' // Import X icon
 
-const notificationLinks = [
-  "/artists",
-  "/artists/twistedpassions",
-  "/about",
-  "/events",
-  "/blogs",
-]
-
-export default function NotificationsDropdown({ notifications = [], onClose, activeContextColor = "#3B82F6" }) {
+export default function NotificationsDropdown({ notifications = [], onClose, activeContextColor = "#3B82F6", onNotificationClick }) {
   const subPanelTintStyle = {
     borderColor: `${activeContextColor}70`,
     backgroundColor: `${activeContextColor}1A`,
@@ -52,10 +44,15 @@ export default function NotificationsDropdown({ notifications = [], onClose, act
             {notifications.map((n, i) => (
               <Link
                 key={i}
-                href={notificationLinks[i % notificationLinks.length]}
+                href={n.href || "/"}
                 className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-base-200 transition-colors border border-transparent"
                 style={{ borderLeftColor: activeContextColor, borderLeftWidth: "3px", backgroundColor: i % 2 === 0 ? `${activeContextColor}14` : `${activeContextColor}0C` }}
-                onClick={onClose}
+                onClick={(event) => {
+                  onNotificationClick?.(n, event)
+                  if (!event.defaultPrevented) {
+                    onClose?.()
+                  }
+                }}
               >
                 <div className="avatar">
                   <div className="w-10 rounded-full" style={{ boxShadow: `0 0 0 2px ${activeContextColor}66` }}>
@@ -69,10 +66,6 @@ export default function NotificationsDropdown({ notifications = [], onClose, act
                 <div className="text-xs text-base-content/50 whitespace-nowrap">{n.time}</div>
               </Link>
             ))}
-            {/* Load More entry */}
-            <div className="flex items-center justify-center p-3 text-base-content/70 cursor-pointer hover:bg-base-200 transition-colors font-semibold" onClick={onClose}>
-              Load More (...)
-            </div>
           </div>
         )}
       </div>

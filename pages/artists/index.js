@@ -8,14 +8,11 @@
  This software comes with NO WARRANTY; see the license for details.
 
  Open source · low-profit · human-first*/
-import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import TagSEO from "@/components/TagSEO"
 import ArtistCard from "@/components/cards/card_artist"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
-import { getPanelClass } from "@/components/cards/sizes/panel-layout"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
+import serverFetch from "@/libs/serverFetch"
 
 const BATCH_SIZE = 12
 
@@ -60,7 +57,7 @@ const Artists = (props) => {
     () =>
       (props.artists || []).map((artist) => ({
         ...artist,
-        panelSize: inferPanelSizeFromDescription(artist),
+        panelSize: "twoThirds",
       })),
     [props.artists],
   )
@@ -102,7 +99,7 @@ const Artists = (props) => {
 	}
 
   return (
-    <SocialRealtimeProvider>
+    
       <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
 			<TagSEO metadataProp={pageMetaData} canonicalSlug="artists" />
 			{/* Hero Section */}
@@ -123,12 +120,12 @@ const Artists = (props) => {
 				<section className="w-full flex-1 min-h-100 flex flex-col justify-stretch">
           {loadedArtists.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
+              <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2">
                 {visibleLoadedArtists.map((artist, index) => {
                   const artistKey = `${artist.path || artist.artistid || artist.title || "artist"}-${index}`
                   return (
-                    <div key={artistKey} className={`${getPanelClass(artist.panelSize)} self-start`}>
-                      <ArtistCard artist={artist} />
+                    <div key={artistKey} className="self-start">
+                      <ArtistCard artist={artist} showIdentityGlow={false} />
                     </div>
                   )
                 })}
@@ -148,12 +145,11 @@ const Artists = (props) => {
 				</section>
 			</main>
       </div>
-    </SocialRealtimeProvider>
+    
 	)
 }
 
 Artists.getInitialProps = async () => {
-  const api_url = getApiURL()
   let data = []
   let status = 200
   let listings = []
@@ -214,16 +210,16 @@ Artists.getInitialProps = async () => {
 
   // If we are running in debug mode, log the active API URL
   if (process.env.DEBUG === "true") {
-    console.log("Artist data fetch starting via API: \n " + api_url + "artist/")
+    console.log("Artist data fetch starting via API: \n /api/artist/")
   }
   try {
-    const listingsRes = await fetch(api_url + "listing/")
+    const listingsRes = await serverFetch("/listing/")
     if (listingsRes.ok) {
       listings = await listingsRes.json()
     }
 
     // Fetch the artist data
-    const res = await fetch(api_url + "artist/")
+    const res = await serverFetch("/artist/")
     status = res.status
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${status}`)
@@ -378,4 +374,5 @@ Artists.getInitialProps = async () => {
 }
 
 export default Artists
+
 

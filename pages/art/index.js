@@ -13,564 +13,91 @@
 
 import TagSEO from "@/components/TagSEO"
 import ListingCard from "@/components/cards/card_listing"
-import getApiURL from "@/components/widgets/GetApiURL"
 import { getRandomStockPhotoByCategory } from "@/utils/stockPhotos"
-import { SocialRealtimeProvider } from "@/components/social/SocialRealtimeContext"
 import { getPanelClass } from "@/components/cards/sizes/panel-layout"
+import serverFetch from "@/libs/serverFetch"
 
-/**
- * Function to generate a random number for social counters
- */
-const getRandomCount = () => Math.floor(Math.random() * 1000) + 1 // Random number between 1 and 1000
-
-// Planned 3x3 batch rhythm without quarter-based spans.
-const EXAMPLE_PANEL_BATCHES = [
-  ["third", "twoThirds"],
-  ["half", "half"],
-  ["twoThirds", "third"],
-  ["third", "twoThirds"],
-  ["half", "half"],
-  ["twoThirds", "third"],
-  ["third", "twoThirds"],
-  ["half", "half"],
-  ["twoThirds", "third"],
-]
-
-const EXAMPLE_PANEL_MIX = EXAMPLE_PANEL_BATCHES.flat()
-
-const EXAMPLE_ARTIST_CARD_MODES = [
-  "fullWidth",
-  "sidePortrait",
-  "stacked",
-  "sidePortrait",
-  "fullWidth",
-  "sidePortrait",
-]
-
-/**
- * Generates fake listings to demonstrate various art categories
- * @returns {Array} Array of fake listing objects with proper structure for ListingCard component
- */
-const generateFakeListings = () => {
-  return [
-    // Sculpture Category
-    {
-      listingid: "fake-1",
-      title: "Bronze Dragon Sculpture",
-      description:
-        "Hand-crafted bronze dragon sculpture with incredible detail. Perfect centerpiece for fantasy enthusiasts.",
-      price: 1299.99,
-      path: "bronze-dragon",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Molten Hands Studio",
-        path: "molten-hands",
-      },
-      artCategory: {
-        category: "Sculpture",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/dragon/400/300",
-        alttext: "Bronze dragon sculpture",
-      },
-      featured: true,
-      loves: getRandomCount(), // Added social counters
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-7",
-      title: "Marble Abstract Form",
-      description: "Elegant white marble sculpture featuring flowing abstract forms. Height: 18 inches.",
-      price: 899.99,
-      path: "marble-abstract",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Chisel & Stone",
-        path: "chisel-stone",
-      },
-      artCategory: {
-        category: "Sculpture",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/marble/400/300",
-        alttext: "Marble abstract sculpture",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-8",
-      title: "Recycled Metal Wildlife",
-      description:
-        "Eco-friendly sculpture made from reclaimed metal parts. This majestic eagle has a wingspan of 24 inches.",
-      price: 450.0,
-      path: "recycled-eagle",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Scrap Metal Visionaries",
-        path: "scrap-visionaries",
-      },
-      artCategory: {
-        category: "Sculpture",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/metal/400/300",
-        alttext: "Recycled metal eagle sculpture",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-
-    // Painting Category
-    {
-      listingid: "fake-2",
-      title: "Abstract Sunset Painting",
-      description: 'Vibrant acrylic painting on canvas showcasing a dreamlike sunset over water. Measures 24" x 36".',
-      price: 450.0,
-      path: "abstract-sunset",
-      created: new Date().toISOString(),
-      artist: {
-        title: "ColorScape Arts",
-        path: "colorscape",
-      },
-      artCategory: {
-        category: "Painting",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/sunset/400/300",
-        alttext: "Abstract sunset painting",
-      },
-      featured: true,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-9",
-      title: "Impressionist Garden Scene",
-      description:
-        "Oil painting inspired by classic Impressionist techniques. This garden scene bursts with color and light.",
-      price: 675.0,
-      path: "garden-impression",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Light & Palette Studio",
-        path: "light-palette",
-      },
-      artCategory: {
-        category: "Painting",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/garden/400/300",
-        alttext: "Impressionist garden painting",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-10",
-      title: "Urban Night Cityscape",
-      description: "Moody cityscape captured in oil paints with dramatic lighting. Framed and ready to hang.",
-      price: 525.0,
-      path: "night-cityscape",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Metropolitan Arts",
-        path: "metro-arts",
-      },
-      artCategory: {
-        category: "Painting",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/city/400/300",
-        alttext: "Urban night cityscape painting",
-      },
-      featured: true,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-
-    // Photography Category
-    {
-      listingid: "fake-3",
-      title: "Urban Wildlife Photography Series",
-      description:
-        "Limited edition print series documenting wildlife in unexpected urban environments. Signed by the artist.",
-      price: 275.0,
-      path: "urban-wildlife",
-      created: new Date().toISOString(),
-      artist: {
-        title: "City Lens Collective",
-        path: "city-lens",
-      },
-      artCategory: {
-        category: "Photography",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/wildlife/400/300",
-        alttext: "Urban wildlife photograph",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-11",
-      title: "Abandoned Places Collection",
-      description: "Hauntingly beautiful photographs of forgotten places. Limited edition prints on archival paper.",
-      price: 325.0,
-      path: "abandoned-places",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Forgotten Frames",
-        path: "forgotten-frames",
-      },
-      artCategory: {
-        category: "Photography",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/abandoned/400/300",
-        alttext: "Abandoned building photograph",
-      },
-      featured: true,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-12",
-      title: "Macro Nature Study",
-      description: "Extreme close-up photography revealing the hidden world of insects and flowers. Set of 3 prints.",
-      price: 225.0,
-      path: "macro-nature",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Tiny Worlds Studio",
-        path: "tiny-worlds",
-      },
-      artCategory: {
-        category: "Photography",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/macro/400/300",
-        alttext: "Macro nature photography",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-
-    // Crochet Category
-    {
-      listingid: "fake-4",
-      title: "Handmade Crochet Blanket",
-      description:
-        "Luxurious handmade crochet blanket with intricate pattern. Made with 100% merino wool in beautiful earth tones.",
-      price: 189.99,
-      path: "crochet-blanket",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Yarn Dreams",
-        path: "yarn-dreams",
-      },
-      artCategory: {
-        category: "Crochet",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/blanket/400/300",
-        alttext: "Handmade crochet blanket",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-13",
-      title: "Amigurumi Fantasy Creatures",
-      description: "Adorable hand-crocheted fantasy creatures including a dragon, unicorn, and phoenix. Perfect gifts!",
-      price: 45.99,
-      path: "amigurumi-creatures",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Hook & Stitch Magic",
-        path: "hook-stitch",
-      },
-      artCategory: {
-        category: "Crochet",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/amigurumi/400/300",
-        alttext: "Amigurumi fantasy creatures",
-      },
-      featured: true,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-14",
-      title: "Crochet Wall Hanging",
-      description: "Bohemian-inspired wall hanging made with organic cotton yarns and driftwood. One-of-a-kind piece.",
-      price: 120.0,
-      path: "crochet-wallhanging",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Fiber Art Collective",
-        path: "fiber-collective",
-      },
-      artCategory: {
-        category: "Crochet",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/wallhanging/400/300",
-        alttext: "Crochet wall hanging",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-
-    // Digital Services Category
-    {
-      listingid: "fake-5",
-      title: "Custom Website Development",
-      description:
-        "Professional website development services tailored to artists and creative businesses. Includes responsive design and SEO optimization.",
-      price: 1499.0,
-      path: "website-development",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Web Canvas Studio",
-        path: "web-canvas",
-      },
-      artCategory: {
-        category: "Digital Services",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/website/400/300",
-        alttext: "Web development illustration",
-      },
-      featured: true,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-15",
-      title: "Digital Art Portfolio Creation",
-      description:
-        "Custom digital portfolio design to showcase your artwork with striking presentation. Includes up to 10 gallery pages.",
-      price: 650.0,
-      path: "portfolio-creation",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Portfolio Pro",
-        path: "portfolio-pro",
-      },
-      artCategory: {
-        category: "Digital Services",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/portfolio/400/300",
-        alttext: "Digital portfolio example",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-16",
-      title: "E-Commerce Art Shop Setup",
-      description:
-        "Complete setup of your online art store with payment processing, inventory management, and beautiful product displays.",
-      price: 1250.0,
-      path: "ecommerce-setup",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Digital Artisan Solutions",
-        path: "digital-artisan",
-      },
-      artCategory: {
-        category: "Digital Services",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/ecommerce/400/300",
-        alttext: "E-commerce shop example",
-      },
-      featured: true,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-
-    // Performance Art Category
-    {
-      listingid: "fake-6",
-      title: "Aerial Silk Performance",
-      description:
-        "Book our aerial silk performers for your next event. Stunning choreography that will leave your guests speechless.",
-      price: 850.0,
-      path: "aerial-silk",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Sky Dancers Collective",
-        path: "sky-dancers",
-      },
-      artCategory: {
-        category: "Performance Art",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/circus/400/300",
-        alttext: "Aerial silk performance",
-      },
-      featured: true,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-17",
-      title: "Fire Dancing Show",
-      description:
-        "Mesmerizing fire dancing performance featuring skilled artists with poi, staff, and hoop. Perfect for evening events.",
-      price: 750.0,
-      path: "fire-dancing",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Flame Artistry",
-        path: "flame-artistry",
-      },
-      artCategory: {
-        category: "Performance Art",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/fire/400/300",
-        alttext: "Fire dancing performance",
-      },
-      featured: false,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-    {
-      listingid: "fake-18",
-      title: "Interactive Theater Experience",
-      description:
-        "Immersive theater performance where audience members become part of the story. Custom themes available.",
-      price: 1200.0,
-      path: "interactive-theater",
-      created: new Date().toISOString(),
-      artist: {
-        title: "Fourth Wall Breakers",
-        path: "fourth-wall",
-      },
-      artCategory: {
-        category: "Performance Art",
-      },
-      profilePic: {
-        url: "https://picsum.photos/seed/theater/400/300",
-        alttext: "Interactive theater performance",
-      },
-      featured: true,
-      loves: getRandomCount(),
-      likes: getRandomCount(),
-      followers: getRandomCount(),
-    },
-  ]
-}
-
-/**
- *
- * @param {*} props
- * @returns
- */
 const Listings = (props) => {
   const pageMetaData = {
-    title: "Art Listings",
+    title: "Browse Art",
     description: "Shop and explore curated paintings, sculpture, digital work, and more from independent creators.",
-    keywords: "art listings, paintings, sculpture, digital art, gallery, buy art",
+    keywords: "art listings, paintings, sculpture, digital art, gallery, buy art, browse art",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
-      title: "Explore Art Listings on Platform",
-      description: "Browse curated artwork across mediums and categories from independent creators.",
+      title: "Browse Art on TAG",
+      description: "Discover curated artwork across mediums and categories from independent artists.",
     },
   }
   return (
-    <SocialRealtimeProvider>
-      <div className="min-h-screen flex flex-col bg-base-100 text-base-content">
-        <TagSEO metadataProp={pageMetaData} canonicalSlug="art" />
-        {/* Hero Section */}
-        <section className="text-center py-12">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-4 text-primary">
-            Art Listings
-          </h1>
-          <p className="text-xl md:text-2xl text-secondary mb-6">
-            Explore a curated selection of art pieces to inspire your creativity.
-          </p>
-          <div className="badge badge-info badge-lg">
-            ✨ Enhanced with Social Features
+    <div className="relative isolate min-h-screen bg-base-100 text-base-content">
+      <TagSEO metadataProp={pageMetaData} canonicalSlug="art" />
+      {/* Hero Section */}
+      <section className="relative text-center py-6 md:py-8">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-primary">
+          Browse Art
+        </h1>
+        <p className="text-sm md:text-base text-secondary/90 mb-0">
+          Curated paintings, sculpture, digital work, and more from independent creators.
+        </p>
+      </section>
+      <main className="relative container mx-auto px-4 py-8 flex-1 w-full">
+        {/* Filter Bar - light touch placeholder */}
+        <div className="mb-8 pb-6 border-b border-base-200">
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="dropdown dropdown-hover">
+              <button className="btn btn-sm btn-ghost gap-2">
+                Category ▾
+              </button>
+              <ul className="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow">
+                <li><a>Painting</a></li>
+                <li><a>Sculpture</a></li>
+                <li><a>Digital Art</a></li>
+                <li><a>Photography</a></li>
+                <li><a>Mixed Media</a></li>
+              </ul>
+            </div>
+            
+            <div className="dropdown dropdown-hover">
+              <button className="btn btn-sm btn-ghost gap-2">
+                Genre ▾
+              </button>
+              <ul className="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow">
+                <li><a>Abstract</a></li>
+                <li><a>Figurative</a></li>
+                <li><a>Landscape</a></li>
+                <li><a>Portrait</a></li>
+                <li><a>Still Life</a></li>
+              </ul>
+            </div>
+            
+            <div className="divider divider-horizontal mx-1 my-0"></div>
+            <span className="text-sm text-base-content/60">{props.listings.length} results</span>
           </div>
-        </section>
-      <main className="container mx-auto px-4 py-8 flex-1 w-full">
+        </div>
+
         {/* Dynamic listings section */}
         <div className="mb-16">
-          <h3 className="text-2xl font-bold mb-6">Featured Art</h3>
           <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
             {props.listings.map((listing, index) => (
               <div
                 key={listing.path || listing.listingid || `${listing.title || "listing"}-${index}`}
                 className={`${getPanelClass(listing.panelSize)} self-start`}
               >
-                <ListingCard listing={listing} panelSize={listing.panelSize} />
+                <ListingCard listing={listing} panelSize={listing.panelSize} showArtistIdentityGlow={false} />
               </div>
             ))}
           </div>
         </div>
-        {/* Fake listings section */}
-        <div className="mt-24 mb-20 md:flex md:items-stretch md:gap-6">
-          <div className="hidden md:block w-px bg-base-300/70" aria-hidden="true" />
-          <div className="flex-1">
-            <h3 className="text-3xl font-bold mb-8 text-center">Coming Soon: Bloomscrolling (example artist links may be broken)</h3>
-            <p className="mb-12 text-xl text-center max-w-4xl mx-auto">Imagine endlessly viewing listings from our artistic community, with no advertisements!.</p>
-            <div className="grid grid-cols-1 items-start md:grid-cols-6 lg:grid-cols-12 gap-6">
-              {props.fakeListings.map((listing, index) => (
-                <div
-                  key={listing.path || listing.listingid || `${listing.title || "fake-listing"}-${index}`}
-                  className={`${getPanelClass(listing.panelSize)} self-start`}
-                >
-                  <ListingCard
-                    listing={listing}
-                    panelSize={listing.panelSize}
-                    artistCardMode={listing.artistCardMode}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+
       </main>
     </div>
-    </SocialRealtimeProvider>
+    
   )
 }
 
 Listings.getInitialProps = async (context) => {
-  const api_url = getApiURL()
   const { query } = context
 
   let data = []
@@ -578,7 +105,7 @@ Listings.getInitialProps = async (context) => {
 
   try {
     const queryParams = new URLSearchParams(query).toString()
-    const res = await fetch(`${api_url}listing/?${queryParams}`)
+    const res = await serverFetch(`/listing/?${queryParams}`)
     status = res.status
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${status}`)
@@ -592,13 +119,6 @@ Listings.getInitialProps = async (context) => {
     ...listing,
     panelSize: "half",
   })
-
-  // Generate fake listings with an intentional panel-size composition for examples.
-  const fakeListings = generateFakeListings().map((listing, index) => ({
-    ...listing,
-    panelSize: EXAMPLE_PANEL_MIX[index % EXAMPLE_PANEL_MIX.length],
-    artistCardMode: EXAMPLE_ARTIST_CARD_MODES[index % EXAMPLE_ARTIST_CARD_MODES.length],
-  }))
 
   const listings = (Array.isArray(data) ? data : []).map(enrichListing)
 
@@ -632,7 +152,6 @@ Listings.getInitialProps = async (context) => {
 
   return {
     listings,
-    fakeListings,
     status: status,
     sidebarProps: {
       leftSidebarData: {
@@ -740,3 +259,4 @@ Listings.getInitialProps = async (context) => {
 }
 
 export default Listings
+

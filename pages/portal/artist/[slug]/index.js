@@ -9,14 +9,13 @@
 
  Open source · low-profit · human-first*/
 
-import Link from "next/link"
 import { getServerSession } from "next-auth/next"
-import { useState } from "react"
 
 import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
+import ArtistContextNav from "@/components/portal/ArtistContextNav"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import { isAdmin } from "@/utils/authHelpers"
+import serverFetch from "@/libs/serverFetch"
 
 const UPCOMING_DATES = [
   {
@@ -66,27 +65,14 @@ function DashboardCard({ title, badge, children }) {
 }
 
 function PreviewMode({ artistProfile, slug, listingCount }) {
+
   return (
     <div className="space-y-4">
-      <div className="alert alert-info shadow-sm">
-        <div>
-          <div className="font-semibold">Public Preview Mode</div>
-          <div className="text-sm opacity-80">
-            This is a lightweight preview of how the artist profile reads for public visitors. Open the public page for the full live experience.
-          </div>
-        </div>
-      </div>
-
       <div className="card bg-base-100 shadow border border-base-300">
         <div className="card-body gap-4">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h2 className="text-2xl font-bold text-base-content">{artistProfile?.title || slug}</h2>
-              <p className="text-base-content/70 mt-1">{artistProfile?.byline || "No byline set yet."}</p>
-            </div>
-            <Link href={`/artists/${slug}`} className="btn btn-sm btn-primary">
-              Open Public Profile
-            </Link>
+          <div>
+            <h2 className="text-2xl font-bold text-base-content">{artistProfile?.title || slug}</h2>
+            <p className="text-base-content/70 mt-1">{artistProfile?.byline || "No byline set yet."}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -103,56 +89,13 @@ function PreviewMode({ artistProfile, slug, listingCount }) {
               <div className="text-lg font-semibold text-base-content mt-1">/{artistProfile?.path || slug}</div>
             </div>
           </div>
-
-          <div className="prose max-w-none text-base-content">
-            <h3>Statement Preview</h3>
-            <div dangerouslySetInnerHTML={{ __html: artistProfile?.statement || "<p>No statement available yet.</p>" }} />
-          </div>
         </div>
-      </div>
-    </div>
-  )
-}
-
-function EditMode({ slug }) {
-  return (
-    <div className="space-y-4">
-      <div className="alert alert-warning shadow-sm">
-        <div>
-          <div className="font-semibold">Edit Mode</div>
-          <div className="text-sm opacity-80">
-            Editing tools are staged here. Wire the specific forms and media upload flows into this mode as each subsystem is finalized.
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <DashboardCard title="Profile Editing" badge="Ready for wiring">
-          <p className="text-sm text-base-content/70">
-            Update statement, biography, byline, SEO tags, and public path controls for this artist page.
-          </p>
-          <div className="flex gap-2 flex-wrap">
-            <button type="button" className="btn btn-sm btn-primary">Edit Artist Copy</button>
-            <button type="button" className="btn btn-sm btn-outline">Manage Images</button>
-          </div>
-        </DashboardCard>
-
-        <DashboardCard title="Listing Operations" badge="Current route available">
-          <p className="text-sm text-base-content/70">
-            Move into listing creation or targeted update flows tied to this artist workspace.
-          </p>
-          <div className="flex gap-2 flex-wrap">
-            <Link href="/portal/artist/listing/create" className="btn btn-sm btn-primary">Create Listing</Link>
-            <Link href={`/artists/${slug}`} className="btn btn-sm btn-outline">Cross-check Public Page</Link>
-          </div>
-        </DashboardCard>
       </div>
     </div>
   )
 }
 
 export default function ArtistSlugPortalPage({ slug, artistProfile, listings }) {
-  const [mode, setMode] = useState("preview")
   const listingCount = Array.isArray(listings) ? listings.length : 0
 
   const pageMetaData = {
@@ -169,6 +112,7 @@ export default function ArtistSlugPortalPage({ slug, artistProfile, listings }) 
   return (
     <div className="min-h-screen bg-base-200 p-4 md:p-8">
       <TagSEO metadataProp={pageMetaData} canonicalSlug={`portal/artist/${slug}`} />
+      <ArtistContextNav />
 
       <div className="max-w-6xl mx-auto space-y-6">
         <section className="card bg-base-100 shadow-lg border border-base-300">
@@ -178,40 +122,19 @@ export default function ArtistSlugPortalPage({ slug, artistProfile, listings }) 
                 <div className="text-xs uppercase tracking-widest text-base-content/50">Artist Portal</div>
                 <h1 className="text-3xl font-bold text-primary mt-1">{artistProfile?.title || slug}</h1>
                 <p className="text-base-content/70 mt-2 max-w-3xl">
-                  This workspace is for the artist identified by the slug. Use it to preview the public profile, step into edit mode, and review operational metrics.
+                  This workspace is for the artist identified by the slug. Use it to preview the public profile and review operational metrics.
                 </p>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <Link href="/portal/artist" className="btn btn-sm btn-ghost">Back to Artist Portal</Link>
-                <Link href={`/artists/${slug}`} className="btn btn-sm btn-outline">Public Profile</Link>
               </div>
             </div>
 
             <div className="flex gap-2 flex-wrap items-center">
-              <button
-                type="button"
-                className={`btn btn-sm ${mode === "preview" ? "btn-primary" : "btn-outline"}`}
-                onClick={() => setMode("preview")}
-              >
-                Preview as Public
-              </button>
-              <button
-                type="button"
-                className={`btn btn-sm ${mode === "edit" ? "btn-primary" : "btn-outline"}`}
-                onClick={() => setMode("edit")}
-              >
-                Enter Edit Mode
-              </button>
+              <span className="badge badge-primary">Preview as Public</span>
               <span className="badge badge-ghost">Slug: {slug}</span>
             </div>
           </div>
         </section>
 
-        {mode === "preview" ? (
-          <PreviewMode artistProfile={artistProfile} slug={slug} listingCount={listingCount} />
-        ) : (
-          <EditMode slug={slug} />
-        )}
+        <PreviewMode artistProfile={artistProfile} slug={slug} listingCount={listingCount} />
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           <DashboardCard title="Upcoming Project & Ship-By Dates" badge="Faked for now">
@@ -336,8 +259,7 @@ export async function getServerSideProps(context) {
     }
 
     try {
-      const apiUrl = getApiURL()
-      const linkedArtistResponse = await fetch(`${apiUrl}linker_usertoartist/byUserID/${userId}`)
+      const linkedArtistResponse = await serverFetch(`/linker_usertoartist/byUserID/${userId}`)
 
       if (!linkedArtistResponse.ok) {
         return { notFound: true }
@@ -360,22 +282,32 @@ export async function getServerSideProps(context) {
     }
   }
 
-  const apiUrl = getApiURL()
-
   try {
-    const response = await fetch(`${apiUrl}artist/${slug}/profile`)
+    const [profileResponse, artistResponse] = await Promise.all([
+      serverFetch(`/artist/${slug}/profile`),
+      serverFetch(`/artist/${slug}`),
+    ])
 
-    if (!response.ok) {
+    if (!profileResponse.ok) {
       return { notFound: true }
     }
 
-    const data = await response.json()
+    const profileData = await profileResponse.json()
+    const artistData = artistResponse.ok ? await artistResponse.json() : null
+
+    const artistProfile = {
+      ...(profileData?.artist || {}),
+      profilePic: profileData?.profilePic || artistData?.profilePic || null,
+      coverPic: profileData?.coverPic || artistData?.coverPic || null,
+      gallery: artistData?.gallery || profileData?.artist?.gallery || null,
+    }
 
     return {
       props: {
         slug,
-        artistProfile: data?.artist || null,
-        listings: data?.listings || [],
+        artistProfile,
+        listings: profileData?.listings || [],
+        currentUser: session.user?.email || session.user?.name || null,
       },
     }
   } catch (error) {
@@ -386,7 +318,10 @@ export async function getServerSideProps(context) {
         slug,
         artistProfile: null,
         listings: [],
+        currentUser: session.user?.email || session.user?.name || null,
       },
     }
   }
 }
+
+

@@ -28,12 +28,12 @@ export const defaultNavigationTree = [
 					{
 						id: "user-portal",
 						label: "User Portal",
-						href: "/user/portal",
+						href: "/portal/user",
 					},
 					{
 						id: "privacy-settings",
 						label: "Privacy Settings",
-						href: "/user/privacy-settings",
+						href: "/portal/user/settings",
 					},
 					{
 						id: "artist-admin",

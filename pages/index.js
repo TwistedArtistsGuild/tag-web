@@ -19,10 +19,10 @@ import styles from "@/styles/pages/index.module.css"
 import TagSEO from "@/components/TagSEO"
 import Hero from "@/components/homepage/Hero"
 import CardTools from "@/components/homepage/Card_Tools"
-import CardBloomscroll from "@/components/homepage/Card_Blookscroll"
 import CardMembershipBenefits from "@/components/homepage/Card_membership_benefits"
 import CardContests from "@/components/homepage/Card_Contests"
 import CardPricing from "@/components/homepage/Card_Pricing"
+import CardBloomscroll from "@/components/homepage/Card_Bloomscroll"
 import FAQ from "@/components/homepage/FAQ"
 import CTA from "@/components/homepage/CTA"
 
@@ -36,14 +36,14 @@ import CTA from "@/components/homepage/CTA"
 export default function Home() {
   const pageMetaData = {
     title: "Discover Artists, Events, and Creative Tools",
-    description: "Browse artist portfolios, discover original work, and grow your creative business with contests, events, and creator-first tools.",
-    keywords: "artists, portfolios, art marketplace, creative community, events, contests, creator tools",
+    description: "Browse artist portfolios, discover original work, and grow your creative business with creator-first tools for payments, POS, pricing, budgeting, payroll, accounting, project workflows, event management, CRM, and marketing.",
+    keywords: "artists, art, artisan crafts, makerspace, portfolios, art marketplace, creative community, events, contests, creator tools, business tools, payments, online payments, point of sale, pos, cost calculator, margin calculator, pricing tools, mileage tracking, expense tracking, budgeting, inventory management, timesheets, payroll, invoices, deposits, receipts, contracts, project management, event management, crm, marketing campaigns, performance dashboards, accounting, double entry accounting, b2b2c, b2b, b2c, paintings, sculpture, digital design, performance art, photography, illustration, mixed media, ceramics, pottery, printmaking, textile art, fiber art, woodworking, metalwork, jewelry, glass art, street art, mural art, installation art, music, dance, theater, spoken word, film, animation",
     robots: "index, follow",
     author: "Bobb Shields",
     viewport: "width=device-width, initial-scale=1.0",
     og: {
       title: "Creator-First Art Community",
-      description: "Discover artists, original work, and practical tools designed for sustainable creative growth.",
+      description: "Discover artists, original work, and practical business tools built for sustainable creative growth across visual, digital, craft, and performance arts.",
     },
   }
 
@@ -62,28 +62,75 @@ export default function Home() {
             </div>
             <div className={`${styles.bgColor} bg-secondary`}>
               <div className={`${styles.gradient} p-10`}>
-                <span className={`${styles.centerTextContent} text-2xl font-bold`}>Building business tools is our art.</span>
+                <span className={`${styles.centerTextContent} text-2xl font-bold`}>Building business solutions is our art.</span>
               </div>
             </div>
             <div className={`${styles.bgColor} bg-accent`}>
               <div className={`${styles.gradient} p-10`}>
-                <span className={`${styles.rightTextContent} text-2xl font-bold`}>Join us, create more.</span>
+                <span className={`${styles.rightTextContent} text-2xl font-bold`}>Enabling artists to create more.</span>
               </div>
             </div>
           </section>
 
+          {/* Divider */}
+          <div className="flex items-center justify-center py-8">
+            <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+          </div>
+
           {/* Main Content Sections */}
           <Hero />
+
+          {/* Divider */}
+          <div className="flex items-center justify-center py-8">
+            <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+          </div>
+
           <section className="bg-base-200">
-            <div className="max-w-7xl mx-auto px-8 py-20 space-y-8">
-              <CardTools />
-              <CardBloomscroll />
-              <CardMembershipBenefits />
-              <CardContests />
-              <CardPricing />
+            <div className="max-w-7xl mx-auto px-8 py-20 space-y-16">
+              <CardTools index={0} />
+              
+              {/* Divider */}
+              <div className="flex items-center justify-center py-8">
+                <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+              </div>
+              
+              <CardMembershipBenefits index={1} />
+              
+              {/* Divider */}
+              <div className="flex items-center justify-center py-8">
+                <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+              </div>
+              
+              <CardContests index={2} />
+              
+              {/* Divider */}
+              <div className="flex items-center justify-center py-8">
+                <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+              </div>
+              
+              <CardPricing index={3} />
+
+              {/* Divider */}
+              <div className="flex items-center justify-center py-8">
+                <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+              </div>
+
+              <CardBloomscroll index={4} />
             </div>
           </section>
+
+          {/* Divider */}
+          <div className="flex items-center justify-center py-8">
+            <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+          </div>
+
           <FAQ />
+
+          {/* Divider */}
+          <div className="flex items-center justify-center py-8">
+            <div className="w-full max-w-md h-1 bg-gradient-to-r from-transparent via-secondary to-transparent"></div>
+          </div>
+
           <CTA />
         </div>
       </div>

@@ -9,9 +9,9 @@
 
  Open source · low-profit · human-first*/
 import DynaFormDB from "@/components/widgets/DynaFormDB";
-import getApiURL from "@/components/widgets/GetApiURL";
+import TagSEO from "@/components/TagSEO";
+import serverFetch from "@/libs/serverFetch"
 
-const api_url = getApiURL();
 const formName = "EventForm1";
 //broken but don't care!!!!
 
@@ -19,14 +19,31 @@ export default function CreateEventForm1(props) {
     props.metadataProp = props.metadataProp || {};
     props.metadataProp.FromURL = "/events/create.js";
     props.metadataProp.redirectURL = "/events/";
-    props.metadataProp.APIURL = api_url + `${props.metadataProp.apiurlpostfix}`;
-    return <div className="p-4"><DynaFormDB request="add" metadataProp={props.metadataProp} /></div>;
+    props.metadataProp.APIURL = `/api/${props.metadataProp.apiurlpostfix}`;
+    return (
+        <div className="p-4">
+            <TagSEO
+                metadataProp={{
+                    title: "Create Event",
+                    description: "Create a new event listing.",
+                    robots: "noindex, nofollow",
+                    keywords: "events, create event",
+                    og: {
+                        title: "Create Event",
+                        description: "Create a new event listing.",
+                    },
+                }}
+                canonicalSlug="events/create"
+            />
+            <DynaFormDB request="add" metadataProp={props.metadataProp} />
+        </div>
+    );
 }
 
 CreateEventForm1.getInitialProps = async function () {
     let metadata = {};
     try {
-        const res = await fetch(api_url + 'forms_metadata/'+ formName);
+        const res = await serverFetch(`/forms_metadata/${formName}`);
         metadata = await res.json();
     } catch (error) {
         console.error("Error fetching form meta:", error);

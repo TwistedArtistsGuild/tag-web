@@ -9,43 +9,11 @@
 
  Open source · low-profit · human-first*/
 import Link from "next/link"
-import { useState } from "react"
-import { useRouter } from "next/router"
 
 import TagSEO from "@/components/TagSEO"
+import BugReportControl from "@/components/forms/bug-report"
 
 export default function Custom404() {
-	const [email, setEmail] = useState("")
-	const [message, setMessage] = useState("")
-	const router = useRouter()
-
-	const handleSubmit = async (e) => {
-		e.preventDefault()
-		try {
-			const res = await fetch('/api/sendEmail', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					to: 'admin@twistedartistsguild.com',
-					subject: 'Support Request',
-					text: `${message}\n\nURL: ${router.asPath}`,
-					html: `<p>${message}</p><p>URL: ${router.asPath}</p>`,
-					replyTo: email,
-				}),
-			})
-			if (res.ok) {
-				alert('Email sent successfully!')
-			} else {
-				alert('Failed to send email.')
-			}
-		} catch (error) {
-			console.error('Error sending email:', error)
-			alert('Failed to send email.')
-		}
-	}
-
 	return (
       <section className="relative bg-base-100 text-base-content w-full p-10 flex flex-col items-center gap-6">
       <TagSEO metadataProp={{ title: "Page Not Found", description: "The requested page could not be found on Platform.", keywords: "artists, art community, marketplace", robots: "noindex, nofollow", og: { title: "Page Not Found", description: "The requested page could not be found on Platform." } }} canonicalSlug="404" />
@@ -69,30 +37,13 @@ export default function Custom404() {
 				Home
 			</Link>
 
-			<form onSubmit={handleSubmit} className="flex flex-col gap-4 items-center">
-				<label className="flex flex-col items-start">
-					Your Email:
-					<input
-						type="email"
-						value={email}
-						onChange={(e) => setEmail(e.target.value)}
-						required
-						className="input input-bordered w-full max-w-xs"
-					/>
-				</label>
-				<label className="flex flex-col items-start">
-					Message:
-					<textarea
-						value={message}
-						onChange={(e) => setMessage(e.target.value)}
-						required
-						className="textarea textarea-bordered w-full max-w-xs"
-					/>
-				</label>
-				<button type="submit" className="btn btn-primary">
-					Send
-				</button>
-			</form>
+			<div className="w-full max-w-3xl">
+				<BugReportControl
+					isEmbedded
+					defaultShortDescription="404 page not found issue"
+					defaultExpectedBehavior="I expected this URL to resolve to a valid page."
+				/>
+			</div>
 		</section>
 	)
 }

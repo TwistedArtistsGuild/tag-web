@@ -54,6 +54,34 @@ Artist media should be stored under the numeric `artistId` directory, not the ar
 
 ## 🚀 Getting Started
 
+### Prerequisites
+
+- **Node.js ≥ 22.15.0** — required for `--use-system-ca` support, which is part of the project's security posture. This flag makes Node use the OS certificate store rather than its bundled Mozilla CA bundle, ensuring corporate/custom CA chains are trusted without disabling TLS verification. The flag was introduced in Node.js v24 and backported to v22.15.0. Versions below 22.15.0 will fail to start the dev server.
+
+  Verify your version:
+  ```bash
+  node --version   # must be >= 22.15.0
+  ```
+
+  **Upgrade (Windows — winget):**
+  ```powershell
+  winget upgrade Node.js
+  ```
+
+  **Fresh install of Node.js 22 LTS (Windows — winget):**
+  ```powershell
+  winget install OpenJS.NodeJS.LTS
+  ```
+
+  **macOS / Linux — via fnm:**
+  ```bash
+  # Install fnm if not already present
+  curl -fsSL https://fnm.vercel.app/install | bash
+
+  fnm install 22
+  fnm use 22
+  ```
+
 1. **Clone this repo**
    ```bash
    git clone https://github.com/twistedartistsguild/tag-web.git

@@ -14,7 +14,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import DateInput from "./DynaDateInput";
 import { useSession } from "next-auth/react";
-import getApiURL from "@/components/widgets/GetApiURL";
 import TTArticle from "@/components/tiptap/TT_Article";
 import TTArticleGallery from "@/components/tiptap/TT_ArticleGallery";
 import TTSingleLine from "@/components/tiptap/TT_SingleLine";
@@ -39,6 +38,86 @@ function warnDeprecatedPreset(presetName, replacementText, fieldName) {
   );
 }
 
+function getFieldName(field) {
+  return field?.name || field?.Name || "";
+}
+
+function getFieldLabel(field) {
+  return field?.label || field?.Label || getFieldName(field);
+}
+
+function isFieldRequired(field) {
+  const explicit =
+    field?.isRequired ??
+    field?.IsRequired ??
+    field?.required ??
+    field?.Required;
+
+  if (typeof explicit === "boolean") {
+    return explicit;
+  }
+
+  if (typeof explicit === "number") {
+    return explicit === 1;
+  }
+
+  if (typeof explicit === "string") {
+    const normalized = explicit.trim().toLowerCase();
+    if (["true", "1", "yes", "required"].includes(normalized)) {
+      return true;
+    }
+    if (["false", "0", "no"].includes(normalized)) {
+      return false;
+    }
+  }
+
+  const validationValue = field?.validation || field?.Validation;
+  if (typeof validationValue === "string") {
+    const normalized = validationValue.toLowerCase();
+    if (normalized.includes("required") || normalized.includes("validate_required")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function hasMeaningfulRichText(value) {
+  if (value === null || value === undefined) {
+    return false;
+  }
+
+  const text = String(value)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return text.length > 0;
+}
+
+function isValueMissing(field, value) {
+  const normalizedType = String(field?.type || field?.Type || "text").trim().toLowerCase();
+
+  if (normalizedType === "checkbox") {
+    return value !== true;
+  }
+
+  if (normalizedType.startsWith("tiptap") || normalizedType === "textarea") {
+    return !hasMeaningfulRichText(value);
+  }
+
+  if (value === null || value === undefined) {
+    return true;
+  }
+
+  if (typeof value === "string") {
+    return value.trim() === "";
+  }
+
+  return false;
+}
+
 /**
  * Dynamic Form component that renders form fields based on metadata
  * @param {Object} props - Component properties
@@ -51,7 +130,15 @@ function warnDeprecatedPreset(presetName, replacementText, fieldName) {
 export default function DynaForm(props) {
   const router = useRouter();
   const { data: session } = useSession();
-  const api_url = getApiURL();
+
+  const getSafeClassName = (fieldClassName, fallbackClassName) => {
+    const rawClassName = String(fieldClassName || "").trim();
+    if (!rawClassName || rawClassName.toLowerCase().startsWith("styles.")) {
+      return fallbackClassName;
+    }
+
+    return rawClassName;
+  };
 
   const getNumericOrder = (field) => {
     const rawOrder =
@@ -118,7 +205,7 @@ export default function DynaForm(props) {
     }
 
     if (metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix) {
-      const baseUrl = api_url || "";
+      const baseUrl = '/api/';
       const postfix = metadata.apiurlpostfix || metadata.APIURLpostfix || metadata.apiurLpostfix || "";
       const separator = baseUrl.endsWith('/') || postfix.startsWith('/') ? '' : '/';
 
@@ -126,7 +213,15 @@ export default function DynaForm(props) {
     }
 
     return "";
-  }, [api_url, metadata.APIURL, metadata.APIURLpostfix, metadata.apiurlpostfix, metadata.apiurLpostfix]);
+  }, [metadata.APIURL, metadata.APIURLpostfix, metadata.apiurlpostfix, metadata.apiurLpostfix]);
+
+  const rawRequestType = String(props.request || metadata.requestType || metadata.RequestType || "add").trim().toLowerCase();
+  const effectiveRequestType =
+    rawRequestType.includes("update")
+      ? "update"
+      : rawRequestType.includes("delete")
+        ? "delete"
+        : "add";
 
   const requestMethod = useMemo(() => {
     const requestMap = {
@@ -135,8 +230,8 @@ export default function DynaForm(props) {
       delete: "DELETE"
     };
 
-    return requestMap[props.request] || "POST";
-  }, [props.request]);
+    return requestMap[effectiveRequestType] || "POST";
+  }, [effectiveRequestType]);
 
   const orderedFields = useMemo(() => {
     const fields = Array.isArray(metadata?.forms_Fields) ? metadata.forms_Fields : [];
@@ -200,55 +295,70 @@ export default function DynaForm(props) {
       console.group("🔍 DynaFormDB Debug Info - Initial Load");
       console.log("Form Metadata:", metadata);
       console.log("Form Initial Values:", initialValues);
-      console.log("API Endpoint:", metadata.APIURL || `${api_url}${metadata.APIURLpostfix || metadata.apiurLpostfix || ''}`);
-      console.log("Request Type:", props.request);
+      console.log("API Endpoint:", metadata.APIURL || `/api/${metadata.APIURLpostfix || metadata.apiurLpostfix || ''}`);
+      console.log("Request Type:", effectiveRequestType);
       console.log("Session Data:", session);
       console.groupEnd();
     }
     return () => window.cancelAnimationFrame(frameId);
-  }, [api_url, endpoint, metadata, orderedFields, props.formData, props.request, session]);
+  }, [effectiveRequestType, endpoint, metadata, orderedFields, props.formData, session]);
 
-  /**
-   * Handles input field changes and updates form state
-   * @param {string} fieldName - Name of the field
-   * @param {string|number|boolean} value - New value
-   */
-  const handleFieldChange = (fieldName, value) => {
-    setFormValues(prevValues => ({
-      ...prevValues,
-      [fieldName]: value
-    }));
-    
-    if (process.env.NEXT_PUBLIC_DEBUG === "true") {
-      console.log(`Field changed: ${fieldName} = ${value}`);
-    }
-  };
+    /**
+        * Handles input field changes and updates form state
+        * @param {string} fieldName - Name of the field
+        * @param {string|number|boolean} value - New value
+        */
+    const handleFieldChange = (fieldName, value) => {
+        // 1. Apply the immediate manual change
+        let updatedValues = {
+            ...formValues,
+            [fieldName]: value
+        };
+
+        // 2. Clear out the localized business rules engine and fire an external listener hook instead
+        if (props.onStateValueChange) {
+            // Pass the updated dictionary and the ordered schema fields to the parent page handler
+            updatedValues = props.onStateValueChange(updatedValues, orderedFields);
+        }
+
+        // 3. Commit everything to the React view model state simultaneously
+        setFormValues(updatedValues);
+
+        if (process.env.NEXT_PUBLIC_DEBUG === "true") {
+            console.log(`Field changed: ${fieldName} = ${value}`);
+        }
+    };
 
   /**
    * Validates form data before submission
    * @returns {boolean} - Whether the form is valid
    */
   const validateForm = () => {
-    // Validation is a future feature - for now, we're not validating anything
-    // and just returning true to allow submission
-    
-    /* VALIDATION DISABLED - FUTURE FEATURE
-    if (metadata.forms_Fields && Array.isArray(metadata.forms_Fields)) {
-      const requiredFields = metadata.forms_Fields.filter(field => 
-        field.validation && 
-        (field.validation.includes('required') || field.validation.includes('validate_'))
-      );
-      
-      for (const field of requiredFields) {
-        const value = formValues[field.name];
-        if (value === undefined || value === "" || value === null) {
-          setFormError(`${field.label || field.name} is required`);
-          return false;
-        }
+    const fields = Array.isArray(orderedFields) ? orderedFields : [];
+
+    for (const field of fields) {
+      if (field.hidden === true || field.Hidden === true) {
+        continue;
+      }
+
+      if (field.disabled === true || field.Disabled === true) {
+        continue;
+      }
+
+      if (!isFieldRequired(field)) {
+        continue;
+      }
+
+      const fieldName = getFieldName(field);
+      const fieldValue = formValues[fieldName];
+
+      if (isValueMissing(field, fieldValue)) {
+        const fieldLabel = getFieldLabel(field) || fieldName || "This field";
+        setFormError(`${fieldLabel} is required.`);
+        return false;
       }
     }
-    */
-    
+
     setFormError(null);
     return true;
   };
@@ -348,6 +458,15 @@ export default function DynaForm(props) {
         console.groupEnd();
       }
       
+      // Call post-submit hook if provided (e.g. to save related data with the new entity ID)
+      if (props.onPostSubmit) {
+        try {
+          await props.onPostSubmit(responseData);
+        } catch (postSubmitErr) {
+          console.error("onPostSubmit hook error:", postSubmitErr);
+        }
+      }
+
       // Successful submission - redirect
       if (metadata.redirectURL) {
         router.push(metadata.redirectURL);
@@ -391,6 +510,23 @@ export default function DynaForm(props) {
       normalizedLabel === "content" ||
       heightValue >= 10;
 
+    const isFullPanelEditor =
+      normalizedType === "tiptap_article" ||
+      normalizedType === "tiptap_article_gallery" ||
+      normalizedType === "tiptap_long" ||
+      normalizedType === "tiptap_longform" ||
+      normalizedType === "tiptap_content" ||
+      normalizedType === "tiptap_body" ||
+      normalizedType === "tiptap_portfolio";
+
+    const isWideField =
+      isFullPanelEditor ||
+      isLongContentField ||
+      normalizedType === "textarea" ||
+      normalizedName === "formbody" ||
+      normalizedName === "description";
+    const fieldColumnClass = isWideField ? "md:col-span-2 xl:col-span-3" : "md:col-span-1";
+
     // Skip rendering hidden fields (they're already in the form state)
     if (field.hidden === true || field.Hidden === true) {
       return null;
@@ -419,8 +555,7 @@ export default function DynaForm(props) {
     const isReadOnly = props.overrideReadOnly === false &&
       (field.isReadOnly === true || field.IsReadOnly === true);
     
-    // Disabled until future validation implementation
-    const isRequired = false; // This is where validation will be used later
+    const isRequired = isFieldRequired(field);
     
     // Debug field properties in development mode
     if (process.env.NODE_ENV === 'development' && process.env.DEBUG_FORMS === 'true') {
@@ -436,7 +571,7 @@ export default function DynaForm(props) {
     // For date-type fields, use the DateInput component
     if (normalizedType === "date" || normalizedType === "datetime" || normalizedType === "datetime-local") {
       return (
-        <div key={index} className="form-control">
+        <div key={index} className={`form-control ${fieldColumnClass}`}>
           <label className="label" htmlFor={`field-${field.name}`}>
             <span className="label-text">
               {field.label || field.Label || field.name}
@@ -449,21 +584,24 @@ export default function DynaForm(props) {
             name={field.name}
             id={`field-${field.name}`}
             value={currentValue || ""} // Never pass null/undefined 
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            onChange={(e) => {
+                const val = e && e.target ? e.target.value : e;
+                handleFieldChange(field.name, val);
+            }}
             label={field.label || field.Label || field.name}
             placeholder={field.placeholder || field.Placeholder || ""}
             required={isRequired}
             disabled={field.disabled === true || field.Disabled === true}
             readOnly={isReadOnly}
             includeTime={normalizedType !== "date"}
-            className={field.className || field.ClassName || "input input-bordered w-full"}
+            className={getSafeClassName(field.className || field.ClassName, "input input-bordered w-full")}
           />
         </div>
       );
     }
     
     // Apply read-only styles to class name
-    const baseClassName = field.className || field.ClassName || "input input-bordered w-full";
+    const baseClassName = getSafeClassName(field.className || field.ClassName, "input input-bordered w-full");
     const className = isReadOnly 
       ? `${baseClassName} bg-base-300 cursor-not-allowed` 
       : baseClassName;
@@ -474,6 +612,7 @@ export default function DynaForm(props) {
       name: field.name,
       className,
       placeholder: field.placeholder || field.Placeholder || "",
+      required: isRequired,
       readOnly: isReadOnly,
       disabled: field.disabled === true || field.Disabled === true,
       // For non-checkbox inputs, ensure we always have a string value
@@ -492,9 +631,9 @@ export default function DynaForm(props) {
     if (field.autocomplete !== undefined || field.Autocomplete !== undefined) {
       sharedAttributes.autoComplete = (field.autocomplete || field.Autocomplete) ? "on" : "off";
     }
-    
+      
     return (
-      <div key={index} className="form-control">
+      <div key={index} className={`form-control ${fieldColumnClass}`}>
         <label className="label" htmlFor={`field-${field.name}`}>
           <span className="label-text">
             {field.label || field.Label || field.name}
@@ -542,17 +681,32 @@ export default function DynaForm(props) {
               );
               
             case "select":
+                let parsedOptions = [];
+                try {
+                    if (field.options) { // Note: Check if 'O' is capital based on your C# Model
+                        parsedOptions = typeof field.options === 'string'
+                            ? JSON.parse(field.options)
+                            : field.options;
+                    }
+                } catch (e) {
+                    console.error("Error parsing select options for " + field.name, e);
+                  }                  
               return (
                 <select
                   {...sharedAttributes}
                   value={currentValue}
                   className={isReadOnly ? `select select-bordered w-full bg-base-300 cursor-not-allowed` : "select select-bordered w-full"}
-                >
-                  {field.options?.map((option, idx) => (
-                    <option key={idx} value={option.value}>
-                      {option.label || option.value}
-                    </option>
-                  )) || <option value="">No options available</option>}
+                  >
+                    <option value="">{field.Placeholder || "Select..."}</option>
+                    {parsedOptions.length > 0 ? (
+                        parsedOptions.map((option, idx) => (
+                            <option key={idx} value={option.value}>
+                                {option.label || option.value}
+                            </option>
+                        ))
+                    ) : (
+                        <option value="">No options available</option>
+                    )}
                 </select>
               );
               
@@ -562,6 +716,7 @@ export default function DynaForm(props) {
                   {...sharedAttributes}
                   type="checkbox"
                   checked={currentValue}
+                  required={isRequired}
                   className={isReadOnly ? `checkbox bg-base-300 cursor-not-allowed` : "checkbox"}
                 />
               );
@@ -644,7 +799,27 @@ export default function DynaForm(props) {
                           uploadContext={uploadContext}
                       />
                   );
-              
+              case 'datetime-local': // Handle the new Date/Time type
+                  return (
+                      <div key={field.Forms_FieldID} style={{ width: field.Width || '100%' }}>
+                          <label className="label">
+                              <span className="label-text">{field.Label}</span>
+                          </label>
+                          <input
+                              type={field.Type} // This will pass 'url' or 'datetime-local' directly
+                              placeholder={field.Placeholder}
+                              className={field.ClassName || 'input input-bordered w-full'}
+                              required={field.IsRequired}
+                              name={field.Name}
+                              pattern={field.RegexValidationPattern}
+                              value={currentValue || ""}
+                              onChange={(e) => {
+                                  const val = e && e.target ? e.target.value : e;
+                                  handleFieldChange(field.name, val);
+                              }}
+                          />
+                      </div>
+                  );
             // Handle other common input types
             default:
               if (isLongContentField) {
@@ -664,6 +839,7 @@ export default function DynaForm(props) {
                 <input
                   {...sharedAttributes}
                   type={normalizedType || "text"}
+                  style={{ width: field.Width || '100%' }}
                 />
               );
           }
@@ -703,7 +879,9 @@ export default function DynaForm(props) {
         
         {/* Render form fields */}
         {orderedFields.length > 0 && (
-          orderedFields.map((field, index) => renderField(field, index))
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+            {orderedFields.map((field, index) => renderField(field, index))}
+          </div>
         )}
 
         {/* Submit button and error message placement */}
@@ -711,7 +889,7 @@ export default function DynaForm(props) {
           <button 
             type="submit" 
             className="btn btn-primary" 
-            aria-label={props.request === "add" ? "Add" : props.request === "update" ? "Update" : "Submit"}
+            aria-label={effectiveRequestType === "add" ? "Add" : effectiveRequestType === "update" ? "Update" : "Submit"}
             disabled={isSubmitting}
           >
             {isSubmitting ? (
@@ -720,8 +898,8 @@ export default function DynaForm(props) {
                 Processing...
               </>
             ) : (
-              props.request === "add" ? "Add" : 
-              props.request === "update" ? "Update" : 
+              effectiveRequestType === "add" ? "Add" : 
+              effectiveRequestType === "update" ? "Update" : 
               "Submit"
             )}
           </button>

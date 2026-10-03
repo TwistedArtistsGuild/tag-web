@@ -232,13 +232,20 @@ export default function TTArticleGallery({
 	}, [loadDirectory, prefix]);
 
 	const closeSelector = useCallback(() => {
+		const isEditingExistingGallery = Boolean(editingGallery);
 		setModalOpen(false);
-		setEditingGallery(null);
 		setUploadNote("");
+		if (!isEditingExistingGallery) {
+			setSelected([]);
+			setGallerySize("large");
+			setGalleryPlacement("center");
+			setDragIndex(null);
+		}
+		setEditingGallery(null);
 		if (selectorMode === "single") {
 			resolveSinglePick(null);
 		}
-	}, [resolveSinglePick, selectorMode]);
+	}, [editingGallery, resolveSinglePick, selectorMode]);
 
 	const goUp = () => {
 		const segments = prefix.replace(/\/$/, "").split("/").filter(Boolean);

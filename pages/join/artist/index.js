@@ -1,117 +1,128 @@
-import Link from "next/link"
-import { useState } from "react"
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
-import TagSEO from "@/components/TagSEO"
-import getApiURL from "@/components/widgets/GetApiURL"
-import { getMarkdownContent } from "@/components/widgets/markdown"
+import TagSEO from "@/components/TagSEO";
+import RegisterSlug from "@/components/forms/onboarding/register-slug";
+import TermsAcceptanceForm from "@/components/forms/onboarding/artists/TermsAcceptanceForm";
+import {
+  getArtistRegistrationProgress,
+  markArtistRegistrationStepComplete,
+  setArtistRegistrationProgress,
+  markWorkflowStepComplete,
+} from "@/utils/onboarding/artistWorkflow";
 
-import Registration1 from "./registration1"
-import { Registration2Notes } from "./registration2"
+function getRequestOrigin(req) {
+  const forwardedProto = String(req?.headers?.["x-forwarded-proto"] || "").split(",")[0].trim();
+  const forwardedHost = String(req?.headers?.["x-forwarded-host"] || "").trim();
+  const host = forwardedHost || String(req?.headers?.host || "").trim();
 
-const ARTIST_PAGES = [
-  {
-    slug: "registration1",
-    formName: "ArtistForm1",
-    title: "Artist Registration 1",
-    description: "Initial artist registration and profile setup form.",
-    route: "/join/artist/registration1",
-    kind: "dynaform",
-  },
-  {
-    slug: "registration2",
-    title: "Artist Registration 2",
-    description: "Planning notes for business entity type, category, genre, existing DB fields, and profile picture upload.",
-    route: "/join/artist/registration2",
-    kind: "notes",
-  },
-]
-
-const FORM_COMPONENTS = {
-  registration1: Registration1,
-  registration2: Registration2Notes,
-}
-
-async function fetchFormMetadata(apiUrl, formName) {
-  let response = await fetch(`${apiUrl}formsmetadata/${formName}`)
-
-  if (!response.ok) {
-    response = await fetch(`${apiUrl}forms_metadata/${formName}`)
+  if (!host) {
+    return null;
   }
 
-  if (!response.ok) {
-    return null
-  }
-
-  return response.json()
+  const protocol = forwardedProto || (process.env.NODE_ENV === "development" ? "http" : "https");
+  return `${protocol}://${host}`;
 }
 
-function TermsAgreementStep({ termsContent }) {
-  const [hasReachedBottom, setHasReachedBottom] = useState(false)
-  const [agreed, setAgreed] = useState(false)
+async function getSessionFromRequest(context) {
+  const origin = getRequestOrigin(context?.req);
+  if (!origin) {
+    return null;
+  }
 
-  const handleScroll = (event) => {
-    const element = event.currentTarget
-    const reachedBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 8
+  try {
+    const response = await fetch(`${origin}/api/auth/session`, {
+      headers: {
+        cookie: context?.req?.headers?.cookie || "",
+      },
+    });
 
-    if (reachedBottom) {
-      setHasReachedBottom(true)
+    if (!response.ok) {
+      return null;
     }
+
+    return await response.json();
+  } catch {
+    return null;
   }
-
-  return (
-    <section className="card bg-base-100 shadow border border-base-300">
-      <div className="card-body gap-4">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-xl font-semibold text-base-content">Final Step: Terms of Service Agreement</h2>
-            <p className="text-sm text-base-content/70">
-              Review the current terms below. You must scroll to the bottom before you can agree.
-            </p>
-          </div>
-          <Link href="/about/termsofservice" className="btn btn-sm btn-ghost">Open terms page</Link>
-        </div>
-
-        <div
-          className="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-200/60 p-4 prose prose-sm max-w-none"
-          onScroll={handleScroll}
-        >
-          <div dangerouslySetInnerHTML={{ __html: termsContent }} />
-        </div>
-
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-sm text-base-content/70">
-            {agreed
-              ? "Terms acknowledged for this session."
-              : hasReachedBottom
-                ? "You reached the bottom and can now agree."
-                : "Scroll to the bottom to enable the Agree button."}
-          </div>
-          <div className="flex gap-2 flex-wrap items-center">
-            {agreed && <span className="badge badge-success">Agreed</span>}
-            <a href="mailto:admin@twistedartistsguild.com?subject=Terms%20of%20Service%20Disagreement" className="btn btn-sm btn-outline btn-error">
-              Disagree
-            </a>
-            <button type="button" className="btn btn-sm btn-primary" disabled={!hasReachedBottom} onClick={() => setAgreed(true)}>
-              Agree
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
 }
 
-export default function JoinArtistIndexPage({ metadataBySlug, termsContent }) {
+function getWizardStep(rawStep) {
+  const parsed = Number(rawStep || 1);
+  if (parsed === 2) {
+    return 2;
+  }
+
+  return 1;
+}
+
+function buildArtistJoinHref(step, slug) {
+  const normalizedSlug = String(slug || "").trim().toLowerCase();
+  if (normalizedSlug) {
+    return `/join/artist/${encodeURIComponent(normalizedSlug)}?step=${step}`;
+  }
+
+  return `/join/artist?step=${step}`;
+}
+
+export default function JoinArtistIndexPage({ sessionUser, currentStep }) {
+  const sessionUserId = Number(sessionUser?.id || 0);
+  const [draftKey] = useState(() => `artist-draft:${sessionUser?.id || "anon"}:${Date.now()}`);
+  const [tcAccepted, setTcAccepted] = useState(false);
+  const activeStep = currentStep === 2 ? 2 : 1;
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    setArtistRegistrationProgress({
+      draftKey,
+      ownerUserId: Number.isFinite(sessionUserId) && sessionUserId > 0 ? sessionUserId : null,
+      entityId: null,
+      title: "",
+      slug: "",
+      tcAccepted: false,
+      email: sessionUser?.email || "",
+      steps: {},
+      currentStep: null,
+    });
+  }, [draftKey, sessionUser?.email, sessionUserId]);
+
+  const scopedProgressApi = useMemo(() => ({
+    getProgress: () => {
+      const progress = getArtistRegistrationProgress?.() || {};
+      if (progress?.draftKey !== draftKey) {
+        return null;
+      }
+      const ownerUserId = Number(progress?.ownerUserId || 0);
+      const isSafeProgress = ownerUserId <= 0
+        ? true
+        : Number.isFinite(sessionUserId) && sessionUserId > 0 && ownerUserId === sessionUserId;
+
+      return isSafeProgress ? progress : null;
+    },
+    setProgress: (payload) => {
+      setArtistRegistrationProgress({
+        draftKey,
+        ownerUserId: Number.isFinite(sessionUserId) && sessionUserId > 0 ? sessionUserId : null,
+        ...payload,
+      });
+    },
+    markStepComplete: markArtistRegistrationStepComplete,
+    markWorkflowStep: (entityId, stepKey) => markWorkflowStepComplete(entityId, stepKey),
+  }), [draftKey, sessionUserId]);
+
   const pageMetaData = {
     title: "Join Artist",
-    description: "Artist onboarding and registration forms.",
+    description: "Artist onboarding start: terms and slug reservation.",
     keywords: "join, artist, registration",
     robots: "noindex, nofollow",
     og: {
       title: "Join Artist",
-      description: "Artist onboarding and registration forms.",
+      description: "Artist onboarding start: terms and slug reservation.",
     },
-  }
+  };
 
   return (
     <div className="min-h-screen bg-base-200 p-4 md:p-8">
@@ -125,79 +136,95 @@ export default function JoinArtistIndexPage({ metadataBySlug, termsContent }) {
               <Link href="/join" className="btn btn-sm btn-ghost">Back to Join</Link>
             </div>
             <p className="text-base-content/70">
-              This folder hosts artist onboarding pages. Dynaform-backed and notes-only registration pages are listed below, with embedded content at the bottom.
+              Start with 2 steps: accept Terms &amp; Conditions, then reserve your artist slug. After slug reservation, you will continue in the slug route to complete profile, contact, media, and public contact setup.
             </p>
           </div>
         </div>
 
         <div className="card bg-base-100 shadow border border-base-300">
           <div className="card-body gap-3">
-            <h2 className="text-lg font-semibold text-base-content">Available Registration Pages</h2>
-            <div className="space-y-3">
-              {ARTIST_PAGES.map((form) => (
-                <div key={form.slug} className="rounded-box border border-base-300 bg-base-200/60 p-4 flex items-center justify-between gap-3 flex-wrap">
-                  <div>
-                    <div className="font-medium text-base-content">{form.title}</div>
-                    <p className="text-sm text-base-content/70">{form.description}</p>
-                    <div className="pt-2">
-                      <span className={`badge ${form.kind === "dynaform" ? "badge-outline" : "badge-ghost"}`}>
-                        {form.kind === "dynaform" ? "Dynaform" : "Notes only"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    <Link href={form.route} className="btn btn-sm btn-outline">Open standalone page</Link>
-                    <a href={`#${form.slug}`} className="btn btn-sm btn-primary">Jump to embedded section</a>
-                  </div>
-                </div>
-              ))}
+            <div className="flex gap-2 flex-wrap">
+              <Link href="/join/artist?step=1" className={`btn btn-sm ${activeStep === 1 ? "btn-primary" : "btn-outline"}`}>
+                1. Terms &amp; Conditions
+              </Link>
+              <Link href="/join/artist?step=2" className={`btn btn-sm ${activeStep === 2 ? "btn-primary" : "btn-outline"}`}>
+                2. Reserve Slug
+              </Link>
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
-          {ARTIST_PAGES.map((form) => {
-            const FormComponent = FORM_COMPONENTS[form.slug]
-            const metadata = metadataBySlug?.[form.slug] || null
+        {activeStep === 1 && (
+          <TermsAcceptanceForm
+            tcAccepted={tcAccepted}
+            onAcceptanceChange={setTcAccepted}
+            onContinue={() => {
+              if (tcAccepted) {
+                scopedProgressApi.setProgress({ tcAccepted: true });
+                window.location.href = "/join/artist?step=2";
+              }
+            }}
+          />
+        )}
 
-            return (
-              <section key={form.slug} id={form.slug} className="card bg-base-100 shadow border border-base-300 scroll-mt-24">
-                <div className="card-body gap-4">
-                  <div>
-                    <h2 className="text-xl font-semibold text-base-content">{form.title}</h2>
-                    <p className="text-sm text-base-content/70">{form.description}</p>
-                  </div>
-                  {form.kind === "dynaform" ? <FormComponent metadataProp={metadata} /> : <FormComponent />}
-                </div>
-              </section>
-            )
-          })}
-        </div>
+        {activeStep === 2 && (
+          <RegisterSlug
+            domain="artist"
+            domainLabel="Artist"
+            reserveEndpoint={`/api/artist/reserve-slug`}
+            updateEndpoint={(id) => `/api/artist/${id}/update-slug`}
+            checkEndpoint={(candidateSlug, currentId) => `/api/artist/check-slug/${encodeURIComponent(candidateSlug)}${currentId ? `?excludeId=${encodeURIComponent(currentId)}` : ""}`}
+            nextRoute={() => {
+              const progress = scopedProgressApi.getProgress?.() || {};
+              const nextSlug = String(progress?.slug || "").trim().toLowerCase();
+              return buildArtistJoinHref(3, nextSlug);
+            }}
+            sessionUser={sessionUser}
+            progressApi={scopedProgressApi}
+            onReserved={async ({ entityId }) => {
+              const currentUserId = Number(sessionUser?.id || 0);
+              if (!Number.isFinite(currentUserId) || currentUserId <= 0 || !entityId) {
+                return;
+              }
 
-        <TermsAgreementStep termsContent={termsContent} />
+              try {
+                await fetch(`/api/linker_usertoartist`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    UserID: currentUserId,
+                    ArtistID: Number(entityId),
+                    Role: "owner",
+                  }),
+                });
+              } catch {
+                // Non-blocking: reservation succeeded; linker backfill is best-effort.
+              }
+            }}
+          />
+        )}
       </div>
     </div>
-  )
+  );
 }
 
-export async function getServerSideProps() {
-  const apiUrl = getApiURL()
-  const metadataBySlug = {}
-  const termsContent = await getMarkdownContent("content/tos.md")
+export async function getServerSideProps(context) {
+  const session = await getSessionFromRequest(context);
+  const currentStep = getWizardStep(context.query?.step);
 
-  for (const form of ARTIST_PAGES.filter((entry) => entry.formName)) {
-    try {
-      metadataBySlug[form.slug] = await fetchFormMetadata(apiUrl, form.formName)
-    } catch (error) {
-      console.error(`Unable to load form metadata for ${form.formName}:`, error.message)
-      metadataBySlug[form.slug] = null
-    }
+  if (!session?.user?.id) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl || "/join/artist")}`,
+        permanent: false,
+      },
+    };
   }
 
   return {
     props: {
-      metadataBySlug,
-      termsContent,
+      sessionUser: session?.user || null,
+      currentStep,
     },
-  }
+  };
 }

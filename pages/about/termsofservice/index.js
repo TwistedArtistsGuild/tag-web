@@ -12,6 +12,7 @@
 
 import { getMarkdownContent } from "@/components/widgets/markdown"
 import TagSEO from "@/components/TagSEO"
+import { sanitizeDefaultHtml } from "@/components/security/sanitize"
 
 export default function CodeOfConduct({ content }) {
 	const pageMetaData = {
@@ -31,7 +32,7 @@ export default function CodeOfConduct({ content }) {
 				<h1 className="text-4xl md:text-5xl font-bold text-primary text-center my-6">
 					Our website&apos;s terms of service
 				</h1>
-				<div dangerouslySetInnerHTML={{ __html: content }} />
+				<div dangerouslySetInnerHTML={{ __html: sanitizeDefaultHtml(content) }} />
 			</div>
 		</div>
 	)
@@ -45,5 +46,6 @@ export async function getStaticProps() {
 		},
 	}
 }
+
 
 

@@ -15,7 +15,6 @@ import { buffer } from "micro"
 import { sendEmail } from "@/pages/api/sendEmail"
 import configFile from "@/config"
 import { findCheckoutSession } from "@/libs/stripe"
-import getApiURL from "@/components/widgets/GetApiURL"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -34,6 +33,7 @@ export default async function handler(req, res) {
 		const buf = await buffer(req)
 		let data
 		let eventType
+		let eventId
 
 		if (webhookSecret) {
 			let event
@@ -48,9 +48,11 @@ export default async function handler(req, res) {
 			}
 			data = event.data
 			eventType = event.type
+			eventId = event.id
 		} else {
 			data = req.body.data
 			eventType = req.body.type
+			eventId = req.body.id || data?.object?.id
 		}
 
 		try {
@@ -71,19 +73,17 @@ export default async function handler(req, res) {
 
 				let user
 
-				const api_url = getApiURL()
-
 				// Get or create the user. userId is normally pass in the checkout session (clientReferenceID) to identify the user when we get the webhook event
 				if (userId) {
-					const userRes = await fetch(`${api_url}users/${userId}`)
+					const userRes = await fetch(`/api/users/${userId}`)
 					user = await userRes.json()
 				} else if (customer.email) {
-					const userRes = await fetch(`${api_url}users?email=${customer.email}`)
+					const userRes = await fetch(`/api/users?email=${customer.email}`)
 					const users = await userRes.json()
 					user = users[0]
 
 					if (!user) {
-						const createUserRes = await fetch(`${api_url}users`, {
+						const createUserRes = await fetch(`/api/users`, {
 							method: "POST",
 							headers: {
 								"Content-Type": "application/json",
@@ -101,7 +101,7 @@ export default async function handler(req, res) {
 				}
 
 				// update user data (for instance add credits)
-				await fetch(`${api_url}users/${user.id}`, {
+				await fetch(`/api/users/${user.id}`, {
 					method: "PUT",
 					headers: {
 						"Content-Type": "application/json",
@@ -111,6 +111,38 @@ export default async function handler(req, res) {
 						customerId: customerId,
 					}),
 				})
+
+				// Prototype ledger posting for Modern Treasury integration
+				try {
+					const amountTotalCents = session?.amount_total || 0
+					const amountTaxCents = session?.total_details?.amount_tax || 0
+					const shippingRevenueCents = session?.total_details?.amount_shipping || 0
+
+					await fetch(`/api/treasury/stripe-event`, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							stripeEventId: eventId || session.id,
+							stripeEventType: eventType,
+							stripePaymentIntentId: session?.payment_intent || null,
+							orderId: session.id,
+							amountTotalCents: amountTotalCents,
+							platformFeeCents: 0,
+							amountShippingCents: shippingRevenueCents,
+							amountTaxCents: amountTaxCents,
+							stripeFeeCents: 0,
+							shippingCostCents: 0,
+							sellerType: "artist",
+							currency: (session?.currency || "usd").toUpperCase(),
+							description: `Stripe checkout ${session.id}`,
+							dryRun: (process.env.MODERN_TREASURY_DRY_RUN || "true") !== "false",
+						}),
+					})
+				} catch (ledgerError) {
+					console.error("Modern Treasury ledger post failed:", ledgerError?.message || ledgerError)
+				}
 
 				// Send email with user link, product page, etc...
 				try {

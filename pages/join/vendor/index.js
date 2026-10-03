@@ -1,113 +1,126 @@
-import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { getServerSession } from "next-auth/next"
 
-import TagSEO from "@/components/TagSEO"
+import { authOptions } from "@/pages/api/auth/[...nextauth]"
+import OrganizationSlugReservationStep from "@/components/forms/onboarding/organizations/OrganizationSlugReservationStep"
+import JoinPageShell from "@/components/join/common/join-page-shell"
+import TermsAgreementStep from "@/components/join/common/terms-agreement-step"
 import { getMarkdownContent } from "@/components/widgets/markdown"
+import {
+  clearVendorRegistrationProgress,
+  getVendorRegistrationProgress,
+  markVendorRegistrationStepComplete,
+  setVendorRegistrationProgress,
+} from "@/utils/onboarding/vendorWorkflow"
 
-function TermsAgreementStep({ termsContent }) {
-  const [hasReachedBottom, setHasReachedBottom] = useState(false)
-  const [agreed, setAgreed] = useState(false)
-
-  const handleScroll = (event) => {
-    const element = event.currentTarget
-    const reachedBottom = element.scrollTop + element.clientHeight >= element.scrollHeight - 8
-
-    if (reachedBottom) {
-      setHasReachedBottom(true)
-    }
+function getWizardStep(rawStep) {
+  const parsed = Number(rawStep || 1)
+  if (parsed === 2) {
+    return 2
   }
 
-  return (
-    <section className="card bg-base-100 shadow border border-base-300">
-      <div className="card-body gap-4">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div>
-            <h2 className="text-xl font-semibold text-base-content">Final Step: Terms of Service Agreement</h2>
-            <p className="text-sm text-base-content/70">
-              Review the current terms below. You must scroll to the bottom before you can agree.
-            </p>
-          </div>
-          <Link href="/about/termsofservice" className="btn btn-sm btn-ghost">Open terms page</Link>
-        </div>
-
-        <div
-          className="max-h-80 overflow-y-auto rounded-box border border-base-300 bg-base-200/60 p-4 prose prose-sm max-w-none"
-          onScroll={handleScroll}
-        >
-          <div dangerouslySetInnerHTML={{ __html: termsContent }} />
-        </div>
-
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="text-sm text-base-content/70">
-            {agreed
-              ? "Terms acknowledged for this session."
-              : hasReachedBottom
-                ? "You reached the bottom and can now agree."
-                : "Scroll to the bottom to enable the Agree button."}
-          </div>
-          <div className="flex gap-2 flex-wrap items-center">
-            {agreed && <span className="badge badge-success">Agreed</span>}
-            <a href="mailto:admin@twistedartistsguild.com?subject=Terms%20of%20Service%20Disagreement" className="btn btn-sm btn-outline btn-error">
-              Disagree
-            </a>
-            <button type="button" className="btn btn-sm btn-primary" disabled={!hasReachedBottom} onClick={() => setAgreed(true)}>
-              Agree
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
+  return 1
 }
 
-export default function JoinVendorIndexPage({ termsContent }) {
+function buildVendorJoinHref(step, slug, id) {
+  const normalizedSlug = String(slug || "").trim().toLowerCase()
+  if (normalizedSlug) {
+    const idSegment = id ? `&id=${encodeURIComponent(String(id))}` : ""
+    return `/join/vendor/${encodeURIComponent(normalizedSlug)}?step=${step}${idSegment}`
+  }
+
+  return `/join/vendor?step=${step}`
+}
+
+export default function JoinVendorIndexPage({ termsContent, currentStep }) {
+  const [progress, setProgress] = useState({})
+
+  useEffect(() => {
+    setProgress(getVendorRegistrationProgress?.() || {})
+  }, [])
+
+  const reservedSlug = String(progress?.slug || "").trim().toLowerCase()
+  const reservedId = Number(progress?.entityId || 0)
+
   const pageMetaData = {
     title: "Join Vendor",
-    description: "Vendor onboarding folder.",
+    description: "Start vendor onboarding with terms and workspace slug reservation.",
     keywords: "join, vendor, onboarding",
     robots: "noindex, nofollow",
     og: {
       title: "Join Vendor",
-      description: "Vendor onboarding folder.",
+      description: "Start vendor onboarding with terms and workspace slug reservation.",
     },
   }
 
   return (
-    <div className="min-h-screen bg-base-200 p-4 md:p-8">
-      <TagSEO metadataProp={pageMetaData} canonicalSlug="join/vendor" />
+    <JoinPageShell
+      title="Join as a Vendor"
+      description="Start with terms and reserve your vendor workspace slug."
+      canonicalSlug="join/vendor"
+      metadata={pageMetaData}
+      steps={[
+        {
+          href: "/join/vendor?step=1",
+          label: "Terms",
+          isActive: currentStep === 1,
+        },
+        {
+          href: "/join/vendor?step=2",
+          label: "Reserve Workspace",
+          isActive: currentStep === 2,
+        },
+      ]}
+      badge={reservedId > 0 ? `Vendor ID: ${reservedId}` : null}
+    >
+      {currentStep === 1 ? (
+        <TermsAgreementStep
+          termsContent={termsContent}
+          onAccepted={() => {
+            setVendorRegistrationProgress({ tcAccepted: true })
+            window.location.href = "/join/vendor?step=2"
+          }}
+          continueLabel="Continue to Workspace Reservation"
+        />
+      ) : null}
 
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="card bg-base-100 shadow-lg border border-base-300">
-          <div className="card-body gap-3">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <h1 className="text-3xl font-bold text-base-content">Join as a Vendor</h1>
-              <Link href="/join" className="btn btn-sm btn-ghost">Back to Join</Link>
-            </div>
-            <p className="text-base-content/70">
-              This folder is ready for vendor onboarding forms. When dynaform pages are added here, they should be listed and embedded at the bottom of this page.
-            </p>
-          </div>
-        </div>
-
-        <div className="card bg-base-100 shadow border border-base-300">
-          <div className="card-body">
-            <h2 className="text-lg font-semibold text-base-content">Available Forms</h2>
-            <p className="text-sm text-base-content/70">No vendor dynaform pages are published in this directory yet.</p>
-          </div>
-        </div>
-
-        <TermsAgreementStep termsContent={termsContent} />
-      </div>
-    </div>
+      {currentStep === 2 ? (
+        <OrganizationSlugReservationStep
+          context="vendor"
+          entityLabel="Vendor"
+          reservedId={reservedId}
+          reservedSlug={reservedSlug}
+          buildJoinHref={buildVendorJoinHref}
+          clearProgress={clearVendorRegistrationProgress}
+          getProgress={getVendorRegistrationProgress}
+          setProgress={setVendorRegistrationProgress}
+          markStepComplete={markVendorRegistrationStepComplete}
+        />
+      ) : null}
+    </JoinPageShell>
   )
 }
 
-export async function getStaticProps() {
+export async function getServerSideProps(context) {
+  const session = await getServerSession(context.req, context.res, authOptions)
+
+  if (!session?.user?.id) {
+    return {
+      redirect: {
+        destination: `/api/auth/signin?callbackUrl=${encodeURIComponent(context.resolvedUrl || "/join/vendor")}`,
+        permanent: false,
+      },
+    }
+  }
+
   const termsContent = await getMarkdownContent("content/tos.md")
+  const currentStep = getWizardStep(context.query?.step)
 
   return {
     props: {
       termsContent,
+      currentStep,
     },
   }
 }
+

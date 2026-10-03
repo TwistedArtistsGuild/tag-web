@@ -35,6 +35,7 @@ export default function PictureManagement() {
 					useCase="staff-portal"
 					allowContainerSwitch={true}
 					preserveStartPrefixOnContainerSwitch={false}
+					creditsMode="smart-owner"
 				/>
 			</div>
 		</div>

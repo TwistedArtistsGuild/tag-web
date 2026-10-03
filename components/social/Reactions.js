@@ -10,7 +10,6 @@
  Open source · low-profit · human-first*/
 
 import { useState, useCallback, memo, useRef } from 'react';
-import { useRealtimeReactions, useSocialRealtime } from './SocialRealtimeContext';
 
 function buildReactionMap(initialReactions = [], currentUser) {
     const reactionMap = new Map();
@@ -55,6 +54,7 @@ function buildReactionMap(initialReactions = [], currentUser) {
  * @param {boolean} props.showDetails - Whether to show detailed reaction info
  * @param {boolean} props.showQuickReactions - Whether to show first 4 reactions as quick buttons
  * @param {string} props.size - Size variant ('sm', 'md', 'lg')
+ * @param {Array} props.availableReactions - Available reaction options (optional, falls back to default)
  */
 const SocialReactions = ({
     targetId,
@@ -66,25 +66,25 @@ const SocialReactions = ({
     readOnly = false,
     showDetails = true,
     showQuickReactions = false,
-    size = 'md'
+    size = 'md',
+    availableReactions: customAvailableReactions = null
 }) => {
     const [reactions, setReactions] = useState(() => buildReactionMap(initialReactions, currentUser));
     const [isLoading, setIsLoading] = useState(false);
     const [expanded, setExpanded] = useState(false);
     const collapseTimer = useRef(null);
-    const { emit, isConnected } = useSocialRealtime();
 
     const handleMouseEnter = () => {
         clearTimeout(collapseTimer.current);
-        if (!readOnly || reactions.size > 0) setExpanded(true);
+        setExpanded(true);
     };
 
     const handleMouseLeave = () => {
         collapseTimer.current = setTimeout(() => setExpanded(false), 300);
     };
 
-    // Available reaction options
-    const availableReactions = [
+    // Default available reaction options (can be overridden via props)
+    const defaultAvailableReactions = [
         { emoji: '❤️', name: 'love', label: 'Love' },
         { emoji: '👏', name: 'applause', label: 'Applause' },
         { emoji: '🔥', name: 'fire', label: 'Fire' },
@@ -97,63 +97,7 @@ const SocialReactions = ({
         { emoji: '🙌', name: 'praise', label: 'Praise' }
     ];
 
-    // Handle real-time reaction updates
-    const handleRealtimeUpdate = useCallback((update) => {
-        if (update.data.targetId !== targetId || update.data.targetType !== targetType) {
-            return;
-        }
-
-        const { reaction, userId, username, timestamp } = update.data;
-        
-        setReactions(prev => {
-            const newReactions = new Map(prev);
-            
-            if (!newReactions.has(reaction)) {
-                newReactions.set(reaction, {
-                    emoji: reaction,
-                    count: 0,
-                    users: [],
-                    hasReacted: false
-                });
-            }
-            
-            const current = newReactions.get(reaction);
-            
-            if (update.type === 'reaction_added') {
-                // Check if user already reacted with this emoji
-                const existingUser = current.users.find(user => user.id === userId);
-                if (!existingUser) {
-                    current.count++;
-                    current.users.push({ id: userId, username, timestamp });
-                    
-                    if (currentUser && userId === currentUser.id) {
-                        current.hasReacted = true;
-                    }
-                    
-                    // Trigger animation
-                }
-            } else if (update.type === 'reaction_removed') {
-                const userIndex = current.users.findIndex(user => user.id === userId);
-                if (userIndex > -1) {
-                    current.count--;
-                    current.users.splice(userIndex, 1);
-                    
-                    if (currentUser && userId === currentUser.id) {
-                        current.hasReacted = false;
-                    }
-                    
-                    // Remove reaction if count reaches 0
-                    if (current.count === 0) {
-                        newReactions.delete(reaction);
-                    }
-                }
-            }
-            
-            return newReactions;
-        });
-    }, [targetId, targetType, currentUser]);
-
-    useRealtimeReactions(handleRealtimeUpdate);
+    const availableReactions = customAvailableReactions || defaultAvailableReactions;
 
     // Add reaction
     const addReaction = useCallback(async (emoji) => {
@@ -190,21 +134,6 @@ const SocialReactions = ({
                 return newReactions;
             });
             
-            // Emit real-time update
-            if (isConnected) {
-                emit('reactions', {
-                    type: 'reaction_added',
-                    data: {
-                        targetId,
-                        targetType,
-                        reaction: emoji,
-                        userId: currentUser.id,
-                        username: currentUser.username,
-                        timestamp: new Date().toISOString()
-                    }
-                });
-            }
-            
             // Call parent callback
             await onReactionAdd({
                 targetId,
@@ -233,7 +162,7 @@ const SocialReactions = ({
         } finally {
             setIsLoading(false);
         }
-    }, [currentUser, readOnly, isLoading, targetId, targetType, onReactionAdd, emit, isConnected]);
+    }, [currentUser, readOnly, isLoading, targetId, targetType, onReactionAdd]);
 
     // Remove reaction
     const removeReaction = useCallback(async (emoji) => {
@@ -259,21 +188,6 @@ const SocialReactions = ({
                 
                 return newReactions;
             });
-            
-            // Emit real-time update
-            if (isConnected) {
-                emit('reactions', {
-                    type: 'reaction_removed',
-                    data: {
-                        targetId,
-                        targetType,
-                        reaction: emoji,
-                        userId: currentUser.id,
-                        username: currentUser.username,
-                        timestamp: new Date().toISOString()
-                    }
-                });
-            }
             
             // Call parent callback
             await onReactionRemove({
@@ -311,7 +225,7 @@ const SocialReactions = ({
         } finally {
             setIsLoading(false);
         }
-    }, [currentUser, readOnly, isLoading, targetId, targetType, onReactionRemove, emit, isConnected]);
+    }, [currentUser, readOnly, isLoading, targetId, targetType, onReactionRemove]);
 
     // Toggle reaction (add if not reacted, remove if already reacted)
     const toggleReaction = useCallback((emoji) => {
@@ -358,9 +272,8 @@ const SocialReactions = ({
     const totalCount = reactionArray.reduce((sum, r) => sum + r.count, 0);
     const hasAnyReaction = reactionArray.some(r => r.hasReacted);
 
-    if (readOnly && totalCount === 0) {
-        return null;
-    }
+    // Show component even with 0 count, but only hide if explicitly set to not show
+    // Allow users to see available reactions even if no one has reacted yet
 
     return (
         <div
@@ -373,13 +286,13 @@ const SocialReactions = ({
                 <button
                     className={`
                         inline-flex items-center gap-1 rounded-full border-2 px-3 py-1.5 text-sm
-                        transition-colors duration-150 cursor-default select-none
+                        transition-colors duration-150 select-none
                         ${hasAnyReaction
-                            ? 'bg-primary/10 border-primary text-primary'
-                            : 'bg-base-100 border-base-300 text-base-content/60'
+                            ? 'bg-primary/10 border-primary text-primary cursor-pointer hover:bg-primary/20'
+                            : 'bg-base-100 border-base-300 text-base-content/60 cursor-pointer hover:border-primary/30'
                         }
                     `}
-                    tabIndex={-1}
+                    onClick={() => setExpanded(true)}
                     aria-label={`${totalCount} reaction${totalCount !== 1 ? 's' : ''}`}
                 >
                     <span className="flex items-center gap-0.5 leading-none">
@@ -402,6 +315,7 @@ const SocialReactions = ({
                     {availableReactions.map((reactionOption) => {
                         const current = reactions.get(reactionOption.emoji);
                         const hasReacted = current?.hasReacted || false;
+                        const count = current?.count || 0;
 
                         return (
                             <div key={reactionOption.name} className="relative group/reaction">
@@ -411,22 +325,23 @@ const SocialReactions = ({
                                     whitespace-nowrap rounded bg-neutral text-neutral-content text-xs px-2 py-0.5
                                     opacity-0 group-hover/reaction:opacity-100 transition-opacity duration-150 z-50
                                 ">
-                                    {reactionOption.label}
+                                    {reactionOption.label} {count > 0 && `(${count})`}
                                 </span>
                                 <button
                                     onClick={() => !readOnly && toggleReaction(reactionOption.emoji)}
                                     disabled={readOnly || isLoading}
                                     className={`
-                                        inline-flex items-center justify-center rounded-full border-2
+                                        inline-flex items-center justify-center gap-1 rounded-full border-2
                                         ${sizeClasses.reaction} transition-colors duration-150
                                         ${hasReacted
                                             ? 'bg-primary/10 border-primary text-primary'
                                             : 'bg-base-100 border-base-300 text-base-content hover:border-primary/50 hover:bg-base-200'
                                         }
-                                        ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                                        ${(readOnly || isLoading) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                                     `}
                                 >
                                     <span className="leading-none">{reactionOption.emoji}</span>
+                                    {count > 0 && <span className="text-xs font-medium">{count}</span>}
                                 </button>
                             </div>
                         );

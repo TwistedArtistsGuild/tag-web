@@ -11,7 +11,6 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { SocialRealtimeProvider } from './SocialRealtimeContext';
 import SocialComments from './Comments';
 import DirectMessages from './DirectMessages';
 import SocialReactions from './Reactions';
@@ -86,7 +85,7 @@ const SocialComponentsDemo = () => {
     const [activeTab, setActiveTab] = useState('comments');
 
     return (
-        <SocialRealtimeProvider>
+        
             <div className="max-w-6xl mx-auto p-6 space-y-8">
                 <div className="text-center">
                     <h1 className="text-4xl font-bold mb-4">Social Components Demo</h1>
@@ -513,8 +512,9 @@ const SocialComponentsDemo = () => {
                     </div>
                 </div>
             </div>
-        </SocialRealtimeProvider>
+        
     );
 };
 
 export default SocialComponentsDemo;
+
