@@ -159,6 +159,9 @@ export default function LeftSidebar(props) {
                 title={artist.title || "Untitled artist"}
                 summary={artist.byline || artist.description || artist.locationSummary || "Artist profile"}
                 image={artist.profilePic?.url || artist.profilePic?.URL || artist.profilePicUrl || "/blank_image.png"}
+                logoImage={artist.logoPic?.url || artist.logoPic?.URL || artist.logoPic?.normalizedURL || artist.logoPic?.NormalizedURL || artist.logo?.url || artist.logo?.URL || artist.logoUrl || artist.logoURL || ""}
+                logoEntityType="artist"
+                logoEntityId={artist.artistID || artist.artistid || ""}
                 imageAlt={artist.profilePic?.alttext || `${artist.title || "Artist"} profile picture`}
                 href={artist.path ? `/artists/${artist.path}` : "/artists"}
                 badge="Artist"
@@ -185,6 +188,9 @@ export default function LeftSidebar(props) {
                 title={event.name || event.title || "Untitled event"}
                 summary={event.description || event.location?.name || event.location || event.venue?.name || "Upcoming event"}
                 image={event.image || event.coverImage || event.heroImage || event.imageUrl || "/blank_image.png"}
+                logoImage={event.logoPic?.url || event.logoPic?.URL || event.logoPic?.normalizedURL || event.logoPic?.NormalizedURL || event.logo?.url || event.logo?.URL || event.logoUrl || event.logoURL || ""}
+                logoEntityType="event"
+                logoEntityId={event.eventID || event.EventID || event.eventnum || ""}
                 imageAlt={event.name || event.title || "Event media"}
                 href={event.href || (event.path ? `/events/${event.path}` : "/events")}
                 badge="Event"
