@@ -9,88 +9,72 @@
 
  Open source · low-profit · human-first*/
 "use client"
+"use client"
 
-import { createContext, useState, useContext, useEffect } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
+import { nextSidebarState } from "@/utils/sidebarState"
 
 const LayoutContext = createContext()
 
+/** Below 1280px the panels overlay the page (with a scrim), one at a time. From 1280px they push it. */
+const OVERLAY_QUERY = "(max-width: 1279px)"
+
 export function LayoutProvider({ children }) {
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
-  const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(false)
-  const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === "undefined") {
-      return "tag-theme"
-    }
-
-    return localStorage.getItem("theme") || "tag-theme"
-  })
+  const [sidebars, setSidebars] = useState({ left: false, right: false })
+  const [isOverlay, setIsOverlay] = useState(false)
+  const isOverlayRef = useRef(false)
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-      if (window.innerWidth < 768) {
-        setIsLeftSidebarVisible(false)
-        setIsRightSidebarVisible(false)
+    const query = window.matchMedia(OVERLAY_QUERY)
+    const update = () => {
+      isOverlayRef.current = query.matches
+      setIsOverlay(query.matches)
+      // Moving into the overlay layout with both panels open: keep only the cart.
+      if (query.matches) {
+        setSidebars((current) => (current.left && current.right ? { left: false, right: true } : current))
       }
     }
-
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
+    update()
+    query.addEventListener("change", update)
+    return () => query.removeEventListener("change", update)
   }, [])
 
+  // `force`: true opens, false closes, anything else (e.g. a click event) toggles.
+  const toggleLeftSidebar = useCallback((force) => {
+    setSidebars((current) => nextSidebarState(current, "left", typeof force === "boolean" ? force : undefined, isOverlayRef.current))
+  }, [])
+
+  const toggleRightSidebar = useCallback((force) => {
+    setSidebars((current) => nextSidebarState(current, "right", typeof force === "boolean" ? force : undefined, isOverlayRef.current))
+  }, [])
+
+  const closeSidebars = useCallback(() => setSidebars({ left: false, right: false }), [])
+
+  // Escape closes an open panel, unless a popover or menu already handled it (they preventDefault).
+  const anyOpen = sidebars.left || sidebars.right
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.documentElement.setAttribute("data-theme", theme)
+    if (!anyOpen) return undefined
+    function handleKeyDown(event) {
+      if (event.key === "Escape" && !event.defaultPrevented) closeSidebars()
     }
-  }, [theme])
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [anyOpen, closeSidebars])
 
-  function updateTheme(newTheme) {
-    setTheme(newTheme)
-    if (typeof document !== "undefined") {
-      document.documentElement.setAttribute("data-theme", newTheme)
-    }
-    if (typeof window !== "undefined") {
-      localStorage.setItem("theme", newTheme)
-    }
-  }
-
-  function toggleLeftSidebar() {
-    setIsLeftSidebarVisible((prev) => {
-      const next = !prev
-      if (isMobile && next) {
-        setIsRightSidebarVisible(false)
-      }
-      return next
-    })
-  }
-
-  function toggleRightSidebar() {
-    setIsRightSidebarVisible((prev) => {
-      const next = !prev
-      if (isMobile && next) {
-        setIsLeftSidebarVisible(false)
-      }
-      return next
-    })
-  }
-
-  const value = {
+  const value = useMemo(() => ({
     isHeaderVisible,
     setIsHeaderVisible,
-    isLeftSidebarVisible,
-    setIsLeftSidebarVisible,
-    isRightSidebarVisible,
-    setIsRightSidebarVisible,
-    isMobile,
-    theme,
-    updateTheme,
+    isLeftSidebarVisible: sidebars.left,
+    setIsLeftSidebarVisible: (open) => toggleLeftSidebar(Boolean(open)),
+    isRightSidebarVisible: sidebars.right,
+    setIsRightSidebarVisible: (open) => toggleRightSidebar(Boolean(open)),
+    isOverlay,
     toggleHeader: () => setIsHeaderVisible((prev) => !prev),
     toggleLeftSidebar,
     toggleRightSidebar,
-  }
+    closeSidebars,
+  }), [isHeaderVisible, sidebars, isOverlay, toggleLeftSidebar, toggleRightSidebar, closeSidebars])
 
   return <LayoutContext.Provider value={value}>{children}</LayoutContext.Provider>
 }

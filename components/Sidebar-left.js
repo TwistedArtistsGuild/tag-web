@@ -7,375 +7,228 @@
 
  This software comes with NO WARRANTY; see the license for details.
 
- Open source · low-profit · human-first*/ 
+ Open source · low-profit · human-first*/
 "use client"
 
-import { useState, useEffect, useRef } from "react"
-import { useLayout } from "./LayoutProvider"
-import ListingCardSmall from "@/components/cards/card_listing_small"
-import UnifiedCard from "@/components/cards/UnifiedCard"
-import Navigation from "@/components/Navigation"
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/router"
-import { PanelLeftOpen, PanelLeftClose } from 'lucide-react';
+import { PanelLeft, Search, ShoppingCart } from "lucide-react"
+import { useLayout } from "./LayoutProvider"
+import { useCart } from "@/components/cart/CartContext"
+import { hasExplicitWarning, extractContentWarnings } from "@/components/social/ContentTags"
+import SidePanel from "@/components/sidebar/SidePanel"
+import EdgeTab from "@/components/sidebar/EdgeTab"
+import SidebarRow from "@/components/sidebar/SidebarRow"
+import SidebarFavorites from "@/components/sidebar/SidebarFavorites"
+import { filterSidebarItems } from "@/utils/sidebarFilter"
 
+export const BROWSE_PANEL_ID = "tag-browse-panel"
+const ROWS_PER_SECTION = 6
+const DEFAULT_FILTERS = [
+  { label: "All art", value: "-1" },
+  { label: "Paintings", value: "3" },
+  { label: "Sculpture", value: "30" },
+]
+
+function listingRow(listing, onAddToCart) {
+  const artist = listing?.artist || listing?.vendor || {}
+  const href = listing?.artist?.path && listing?.path ? `/artists/${listing.artist.path}/listings/${listing.path}` : "/art/"
+  const price = Number(listing?.price || 0)
+  return {
+    key: listing?.id || listing?.listingID || listing?.path || listing?.title,
+    href,
+    title: listing?.title || "Untitled listing",
+    meta: artist?.title || artist?.name || "",
+    media: { kind: "thumb", src: listing?.profilePic?.url || listing?.defaultImageURL || listing?.image || "" },
+    explicit: hasExplicitWarning(extractContentWarnings(listing)),
+    price,
+    action: price > 0 ? (
+      <button
+        type="button"
+        className="tag-row__action"
+        aria-label={`Add ${listing?.title || "listing"} to cart`}
+        title="Add to cart"
+        onClick={() => onAddToCart(listing)}
+      >
+        <ShoppingCart aria-hidden="true" />
+      </button>
+    ) : null,
+  }
+}
+
+function artistRow(artist) {
+  return {
+    key: artist?.id || artist?.artistID || artist?.path || artist?.title,
+    href: artist?.path ? `/artists/${artist.path}` : "/artists",
+    title: artist?.title || "Untitled artist",
+    meta: artist?.byline || artist?.locationSummary || "",
+    media: { kind: "avatar", src: artist?.profilePic?.url || artist?.profilePic?.URL || artist?.profilePicUrl || "" },
+  }
+}
+
+function eventRow(event) {
+  const location = typeof event?.location === "string" ? event.location : event?.location?.name || event?.venue?.name || ""
+  return {
+    key: event?.id || event?.eventID || event?.path || event?.title,
+    href: event?.href || (event?.path ? `/events/${event.path}` : "/events"),
+    title: event?.name || event?.title || "Untitled event",
+    meta: location,
+    media: { kind: "date", date: event?.date || event?.startDate || event?.startsAt },
+  }
+}
+
+function RowSection({ id, title, seeAllHref, rows }) {
+  if (!rows.length) return null
+  return (
+    <section className="tag-panel__section" aria-labelledby={id}>
+      <h3 id={id} className="tag-panel__section-title">
+        {title}
+        <Link href={seeAllHref}>See all</Link>
+      </h3>
+      <ul className="tag-rows">
+        {rows.slice(0, ROWS_PER_SECTION).map(({ key, ...row }, index) => (
+          <SidebarRow key={key || index} {...row} />
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/**
+ * Browse panel (left): search, category chips, the visitor's favorites, then compact rows for
+ * featured listings, artists and events. Data comes from page props; when a page gives none,
+ * listings are fetched the first time the panel opens.
+ */
 export default function LeftSidebar(props) {
-  // Since MyLayout.js spreads the leftSidebarData, we access props directly
-  const artists = props.artists || [];
-  const [listings, setDisplayListings] = useState(props.listings || []);
-  const [displayType, setDisplayType] = useState("auto");
-  const events = props.events || [];
-  const filters = props.filters || [
-    { label: "All Art", value: "-1" },
-    { label: "Paintings", value: "3" },
-    { label: "Sculpture", value: "30" },
-  ];
-  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL;
+  const artists = props.artists || []
+  const events = props.events || []
+  const filters = props.filters || DEFAULT_FILTERS
+  const api_url = process.env.NEXT_PUBLIC_TAG_API_URL
 
-  // All hooks declared up front before any function definitions
-  const { isLeftSidebarVisible, toggleLeftSidebar, isMobile, isHeaderVisible } = useLayout()
-  const [activeTab, setActiveTab] = useState("browse")
+  const { isLeftSidebarVisible, toggleLeftSidebar, toggleRightSidebar } = useLayout()
+  const { addToCart } = useCart()
+  const router = useRouter()
+  const [listings, setListings] = useState(props.listings || [])
   const [searchTerm, setSearchTerm] = useState("")
   const [activeFilter, setActiveFilter] = useState("-1")
-  const [searchHighlight, setSearchHighlight] = useState(false)
   const searchInputRef = useRef(null)
-  const router = useRouter()
+  const hasFetchedRef = useRef(false)
 
- useEffect(() => {
-  // Auto-detect content type if not specified
-     const resolveContent = async () => {
-    // 2. Logic: If we already have data from props, use it.
-    if (props.contentType && props.contentType !== "auto") {
-        setDisplayType(props.contentType);
-        return;
-    }
-      if (artists.length > 0) {
-          setDisplayType("artists");
-      } else if (events.length > 0) {
-          setDisplayType("events");
-      } else if (props.listings && props.listings.length > 0) {
-          setDisplayType("listings");
-      } else {
-          try {
-              // Fetch the listings data
-              let status = 200
-              const res = await fetch(`${api_url}listing/`);
-              //TODO: Change to add new API in backend to fetch top n listings instead of fetching all
-              //listings and filter top 5 to show
-              status = res.status
-              if (!res.ok) {
-                  throw new Error(`HTTP error! status: ${status}`)
-              }
-              const data = await res.json();
-              setDisplayListings(data);
-              setDisplayType("listings");
-          } catch (error) {
-              console.error('Error in getInitialProps:', error);
-              setDisplayType("none");
-          }
+  const shouldFetchListings = (!props.contentType || props.contentType === "auto")
+    && !props.listings?.length && !artists.length && !events.length
+
+  // Fetch listings on first open only (they used to be downloaded on every page load).
+  useEffect(() => {
+    if (!isLeftSidebarVisible || !shouldFetchListings || hasFetchedRef.current) return
+    hasFetchedRef.current = true
+    let cancelled = false
+    ;(async () => {
+      try {
+        //TODO: Change to add new API in backend to fetch top n listings instead of fetching all
+        const res = await fetch(`${api_url}listing/`)
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`)
+        const data = await res.json()
+        if (!cancelled && Array.isArray(data)) setListings(data)
+      } catch (error) {
+        console.error("Error loading sidebar listings:", error)
       }
-     }
-     resolveContent();
- }, [api_url, artists.length, events.length, props.contentType, props.listings]); // Re-run if props change
-
-  // Render content based on type
-  const renderContent = () => {
-      const filterItem = (item) => {
-          // 1. Category Filter Logic
-          const categoryMatch = activeFilter === "-1" || activeFilter === -1 || String(item.artCategoryID) === String(activeFilter);
-
-          // 2. Multi-Property Search Logic
-          if (!searchTerm) return categoryMatch; // Performance optimization for empty search
-          const searchLower = searchTerm.toLowerCase();
-          console.log(searchLower);
-          console.log([
-              item.biography,
-              item.byline,
-              item.title,
-              item.path,
-              item.seotags,
-              item.statement
-          ]);
-          // 3. Type-Specific Property Checking
-          let searchMatch = false;
-
-          switch (displayType) {
-              case "artists":
-                  searchMatch = [
-                      item.biography,
-                      item.byline,
-                      item.title,
-                      item.path,
-                      item.seotags,
-                      item.statement
-                  ].some(prop =>
-                      String(prop || "").toLowerCase().includes(searchLower)
-                  );
-                  break;
-
-              case "events":
-                  searchMatch = [
-                      item.description,
-                      item.title,
-                      item.note,
-                      item.path,
-                  ].some(prop =>
-                      String(prop || "").toLowerCase().includes(searchLower)
-                  );
-                  break;
-              case "listings":
-              default:
-                  searchMatch = [
-                      item.description,
-                      item.title,
-                      item.culture,
-                      item.medium,
-                      item.path,
-                      item.artCategory
-                  ].some(prop =>
-                      String(prop || "").toLowerCase().includes(searchLower)
-                  );
-                  break;
-          }
-
-          return categoryMatch && searchMatch;
-      };
-    switch (displayType) {
-      case "listings":
-        return (
-          <>
-            <h3 className="font-medium text-base-content mb-3">Featured Listings</h3>
-            {listings.filter(filterItem).map((listing, index) => (
-              <ListingCardSmall key={listing.id || index} listing={listing} />
-            ))}
-          </>
-        );
-      case "artists":
-        return (
-          <>
-            <h3 className="font-medium text-base-content mb-3">Featured Artists</h3>
-            {artists.filter(filterItem).map((artist, index) => (
-              <UnifiedCard
-                key={artist.id || artist.artistID || index}
-                title={artist.title || "Untitled artist"}
-                summary={artist.byline || artist.description || artist.locationSummary || "Artist profile"}
-                image={artist.profilePic?.url || artist.profilePic?.URL || artist.profilePicUrl || "/blank_image.png"}
-                logoImage={artist.logoPic?.url || artist.logoPic?.URL || artist.logoPic?.normalizedURL || artist.logoPic?.NormalizedURL || artist.logo?.url || artist.logo?.URL || artist.logoUrl || artist.logoURL || ""}
-                logoEntityType="artist"
-                logoEntityId={artist.artistID || artist.artistid || ""}
-                imageAlt={artist.profilePic?.alttext || `${artist.title || "Artist"} profile picture`}
-                href={artist.path ? `/artists/${artist.path}` : "/artists"}
-                badge="Artist"
-                size="xs"
-                compact
-                mediaClassName="h-28 w-full"
-                showAuthor={false}
-                showImpressions={false}
-                showComments={false}
-                showReport={false}
-                showIdentityGlow={false}
-                className="mb-3"
-              />
-            ))}
-          </>
-        );
-      case "events":
-        return (
-          <>
-            <h3 className="font-medium text-base-content mb-3">Upcoming Events</h3>
-            {events.filter(filterItem).map((event, index) => (
-              <UnifiedCard
-                key={event.id || event.eventID || index}
-                title={event.name || event.title || "Untitled event"}
-                summary={event.description || event.location?.name || event.location || event.venue?.name || "Upcoming event"}
-                image={event.image || event.coverImage || event.heroImage || event.imageUrl || "/blank_image.png"}
-                logoImage={event.logoPic?.url || event.logoPic?.URL || event.logoPic?.normalizedURL || event.logoPic?.NormalizedURL || event.logo?.url || event.logo?.URL || event.logoUrl || event.logoURL || ""}
-                logoEntityType="event"
-                logoEntityId={event.eventID || event.EventID || event.eventnum || ""}
-                imageAlt={event.name || event.title || "Event media"}
-                href={event.href || (event.path ? `/events/${event.path}` : "/events")}
-                badge="Event"
-                date={event.date || event.startDate || event.startsAt}
-                size="xs"
-                compact
-                mediaClassName="h-28 w-full"
-                showAuthor={false}
-                showImpressions={false}
-                showComments={false}
-                showReport={false}
-                className="mb-3"
-              />
-            ))}
-          </>
-        );
-      default:
-        return (          
-            <>
-                <h3 className="font-medium text-base-content mb-3">Featured Listings</h3>
-                {listings.filter(filterItem).map((listing, index) => (
-                    <ListingCardSmall key={listing.id || index} listing={listing} />
-                ))}
-            </>
-        );
+    })()
+    return () => {
+      cancelled = true
     }
-  };
-  
-  const topOffset = isHeaderVisible ? "top-20" : "top-0"
+  }, [api_url, isLeftSidebarVisible, shouldFetchListings])
 
+  // The header's search button opens this panel and focuses the field.
   useEffect(() => {
     const handleSidebarSearchFocus = () => {
-      setActiveTab("browse")
-      setTimeout(() => {
-        searchInputRef.current?.focus()
-        setSearchHighlight(true)
-        setTimeout(() => setSearchHighlight(false), 3000)
-      }, 350) // wait for sidebar open animation
+      toggleLeftSidebar(true)
+      window.setTimeout(() => searchInputRef.current?.focus(), 350) // after the slide-in
     }
     window.addEventListener("sidebarSearchFocus", handleSidebarSearchFocus)
     return () => window.removeEventListener("sidebarSearchFocus", handleSidebarSearchFocus)
-  }, [])
+  }, [toggleLeftSidebar])
+
+  function runSearch() {
+    router.push(`/search?term=${encodeURIComponent(searchTerm)}`)
+  }
+
+  function handleAddToCart(listing) {
+    addToCart({ ...listing, id: listing.listingID || listing.id, price: Number(listing.price || 0) }, 1)
+    toggleRightSidebar(true)
+  }
+
+  // Categories only exist on listings; artists and events are filtered by the search text alone.
+  const listingRows = filterSidebarItems(listings, { type: "listings", term: searchTerm, category: activeFilter })
+    .map((listing) => listingRow(listing, handleAddToCart))
+  const artistRows = filterSidebarItems(artists, { type: "artists", term: searchTerm, category: "-1" }).map(artistRow)
+  const eventRows = filterSidebarItems(events, { type: "events", term: searchTerm, category: "-1" }).map(eventRow)
+  const nothingFound = searchTerm && !listingRows.length && !artistRows.length && !eventRows.length
 
   return (
     <>
-      {/* Open Button - Left Edge of Screen when closed */}
-          {!isLeftSidebarVisible && (
+      <EdgeTab
+        side="left"
+        label="Browse"
+        ariaLabel="Open browse panel"
+        icon={<PanelLeft aria-hidden="true" />}
+        controls={BROWSE_PANEL_ID}
+        expanded={isLeftSidebarVisible}
+        onClick={() => toggleLeftSidebar(true)}
+      />
+      <SidePanel id={BROWSE_PANEL_ID} side="left" title="Browse" open={isLeftSidebarVisible} onClose={() => toggleLeftSidebar(false)}>
+        <form
+          className="tag-panel__search"
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault()
+            runSearch()
+          }}
+        >
+          <Search className="tag-panel__search-icon" aria-hidden="true" />
+          <label className="sr-only" htmlFor="tag-browse-search">Search the guild</label>
+          <input
+            id="tag-browse-search"
+            ref={searchInputRef}
+            type="search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search art, artists, events…"
+            autoComplete="off"
+          />
+          <button type="submit" className="tag-panel__search-go" aria-label="Search">
+            <Search aria-hidden="true" />
+          </button>
+        </form>
+
+        {filters.length > 0 && (
+          <div className="tag-panel__chips" role="group" aria-label="Filter by category">
+            {filters.map((filter) => (
               <button
-                  onClick={toggleLeftSidebar}
-                  className="fixed top-1/2 left-0 transform -translate-y-1/2 z-50 bg-primary text-primary-content 
-               p-1.5 rounded-r-md shadow-md hover:shadow-lg transition-all 
-               border-y border-r border-primary-focus"
-                  aria-label="Show left sidebar"
+                key={filter.value}
+                type="button"
+                className="tag-chip"
+                aria-pressed={String(activeFilter) === String(filter.value)}
+                onClick={() => setActiveFilter(String(filter.value))}
               >
-                  <PanelLeftOpen size={20} strokeWidth={1.5} />
+                {filter.label}
               </button>
-          )}
-
-      {/* Left Sidebar */}
-      <aside
-        className={`
-          fixed ${topOffset} bottom-0 left-0 w-80 bg-base-200 border-r border-base-content/10 z-30
-          transition-transform duration-300 ease-in-out
-          ${isLeftSidebarVisible ? "translate-x-0" : "-translate-x-full"}
-          ${isMobile ? "w-full" : "w-80"}
-          h-screen overflow-y-auto
-        `}
-      >
-        {/* Theme-reactive accent strip */}
-        <div className="sidebar-accent" />
-
-        {/* Close Button - Right Edge Center of Sidebar when open */}
-        {isLeftSidebarVisible && (
-            <button
-                onClick={toggleLeftSidebar}
-                className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-base-200 text-base-content 
-        hover:bg-base-300 p-1 rounded-md border border-base-content/20 
-        shadow-sm z-40"
-                aria-label="Hide left sidebar"
-            >
-                <PanelLeftClose size={18} strokeWidth={1.5} />
-            </button>
+            ))}
+          </div>
         )}
 
-        {/* Sidebar Header */}
-        <div className="sidebar-inner-header flex items-center justify-between gap-3 p-4 border-b border-base-content/10 bg-base-300">
-          <div className="tabs tabs-boxed">
-            <button
-              className={`tab ${activeTab === "browse" ? "tab-active" : ""}`}
-              onClick={() => setActiveTab("browse")}
-            >
-              Browse
-            </button>
-            <button
-              className={`tab ${activeTab === "navigation" ? "tab-active" : ""}`}
-              onClick={() => setActiveTab("navigation")}
-            >
-              Navigation
-            </button>
-          </div>
-          {/* Mobile close button in header */}
-          {isMobile && (
-            <button
-              onClick={toggleLeftSidebar}
-              className="btn btn-sm btn-circle btn-ghost touch-manipulation shrink-0"
-              aria-label="Close sidebar"
-              style={{ touchAction: 'manipulation' }}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
+        <SidebarFavorites />
 
-        <div className="flex-1 overflow-y-auto p-4 pb-24 max-h-[calc(100vh-220px)]">
-          {activeTab === "browse" ? (
-            <div className="space-y-4">
-              {/* Search Section */}
-              <div className="p-2 border border-base-content/10 bg-base-100 rounded-md">
-                <div className="flex gap-2 items-center">
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search..."
-                    className="input input-bordered input-xs flex-1"
-                    onKeyDown={e => { if (e.key === 'Enter') { router.push(`/search?term=${encodeURIComponent(searchTerm)}`) } }}
-                  />
-                  <button
-                    className={`btn btn-primary btn-xs transition-all duration-200 ${searchHighlight ? "ring-2 ring-offset-1 ring-primary animate-pulse" : ""}`}
-                    onClick={() => router.push(`/search?term=${encodeURIComponent(searchTerm)}`)}
-                    aria-label="Search"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
+        <RowSection id="tag-browse-listings" title="Featured listings" seeAllHref="/art/" rows={listingRows} />
+        <RowSection id="tag-browse-artists" title="Featured artists" seeAllHref="/artists" rows={artistRows} />
+        <RowSection id="tag-browse-events" title="Upcoming events" seeAllHref="/events" rows={eventRows} />
 
-              {/* Filters Section */}
-              {filters.length > 0 && (
-                <div className="p-4 border border-base-content/10 rounded-md">
-                  <h3 className="font-medium text-base-content mb-3">Filters</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {filters.map((filter, index) => (
-                      <label key={index} className="label cursor-pointer justify-start">
-                        <input
-                          type="radio"
-                          name="filter"
-                          className="radio radio-primary radio-xs"
-                          checked={activeFilter === filter.value}
-                          onChange={() => setActiveFilter(filter.value)}
-                        />
-                        <span className="label-text text-xs ml-2">{filter.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-4">{renderContent()}</div>
-            </div>
-          ) : (
-            <Navigation
-              embedded
-              title={null}
-              subtitle={null}
-              className="border-0 bg-transparent p-0 shadow-none"
-            />
-          )}
-        </div>
-      </aside>
-
-      {/* Mobile Overlay */}
-      {isMobile && isLeftSidebarVisible && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-20 touch-manipulation" 
-          onClick={toggleLeftSidebar}
-          onTouchEnd={toggleLeftSidebar}
-          style={{ touchAction: 'manipulation' }}
-        />
-      )}
+        {nothingFound ? (
+          <p className="tag-panel__empty-note" role="status">
+            Nothing here matches “{searchTerm}”. Press Enter to search the whole guild.
+          </p>
+        ) : null}
+      </SidePanel>
     </>
   )
 }
