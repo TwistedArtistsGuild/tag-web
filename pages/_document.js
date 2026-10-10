@@ -10,18 +10,30 @@
  Open source · low-profit · human-first*/
 import { Html, Head, Main, NextScript } from "next/document";
 import config from "@/config";
+import { DEFAULT_PREFS, themeHeadScript } from "@/utils/themePrefs";
+import { noticeHeadScript } from "@/components/NoticeBar";
 
 export default function Document() {
   const ghlTrackingId = process.env.NEXT_PUBLIC_GHL_TRACKING_ID;
 
   return (
-    <Html lang="en" className="font-sans" data-theme={config.colors.theme} data-scroll-behavior="smooth">
+    <Html
+      lang="en"
+      className="font-sans"
+      data-theme={config.colors.theme}
+      data-palette={DEFAULT_PREFS.palette}
+      data-mode={DEFAULT_PREFS.mode}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <Head>
+        {/* Restores the saved palette + mode before first paint (no flash). Must stay first. */}
+        <script dangerouslySetInnerHTML={{ __html: themeHeadScript() + noticeHeadScript() }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Bebas+Neue&family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Courgette&family=Dancing+Script:wght@400;600;700&family=Great+Vibes&family=ManRope:wght@400;500;600;700&family=Oswald:wght@400;500;600&family=Pacifico&family=Parisienne&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Raleway:wght@400;500;600&family=Sacramento&family=Satisfy&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Bebas+Neue&family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Courgette&family=Dancing+Script:wght@400;600;700&family=Great+Vibes&family=Oswald:wght@400;500;600&family=Pacifico&family=Parisienne&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Raleway:wght@400;500;600&family=Sacramento&family=Satisfy&display=swap"
         />
         <meta name="theme-color" content={config.colors.main} />
         <link
